@@ -80,7 +80,7 @@ function asset_src(string $path): string {
 /** base_url() for a public/ asset, with a ?v=<mtime> cache-buster so browsers
  * pick up CSS/JS changes immediately instead of serving a stale cached copy. */
 function versioned_asset(string $path): string {
-    $fsPath = __DIR__ . '/../public/' . ltrim($path, '/');
+    $fsPath = __DIR__ . '/../' . ltrim($path, '/');
     $version = is_file($fsPath) ? filemtime($fsPath) : time();
     return base_url($path) . '?v=' . $version;
 }

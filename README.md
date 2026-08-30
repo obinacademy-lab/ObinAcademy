@@ -29,23 +29,32 @@ whatever turns up.
 - **Email**: same Resend API, called via `curl`.
 - **Database**: MySQL, with `INT AUTO_INCREMENT` primary keys instead of Prisma's `cuid()` strings — the natural fit for plain PHP/MySQL.
 
+## Project layout
+
+The app is served straight from the repo root — there is **no nested `public/`
+folder**. On shared hosting the whole repo *is* `public_html`. The support
+folders (`includes/`, `config/`, `migration/`, `private-uploads/`) sit alongside
+the pages and are kept off the web by their own `.htaccess` (`Require all denied`)
+plus deny rules in the root `.htaccess`.
+
 ## Local development
 
 ```
-php -S localhost:8000 -t public
+php -S localhost:8000 -t .
 ```
 
-Then visit `http://localhost:8000`. (Update `APP_URL` in `config/config.php` to match.)
+Then visit `http://localhost:8000`. Set `APP_URL` in `config/config.php` to
+`http://localhost:8000` (no `/public` segment).
 
 ## Deploying to Hostinger
 
 1. **Create the database**: hPanel → Databases → MySQL Databases → create a database + user, note the host/name/user/password.
-2. **Upload files**: via hPanel's File Manager or FTP, upload the contents of `public/` into `public_html/`, and upload `includes/`, `config/`, `private-uploads/`, `migration/`, and `schema.sql` as **siblings of** `public_html` (one level up) — not inside it. This keeps `includes/`, `config/`, and `private-uploads/` off the public web even if the `.htaccess` deny rules aren't honored for some reason.
+2. **Upload files**: via hPanel's File Manager or FTP, upload the **entire repo contents** (everything: `index.php`, `assets/`, `courses/`, `dashboard/`, `api/`, `includes/`, `config/`, `migration/`, `private-uploads/`, `schema.sql`, `.htaccess`) into `public_html/`. `includes/`, `config/`, `migration/`, and `private-uploads/` each carry an `.htaccess` with `Require all denied`, and the root `.htaccess` also blocks them and the `.sql`/`.md` files, so they stay off the public web.
 3. **Import the schema**: hPanel → phpMyAdmin → your database → Import → `schema.sql`.
-4. **Configure**: edit `config/config.php` with the real Hostinger DB credentials, set `APP_URL` to `https://obinacademy.site`, generate a real `APP_SECRET` (`php -r "echo bin2hex(random_bytes(32));"`), and switch `IOTEC_WALLET_ID` to the live wallet only once you're ready for real learner payments.
-5. **Raise PHP upload limits**: hPanel → Advanced → PHP Configuration → raise `upload_max_filesize`, `post_max_size` (both to at least a few hundred MB for course videos), `max_execution_time`, and `memory_limit`. The `.htaccess` in `public/` tries to set these too, but only takes effect if Hostinger runs PHP as an Apache module rather than PHP-FPM — the hPanel setting always works.
+4. **Configure**: edit `config/config.php` with the real Hostinger DB credentials, set `APP_URL` to `https://obinacademy.site` (no `/public` — the app is at the domain root), generate a real `APP_SECRET` (`php -r "echo bin2hex(random_bytes(32));"`), and switch `IOTEC_WALLET_ID` to the live wallet only once you're ready for real learner payments.
+5. **Raise PHP upload limits**: hPanel → Advanced → PHP Configuration → raise `upload_max_filesize`, `post_max_size` (both to at least a few hundred MB for course videos), `max_execution_time`, and `memory_limit`. The root `.htaccess` tries to set these too, but only takes effect if Hostinger runs PHP as an Apache module rather than PHP-FPM — the hPanel setting always works.
 6. **Migrate your real data** (once, before real users touch the new site): SSH in if your plan allows it and run `php migration/import-mysql.php`, or run it locally against a database you then export/import into Hostinger's MySQL via phpMyAdmin.
-7. **Point the domain**: if `public_html` is the doc root for `obinacademy.site`, you're done — Hostinger DNS already points there. Otherwise add the domain in hPanel and point it at the folder you uploaded `public/`'s contents into.
+7. **Point the domain**: if `public_html` is the doc root for `obinacademy.site`, you're done — Hostinger DNS already points there. Otherwise add the domain in hPanel and point it at the folder you uploaded the repo into.
 
 ## Known limitations vs. the Next.js version
 

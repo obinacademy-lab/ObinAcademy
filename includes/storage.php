@@ -22,7 +22,7 @@ function private_uploads_root(): string {
 }
 
 function public_uploads_root(): string {
-    return __DIR__ . '/../public/uploads';
+    return __DIR__ . '/../uploads';
 }
 
 function format_max_size(int $bytes): string {

@@ -1,0 +1,26 @@
+Options -Indexes
+
+# The app now lives directly in the web root (no nested public/ folder), so
+# these support files sit alongside the pages — block direct web access to them.
+<FilesMatch "\.(sql|md|dist|example\.php|gitignore|gitattributes)$">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 (?i)/(config|includes|migration|private-uploads)(/|$)
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Raise PHP upload limits for course video uploads. Only takes effect if this
+# server runs PHP as an Apache module (mod_php) — if it runs PHP-FPM instead
+# (common on Hostinger), set these in hPanel > Advanced > PHP Configuration
+# instead; this block is then silently ignored.
+<IfModule mod_php.c>
+  php_value upload_max_filesize 512M
+  php_value post_max_size 512M
+  php_value max_execution_time 300
+  php_value max_input_time 300
+  php_value memory_limit 256M
+</IfModule>
