@@ -1,0 +1,7 @@
+/config/config.php
+/private-uploads/**
+!/private-uploads/.gitkeep
+/public/uploads/**
+!/public/uploads/.gitkeep
+.DS_Store
+/migration/*.json

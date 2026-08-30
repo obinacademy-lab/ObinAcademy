@@ -1,0 +1,168 @@
+<?php
+/**
+ * Dashboard shell. Requires $user (from require_login/require_role) and
+ * optionally $pageTitle before include.
+ */
+// Grouped as [group label => [href, label, icon name]] so the sidebar reads
+// as sections of related tasks rather than one flat list of links.
+$navByRole = [
+    'LEARNER' => [
+        'Learning' => [
+            ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
+        ],
+        'Account' => [
+            ['/dashboard/settings.php', 'Settings', 'settings'],
+        ],
+    ],
+    'CREATOR' => [
+        'Teaching' => [
+            ['/dashboard/creator/index.php', 'My Courses', 'book-open'],
+            ['/dashboard/creator/course-new.php', 'Create Course', 'plus-circle'],
+            ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
+        ],
+        'Account' => [
+            ['/dashboard/settings.php', 'Settings', 'settings'],
+        ],
+    ],
+    'ADMIN' => [
+        'Overview' => [
+            ['/dashboard/admin/index.php', 'Overview', 'layout-dashboard'],
+        ],
+        'Manage' => [
+            ['/dashboard/admin/users.php', 'Users', 'users'],
+            ['/dashboard/admin/creator-applications.php', 'Creator Applications', 'user-plus'],
+            ['/dashboard/admin/courses.php', 'Courses', 'book-open'],
+            ['/dashboard/admin/revenue.php', 'Revenue', 'trending-up'],
+            ['/dashboard/admin/categories.php', 'Categories', 'tag'],
+            ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
+            ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
+        ],
+        'System' => [
+            ['/dashboard/admin/audit-log.php', 'Audit Log', 'scroll-text'],
+            ['/dashboard/settings.php', 'Settings', 'settings'],
+        ],
+    ],
+];
+$navGroups = $navByRole[$user['role']];
+$currentPath = current_path();
+
+// Live counts shown as badges on the relevant nav item, and a small
+// role-specific snapshot widget — so the sidebar carries real information
+// instead of sitting mostly empty below a short link list.
+$navBadges = [];
+$sidebarWidget = null;
+if ($user['role'] === 'ADMIN') {
+    $navBadges = [
+        '/dashboard/admin/creator-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'],
+        '/dashboard/admin/withdrawals.php' => (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'],
+        '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW'")['n'],
+    ];
+    $sidebarWidget = [
+        'title' => 'This Month',
+        'icon' => 'trending-up',
+        'rows' => [
+            ['label' => 'Platform Revenue', 'value' => format_money((float) (db_one("SELECT COALESCE(SUM(platform_fee),0) AS n FROM earnings WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())")['n'] ?? 0))],
+            ['label' => 'New Signups', 'value' => (string) (int) db_one("SELECT COUNT(*) AS n FROM users WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())")['n']],
+        ],
+    ];
+} elseif ($user['role'] === 'CREATOR') {
+    $sidebarWidget = [
+        'title' => 'Your Earnings',
+        'icon' => 'wallet',
+        'rows' => [
+            ['label' => 'Total Earned', 'value' => format_money((float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM earnings WHERE creator_id=?', [$user['id']])['n'] ?? 0))],
+            ['label' => 'Published Courses', 'value' => (string) (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE creator_id=? AND status='PUBLISHED'", [$user['id']])['n']],
+        ],
+    ];
+} elseif ($user['role'] === 'LEARNER') {
+    $enrollStats = db_one('SELECT COUNT(*) AS n, COALESCE(AVG(progress),0) AS avg_progress FROM enrollments WHERE user_id=?', [$user['id']]);
+    $sidebarWidget = [
+        'title' => 'Your Progress',
+        'icon' => 'graduation-cap',
+        'rows' => [
+            ['label' => 'Enrolled Courses', 'value' => (string) (int) $enrollStats['n']],
+            ['label' => 'Avg. Completion', 'value' => round((float) $enrollStats['avg_progress']) . '%'],
+        ],
+    ];
+}
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
+  <title><?= e($pageTitle ?? 'Dashboard — Obin Academy') ?></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
+  <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/dashboard.css')) ?>">
+</head>
+<body>
+<div class="dash">
+  <div class="dash-overlay" data-dash-overlay data-dash-close></div>
+  <aside class="dash-sidebar" data-dash-sidebar>
+    <div class="dash-sidebar-head">
+      <?php render_logo(); ?>
+      <button data-dash-close aria-label="Close menu">✕</button>
+    </div>
+
+    <a href="<?= e(base_url('index.php')) ?>" target="_blank" rel="noopener" class="dash-visit-site">
+      <?php dash_icon('arrow-right', 'visit-icon'); ?>
+      <span>Visit Live Site</span>
+    </a>
+
+    <div class="dash-nav-scroll">
+      <?php foreach ($navGroups as $groupLabel => $items): ?>
+        <div class="dash-nav-group">
+          <div class="dash-nav-group-label"><?= e($groupLabel) ?></div>
+          <nav class="dash-nav">
+            <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; ?>
+              <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>">
+                <?php dash_icon($icon); ?><span><?= e($label) ?></span>
+                <?php if ($badge > 0): ?><span class="nav-badge"><?= $badge ?></span><?php endif; ?>
+              </a>
+            <?php endforeach; ?>
+          </nav>
+        </div>
+      <?php endforeach; ?>
+    </div>
+
+    <?php if ($sidebarWidget): ?>
+      <div class="dash-widget">
+        <div class="dash-widget-head"><?php dash_icon($sidebarWidget['icon']); ?><?= e($sidebarWidget['title']) ?></div>
+        <?php foreach ($sidebarWidget['rows'] as $row): ?>
+          <div class="dash-widget-row"><span><?= e($row['label']) ?></span><strong><?= e($row['value']) ?></strong></div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+
+    <div class="dash-user">
+      <div class="who">
+        <div class="avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></div>
+        <div class="who-text">
+          <div class="name"><?= e($user['name']) ?></div>
+          <div class="email"><?= e($user['email']) ?></div>
+        </div>
+      </div>
+      <a href="<?= e(base_url('logout.php')) ?>" class="signout"><?php dash_icon('log-out'); ?><span>Sign Out</span></a>
+    </div>
+  </aside>
+
+  <div class="dash-main">
+    <div class="dash-topbar">
+      <?php render_logo(true); ?>
+      <button data-dash-open aria-label="Open menu">☰</button>
+    </div>
+
+    <div class="dash-content">
+      <?php
+        $flashError = flash_get('error');
+        $flashSuccess = flash_get('success');
+      ?>
+      <?php if ($flashError): ?>
+        <div class="alert alert-error" data-flash><?= e($flashError) ?></div>
+      <?php endif; ?>
+      <?php if ($flashSuccess): ?>
+        <div class="alert alert-success" data-flash><?= e($flashSuccess) ?></div>
+      <?php endif; ?>
