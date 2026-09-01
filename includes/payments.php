@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/iotec.php';
 require_once __DIR__ . '/email.php';
+require_once __DIR__ . '/coupons.php';
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -79,7 +80,10 @@ function resolve_payment_with_iotec(array $payment): array {
             : db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$payment['user_id'], $payment['course_id']]);
 
         if (!$existing) {
-            $split = split_sale((float) $payment['course_price']);
+            // The actual amount charged — reflects any coupon discount applied
+            // at checkout, and stays correct even if the course's list price
+            // changed while this payment was pending (course_price would not).
+            $split = split_sale((float) $payment['amount']);
             $expiresAt = compute_expires_at($payment['access_duration_days'] !== null ? (int) $payment['access_duration_days'] : null);
             db()->beginTransaction();
             try {
@@ -101,6 +105,7 @@ function resolve_payment_with_iotec(array $payment): array {
                 db()->rollBack();
                 throw $e;
             }
+            if (!empty($payment['coupon_id'])) redeem_coupon((int) $payment['coupon_id']);
             send_payment_receipt_email($payment, $isGuestPayment, 'Course Enrollment');
         } else {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
@@ -123,10 +128,12 @@ function resolve_payment_with_iotec(array $payment): array {
  * logged-in learner, or null plus $guestName/$guestEmail for guest checkout
  * (no account). A guest payment gets a one-time poll token (plaintext
  * returned here, only its hash stored) so the browser can keep polling
- * poll_payment_status() without a session identity.
+ * poll_payment_status() without a session identity. $couponCode is validated
+ * server-side regardless of what price the client displayed — never trust a
+ * client-computed discount for what actually gets charged.
  * @return array{paymentId?: int, pollToken?: string, error?: string}
  */
-function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null): array {
+function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null, ?string $couponCode = null): array {
     if (!validate_phone($phone)) return ['error' => 'Enter a valid phone number.'];
 
     $isGuest = $userId === null;
@@ -141,6 +148,17 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if (!$course || $course['status'] !== 'PUBLISHED') return ['error' => 'Course not found.'];
     if (!$isGuest && (int) $course['creator_id'] === $userId) return ['error' => 'Creators cannot enroll in their own course.'];
     if ((float) $course['price'] <= 0) return ['error' => 'This course is free — use the enroll button instead.'];
+
+    $finalPrice = (float) $course['price'];
+    $couponId = null;
+    $originalAmount = null;
+    if ($couponCode !== null && trim($couponCode) !== '') {
+        $couponResult = validate_coupon($couponCode, $courseId, $finalPrice);
+        if (!$couponResult['valid']) return ['error' => $couponResult['error']];
+        $couponId = (int) $couponResult['coupon']['id'];
+        $originalAmount = $finalPrice;
+        $finalPrice = $couponResult['discountedPrice'];
+    }
 
     $existingEnrollment = $isGuest
         ? db_one('SELECT id FROM enrollments WHERE course_id = ? AND guest_email = ? AND user_id IS NULL', [$courseId, $guestEmail])
@@ -179,18 +197,18 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if ($isGuest) {
         [$pollToken, $pollTokenHash] = make_access_token();
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, amount, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$guestName, $guestEmail, $pollTokenHash, $courseId, $course['price'], $phone]
+            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, amount, original_amount, coupon_id, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$guestName, $guestEmail, $pollTokenHash, $courseId, $finalPrice, $originalAmount, $couponId, $phone]
         );
     } else {
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, course_id, amount, phone, type, status) VALUES (?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$userId, $courseId, $course['price'], $phone]
+            "INSERT INTO payments (user_id, course_id, amount, original_amount, coupon_id, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$userId, $courseId, $finalPrice, $originalAmount, $couponId, $phone]
         );
     }
 
     try {
-        $result = iotec_initiate_collection((float) $course['price'], $phone, (string) $paymentId, substr("Obin Academy - {$course['title']}", 0, 100));
+        $result = iotec_initiate_collection($finalPrice, $phone, (string) $paymentId, substr("Obin Academy - {$course['title']}", 0, 100));
         db_run('UPDATE payments SET iotec_transaction_id = ? WHERE id = ?', [$result['transactionId'], $paymentId]);
     } catch (Throwable $e) {
         error_log('[iotec] initiateCollection failed for payment ' . $paymentId . ': ' . $e->getMessage());

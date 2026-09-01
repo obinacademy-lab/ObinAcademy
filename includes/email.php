@@ -106,6 +106,12 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
     $date = date('F j, Y \a\t g:i A');
     $courseUrl = base_url('courses/view.php?slug=' . $payment['course_slug']);
 
+    $discountRow = '';
+    if (!empty($payment['original_amount'])) {
+        $savings = format_money((float) $payment['original_amount'] - (float) $payment['amount']);
+        $discountRow = '<tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #16a34a;">Discount Applied</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #16a34a;">-' . $savings . '</td></tr>';
+    }
+
     resend_send($to, "Receipt for \"{$courseTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #2563eb;">
@@ -127,6 +133,7 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Date</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$date}</td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$courseTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">{$itemLabel}</span></td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Payment Method</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">Mobile Money</td></tr>
+            {$discountRow}
             <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #1e3a8a; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
           </table>
 

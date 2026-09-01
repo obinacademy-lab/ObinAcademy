@@ -69,7 +69,12 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                 <?php dash_icon('wallet'); ?>
                 <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
               </div>
-              <button class="btn btn-primary btn-block" data-action="pay">Pay <?= e(format_money($price)) ?></button>
+              <div class="coupon-row">
+                <input type="text" placeholder="Coupon code (optional)" data-coupon-input>
+                <button type="button" class="btn btn-outline btn-sm" data-action="apply-coupon">Apply</button>
+              </div>
+              <p class="coupon-message hidden" data-coupon-message></p>
+              <button class="btn btn-primary btn-block" data-action="pay">Pay <span data-price-display><?= e(format_money($price)) ?></span></button>
             </div>
             <div data-state="waiting" class="hidden pay-waiting">
               <div class="spinner"></div>
@@ -100,7 +105,12 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                 <?php dash_icon('wallet'); ?>
                 <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
               </div>
-              <button class="btn btn-primary btn-block" data-action="pay">Pay <?= e(format_money($price)) ?></button>
+              <div class="coupon-row">
+                <input type="text" placeholder="Coupon code (optional)" data-coupon-input>
+                <button type="button" class="btn btn-outline btn-sm" data-action="apply-coupon">Apply</button>
+              </div>
+              <p class="coupon-message hidden" data-coupon-message></p>
+              <button class="btn btn-primary btn-block" data-action="pay">Pay <span data-price-display><?= e(format_money($price)) ?></span></button>
             </div>
             <div data-state="waiting" class="hidden pay-waiting">
               <div class="spinner"></div>

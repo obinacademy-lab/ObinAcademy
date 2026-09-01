@@ -16,6 +16,7 @@
     // URL rather than hardcoding a root-relative path, since the app isn't
     // necessarily hosted at the domain root (e.g. /OA/public/ locally).
     const pollUrl = initiateUrl.replace(/initiate-[^/]+\.php(?:\?.*)?$/, "poll-payment.php");
+    const validateCouponUrl = initiateUrl.replace(/initiate-[^/]+\.php(?:\?.*)?$/, "validate-coupon.php");
     const successRedirect = root.dataset.successRedirect || "";
     const isGuest = root.dataset.guest === "1";
     const states = {
@@ -31,10 +32,53 @@
     const phoneInput = root.querySelector('[data-phone-input]');
     const nameInput = root.querySelector('[data-name-input]');
     const emailInput = root.querySelector('[data-email-input]');
+    const couponInput = root.querySelector('[data-coupon-input]');
+    const applyCouponBtn = root.querySelector('[data-action="apply-coupon"]');
+    const couponMessage = root.querySelector('[data-coupon-message]');
+    const priceDisplay = root.querySelector('[data-price-display]');
+    const originalPriceHtml = priceDisplay ? priceDisplay.innerHTML : "";
 
     let pollCount = 0;
     let pollTimer = null;
     let pollToken = null;
+    let appliedCouponCode = null;
+
+    function setCouponMessage(msg, isError) {
+      if (!couponMessage) return;
+      couponMessage.textContent = msg || "";
+      couponMessage.classList.toggle("hidden", !msg);
+      couponMessage.classList.toggle("error", !!isError);
+      couponMessage.classList.toggle("success", !isError && !!msg);
+    }
+
+    applyCouponBtn?.addEventListener("click", async () => {
+      const code = couponInput?.value.trim() || "";
+      if (!code) { setCouponMessage("Enter a coupon code first.", true); return; }
+      applyCouponBtn.disabled = true;
+      try {
+        const res = await fetch(validateCouponUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseId, code, csrf_token: csrfToken() }),
+        });
+        const data = await res.json();
+        if (!data.valid) {
+          appliedCouponCode = null;
+          if (priceDisplay) priceDisplay.innerHTML = originalPriceHtml;
+          setCouponMessage(data.error || "Invalid coupon.", true);
+        } else {
+          appliedCouponCode = code;
+          if (priceDisplay) {
+            priceDisplay.innerHTML = `<span class="price-strike">${originalPriceHtml}</span>${data.discountedPriceFormatted}`;
+          }
+          setCouponMessage(`Coupon applied — you saved ${data.savingsFormatted}!`, false);
+        }
+      } catch {
+        setCouponMessage("Couldn't check that coupon. Please try again.", true);
+      } finally {
+        applyCouponBtn.disabled = false;
+      }
+    });
 
     function show(state) {
       Object.values(states).forEach((el) => el && el.classList.add("hidden"));
@@ -69,6 +113,7 @@
         try {
           const body = { courseId, phone, csrf_token: csrfToken() };
           if (isGuest) { body.name = name; body.email = email; }
+          if (appliedCouponCode) body.couponCode = appliedCouponCode;
           const res = await fetch(initiateUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -3,6 +3,7 @@ require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/storage.php';
 require __DIR__ . '/../../includes/data.php';
 require __DIR__ . '/../../includes/audit.php';
+require __DIR__ . '/../../includes/coupons.php';
 $user = require_role(['CREATOR', 'ADMIN']);
 
 $courseId = (int) query_param('id');
@@ -145,6 +146,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash_set('success', 'Course restored. It\'s back in Draft — the creator can resubmit it for review.');
         }
         redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
+    } elseif ($action === 'create_coupon') {
+        $code = normalize_coupon_code((string) post('code'));
+        $discountType = post('discountType') === 'FIXED' ? 'FIXED' : 'PERCENT';
+        $discountValue = (float) post('discountValue', '0');
+        $maxUsesRaw = trim((string) post('maxUses'));
+        $maxUses = $maxUsesRaw === '' ? null : max(1, (int) $maxUsesRaw);
+        $expiresRaw = trim((string) post('expiresAt'));
+        $expiresAt = $expiresRaw === '' ? null : $expiresRaw . ' 23:59:59';
+
+        if ($code === '' || !preg_match('/^[A-Z0-9_-]{3,40}$/', $code)) {
+            flash_set('error', 'Coupon code must be 3-40 characters: letters, numbers, - or _.');
+        } elseif ($discountValue <= 0 || ($discountType === 'PERCENT' && $discountValue > 100)) {
+            flash_set('error', 'Enter a valid discount value.');
+        } else {
+            $dupe = db_one('SELECT id FROM coupons WHERE course_id = ? AND code = ?', [$courseId, $code]);
+            if ($dupe) {
+                flash_set('error', "A coupon with the code \"$code\" already exists for this course.");
+            } else {
+                db_insert(
+                    'INSERT INTO coupons (code, course_id, discount_type, discount_value, max_uses, expires_at, creator_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    [$code, $courseId, $discountType, $discountValue, $maxUses, $expiresAt, (int) $course['creator_id']]
+                );
+                note_admin_edit($actingAsAdmin, $user, 'coupon.created', $course['title'], $code);
+                flash_set('success', "Coupon \"$code\" created.");
+            }
+        }
+        redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
+    } elseif ($action === 'toggle_coupon') {
+        $coupon = db_one('SELECT * FROM coupons WHERE id = ? AND course_id = ?', [(int) post('couponId'), $courseId]);
+        if ($coupon) {
+            $newStatus = $coupon['status'] === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+            db_run('UPDATE coupons SET status = ? WHERE id = ?', [$newStatus, $coupon['id']]);
+        }
+        redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
+    } elseif ($action === 'delete_coupon') {
+        db_run('DELETE FROM coupons WHERE id = ? AND course_id = ?', [(int) post('couponId'), $courseId]);
+        redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
     }
 
     // reload course after any mutation that didn't already redirect (e.g. validation errors)
@@ -158,6 +196,7 @@ foreach ($modules as &$m) {
 }
 unset($m);
 $studentCount = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
+$coupons = db_all('SELECT * FROM coupons WHERE course_id = ? ORDER BY created_at DESC', [$courseId]);
 
 $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
 $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
@@ -249,6 +288,56 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     </div>
     <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
     <button type="submit" class="btn btn-primary">Save Changes</button>
+  </form>
+</details>
+
+<h2 class="h3" style="margin-top:36px;">Discount Codes</h2>
+<p class="muted small" style="margin-top:6px;">Create coupon codes learners can apply at checkout for this course.</p>
+
+<?php if ($coupons): ?>
+  <div class="table-wrap" style="margin-top:14px;">
+    <table>
+      <thead><tr><th>Code</th><th>Discount</th><th>Used</th><th>Expires</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <?php foreach ($coupons as $cp): ?>
+          <tr>
+            <td style="font-weight:700; font-family:monospace;"><?= e($cp['code']) ?></td>
+            <td><?= $cp['discount_type'] === 'PERCENT' ? (int) $cp['discount_value'] . '% off' : e(format_money((float) $cp['discount_value'])) . ' off' ?></td>
+            <td><?= (int) $cp['used_count'] ?><?= $cp['max_uses'] !== null ? ' / ' . (int) $cp['max_uses'] : '' ?></td>
+            <td><?= $cp['expires_at'] ? e(format_date($cp['expires_at'])) : 'Never' ?></td>
+            <td><span class="badge <?= $cp['status'] === 'ACTIVE' ? 'badge-published' : 'badge-draft' ?>"><?= $cp['status'] === 'ACTIVE' ? 'Active' : 'Inactive' ?></span></td>
+            <td class="row gap-2">
+              <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="toggle_coupon"><input type="hidden" name="couponId" value="<?= (int) $cp['id'] ?>"><button class="btn btn-outline btn-sm"><?= $cp['status'] === 'ACTIVE' ? 'Deactivate' : 'Activate' ?></button></form>
+              <form method="post" data-confirm="Delete this coupon?"><?= csrf_field() ?><input type="hidden" name="_action" value="delete_coupon"><input type="hidden" name="couponId" value="<?= (int) $cp['id'] ?>"><button style="background:none;border:none;color:var(--danger);cursor:pointer;">🗑</button></form>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+<?php endif; ?>
+
+<details class="card" style="margin-top:14px;">
+  <summary class="card-pad" style="cursor:pointer; font-weight:700; list-style:none;">+ Create Coupon</summary>
+  <form method="post" class="card-pad" style="border-top:1px solid var(--border);">
+    <?= csrf_field() ?>
+    <input type="hidden" name="_action" value="create_coupon">
+    <div class="grid sm:grid-2">
+      <div class="field"><label>Code</label><input name="code" placeholder="e.g. LAUNCH20" style="text-transform:uppercase;" required></div>
+      <div class="field">
+        <label>Discount Type</label>
+        <select name="discountType">
+          <option value="PERCENT">Percentage off</option>
+          <option value="FIXED">Fixed amount off (UGX)</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid sm:grid-2">
+      <div class="field"><label>Discount Value</label><input name="discountValue" type="number" min="1" step="1" placeholder="e.g. 20" required></div>
+      <div class="field"><label>Max Uses (optional)</label><input name="maxUses" type="number" min="1" step="1" placeholder="Unlimited"></div>
+    </div>
+    <div class="field"><label>Expires On (optional)</label><input name="expiresAt" type="date"></div>
+    <button type="submit" class="btn btn-primary">Create Coupon</button>
   </form>
 </details>
 

@@ -93,6 +93,26 @@ CREATE TABLE lessons (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
+-- code is unique per-course (not globally), so different creators can each
+-- run their own "LAUNCH20" without colliding.
+CREATE TABLE coupons (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(40) NOT NULL,
+  course_id INT NOT NULL,
+  discount_type ENUM('PERCENT','FIXED') NOT NULL DEFAULT 'PERCENT',
+  discount_value DECIMAL(12,2) NOT NULL,
+  max_uses INT NULL,
+  used_count INT NOT NULL DEFAULT 0,
+  expires_at DATETIME NULL,
+  status ENUM('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  creator_id INT NOT NULL,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_course_code (course_id, code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
 -- user_id is nullable to support guest checkout: a guest buyer has no
 -- account, so the sale is tracked by guest_name/guest_email instead, and
 -- access_token_hash (sha256 of a token emailed to them) is their only way
@@ -120,8 +140,10 @@ CREATE TABLE payments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   iotec_transaction_id VARCHAR(191) NULL UNIQUE,
   amount DECIMAL(12,2) NOT NULL,
+  original_amount DECIMAL(12,2) NULL,
   phone VARCHAR(32) NOT NULL,
   type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE') NOT NULL DEFAULT 'COURSE_PURCHASE',
+  coupon_id INT NULL,
   status ENUM('PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'PENDING',
   status_message VARCHAR(500) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -133,6 +155,7 @@ CREATE TABLE payments (
   course_id INT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE SET NULL,
   INDEX idx_payments_user_course_status (user_id, course_id, status),
   UNIQUE KEY uniq_access_token_hash (access_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
