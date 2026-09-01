@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const lessons = window.OBIN_LESSONS || [];
   const streamBase = window.OBIN_STREAM_BASE || "/stream.php";
   const updateProgressUrl = window.OBIN_UPDATE_PROGRESS_URL || "/api/update-progress.php";
+  const certificateUrlBase = window.OBIN_CERTIFICATE_URL_BASE || "/certificate.php";
   const courseId = window.OBIN_COURSE_ID;
   const isPremium = !!window.OBIN_IS_PREMIUM;
   let progress = Number(window.OBIN_INITIAL_PROGRESS) || 0;
@@ -60,17 +61,28 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => renderLesson(Number(btn.dataset.lessonIndex)));
   });
 
+  const certificateBanner = document.querySelector("[data-certificate-banner]");
+  const certificateLink = document.querySelector("[data-certificate-link]");
+
   markBtn?.addEventListener("click", async () => {
     const newProgress = total > 0 ? Math.min(100, ((activeIndex + 1) / total) * 100) : 100;
     progress = newProgress;
     if (progressFill) progressFill.style.width = `${Math.round(progress)}%`;
     if (progressLabel) progressLabel.textContent = `${Math.round(progress)}% complete`;
 
-    fetch(updateProgressUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId, progress: newProgress, csrf_token: csrfToken }),
-    }).catch(() => {});
+    try {
+      const res = await fetch(updateProgressUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId, progress: newProgress, csrf_token: csrfToken }),
+      });
+      const data = await res.json();
+      if (data.certificateCode && certificateBanner && certificateLink) {
+        certificateLink.href = `${certificateUrlBase}?code=${encodeURIComponent(data.certificateCode)}`;
+        certificateBanner.classList.remove("hidden");
+        certificateBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    } catch {}
 
     if (activeIndex + 1 < total) renderLesson(activeIndex + 1);
   });

@@ -103,6 +103,11 @@ $pageTitle = $course['title'] . ' — Learn — Obin Academy';
           <div class="expiry-banner">Access expires on <?= e(format_date($expiresAt)) ?></div>
         <?php endif; ?>
 
+        <div class="certificate-banner hidden" data-certificate-banner>
+          <span>🎉 Congratulations — you've completed this course!</span>
+          <a href="#" data-certificate-link class="btn btn-gold btn-sm" target="_blank" rel="noopener">View Your Certificate →</a>
+        </div>
+
         <div class="learn-video-wrap" data-video-wrap oncontextmenu="return false;"></div>
 
         <div class="row between wrap gap-3" style="margin-top:24px;">
@@ -148,6 +153,7 @@ $pageTitle = $course['title'] . ' — Learn — Obin Academy';
   window.OBIN_LESSONS = <?= json_encode(array_map(fn($l) => ['id' => (int) $l['id'], 'type' => $l['type'], 'title' => $l['title']], $allLessons)) ?>;
   window.OBIN_STREAM_BASE = <?= json_encode(base_url('stream.php')) ?>;
   window.OBIN_UPDATE_PROGRESS_URL = <?= json_encode(base_url('api/update-progress.php')) ?>;
+  window.OBIN_CERTIFICATE_URL_BASE = <?= json_encode(base_url('certificate.php')) ?>;
   window.OBIN_COURSE_ID = <?= (int) $course['id'] ?>;
   window.OBIN_IS_PREMIUM = <?= $isPremium ? 'true' : 'false' ?>;
   window.OBIN_INITIAL_PROGRESS = <?= json_encode($progress) ?>;

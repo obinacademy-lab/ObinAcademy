@@ -164,6 +164,21 @@ CREATE TABLE withdrawal_requests (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
+-- Issued automatically once an enrollment's progress hits 100% (see
+-- update_lesson_progress() in includes/enrollment.php). code is the public,
+-- unguessable verification handle — certificate.php?code=... is viewable by
+-- anyone holding the link, same trust model as a real paper certificate.
+CREATE TABLE certificates (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(20) NOT NULL UNIQUE,
+  enrollment_id INT NOT NULL UNIQUE,
+  course_id INT NOT NULL,
+  issued_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (enrollment_id) REFERENCES enrollments(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
 CREATE TABLE audit_log (
   id INT AUTO_INCREMENT PRIMARY KEY,
   action VARCHAR(120) NOT NULL,

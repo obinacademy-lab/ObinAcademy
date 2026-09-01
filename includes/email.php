@@ -143,6 +143,28 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
         HTML);
 }
 
+/** Sent the moment a course is completed (100% progress) — a proactive copy of the certificate.php link. */
+function send_certificate_email(string $to, string $name, string $courseTitle, string $certificateUrl): void {
+    resend_send($to, "You Earned a Certificate for \"{$courseTitle}\"! — Obin Academy", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
+          <div style="font-size: 40px;">🎓</div>
+          <h2 style="color: #1e3a8a; margin-top: 10px;">Congratulations, {$name}!</h2>
+          <p>
+            You've completed <strong>{$courseTitle}</strong> on Obin Academy. Your Certificate
+            of Completion is ready — view it, download it, or add it straight to your LinkedIn profile.
+          </p>
+          <p style="margin-top: 20px;">
+            <a href="{$certificateUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              View Your Certificate
+            </a>
+          </p>
+          <p style="color: #5b6670; font-size: 12.5px; margin-top: 24px;">
+            Or copy and paste this link into your browser:<br>{$certificateUrl}
+          </p>
+        </div>
+        HTML);
+}
+
 function send_creator_application_approved_email(string $to, string $name): void {
     $loginUrl = base_url('login.php?redirect=' . urlencode('/dashboard/creator/index.php'));
     resend_send($to, "You're Approved as an Obin Academy Creator!", <<<HTML

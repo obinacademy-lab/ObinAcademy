@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/certificates.php';
 
 /** @throws RuntimeException */
 function enroll_in_course(int $userId, int $courseId): void {
@@ -30,13 +31,23 @@ function enroll_in_course(int $userId, int $courseId): void {
     }
 }
 
-function update_lesson_progress(?int $userId, int $courseId, float $progress, ?string $guestToken = null): void {
+/** @return array|null the newly-issued (or already-existing) certificate, if this update completed the course. */
+function update_lesson_progress(?int $userId, int $courseId, float $progress, ?string $guestToken = null): ?array {
     $progress = max(0, min(100, $progress));
     if ($userId !== null) {
         db_run('UPDATE enrollments SET progress = ? WHERE user_id = ? AND course_id = ?', [$progress, $userId, $courseId]);
+        $enrollment = db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$userId, $courseId]);
     } elseif ($guestToken) {
         db_run('UPDATE enrollments SET progress = ? WHERE course_id = ? AND access_token_hash = ? AND user_id IS NULL', [$progress, $courseId, hash('sha256', $guestToken)]);
+        $enrollment = db_one('SELECT id FROM enrollments WHERE course_id = ? AND access_token_hash = ? AND user_id IS NULL', [$courseId, hash('sha256', $guestToken)]);
+    } else {
+        return null;
     }
+
+    if ($enrollment && $progress >= 100) {
+        return issue_certificate_if_eligible((int) $enrollment['id']);
+    }
+    return null;
 }
 
 /**

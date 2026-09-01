@@ -3,9 +3,10 @@ require __DIR__ . '/../../includes/bootstrap.php';
 $user = require_login();
 
 $enrollments = db_all('
-    SELECT e.*, c.title, c.slug, c.thumbnail_url,
+    SELECT e.*, c.title, c.slug, c.thumbnail_url, cert.code AS certificate_code,
       (SELECT COUNT(*) FROM lessons l JOIN modules m ON m.id = l.module_id WHERE m.course_id = c.id) AS lesson_count
     FROM enrollments e JOIN courses c ON c.id = e.course_id
+    LEFT JOIN certificates cert ON cert.enrollment_id = e.id
     WHERE e.user_id = ? ORDER BY e.enrolled_at DESC
 ', [$user['id']]);
 
@@ -41,6 +42,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <a href="<?= e(base_url('learn.php?slug=' . $en['slug'])) ?>" class="btn btn-primary btn-block" style="margin-top:14px;">
             <?= (float) $en['progress'] > 0 ? '▶ Continue Learning' : '▶ Start Learning' ?>
           </a>
+          <?php if ($en['certificate_code']): ?>
+            <a href="<?= e(base_url('certificate.php?code=' . $en['certificate_code'])) ?>" target="_blank" rel="noopener" class="btn btn-gold btn-block" style="margin-top:8px;">🎓 View Certificate</a>
+          <?php endif; ?>
         </div>
       </div>
     <?php endforeach; ?>

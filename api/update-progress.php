@@ -12,5 +12,5 @@ $guestToken = $user ? null : ($_SESSION['guest_course_tokens'][$courseId] ?? nul
 
 if (!$user && !$guestToken) json_response(['error' => 'Not authorized.'], 401);
 
-update_lesson_progress($user ? (int) $user['id'] : null, $courseId, $progress, $guestToken);
-json_response(['ok' => true]);
+$certificate = update_lesson_progress($user ? (int) $user['id'] : null, $courseId, $progress, $guestToken);
+json_response(['ok' => true, 'certificateCode' => $certificate['code'] ?? null]);
