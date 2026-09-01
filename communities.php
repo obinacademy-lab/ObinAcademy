@@ -21,8 +21,8 @@ require __DIR__ . '/includes/header.php';
     <span class="pill">Find Your Creator</span>
     <h1 style="text-align:center;">Communities</h1>
     <p class="summary" style="margin-left:auto; margin-right:auto; text-align:center;">
-      Every creator on Obin Academy has their own community — all their courses in one place.
-      Browse creators instead of scattered course listings, and find the one whose teaching fits you best.
+      Discover creator Schools where all their courses are organized in one place, making it
+      easier to find the right creator and learning path for you.
     </p>
     <form method="get" class="search-pill browse-search" style="margin-top:26px;">
       <?php dash_icon('search'); ?>
