@@ -7,6 +7,7 @@ $cert = $code ? get_certificate_by_code($code) : null;
 if (!$cert) {
     http_response_code(404);
     $pageTitle = 'Certificate Not Found — Obin Academy';
+    $noindex = true;
     require __DIR__ . '/includes/header.php';
     echo '<div class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Certificate not found</h1><p class="muted" style="margin-top:10px;">Check the link and try again.</p></div>';
     require __DIR__ . '/includes/footer.php';
@@ -35,6 +36,7 @@ $pageTitle = $cert['course_title'] . ' — Certificate — Obin Academy';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, follow">
   <title><?= e($pageTitle) ?></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

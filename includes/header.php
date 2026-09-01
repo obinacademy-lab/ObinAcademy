@@ -1,6 +1,11 @@
 <?php
 /**
- * Shared page shell. Expects (optionally) $pageTitle before include.
+ * Shared page shell. Expects (optionally) before include:
+ *   $pageTitle       — <title> and og:title (falls back to the site default)
+ *   $pageDescription — meta description and og:description (falls back to the site default)
+ *   $pageImage       — absolute or base_url()-relative image for social share previews (falls back to a default photo)
+ *   $pageType        — og:type, e.g. 'website' (default) or 'article'
+ *   $noindex         — set true on pages that shouldn't be indexed (defaults false)
  * Usage: require __DIR__ . '/../includes/header.php';
  */
 $user = current_user();
@@ -13,13 +18,38 @@ $navLinks = [
     '/contact.php' => 'Contact',
 ];
 $currentPath = current_path();
+
+$seoTitle = $pageTitle ?? 'Obin Academy — Learn New Skills, Teach What You Know';
+$seoDescription = $pageDescription ?? 'Obin Academy is East Africa\'s learning marketplace — practical courses in finance, tech, business and more, taught by real creators and paid for instantly with MTN or Airtel Mobile Money.';
+$seoImage = isset($pageImage) ? (str_starts_with($pageImage, 'http') ? $pageImage : base_url($pageImage)) : base_url('assets/img/hero-couch-learner.jpg');
+$seoType = $pageType ?? 'website';
+$canonicalUrl = base_url(ltrim($currentPath, '/'));
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
-  <title><?= e($pageTitle ?? 'Obin Academy — Learn New Skills, Teach What You Know') ?></title>
+  <title><?= e($seoTitle) ?></title>
+  <meta name="description" content="<?= e($seoDescription) ?>">
+  <link rel="canonical" href="<?= e($canonicalUrl) ?>">
+  <?php if (!empty($noindex)): ?><meta name="robots" content="noindex, follow"><?php endif; ?>
+
+  <meta property="og:site_name" content="Obin Academy">
+  <meta property="og:type" content="<?= e($seoType) ?>">
+  <meta property="og:title" content="<?= e($seoTitle) ?>">
+  <meta property="og:description" content="<?= e($seoDescription) ?>">
+  <meta property="og:image" content="<?= e($seoImage) ?>">
+  <meta property="og:url" content="<?= e($canonicalUrl) ?>">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<?= e($seoTitle) ?>">
+  <meta name="twitter:description" content="<?= e($seoDescription) ?>">
+  <meta name="twitter:image" content="<?= e($seoImage) ?>">
+
+  <?php if (!empty($structuredData)): ?>
+    <script type="application/ld+json"><?= json_encode($structuredData, JSON_UNESCAPED_SLASHES) ?></script>
+  <?php endif; ?>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">

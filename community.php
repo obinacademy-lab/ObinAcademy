@@ -8,6 +8,7 @@ $creator = get_creator_profile($creatorId);
 if (!$creator) {
     http_response_code(404);
     $pageTitle = 'Community Not Found — Obin Academy';
+    $noindex = true;
     require __DIR__ . '/includes/header.php';
     echo '<div class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Community not found</h1><p class="muted" style="margin-top:10px;">This creator doesn\'t have a published community yet.</p></div>';
     require __DIR__ . '/includes/footer.php';
@@ -32,6 +33,10 @@ $socialIconPaths = [
 ];
 
 $pageTitle = $creator['name'] . "'s Community — Obin Academy";
+$pageDescription = trim((string) ($creator['headline'] ?? '')) !== ''
+    ? $creator['name'] . ' on Obin Academy — ' . $creator['headline']
+    : $creator['name'] . "'s courses on Obin Academy — " . (int) $creator['course_count'] . ' course' . ((int) $creator['course_count'] === 1 ? '' : 's') . ' in one place.';
+if (!empty($creator['avatar_url'])) $pageImage = asset_src($creator['avatar_url']);
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero">

@@ -66,6 +66,48 @@ $socialIconPaths = [
 $statusLabel = ['DRAFT' => 'a draft', 'PENDING_REVIEW' => 'pending admin review', 'REJECTED' => 'rejected and needs changes'];
 
 $pageTitle = $course['title'] . ' — Obin Academy';
+$pageDescription = mb_strimwidth(preg_replace('/\s+/', ' ', trim($course['summary'])), 0, 160, '…');
+if (!empty($course['thumbnail_url'])) $pageImage = asset_src($course['thumbnail_url']);
+$pageType = 'website';
+$noindex = $course['status'] !== 'PUBLISHED';
+
+$structuredData = [
+    '@context' => 'https://schema.org',
+    '@type' => 'Course',
+    'name' => $course['title'],
+    'description' => $pageDescription,
+    'provider' => [
+        '@type' => 'Organization',
+        'name' => 'Obin Academy',
+        'sameAs' => base_url('index.php'),
+    ],
+    'url' => base_url('courses/view.php?slug=' . $course['slug']),
+];
+if (!empty($course['thumbnail_url'])) $structuredData['image'] = asset_src($course['thumbnail_url']);
+if ((float) $course['price'] > 0) {
+    $structuredData['offers'] = [
+        '@type' => 'Offer',
+        'price' => number_format((float) ($course['sale_price'] ?? $course['price']), 2, '.', ''),
+        'priceCurrency' => 'UGX',
+        'url' => base_url('courses/view.php?slug=' . $course['slug']),
+        'availability' => 'https://schema.org/InStock',
+    ];
+}
+if ($reviewCount > 0) {
+    $structuredData['aggregateRating'] = [
+        '@type' => 'AggregateRating',
+        'ratingValue' => number_format($avgRating, 1),
+        'reviewCount' => $reviewCount,
+    ];
+}
+if (!empty($course['creator_name'])) {
+    $structuredData['hasCourseInstance'] = [
+        '@type' => 'CourseInstance',
+        'courseMode' => 'online',
+        'instructor' => ['@type' => 'Person', 'name' => $course['creator_name']],
+    ];
+}
+
 require __DIR__ . '/../includes/header.php';
 ?>
 

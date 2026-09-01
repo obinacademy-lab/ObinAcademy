@@ -106,6 +106,7 @@ $faqs = [
 ];
 
 $pageTitle = 'Contact & Support — Obin Academy';
+$pageDescription = "Get in touch with Obin Academy — support for learners, creators, and businesses. Real human support, replies within 24 hours.";
 require __DIR__ . '/includes/header.php';
 ?>
 <!-- 1. Hero -->

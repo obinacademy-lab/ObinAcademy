@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $myApplication = $user ? db_one('SELECT * FROM creator_applications WHERE user_id = ?', [$user['id']]) : null;
 
 $pageTitle = 'Become a Creator — Obin Academy';
+$pageDescription = 'Turn your knowledge into income. Apply to become a creator on Obin Academy — publish courses, set your own price, and keep 90% of every sale, paid instantly to mobile money.';
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero">

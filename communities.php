@@ -13,6 +13,8 @@ if ($q !== '') {
 }
 
 $pageTitle = 'Communities — Obin Academy';
+$pageDescription = 'Discover creator Schools on Obin Academy — browse creators instead of scattered courses, and find the right one for you.';
+$noindex = $q !== '';
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero">

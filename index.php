@@ -57,6 +57,28 @@ $homeFaqs = [
 ];
 
 $pageTitle = 'Obin Academy — Learn New Skills, Teach What You Know';
+$pageDescription = "Learn practical skills in Finance, Tech, Business and more from East Africa's best creators — or turn your own expertise into courses. Pay instantly with MTN or Airtel Mobile Money.";
+$structuredData = [
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'Organization',
+            'name' => 'Obin Academy',
+            'url' => base_url('index.php'),
+            'logo' => base_url('assets/img/hero-couch-learner.jpg'),
+        ],
+        [
+            '@type' => 'WebSite',
+            'name' => 'Obin Academy',
+            'url' => base_url('index.php'),
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => base_url('courses/index.php') . '?q={search_term_string}',
+                'query-input' => 'required name=search_term_string',
+            ],
+        ],
+    ],
+];
 require __DIR__ . '/includes/header.php';
 ?>
 

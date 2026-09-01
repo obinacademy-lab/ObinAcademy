@@ -20,6 +20,7 @@ $industries = [
 ];
 
 $pageTitle = 'Browse All Skills — Obin Academy';
+$pageDescription = 'Every skill category on Obin Academy — from Finance and AI to Agriculture and Design. Find the right courses for where you want to go.';
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero">

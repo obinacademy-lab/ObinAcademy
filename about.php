@@ -48,6 +48,7 @@ $industries = [
 ];
 
 $pageTitle = 'About Us — Obin Academy';
+$pageDescription = "Obin Academy is a modern online learning marketplace built to empower people with practical, income-generating skills — connecting learners with real creators across Africa and beyond.";
 require __DIR__ . '/includes/header.php';
 ?>
 <!-- 1. Hero -->

@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $testimonials = get_published_testimonials();
 
 $pageTitle = 'Stories — Obin Academy';
+$pageDescription = 'Real stories from learners and creators building real skills — and real income — on Obin Academy.';
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero">

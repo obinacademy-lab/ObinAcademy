@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /login.php
+Disallow: /signup.php
+Disallow: /forgot-password.php
+Disallow: /reset-password.php
+Disallow: /access.php
+Disallow: /logout.php
+Disallow: /certificate.php
+Disallow: /stream.php
+
+Sitemap: https://obinacademy.site/sitemap.xml.php
