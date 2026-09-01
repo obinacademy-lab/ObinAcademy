@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/iotec.php';
 require_once __DIR__ . '/email.php';
-require_once __DIR__ . '/coupons.php';
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -80,8 +79,8 @@ function resolve_payment_with_iotec(array $payment): array {
             : db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$payment['user_id'], $payment['course_id']]);
 
         if (!$existing) {
-            // The actual amount charged — reflects any coupon discount applied
-            // at checkout, and stays correct even if the course's list price
+            // The actual amount charged — reflects any sale price active at
+            // checkout, and stays correct even if the course's list price
             // changed while this payment was pending (course_price would not).
             $split = split_sale((float) $payment['amount']);
             $expiresAt = compute_expires_at($payment['access_duration_days'] !== null ? (int) $payment['access_duration_days'] : null);
@@ -105,7 +104,6 @@ function resolve_payment_with_iotec(array $payment): array {
                 db()->rollBack();
                 throw $e;
             }
-            if (!empty($payment['coupon_id'])) redeem_coupon((int) $payment['coupon_id']);
             send_payment_receipt_email($payment, $isGuestPayment, 'Course Enrollment');
         } else {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
@@ -128,12 +126,10 @@ function resolve_payment_with_iotec(array $payment): array {
  * logged-in learner, or null plus $guestName/$guestEmail for guest checkout
  * (no account). A guest payment gets a one-time poll token (plaintext
  * returned here, only its hash stored) so the browser can keep polling
- * poll_payment_status() without a session identity. $couponCode is validated
- * server-side regardless of what price the client displayed — never trust a
- * client-computed discount for what actually gets charged.
+ * poll_payment_status() without a session identity.
  * @return array{paymentId?: int, pollToken?: string, error?: string}
  */
-function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null, ?string $couponCode = null): array {
+function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null): array {
     if (!validate_phone($phone)) return ['error' => 'Enter a valid phone number.'];
 
     $isGuest = $userId === null;
@@ -149,15 +145,15 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if (!$isGuest && (int) $course['creator_id'] === $userId) return ['error' => 'Creators cannot enroll in their own course.'];
     if ((float) $course['price'] <= 0) return ['error' => 'This course is free — use the enroll button instead.'];
 
+    // A sale price only takes effect if it's actually a discount — a stale
+    // sale_price left >= the current price (e.g. after the creator lowered
+    // price directly) is silently ignored rather than overcharging or
+    // no-oping strangely.
     $finalPrice = (float) $course['price'];
-    $couponId = null;
     $originalAmount = null;
-    if ($couponCode !== null && trim($couponCode) !== '') {
-        $couponResult = validate_coupon($couponCode, $courseId, $finalPrice);
-        if (!$couponResult['valid']) return ['error' => $couponResult['error']];
-        $couponId = (int) $couponResult['coupon']['id'];
+    if ($course['sale_price'] !== null && (float) $course['sale_price'] > 0 && (float) $course['sale_price'] < $finalPrice) {
         $originalAmount = $finalPrice;
-        $finalPrice = $couponResult['discountedPrice'];
+        $finalPrice = (float) $course['sale_price'];
     }
 
     $existingEnrollment = $isGuest
@@ -197,13 +193,13 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if ($isGuest) {
         [$pollToken, $pollTokenHash] = make_access_token();
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, amount, original_amount, coupon_id, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$guestName, $guestEmail, $pollTokenHash, $courseId, $finalPrice, $originalAmount, $couponId, $phone]
+            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, amount, original_amount, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$guestName, $guestEmail, $pollTokenHash, $courseId, $finalPrice, $originalAmount, $phone]
         );
     } else {
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, course_id, amount, original_amount, coupon_id, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$userId, $courseId, $finalPrice, $originalAmount, $couponId, $phone]
+            "INSERT INTO payments (user_id, course_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$userId, $courseId, $finalPrice, $originalAmount, $phone]
         );
     }
 

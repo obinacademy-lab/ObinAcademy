@@ -6,6 +6,7 @@ function render_course_card(array $c): void {
     $reviewCount = (int) $c['review_count'];
     $isBestseller = $reviewCount > 0 && $rating >= 4.5;
     $isNew = $reviewCount === 0;
+    $hasSale = !empty($c['sale_price']) && (float) $c['sale_price'] > 0 && (float) $c['sale_price'] < (float) $c['price'];
     ?>
     <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="course-card">
       <div class="thumb">
@@ -17,6 +18,8 @@ function render_course_card(array $c): void {
         <span class="cat-pill"><?= e($c['category_name']) ?></span>
         <?php if ($isBestseller): ?>
           <span class="badge-pill badge-bestseller">🏆 Bestseller</span>
+        <?php elseif ($hasSale): ?>
+          <span class="badge-pill badge-sale">🔥 Sale</span>
         <?php elseif ($isNew): ?>
           <span class="badge-pill badge-new">✨ New</span>
         <?php endif; ?>
@@ -49,7 +52,9 @@ function render_course_card(array $c): void {
 
         <div class="price-row">
           <span class="price">
-            <?php if ((float) $c['price'] > 0): ?>
+            <?php if ($hasSale): ?>
+              <span class="price-strike">UGX <?= number_format((float) $c['price']) ?></span><span class="currency">UGX</span><?= number_format((float) $c['sale_price']) ?>
+            <?php elseif ((float) $c['price'] > 0): ?>
               <span class="currency">UGX</span><?= number_format((float) $c['price']) ?>
             <?php else: ?>
               Free
