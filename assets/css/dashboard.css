@@ -121,7 +121,7 @@
 }
 
 .stat-card {
-  border-radius: var(--radius); border: 1px solid var(--border); background: #fff; padding: 20px;
+  border-radius: var(--radius); border: 2px solid var(--border); background: #fff; padding: 20px;
   container-type: inline-size;
   transition: background-color 0.35s ease, border-color 0.35s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -133,10 +133,10 @@
 .stat-card .label { color: var(--muted); font-size: 13px; }
 .stat-card .sub { color: var(--muted); opacity: 0.7; font-size: 10.5px; margin-top: 2px; }
 .stat-card[data-hoverable="true"]:hover {
-  background-color: color-mix(in srgb, var(--hover-color) 8%, white);
+  background-color: color-mix(in srgb, var(--hover-color) 6%, white);
   border-color: var(--hover-color);
   transform: translateY(-3px);
-  box-shadow: 0 12px 24px -14px color-mix(in srgb, var(--hover-color) 55%, transparent);
+  box-shadow: 0 8px 0 0 color-mix(in srgb, var(--hover-color) 55%, var(--border-strong));
 }
 .stat-card[data-hoverable="true"]:hover .icon { background-color: color-mix(in srgb, var(--hover-color) 20%, white); color: var(--hover-color); }
 a.stat-card-link { text-decoration: none; color: inherit; display: block; }
@@ -155,7 +155,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .growth-side { display: flex; flex-direction: column; gap: 20px; }
 @media (min-width: 900px) { .growth-side { justify-content: space-between; } }
 
-.chart-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); }
+.chart-card { background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: none; }
 .chart-card-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .chart-trend { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 6px 12px; border-radius: var(--radius-full); flex-shrink: 0; white-space: nowrap; }
 .chart-trend svg { width: 14px; height: 14px; }
@@ -211,11 +211,11 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 @media (min-width: 768px) { .quick-actions { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); } }
 .quick-action {
   display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  background: #fff; border: 2px solid var(--border); border-radius: var(--radius);
   text-decoration: none; color: inherit;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.quick-action:hover { transform: translateY(-3px); border-color: transparent; box-shadow: 0 14px 28px -16px rgba(20,24,27,0.22); }
+.quick-action:hover { transform: translateY(-3px); border-color: var(--tint, var(--ink)); box-shadow: 0 8px 0 0 color-mix(in srgb, var(--tint, var(--accent)) 45%, var(--border-strong)); }
 .qa-icon { width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--tint) 15%, white); color: var(--tint); }
 .qa-icon svg { width: 18px; height: 18px; }
 .qa-text { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--ink); }
@@ -230,7 +230,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .all-caught-up svg { width: 22px; height: 22px; flex-shrink: 0; }
 
 /* ---------- activity feed ---------- */
-.activity-feed { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 6px 18px; }
+.activity-feed { background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 6px 18px; }
 .activity-row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
 .activity-row:last-child { border-bottom: none; }
 .activity-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -241,7 +241,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .activity-body { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.5; }
 
 /* ---------- leaderboard ---------- */
-.leaderboard { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 6px 18px; }
+.leaderboard { background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 6px 18px; }
 .leaderboard-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .leaderboard-row:last-child { border-bottom: none; }
 .rank { width: 22px; flex-shrink: 0; text-align: center; font-weight: 800; font-size: 13px; color: var(--muted); display: flex; align-items: center; justify-content: center; }
@@ -252,7 +252,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 
 /* ---------- users page: mini stats, avatars, role select, actions ---------- */
 .mini-stat {
-  background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px;
+  background: #fff; border: 2px solid var(--border); border-radius: var(--radius); padding: 14px 16px;
   border-top: 3px solid var(--tint, var(--accent));
 }
 .mini-stat-value { display: block; font-size: 22px; font-weight: 800; color: var(--ink); }
@@ -273,7 +273,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .icon-btn-danger {
   display: inline-flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; border-radius: 10px;
-  background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer;
+  background: transparent; border: 2px solid var(--border); color: var(--muted); cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .icon-btn-danger svg { width: 15px; height: 15px; }
@@ -283,11 +283,11 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 
 /* ---------- creator application review cards ---------- */
 .application-card {
-  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
-  padding: 20px; box-shadow: var(--shadow);
+  background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg);
+  padding: 20px; box-shadow: none;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.application-card:hover { box-shadow: 0 16px 32px -20px rgba(20,24,27,0.2); }
+.application-card:hover { border-color: var(--ink); box-shadow: var(--shadow-pop); }
 .application-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
 .waiting-badge {
