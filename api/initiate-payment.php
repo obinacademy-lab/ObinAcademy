@@ -1,4 +1,9 @@
 <?php
+// iotec calls (token + collection) can each take up to 15s; guard our own
+// budget explicitly rather than depend on the host's ini default, which on
+// Hostinger's PHP-FPM/LSAPI may ignore public/.htaccess's max_execution_time.
+set_time_limit(45);
+
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/payments.php';
 

@@ -20,7 +20,7 @@ function iotec_http(string $method, string $url, array $headers = [], ?string $b
         CURLOPT_HTTPHEADER => $headers,
         CURLOPT_POSTFIELDS => $body,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 30,
+        CURLOPT_TIMEOUT => 15,
     ]);
     $responseBody = curl_exec($ch);
     if ($responseBody === false) {
