@@ -105,7 +105,7 @@ if ($user['role'] === 'ADMIN') {
   <div class="dash-overlay" data-dash-overlay data-dash-close></div>
   <aside class="dash-sidebar" data-dash-sidebar>
     <div class="dash-sidebar-head">
-      <?php render_logo(); ?>
+      <?php render_logo(true); ?>
       <button data-dash-close aria-label="Close menu">✕</button>
     </div>
 
@@ -138,23 +138,41 @@ if ($user['role'] === 'ADMIN') {
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
-
-    <div class="dash-user">
-      <div class="who">
-        <div class="avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></div>
-        <div class="who-text">
-          <div class="name"><?= e($user['name']) ?></div>
-          <div class="email"><?= e($user['email']) ?></div>
-        </div>
-      </div>
-      <a href="<?= e(base_url('logout.php')) ?>" class="signout"><?php dash_icon('log-out'); ?><span>Sign Out</span></a>
-    </div>
   </aside>
 
   <div class="dash-main">
-    <div class="dash-topbar">
-      <?php render_logo(true); ?>
-      <button data-dash-open aria-label="Open menu">☰</button>
+    <div class="dash-header">
+      <div class="dash-header-left">
+        <button data-dash-open class="dash-hamburger" aria-label="Open menu">☰</button>
+        <?php render_logo(true, 'dash-header-logo'); ?>
+        <div class="dash-search">
+          <?php dash_icon('search'); ?>
+          <input type="text" placeholder="Search learners, courses, payments…">
+        </div>
+      </div>
+      <div class="dash-header-right">
+        <button class="dash-icon-btn" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <div class="account-menu dash-account">
+          <button class="dash-who">
+            <span class="avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></span>
+            <span class="who-text">
+              <span class="name"><?= e($user['name']) ?></span>
+              <span class="role"><?= e(ucfirst(strtolower($user['role']))) ?></span>
+            </span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+          </button>
+          <div class="account-dropdown">
+            <div class="account-dropdown-head">
+              <div class="name"><?= e($user['name']) ?></div>
+              <div class="email"><?= e($user['email']) ?></div>
+            </div>
+            <a href="<?= e(base_url('dashboard/settings.php')) ?>"><?php dash_icon('settings'); ?>Settings</a>
+            <a href="<?= e(base_url('logout.php')) ?>" class="danger"><?php dash_icon('log-out'); ?>Sign Out</a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="dash-content">

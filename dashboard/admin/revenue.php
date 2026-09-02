@@ -37,6 +37,8 @@ foreach ($collectionsSeries as $i => $row) {
     $points[] = [$x, $y];
 }
 $linePath = smooth_svg_path($points);
+// Same curve, closed down to the baseline — the gradient-filled area under the line.
+$areaPath = $points ? $linePath . sprintf(' L%.2f,%d L0,%d Z', end($points)[0], $chartH, $chartH) : '';
 $labelIdxs = $n > 1 ? [0, (int) round(($n - 1) * 0.2), (int) round(($n - 1) * 0.4), (int) round(($n - 1) * 0.6), (int) round(($n - 1) * 0.8), $n - 1] : [0];
 
 $pageTitle = 'Revenue — Admin — Obin Academy';
@@ -118,9 +120,16 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
   <div class="chart-wrap">
     <svg viewBox="0 0 <?= $chartW ?> <?= $chartH ?>" preserveAspectRatio="none" class="revenue-chart">
+      <defs>
+        <linearGradient id="dashAreaFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
       <?php for ($g = 1; $g <= 3; $g++): $gy = $padTop + ($chartH - $padTop - $padBottom) * ($g / 4); ?>
         <line x1="0" y1="<?= round($gy, 1) ?>" x2="<?= $chartW ?>" y2="<?= round($gy, 1) ?>" class="chart-gridline"></line>
       <?php endfor; ?>
+      <path d="<?= e($areaPath) ?>" class="chart-area-blue"></path>
       <path d="<?= e($linePath) ?>" class="chart-line chart-line-blue"></path>
       <?php foreach ($points as $i => [$px, $py]): ?>
         <circle cx="<?= round($px, 1) ?>" cy="<?= round($py, 1) ?>" class="chart-point">
