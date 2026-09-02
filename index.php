@@ -83,11 +83,6 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <section class="hero">
-  <div class="hero-slides" data-hero-slides data-interval="5000">
-    <?php foreach ($heroSlides as $i => [$file, $alt]): ?>
-      <img src="<?= e(base_url('assets/img/' . $file)) ?>" alt="<?= e($alt) ?>" class="<?= $i === 0 ? 'active' : '' ?>" <?= $i === 0 ? '' : 'loading="lazy"' ?>>
-    <?php endforeach; ?>
-  </div>
   <div class="container">
     <div class="hero-row">
       <div class="hero-inner">
@@ -101,26 +96,34 @@ require __DIR__ . '/includes/header.php';
         </div>
       </div>
 
-      <div class="hero-card">
-        <span class="hero-card-title"><span class="live-dot"></span>Platform Snapshot</span>
-        <div class="hero-card-stats">
-          <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</div><div class="hc-label">Courses</div></div>
-          <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</div><div class="hc-label">Learners</div></div>
-          <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</div><div class="hc-label">Creators</div></div>
+      <div class="hero-visual">
+        <div class="hero-photo" data-hero-slides data-interval="5000">
+          <?php foreach ($heroSlides as $i => [$file, $alt]): ?>
+            <img src="<?= e(base_url('assets/img/' . $file)) ?>" alt="<?= e($alt) ?>" class="<?= $i === 0 ? 'active' : '' ?>" <?= $i === 0 ? '' : 'loading="lazy"' ?>>
+          <?php endforeach; ?>
         </div>
-        <hr>
-        <?php if ($rating['count'] > 0): ?>
-          <div class="hero-card-rating">
-            <span class="stars"><?= str_repeat('★', (int) round($rating['avg'])) . str_repeat('☆', 5 - (int) round($rating['avg'])) ?></span>
-            <?= number_format($rating['avg'], 1) ?>/5 average rating
+
+        <div class="hero-card">
+          <span class="hero-card-title"><span class="live-dot"></span>Platform Snapshot</span>
+          <div class="hero-card-stats">
+            <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</div><div class="hc-label">Courses</div></div>
+            <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</div><div class="hc-label">Learners</div></div>
+            <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</div><div class="hc-label">Creators</div></div>
           </div>
-        <?php endif; ?>
-        <?php if ($spotlightQuote): ?>
-          <div class="hero-card-quote">
-            <p>&ldquo;<?= e(mb_strimwidth($spotlightQuote['quote'], 0, 110, '…')) ?>&rdquo;</p>
-            <span class="who"><?= e($spotlightQuote['author_name']) ?></span>
-          </div>
-        <?php endif; ?>
+          <hr>
+          <?php if ($rating['count'] > 0): ?>
+            <div class="hero-card-rating">
+              <span class="stars"><?= str_repeat('★', (int) round($rating['avg'])) . str_repeat('☆', 5 - (int) round($rating['avg'])) ?></span>
+              <?= number_format($rating['avg'], 1) ?>/5 average rating
+            </div>
+          <?php endif; ?>
+          <?php if ($spotlightQuote): ?>
+            <div class="hero-card-quote">
+              <p>&ldquo;<?= e(mb_strimwidth($spotlightQuote['quote'], 0, 110, '…')) ?>&rdquo;</p>
+              <span class="who"><?= e($spotlightQuote['author_name']) ?></span>
+            </div>
+          <?php endif; ?>
+        </div>
       </div>
     </div>
   </div>
