@@ -231,6 +231,21 @@ CREATE TABLE password_reset_tokens (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ---------------------------------------------------------------------------
+-- One row per visitor per calendar day (not per pageview) — the first
+-- pageview of the day wins and records that day's referrer/landing page, so
+-- repeat browsing within the same day doesn't inflate the visit count.
+CREATE TABLE page_visits (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  visitor_id VARCHAR(32) NOT NULL,
+  visit_date DATE NOT NULL,
+  referrer_source ENUM('google','social','direct','other') NOT NULL DEFAULT 'direct',
+  landing_path VARCHAR(500) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_visitor_day (visitor_id, visit_date),
+  INDEX idx_visit_date (visit_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ---------------------------------------------------------------------------
