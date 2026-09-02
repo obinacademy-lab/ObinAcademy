@@ -322,8 +322,8 @@ require __DIR__ . '/includes/header.php';
           <div class="row gap-3" style="align-items:flex-start;">
             <span class="icon-badge" style="--tint:#2563eb; width:42px; height:42px; font-size:18px;"><?= ci('map-pin') ?></span>
             <div>
-              <div style="font-weight:700; color:var(--ink);">Address</div>
-              <p class="muted" style="margin-top:2px;">Plot 14, Kampala Road<br>Kampala, Uganda</p>
+              <div style="font-weight:700; color:var(--ink);">Location</div>
+              <p class="muted" style="margin-top:2px;">Kampala, Uganda</p>
             </div>
           </div>
           <div class="row gap-3" style="align-items:flex-start;">
@@ -337,7 +337,7 @@ require __DIR__ . '/includes/header.php';
         <a href="https://www.google.com/maps/search/?api=1&query=Kampala%2C+Uganda" target="_blank" rel="noopener noreferrer" class="btn btn-dark" style="margin-top:26px;"><?= ci('navigation') ?> Get Directions</a>
       </div>
       <div class="map-placeholder reveal reveal-delay-2">
-        <span class="pin"><?= ci('map-pin') ?></span>
+        <iframe src="https://www.google.com/maps?q=Kampala,+Uganda&output=embed" title="Map showing Kampala, Uganda" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
     </div>
   </div>
