@@ -198,7 +198,7 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
         );
     } else {
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, course_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            "INSERT INTO payments (user_id, course_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
             [$userId, $courseId, $finalPrice, $originalAmount, $phone]
         );
     }
