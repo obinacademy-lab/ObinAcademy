@@ -132,10 +132,13 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <path d="<?= e($areaPath) ?>" class="chart-area-blue"></path>
       <path d="<?= e($linePath) ?>" class="chart-line chart-line-blue"></path>
       <?php foreach ($points as $i => [$px, $py]): ?>
-        <circle cx="<?= round($px, 1) ?>" cy="<?= round($py, 1) ?>" class="chart-point">
-          <title><?= e(format_date($collectionsSeries[$i]['date'] . ' 00:00:00')) ?>: <?= e(format_money($collectionsSeries[$i]['collected'])) ?></title>
-        </circle>
+        <circle cx="<?= round($px, 1) ?>" cy="<?= round($py, 1) ?>" class="chart-point" tabindex="0"
+          data-chart-label="<?= e(format_date($collectionsSeries[$i]['date'] . ' 00:00:00')) ?>"
+          data-chart-value="<?= e(format_money($collectionsSeries[$i]['collected'])) ?>"></circle>
       <?php endforeach; ?>
+      <?php if ($points): [$lx, $ly] = end($points); ?>
+        <circle cx="<?= round($lx, 1) ?>" cy="<?= round($ly, 1) ?>" r="5" class="chart-end-dot chart-end-dot-blue" style="pointer-events:none;"></circle>
+      <?php endif; ?>
     </svg>
     <div class="chart-x-labels">
       <?php foreach ($labelIdxs as $idx): ?>

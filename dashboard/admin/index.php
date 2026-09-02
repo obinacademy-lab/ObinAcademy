@@ -172,10 +172,13 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <?php endfor; ?>
         <path d="<?= e($areaPath) ?>" class="chart-area"></path>
         <path d="<?= e($linePath) ?>" class="chart-line"></path>
+        <?php foreach ($points as $i => [$px, $py]): ?>
+          <circle cx="<?= round($px, 1) ?>" cy="<?= round($py, 1) ?>" class="chart-point-gold" tabindex="0"
+            data-chart-label="<?= e(format_date($revenueSeries[$i]['date'] . ' 00:00:00')) ?>"
+            data-chart-value="<?= e(format_money($revenueSeries[$i]['cumulative'])) ?>"></circle>
+        <?php endforeach; ?>
         <?php if ($points): [$lx, $ly] = end($points); ?>
-          <circle cx="<?= round($lx, 1) ?>" cy="<?= round($ly, 1) ?>" r="5" class="chart-end-dot">
-            <title><?= e(format_money($revenueTotal)) ?> total as of today</title>
-          </circle>
+          <circle cx="<?= round($lx, 1) ?>" cy="<?= round($ly, 1) ?>" r="5" class="chart-end-dot" style="pointer-events:none;"></circle>
         <?php endif; ?>
       </svg>
       <div class="chart-x-labels">
