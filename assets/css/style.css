@@ -2,11 +2,6 @@
 
 :root {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  /* A classic editorial serif reserved for large display headlines (h1) —
-     paired with the clean sans body, this pairing is the single most
-     recognizable "premium/timeless" signal, distinct from the all-sans
-     SaaS look most course platforms default to. */
-  --font-serif: "Fraunces", "Iowan Old Style", "Georgia", serif;
 
   --brand-950: #1e3a8a;
   --brand-900: #1e40af;
@@ -14,10 +9,14 @@
   --brand-700: #2563eb;
   --brand-600: #3b82f6;
 
-  --ink: #14181b;
+  --ink: #16181a;
   --muted: #5b6670;
-  --surface: #f4f7f8;
-  --border: #e3e8ea;
+  /* A warm flat cream instead of the old cool grey — the Skool reference's
+     entire background is this kind of off-white, not a "card floating on
+     grey" SaaS surface. */
+  --surface: #f7f6f2;
+  --border: #e7e4dc;
+  --border-strong: #d8d4c8;
 
   --accent: #2563eb;
   --accent-dark: #1d4ed8;
@@ -35,13 +34,15 @@
   --radius: 14px;
   --radius-lg: 20px;
   --radius-full: 999px;
+  /* Buttons/cards get a chunkier, more structured rounding than full-pill —
+     part of the deliberate move away from the soft SaaS look. */
+  --radius-chunky: 12px;
 
   --shadow: 0 1px 2px rgba(20, 24, 27, 0.04), 0 8px 24px -12px rgba(20, 24, 27, 0.12);
-  /* Bolder, brand-tinted glow shadows — used on hover for cards/buttons so
-     lift feels like premium light spilling from the brand color, not a
-     generic grey drop-shadow. */
-  --shadow-glow: 0 2px 6px rgba(20, 24, 27, 0.05), 0 24px 48px -20px color-mix(in srgb, var(--accent) 25%, transparent);
-  --shadow-glow-gold: 0 2px 6px rgba(20, 24, 27, 0.05), 0 24px 48px -20px color-mix(in srgb, var(--gold) 30%, transparent);
+  /* A hard, flat offset "pop" shadow (no blur) — the tactile, confident hover
+     feel from the reference, replacing a soft blurred drop-shadow. */
+  --shadow-pop: 0 8px 0 0 var(--border-strong);
+  --shadow-pop-ink: 0 8px 0 0 color-mix(in srgb, var(--ink) 16%, transparent);
   --container: 1180px;
 }
 
@@ -60,14 +61,9 @@ body {
 img, video, iframe { max-width: 100%; }
 a { color: inherit; }
 
+/* Big, bold, plain sans headlines throughout — no serif, no ornamentation.
+   The boldness comes from scale and weight, not decoration. */
 h1, h2, h3, h4 { margin: 0; font-weight: 900; letter-spacing: -0.02em; text-wrap: balance; }
-/* h1 alone carries the classic-editorial serif display treatment — every
-   other heading level stays the bold sans, so the serif reads as a
-   deliberate accent on the single most important line per page, not a
-   blanket font swap. Lighter weight + looser tracking than the sans
-   scale on purpose: serif display faces carry elegance through form,
-   not brute weight — 900 in a serif reads clumsy, not premium. */
-h1 { font-family: var(--font-serif); font-weight: 600; letter-spacing: -0.005em; }
 p { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -116,7 +112,11 @@ p { margin: 0; }
 @media (min-width: 768px) { .section { padding: 88px 0; } }
 
 /* ---------- type scale ---------- */
-.h1 { font-size: clamp(34px, 5.8vw, 58px); line-height: 1.04; }
+/* Bare <h1> carries this directly (not just the .h1 utility) since most
+   pages use plain h1 tags — pushed noticeably bigger than before, matching
+   the reference's confident, oversized display headline scale. */
+h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
+.h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 .h2 { font-size: clamp(27px, 4.2vw, 40px); line-height: 1.1; }
 .h3 { font-size: 22px; line-height: 1.22; }
 .lede { font-size: 17.5px; color: var(--muted); line-height: 1.65; max-width: 62ch; }
@@ -288,32 +288,35 @@ p { margin: 0; }
 @media (min-width: 900px) { .mobile-menu { display: none !important; } }
 
 /* ---------- buttons ---------- */
+/* Chunky rounded-rect (not full pill) with a hard flat "pop" shadow on
+   hover — a tactile, confident block-lift instead of a soft blurred glow.
+   This is the core shape/motion change behind the whole redesign. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 13px 26px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-chunky);
   font-weight: 800;
   font-size: 14.5px;
   letter-spacing: -0.005em;
   text-decoration: none;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s cubic-bezier(0.16,1,0.3,1);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.15s cubic-bezier(0.2,0.8,0.2,1);
   white-space: nowrap;
 }
-.btn:hover { transform: translateY(-2px); }
-.btn:active { transform: translateY(0); }
+.btn:hover { transform: translateY(-3px); }
+.btn:active { transform: translateY(0); box-shadow: none !important; }
 .btn-arrow { display: inline-block; transition: transform 0.2s ease; }
 .btn:hover .btn-arrow { transform: translateX(3px); }
-.btn-primary { background: var(--accent); color: var(--white); box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 70%, transparent); }
-.btn-primary:hover { background: var(--accent-dark); box-shadow: var(--shadow-glow); }
-.btn-dark { background: var(--brand-950); color: var(--white); box-shadow: 0 8px 20px -10px rgba(20,24,27,0.5); }
-.btn-dark:hover { background: var(--brand-900); box-shadow: 0 2px 6px rgba(20,24,27,0.06), 0 22px 44px -16px rgba(30,58,138,0.45); }
-.btn-outline { background: var(--white); color: var(--ink); border-color: var(--border); }
-.btn-outline:hover { background: var(--surface); box-shadow: 0 2px 6px rgba(20,24,27,0.04), 0 18px 36px -18px rgba(20,24,27,0.2); }
+.btn-primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); box-shadow: 0 8px 0 0 color-mix(in srgb, var(--accent) 35%, black 15%); }
+.btn-dark { background: var(--brand-950); color: var(--white); border-color: var(--brand-950); }
+.btn-dark:hover { background: var(--brand-900); border-color: var(--brand-900); box-shadow: 0 8px 0 0 color-mix(in srgb, var(--brand-950) 45%, black 20%); }
+.btn-outline { background: var(--white); color: var(--ink); border-color: var(--border-strong); }
+.btn-outline:hover { border-color: var(--ink); box-shadow: var(--shadow-pop-ink); }
 /* For outline buttons on dark/photo backgrounds (e.g. the hero) — frosted-glass
    fill + a solid white border so the label stays legible over any part of the
    photo, instead of a bare transparent outline that photo contrast can wash out. */
@@ -331,29 +334,28 @@ p { margin: 0; }
    next to "Start Learning" in the hero. Dark navy text on gold for max contrast. */
 .btn-gold {
   background: var(--gold);
-  color: var(--brand-950);
+  color: #1e1400;
   font-weight: 800;
   border-color: var(--gold);
-  box-shadow: 0 10px 26px -10px rgba(245,179,1,0.6);
 }
-.btn-gold:hover { background: #ffc93d; border-color: #ffc93d; box-shadow: var(--shadow-glow-gold); }
+.btn-gold:hover { background: #ffc93d; border-color: #ffc93d; box-shadow: 0 8px 0 0 color-mix(in srgb, var(--gold) 55%, black 15%); }
 .btn-ghost { background: transparent; color: var(--ink); }
 .btn-ghost:hover { background: var(--surface); }
-.btn-sm { padding: 8px 18px; font-size: 13px; }
+.btn-sm { padding: 9px 18px; font-size: 13px; }
 .btn-lg { padding: 16px 32px; font-size: 16px; }
 .btn-block { width: 100%; }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
 /* ---------- cards ---------- */
 .card {
   background: var(--white);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 .card-pad { padding: 22px; }
-.card-hover { transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s ease; }
-.card-hover:hover { transform: translateY(-5px); box-shadow: var(--shadow-glow); border-color: transparent; }
+.card-hover { transition: transform 0.2s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.2s cubic-bezier(0.2,0.8,0.2,1), border-color 0.2s ease; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: var(--shadow-pop); border-color: var(--ink); }
 
 /* ---------- forms ---------- */
 label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; color: var(--ink); }
@@ -647,12 +649,12 @@ table tr:last-child td { border-bottom: none; }
 
 .testimonial-card {
   position: relative; overflow: hidden;
-  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg);
   padding: 32px 28px 28px; display: flex; flex-direction: column; height: 100%;
-  box-shadow: var(--shadow);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  box-shadow: none;
+  transition: transform 0.2s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.2s cubic-bezier(0.2,0.8,0.2,1), border-color 0.2s ease;
 }
-.testimonial-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-glow); border-color: transparent; }
+.testimonial-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-pop); border-color: var(--ink); }
 .testimonial-card .quote-mark {
   position: absolute; top: 2px; right: 20px; z-index: 0; pointer-events: none; user-select: none;
   font-size: 92px; line-height: 1; font-family: Georgia, "Times New Roman", serif; font-weight: 700;
@@ -713,14 +715,14 @@ table tr:last-child td { border-bottom: none; }
   position: relative; z-index: 0;
   flex: 0 1 calc(50% - 7px);
   display: flex; flex-direction: column; align-items: center; gap: 12px;
-  padding: 22px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: #fff;
+  padding: 22px 12px; border-radius: var(--radius); border: 2px solid var(--border); background: #fff;
   text-decoration: none; text-align: center;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s cubic-bezier(0.2,0.8,0.2,1), border-color 0.15s ease, box-shadow 0.15s ease;
 }
 @media (min-width: 560px) { .industry-item { flex-basis: calc(33.333% - 9.34px); } }
 @media (min-width: 780px) { .industry-item { flex-basis: calc(25% - 10.5px); } }
 @media (min-width: 1024px) { .industry-item { flex-basis: calc(16.6667% - 11.67px); } }
-.industry-item:hover { transform: translateY(-4px); border-color: transparent; box-shadow: 0 14px 28px -16px rgba(20,24,27,0.2); }
+.industry-item:hover { transform: translateY(-3px); border-color: var(--ink); box-shadow: 0 6px 0 0 var(--border-strong); }
 
 .industry-item .icon-wrap {
   width: 46px; height: 46px; border-radius: 13px;
@@ -824,11 +826,11 @@ table tr:last-child td { border-bottom: none; }
 /* ---------- course card ---------- */
 .course-card {
   text-decoration: none; color: inherit; display: flex; flex-direction: column;
-  border: 1px solid var(--border); border-radius: var(--radius-lg); background: #fff; overflow: hidden;
-  box-shadow: 0 1px 2px rgba(20,24,27,0.04), 0 10px 24px -18px rgba(20,24,27,0.16);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  border: 2px solid var(--border); border-radius: var(--radius-lg); background: #fff; overflow: hidden;
+  box-shadow: none;
+  transition: box-shadow 0.2s cubic-bezier(0.2,0.8,0.2,1), transform 0.2s cubic-bezier(0.2,0.8,0.2,1), border-color 0.2s ease;
 }
-.course-card:hover { transform: translateY(-8px); border-color: transparent; box-shadow: var(--shadow-glow); }
+.course-card:hover { transform: translateY(-4px); border-color: var(--ink); box-shadow: var(--shadow-pop); }
 .course-card .thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; background: var(--brand-900); }
 .course-card .thumb::after { content: ""; position: absolute; inset: auto 0 0 0; height: 45%; background: linear-gradient(to top, rgba(20,24,27,0.35), transparent); pointer-events: none; }
 .course-card .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
@@ -864,11 +866,11 @@ table tr:last-child td { border-bottom: none; }
 /* ---------- creator community card (Communities directory) ---------- */
 .creator-card {
   text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; text-align: center;
-  border: 1px solid var(--border); border-radius: var(--radius-lg); background: #fff; overflow: hidden;
-  box-shadow: 0 1px 2px rgba(20,24,27,0.04), 0 10px 24px -18px rgba(20,24,27,0.16);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  border: 2px solid var(--border); border-radius: var(--radius-lg); background: #fff; overflow: hidden;
+  box-shadow: none;
+  transition: box-shadow 0.2s cubic-bezier(0.2,0.8,0.2,1), transform 0.2s cubic-bezier(0.2,0.8,0.2,1), border-color 0.2s ease;
 }
-.creator-card:hover { transform: translateY(-8px); border-color: transparent; box-shadow: var(--shadow-glow); }
+.creator-card:hover { transform: translateY(-4px); border-color: var(--ink); box-shadow: var(--shadow-pop); }
 .creator-card .banner { width: 100%; height: 64px; background: linear-gradient(135deg, var(--brand-800), var(--accent)); flex-shrink: 0; }
 .creator-card .avatar {
   width: 76px; height: 76px; border-radius: 50%; overflow: hidden; margin-top: -38px; border: 4px solid #fff;
@@ -1041,10 +1043,10 @@ table tr:last-child td { border-bottom: none; }
 
 /* ---------- value cards (about page) ---------- */
 .value-card {
-  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
-  padding: 26px 22px; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg);
+  padding: 26px 22px; transition: transform 0.2s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.2s cubic-bezier(0.2,0.8,0.2,1), border-color 0.2s ease;
 }
-.value-card:hover { transform: translateY(-5px); border-color: transparent; box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--tint, var(--accent)) 30%, rgba(20,24,27,0.2)); }
+.value-card:hover { transform: translateY(-4px); border-color: var(--ink); box-shadow: 0 8px 0 0 color-mix(in srgb, var(--tint, var(--accent)) 55%, var(--border-strong)); }
 .value-card .icon-badge {
   width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center;
   font-size: 22px; background: color-mix(in srgb, var(--tint, var(--accent)) 14%, white);
