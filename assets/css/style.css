@@ -2,6 +2,11 @@
 
 :root {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  /* A classic editorial serif reserved for large display headlines (h1) —
+     paired with the clean sans body, this pairing is the single most
+     recognizable "premium/timeless" signal, distinct from the all-sans
+     SaaS look most course platforms default to. */
+  --font-serif: "Fraunces", "Iowan Old Style", "Georgia", serif;
 
   --brand-950: #1e3a8a;
   --brand-900: #1e40af;
@@ -35,8 +40,8 @@
   /* Bolder, brand-tinted glow shadows — used on hover for cards/buttons so
      lift feels like premium light spilling from the brand color, not a
      generic grey drop-shadow. */
-  --shadow-glow: 0 2px 6px rgba(20, 24, 27, 0.06), 0 22px 44px -16px color-mix(in srgb, var(--accent) 45%, transparent);
-  --shadow-glow-gold: 0 2px 6px rgba(20, 24, 27, 0.06), 0 22px 44px -16px color-mix(in srgb, var(--gold) 55%, transparent);
+  --shadow-glow: 0 2px 6px rgba(20, 24, 27, 0.05), 0 24px 48px -20px color-mix(in srgb, var(--accent) 25%, transparent);
+  --shadow-glow-gold: 0 2px 6px rgba(20, 24, 27, 0.05), 0 24px 48px -20px color-mix(in srgb, var(--gold) 30%, transparent);
   --container: 1180px;
 }
 
@@ -56,6 +61,13 @@ img, video, iframe { max-width: 100%; }
 a { color: inherit; }
 
 h1, h2, h3, h4 { margin: 0; font-weight: 900; letter-spacing: -0.02em; text-wrap: balance; }
+/* h1 alone carries the classic-editorial serif display treatment — every
+   other heading level stays the bold sans, so the serif reads as a
+   deliberate accent on the single most important line per page, not a
+   blanket font swap. Lighter weight + looser tracking than the sans
+   scale on purpose: serif display faces carry elegance through form,
+   not brute weight — 900 in a serif reads clumsy, not premium. */
+h1 { font-family: var(--font-serif); font-weight: 600; letter-spacing: -0.005em; }
 p { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1032,7 +1044,7 @@ table tr:last-child td { border-bottom: none; }
   background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
   padding: 26px 22px; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
-.value-card:hover { transform: translateY(-5px); border-color: transparent; box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--tint, var(--accent)) 55%, rgba(20,24,27,0.25)); }
+.value-card:hover { transform: translateY(-5px); border-color: transparent; box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--tint, var(--accent)) 30%, rgba(20,24,27,0.2)); }
 .value-card .icon-badge {
   width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center;
   font-size: 22px; background: color-mix(in srgb, var(--tint, var(--accent)) 14%, white);
@@ -1058,7 +1070,7 @@ table tr:last-child td { border-bottom: none; }
   transition: transform 0.5s ease, opacity 0.5s ease;
 }
 .how-panel:hover::after { transform: rotate(-4deg) scale(1.06); opacity: 0.1; }
-.how-panel:hover { transform: translateY(-7px); box-shadow: 0 32px 64px -30px color-mix(in srgb, var(--panel-accent, var(--accent)) 60%, transparent); border-color: transparent; }
+.how-panel:hover { transform: translateY(-7px); box-shadow: 0 32px 64px -30px color-mix(in srgb, var(--panel-accent, var(--accent)) 32%, transparent); border-color: transparent; }
 
 /* Learners: cool, trustworthy blue. Creators: warm, prosperous gold.
    Distinct at a glance, each still reading as premium rather than gimmicky. */
