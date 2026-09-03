@@ -206,10 +206,15 @@ function smooth_svg_path(array $points): string {
     return $d;
 }
 
-/** Row of social icon links (Facebook/Instagram/YouTube/TikTok/LinkedIn) — shared by the course sidebar's instructor card and public profile pages. Silently drops empty/unknown entries. */
+/**
+ * Row of social icons (Facebook/Instagram/YouTube/TikTok/LinkedIn) — shared
+ * by the course sidebar's instructor card and public profile pages. Always
+ * renders all five, in the same fixed order, on every page — a platform the
+ * creator hasn't linked shows as a muted, non-clickable placeholder rather
+ * than being dropped, so the row lines up the same way from creator to
+ * creator instead of some pages showing 5 icons and others 1 or 2.
+ */
 function render_social_links(array $socials): void {
-    $socials = array_filter($socials);
-    if (!$socials) return;
     $iconPaths = [
         'facebook' => '<path d="M13.5 21v-7.5h2.5l.5-3H13.5V8.5c0-.9.25-1.5 1.53-1.5H16.5V4.34C16.19 4.3 15.13 4.2 14 4.2c-2.34 0-3.94 1.43-3.94 4.05V10.5H7.5v3H10V21h3.5z"/>',
         'instagram' => '<path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2zM12 2c-2.7 0-3.1 0-4.1.1-1.1 0-1.8.2-2.4.5A4.8 4.8 0 0 0 2.6 5.5c-.3.6-.5 1.3-.5 2.4C2 8.9 2 9.3 2 12s0 3.1.1 4.1c.1 1.1.2 1.8.5 2.4a4.8 4.8 0 0 0 2.9 2.9c.6.3 1.3.5 2.4.5C8.9 22 9.3 22 12 22s3.1 0 4.1-.1c1.1-.1 1.8-.2 2.4-.5a4.8 4.8 0 0 0 2.9-2.9c.3-.6.5-1.3.5-2.4.1-1 .1-1.4.1-4.1s0-3.1-.1-4.1c-.1-1.1-.2-1.8-.5-2.4a4.8 4.8 0 0 0-2.9-2.9c-.6-.3-1.3-.5-2.4-.5C15.1 2 14.7 2 12 2zm0 1.8c2.6 0 3 0 4 .1.9 0 1.5.2 1.8.3.5.2.8.4 1.1.7.3.3.5.6.7 1.1.1.3.3.9.3 1.8.1 1 .1 1.4.1 4s0 3-.1 4c0 .9-.2 1.5-.3 1.8-.2.5-.4.8-.7 1.1-.3.3-.6.5-1.1.7-.3.1-.9.3-1.8.3-1 .1-1.4.1-4 .1s-3 0-4-.1c-.9 0-1.5-.2-1.8-.3a3 3 0 0 1-1.1-.7 3 3 0 0 1-.7-1.1c-.1-.3-.3-.9-.3-1.8-.1-1-.1-1.4-.1-4s0-3 .1-4c0-.9.2-1.5.3-1.8.2-.5.4-.8.7-1.1.3-.3.6-.5 1.1-.7.3-.1.9-.3 1.8-.3 1-.1 1.4-.1 4-.1z"/>',
@@ -218,9 +223,13 @@ function render_social_links(array $socials): void {
         'linkedin' => '<path d="M6.9 8.4H3.6V20h3.3V8.4zM5.3 3.4a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8zM20.4 20h-3.3v-6.1c0-1.5-.5-2.5-1.9-2.5-1 0-1.6.7-1.9 1.4-.1.2-.1.6-.1.9V20H10s0-10.6 0-11.6h3.3v1.6c.4-.7 1.2-1.7 3-1.7 2.2 0 3.8 1.4 3.8 4.5V20z"/>',
     ];
     echo '<div class="creator-social">';
-    foreach ($socials as $network => $url) {
-        if (!isset($iconPaths[$network])) continue;
-        echo '<a href="' . e($url) . '" target="_blank" rel="noopener noreferrer" aria-label="' . e(ucfirst($network)) . '"><svg viewBox="0 0 24 24" fill="currentColor">' . $iconPaths[$network] . '</svg></a>';
+    foreach ($iconPaths as $network => $path) {
+        $url = trim((string) ($socials[$network] ?? ''));
+        if ($url !== '') {
+            echo '<a href="' . e($url) . '" target="_blank" rel="noopener noreferrer" aria-label="' . e(ucfirst($network)) . '"><svg viewBox="0 0 24 24" fill="currentColor">' . $path . '</svg></a>';
+        } else {
+            echo '<span class="is-empty" aria-label="' . e(ucfirst($network)) . ' not linked" title="Not linked yet"><svg viewBox="0 0 24 24" fill="currentColor">' . $path . '</svg></span>';
+        }
     }
     echo '</div>';
 }

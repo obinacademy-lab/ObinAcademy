@@ -53,7 +53,6 @@ $creatorSocials = [
     'tiktok' => $course['creator_tiktok_url'] ?? null,
     'linkedin' => $course['creator_linkedin_url'] ?? null,
 ];
-$creatorSocials = array_filter($creatorSocials);
 
 $statusLabel = ['DRAFT' => 'a draft', 'PENDING_REVIEW' => 'pending admin review', 'REJECTED' => 'rejected and needs changes'];
 
