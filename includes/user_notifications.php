@@ -14,7 +14,7 @@ function create_user_notification(int $userId, string $type, string $message, ?s
     );
 }
 
-function get_unread_notification_count(int $userId): int {
+function get_unread_user_notification_count(int $userId): int {
     return (int) db_one('SELECT COUNT(*) AS n FROM user_notifications WHERE user_id = ? AND is_read = 0', [$userId])['n'];
 }
 
