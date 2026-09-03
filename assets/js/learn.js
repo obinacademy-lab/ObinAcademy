@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const src = `${streamBase}?lesson=${lesson.id}`;
     videoWrap.innerHTML = "";
-    videoWrap.classList.toggle("pdf-only", lesson.type !== "VIDEO");
     if (lesson.type === "VIDEO") {
       const video = document.createElement("video");
       video.controls = true;
@@ -36,19 +35,10 @@ document.addEventListener("DOMContentLoaded", () => {
       video.src = src;
       videoWrap.appendChild(video);
     } else {
-      // No embedded iframe — just the one button. Clicking it opens the PDF
-      // as its own page in a new tab.
-      const fullscreenBtn = document.createElement("a");
-      // #toolbar=0 hides the native PDF viewer's own toolbar, which has its
-      // own Download button. Without it, tapping this would hand every
-      // learner, premium or not, a working download regardless of
-      // stream.php's own premium check on the download=1 path below.
-      fullscreenBtn.href = src + "#toolbar=0";
-      fullscreenBtn.target = "_blank";
-      fullscreenBtn.rel = "noopener noreferrer";
-      fullscreenBtn.className = "pdf-fullscreen-btn";
-      fullscreenBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>View Full PDF in Fullscreen</span>';
-      videoWrap.appendChild(fullscreenBtn);
+      const iframe = document.createElement("iframe");
+      iframe.src = src + "#toolbar=0";
+      iframe.title = lesson.title;
+      videoWrap.appendChild(iframe);
     }
 
     heading.textContent = lesson.title;
