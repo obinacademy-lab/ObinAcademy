@@ -1412,19 +1412,21 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .learn-main-inner { max-width: 880px; margin: 0 auto; padding: 32px 20px 60px; }
 .learn-video-wrap { border-radius: var(--radius); overflow:hidden; background:#000; }
 .learn-video-wrap video { width:100%; aspect-ratio:16/9; display:block; border:0; }
-.learn-video-wrap iframe { width:100%; height:80vh; min-height:520px; display:block; border:0; background:#fff; }
-/* #toolbar=0 on the link (matching the iframe above) hides the native PDF
-   viewer's own Download button — stream.php's premium check on the
-   separate download=1 path is the only thing that ever hands out a real
-   download, so this view-only path must never expose that button either. */
+/* No iframe for PDFs — just the one button below, so none of the black
+   video-box styling above applies here. */
+.learn-video-wrap.pdf-only { background:none; border-radius:0; display:flex; justify-content:center; padding:8px 0; }
+/* #toolbar=0 hides the native PDF viewer's own toolbar, which has its own
+   Download button — stream.php's premium check on the separate download=1
+   path is the only thing that ever hands out a real download, so this
+   view-only path must never expose that button either. */
 .pdf-fullscreen-btn {
-  display:flex; align-items:center; justify-content:center; gap:4px;
-  width:max-content; margin:8px auto; background: var(--gold); color:#1e1400;
-  font-weight:700; font-size:10px; padding:4px 10px; border-radius: var(--radius-full);
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  background: var(--gold); color:#1e1400;
+  font-weight:700; font-size:13px; padding:10px 20px; border-radius: var(--radius-full);
   text-decoration:none; transition: background-color 0.15s ease;
 }
 .pdf-fullscreen-btn:hover { background:#ffc93d; }
-.pdf-fullscreen-btn svg { width:9px; height:9px; flex-shrink:0; }
+.pdf-fullscreen-btn svg { width:14px; height:14px; flex-shrink:0; }
 .expiry-banner { background: var(--warning-bg); color: var(--warning-ink); border-radius: 12px; padding: 10px 16px; font-size:12.5px; font-weight:700; margin-bottom:16px; }
 .certificate-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;

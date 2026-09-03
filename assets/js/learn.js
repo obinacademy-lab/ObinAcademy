@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const src = `${streamBase}?lesson=${lesson.id}`;
     videoWrap.innerHTML = "";
+    videoWrap.classList.toggle("pdf-only", lesson.type !== "VIDEO");
     if (lesson.type === "VIDEO") {
       const video = document.createElement("video");
       video.controls = true;
@@ -35,16 +36,13 @@ document.addEventListener("DOMContentLoaded", () => {
       video.src = src;
       videoWrap.appendChild(video);
     } else {
-      const iframe = document.createElement("iframe");
-      iframe.src = src + "#toolbar=0";
-      iframe.title = lesson.title;
-      videoWrap.appendChild(iframe);
-
+      // No embedded iframe — just the one button. Clicking it opens the PDF
+      // as its own page in a new tab.
       const fullscreenBtn = document.createElement("a");
-      // #toolbar=0 here too — it hides the native PDF viewer's own toolbar,
-      // which has its own Download button. Without it, tapping this would
-      // hand every learner, premium or not, a working download regardless
-      // of stream.php's own premium check on the download=1 path below.
+      // #toolbar=0 hides the native PDF viewer's own toolbar, which has its
+      // own Download button. Without it, tapping this would hand every
+      // learner, premium or not, a working download regardless of
+      // stream.php's own premium check on the download=1 path below.
       fullscreenBtn.href = src + "#toolbar=0";
       fullscreenBtn.target = "_blank";
       fullscreenBtn.rel = "noopener noreferrer";
