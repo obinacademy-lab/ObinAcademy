@@ -68,17 +68,7 @@ if (!empty($_SERVER['HTTP_RANGE']) && preg_match('/bytes=(\d*)-(\d*)/', $_SERVER
 header('Content-Type: ' . $mime);
 header('Accept-Ranges: bytes');
 header('Content-Disposition: ' . $disposition . '; filename="' . addslashes($fileName) . '"');
-// Private (never shared/CDN-cached) but reusable in the viewer's own browser
-// for a while — a PDF/video viewer makes many byte-range requests as the
-// learner scrolls or seeks, and "no-store" forced every single one of those
-// back through this script (fresh DB lookup + file I/O) instead of letting
-// the browser reuse bytes it already downloaded. That's exactly what made
-// scrolling a PDF feel stuck, especially scrolling back up to an
-// already-seen page. Uploaded files get a fresh random name per upload
-// (save_upload()), so a given path's content never changes underneath a
-// cached copy.
-header('Cache-Control: private, max-age=3600');
-header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($filePath)) . ' GMT');
+header('Cache-Control: private, no-store');
 
 $length = $end - $start + 1;
 
