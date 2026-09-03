@@ -132,15 +132,27 @@ function get_community_members(int $communityId, int $limit = 50): array {
     );
 }
 
+/** A handful of member avatars for a community card's "social proof" avatar stack — lighter than get_community_members(), no headline/role. */
+function get_community_preview_members(int $communityId, int $limit = 4): array {
+    $limit = max(1, min(8, $limit));
+    return db_all(
+        "SELECT u.name, u.avatar_url FROM community_members cm JOIN users u ON u.id = cm.user_id
+         WHERE cm.community_id = ? ORDER BY cm.joined_at DESC LIMIT $limit",
+        [$communityId]
+    );
+}
+
 function get_community_categories(int $communityId): array {
     return db_all('SELECT * FROM community_categories WHERE community_id = ? ORDER BY sort_order ASC, id ASC', [$communityId]);
 }
+
+const COMMUNITY_LAST_POST_SUBQUERY = '(SELECT MAX(created_at) FROM community_posts WHERE community_id = c.id) AS last_post_at';
 
 /** Largest communities by member count — the homepage's "Featured" row. */
 function get_featured_communities(int $limit = 6): array {
     $limit = max(1, min(20, $limit));
     return db_all(
-        "SELECT c.*, co.slug AS course_slug, cr.name AS creator_name, cr.avatar_url AS creator_avatar_url
+        "SELECT c.*, co.slug AS course_slug, cr.name AS creator_name, cr.avatar_url AS creator_avatar_url, " . COMMUNITY_LAST_POST_SUBQUERY . "
          FROM communities c
          LEFT JOIN courses co ON co.id = c.course_id
          LEFT JOIN users cr ON cr.id = c.creator_id
@@ -152,7 +164,7 @@ function get_featured_communities(int $limit = 6): array {
 function get_new_communities(int $limit = 6): array {
     $limit = max(1, min(20, $limit));
     return db_all(
-        "SELECT c.*, co.slug AS course_slug, cr.name AS creator_name, cr.avatar_url AS creator_avatar_url
+        "SELECT c.*, co.slug AS course_slug, cr.name AS creator_name, cr.avatar_url AS creator_avatar_url, " . COMMUNITY_LAST_POST_SUBQUERY . "
          FROM communities c
          LEFT JOIN courses co ON co.id = c.course_id
          LEFT JOIN users cr ON cr.id = c.creator_id
@@ -179,7 +191,7 @@ function auto_join_course_community(int $userId, int $courseId): void {
 /** Every community a user belongs to — used on the homepage ("Your Communities") and profile. */
 function get_user_communities(int $userId): array {
     return db_all(
-        "SELECT c.*, co.slug AS course_slug, cr.name AS creator_name, cm.role
+        "SELECT c.*, co.slug AS course_slug, cr.name AS creator_name, cm.role, " . COMMUNITY_LAST_POST_SUBQUERY . "
          FROM community_members cm
          JOIN communities c ON c.id = cm.community_id
          LEFT JOIN courses co ON co.id = c.course_id
@@ -199,7 +211,7 @@ function search_communities(string $q = '', int $limit = 50): array {
         $params[] = "%$q%";
     }
     return db_all(
-        "SELECT c.*, co.slug AS course_slug, cr.name AS creator_name, cr.avatar_url AS creator_avatar_url
+        "SELECT c.*, co.slug AS course_slug, cr.name AS creator_name, cr.avatar_url AS creator_avatar_url, " . COMMUNITY_LAST_POST_SUBQUERY . "
          FROM communities c
          LEFT JOIN courses co ON co.id = c.course_id
          LEFT JOIN users cr ON cr.id = c.creator_id

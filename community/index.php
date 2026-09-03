@@ -9,6 +9,7 @@ $results = $q !== '' ? search_communities($q, 30) : [];
 $featured = $q === '' ? get_featured_communities(6) : [];
 $new = $q === '' ? get_new_communities(6) : [];
 $yours = $user ? get_user_communities((int) $user['id']) : [];
+$moduleStats = $q === '' ? get_community_module_stats() : [];
 
 $pageTitle = 'Community — Obin Academy';
 $pageDescription = 'Join the discussion — every course and every creator on Obin Academy has its own community for questions, wins, and support.';
@@ -19,13 +20,32 @@ require __DIR__ . '/../includes/header.php';
 function render_community_card(array $c): void {
     $isCreator = $c['type'] === 'creator';
     $href = base_url('community/view.php?slug=' . $c['slug']);
+    $isActive = !empty($c['last_post_at']) && strtotime($c['last_post_at']) >= strtotime('-24 hours');
+    $previewMembers = (int) $c['member_count'] > 0 ? get_community_preview_members((int) $c['id'], 4) : [];
     ?>
     <a href="<?= e($href) ?>" class="creator-card">
-      <div class="banner"<?= $c['banner_url'] ? ' style="background-image:url(' . e(asset_src($c['banner_url'])) . '); background-size:cover; background-position:center;"' : '' ?>></div>
+      <div class="banner"<?= $c['banner_url'] ? ' style="background-image:url(' . e(asset_src($c['banner_url'])) . '); background-size:cover; background-position:center;"' : '' ?>>
+        <?php if ($isActive): ?><span class="community-activity-badge">🔥 Active today</span><?php endif; ?>
+      </div>
       <div class="avatar"><?= $isCreator ? '👤' : '🎓' ?></div>
       <div class="body">
         <h3><?= e($c['name']) ?></h3>
         <div class="headline"><?= $isCreator ? 'Creator Community' : 'Course Community' ?><?= $c['creator_name'] ? ' · ' . e($c['creator_name']) : '' ?></div>
+
+        <?php if ($previewMembers): ?>
+          <div class="avatar-stack" style="margin-top:12px;">
+            <?php foreach ($previewMembers as $m): ?>
+              <div class="avatar-circle" style="width:30px; height:30px; font-size:11px;">
+                <?php if ($m['avatar_url']): ?><img src="<?= e(asset_src($m['avatar_url'])) ?>" alt="">
+                <?php else: ?><?= e(mb_substr($m['name'], 0, 1)) ?><?php endif; ?>
+              </div>
+            <?php endforeach; ?>
+            <?php if ((int) $c['member_count'] > count($previewMembers)): ?>
+              <div class="avatar-stack-more">+<?= (int) $c['member_count'] - count($previewMembers) ?></div>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
+
         <div class="stats-row">
           <div class="stat"><span class="value"><?= number_format((int) $c['member_count']) ?></span><span class="label">Member<?= (int) $c['member_count'] === 1 ? '' : 's' ?></span></div>
         </div>
@@ -49,6 +69,14 @@ function render_community_card(array $c): void {
       <input type="text" name="q" placeholder="Search communities..." value="<?= e($q) ?>">
       <button type="submit" class="btn btn-gold btn-sm">Search</button>
     </form>
+
+    <?php if ($moduleStats): ?>
+      <div class="meta-row" style="justify-content:center; margin-top:28px;">
+        <span class="meta-chip">🏘️ <?= number_format($moduleStats['communities']) ?> Communit<?= $moduleStats['communities'] === 1 ? 'y' : 'ies' ?></span>
+        <span class="meta-chip">👥 <?= number_format($moduleStats['members']) ?> Member<?= $moduleStats['members'] === 1 ? '' : 's' ?></span>
+        <span class="meta-chip">💬 <?= number_format($moduleStats['posts']) ?> Post<?= $moduleStats['posts'] === 1 ? '' : 's' ?></span>
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 
@@ -90,14 +118,14 @@ function render_community_card(array $c): void {
     <?php endif; ?>
 
     <?php if ($featured): ?>
-      <h2 class="h3" style="margin-top:<?= $yours ? '40px' : '0' ?>;">Featured Communities</h2>
+      <h2 class="h3" style="margin-top:<?= $yours ? '40px' : '0' ?>;">🌟 Featured Communities</h2>
       <div class="grid sm:grid-2 lg:grid-3" style="margin-top:16px;">
         <?php foreach ($featured as $c): render_community_card($c); ?><?php endforeach; ?>
       </div>
     <?php endif; ?>
 
     <?php if ($new): ?>
-      <h2 class="h3" style="margin-top:40px;">New Communities</h2>
+      <h2 class="h3" style="margin-top:40px;">✨ New Communities</h2>
       <div class="grid sm:grid-2 lg:grid-3" style="margin-top:16px;">
         <?php foreach ($new as $c): render_community_card($c); ?><?php endforeach; ?>
       </div>

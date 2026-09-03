@@ -387,6 +387,33 @@ function get_most_active_communities(int $limit = 8): array {
     );
 }
 
+/** Top members by XP within one community — the "Top Contributors" sidebar widget. A real, visible use of the XP a member earns by posting/commenting/completing courses, so it's a genuine engagement loop rather than a number nobody sees. */
+function get_community_leaderboard(int $communityId, int $limit = 5): array {
+    $limit = max(1, min(20, $limit));
+    return db_all(
+        "SELECT u.id, u.name, u.avatar_url, u.xp_points, u.current_streak
+         FROM community_members cm JOIN users u ON u.id = cm.user_id
+         WHERE cm.community_id = ? AND u.xp_points > 0
+         ORDER BY u.xp_points DESC, u.id ASC LIMIT $limit",
+        [$communityId]
+    );
+}
+
+/** Posts from the last 7 days ranked by engagement (comments weighted higher than likes) — the feed's "Trending This Week" strip. */
+function get_trending_posts(int $communityId, int $limit = 3): array {
+    $limit = max(1, min(10, $limit));
+    return db_all(
+        "SELECT p.id, p.body, p.like_count, p.comment_count, p.created_at,
+                u.name AS author_name, u.avatar_url AS author_avatar_url,
+                (p.like_count + p.comment_count * 2) AS score
+         FROM community_posts p JOIN users u ON u.id = p.author_id
+         WHERE p.community_id = ? AND p.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+           AND (p.like_count > 0 OR p.comment_count > 0)
+         ORDER BY score DESC, p.created_at DESC LIMIT $limit",
+        [$communityId]
+    );
+}
+
 // -----------------------------------------------------------------------
 // Render helpers — view-layer functions kept alongside the data functions
 // above, same convention as render_bar_list()/render_logo() in functions.php.
@@ -476,7 +503,7 @@ function render_post_card(array $post, int $communityId, ?array $user, bool $isM
     $bodyHtml = nl2br(e($post['body']));
     $bodyHtml = preg_replace('/#([a-zA-Z0-9_]{2,50})/', '<span class="tag">#$1</span>', $bodyHtml);
     ?>
-    <article class="feed-post" id="post-<?= (int) $post['id'] ?>">
+    <article class="feed-post<?= $post['is_pinned'] ? ' is-pinned' : '' ?>" id="post-<?= (int) $post['id'] ?>">
       <div class="feed-post-head">
         <div class="avatar-circle" style="width:38px; height:38px; font-size:14px;">
           <?php if ($post['author_avatar_url']): ?><img src="<?= e(asset_src($post['author_avatar_url'])) ?>" alt="">

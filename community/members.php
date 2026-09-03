@@ -38,6 +38,7 @@ require __DIR__ . '/../includes/header.php';
             <div class="name"><?= e($m['name']) ?></div>
             <div class="sub"><?= e($m['headline'] ?: ucfirst(strtolower($m['user_role']))) ?></div>
           </div>
+          <?php if ((int) $m['xp_points'] > 0): ?><span class="leaderboard-xp"><?= number_format((int) $m['xp_points']) ?> XP</span><?php endif; ?>
           <?php if ($m['role'] !== 'member'): ?><span class="role-tag"><?= e(ucfirst($m['role'])) ?></span><?php endif; ?>
         </a>
       <?php endforeach; ?>

@@ -98,7 +98,7 @@ function search_community_members(int $communityId, string $q = '', int $limit =
         $params[] = "%$q%";
     }
     return db_all(
-        "SELECT cm.role, cm.joined_at, u.id, u.name, u.avatar_url, u.headline, u.role AS user_role
+        "SELECT cm.role, cm.joined_at, u.id, u.name, u.avatar_url, u.headline, u.role AS user_role, u.xp_points
          FROM community_members cm JOIN users u ON u.id = cm.user_id
          WHERE $where ORDER BY cm.joined_at DESC LIMIT $limit",
         $params

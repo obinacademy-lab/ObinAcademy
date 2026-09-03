@@ -79,6 +79,10 @@ $course = $community['course_id'] ? db_one('SELECT id, title, slug, thumbnail_ur
 // community, since that would just link to the current page.
 $creatorCommunity = ($community['type'] === 'course' && $course) ? get_community_by_creator((int) $course['creator_id']) : null;
 $members = get_community_members($communityId, 200);
+$previewMembers = get_community_preview_members($communityId, 6);
+$leaderboard = get_community_leaderboard($communityId, 5);
+$trending = (!$activeCategory && $offset === 0) ? get_trending_posts($communityId, 3) : [];
+$postCount = (int) db_one('SELECT COUNT(*) AS n FROM community_posts WHERE community_id = ?', [$communityId])['n'];
 
 $pageTitle = $community['name'] . ' — Community — Obin Academy';
 $pageDescription = $community['description'] ?: ('Join the ' . $community['name'] . ' discussion on Obin Academy.');
@@ -99,7 +103,22 @@ require __DIR__ . '/../includes/header.php';
       <div class="community-stats-row">
         <div class="stat"><span class="value"><?= number_format((int) $community['member_count']) ?></span><span class="label">Member<?= (int) $community['member_count'] === 1 ? '' : 's' ?></span></div>
         <div class="stat"><span class="value"><?= count($categories) ?></span><span class="label">Categor<?= count($categories) === 1 ? 'y' : 'ies' ?></span></div>
+        <div class="stat"><span class="value"><?= number_format($postCount) ?></span><span class="label">Post<?= $postCount === 1 ? '' : 's' ?></span></div>
       </div>
+
+      <?php if ($previewMembers): ?>
+        <div class="avatar-stack" style="margin-top:20px;">
+          <?php foreach ($previewMembers as $m): ?>
+            <div class="avatar-circle" style="width:34px; height:34px; font-size:12px;">
+              <?php if ($m['avatar_url']): ?><img src="<?= e(asset_src($m['avatar_url'])) ?>" alt="">
+              <?php else: ?><?= e(mb_substr($m['name'], 0, 1)) ?><?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+          <?php if ((int) $community['member_count'] > count($previewMembers)): ?>
+            <div class="avatar-stack-more">+<?= number_format((int) $community['member_count'] - count($previewMembers)) ?></div>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
 
       <div class="row gap-2" style="margin-top:22px;">
         <?php if (!$user): ?>
@@ -116,6 +135,13 @@ require __DIR__ . '/../includes/header.php';
         <?php if ($course): ?><a href="<?= e(base_url('courses/view.php?slug=' . $course['slug'])) ?>" class="btn btn-outline">View Course</a><?php endif; ?>
         <?php if ($creatorCommunity): ?><a href="<?= e(base_url('community/view.php?slug=' . $creatorCommunity['slug'])) ?>" class="btn btn-outline">Creator Community</a><?php endif; ?>
       </div>
+
+      <?php if ($isMember && (int) $user['xp_points'] > 0): ?>
+        <div class="meta-row" style="justify-content:center; margin-top:18px;">
+          <span class="meta-chip">⚡ <?= number_format((int) $user['xp_points']) ?> XP</span>
+          <?php if ((int) $user['current_streak'] > 1): ?><span class="meta-chip">🔥 <?= (int) $user['current_streak'] ?>-day streak</span><?php endif; ?>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
 </section>
@@ -129,6 +155,21 @@ require __DIR__ . '/../includes/header.php';
           <a href="<?= e(base_url('community/view.php?slug=' . $slug . '&category=' . $cat['slug'])) ?>" class="chip<?= $activeCategory && $activeCategory['id'] === $cat['id'] ? ' active' : '' ?>"><?= e($cat['icon'] . ' ' . $cat['name']) ?></a>
         <?php endforeach; ?>
       </div>
+
+      <?php if ($trending): ?>
+        <div class="trending-strip">
+          <div class="trending-strip-head">🔥 Trending This Week <span class="count"><?= count($trending) ?></span></div>
+          <?php foreach ($trending as $i => $t): ?>
+            <a href="<?= e(base_url('community/post.php?id=' . $t['id'])) ?>" class="trending-post-row">
+              <span class="trending-post-rank">#<?= $i + 1 ?></span>
+              <div class="trending-post-body">
+                <div class="trending-post-text"><?= e($t['body']) ?></div>
+                <div class="trending-post-meta">by <?= e($t['author_name']) ?> · ❤ <?= (int) $t['like_count'] ?> · 💬 <?= (int) $t['comment_count'] ?></div>
+              </div>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
 
       <?php if ($isMember): render_composer($community, $categories, $members); elseif ($user): ?>
         <p class="card card-pad muted small" style="border-style:dashed;">Join this community to start posting and commenting.</p>
@@ -152,6 +193,28 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="feed-sidebar">
+      <?php if ($leaderboard): ?>
+        <div class="card card-pad">
+          <h3>🏆 Top Contributors</h3>
+          <div style="margin-top:10px;">
+            <?php foreach ($leaderboard as $i => $m): ?>
+              <a href="<?= e(base_url('profile.php?id=' . $m['id'])) ?>" class="leaderboard-row">
+                <span class="leaderboard-rank"><?= ['🥇', '🥈', '🥉'][$i] ?? ($i + 1) ?></span>
+                <div class="avatar-circle" style="width:30px; height:30px; font-size:11px;">
+                  <?php if ($m['avatar_url']): ?><img src="<?= e(asset_src($m['avatar_url'])) ?>" alt="">
+                  <?php else: ?><?= e(mb_substr($m['name'], 0, 1)) ?><?php endif; ?>
+                </div>
+                <div style="min-width:0; flex:1;">
+                  <div class="leaderboard-name"><?= e($m['name']) ?></div>
+                  <?php if ((int) $m['current_streak'] > 1): ?><div class="leaderboard-streak">🔥 <?= (int) $m['current_streak'] ?>-day streak</div><?php endif; ?>
+                </div>
+                <span class="leaderboard-xp"><?= number_format((int) $m['xp_points']) ?> XP</span>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endif; ?>
+
       <?php if ($categories): ?>
         <div class="card card-pad">
           <h3>Categories</h3>
