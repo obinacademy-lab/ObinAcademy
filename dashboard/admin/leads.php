@@ -157,7 +157,7 @@ $trendPct = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : null;
 
 $chartW = 700; $chartH = 220; $padTop = 16; $padBottom = 4;
 $n = count($leadsSeries);
-$yMax = $bestDay ?: 1;
+$yMax = ($bestDay ?: 1) * 1.15; // headroom so the peak doesn't touch the ceiling
 $xStep = $n > 1 ? $chartW / ($n - 1) : 0;
 $points = [];
 foreach ($leadsSeries as $i => $row) {
