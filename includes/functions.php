@@ -90,7 +90,7 @@ function asset_src(string $path): string {
 /** base_url() for a public/ asset, with a ?v=<mtime> cache-buster so browsers
  * pick up CSS/JS changes immediately instead of serving a stale cached copy. */
 function versioned_asset(string $path): string {
-    $fsPath = __DIR__ . '/../' . ltrim($path, '/');
+    $fsPath = __DIR__ . '/../public/' . ltrim($path, '/');
     $version = is_file($fsPath) ? filemtime($fsPath) : time();
     return base_url($path) . '?v=' . $version;
 }
@@ -223,6 +223,62 @@ function render_social_links(array $socials): void {
         echo '<a href="' . e($url) . '" target="_blank" rel="noopener noreferrer" aria-label="' . e(ucfirst($network)) . '"><svg viewBox="0 0 24 24" fill="currentColor">' . $iconPaths[$network] . '</svg></a>';
     }
     echo '</div>';
+}
+
+/**
+ * "Share Course" button + popover: WhatsApp/Facebook/X/LinkedIn open a real
+ * share-intent URL in a new tab. Instagram and TikTok have no public web
+ * share-intent for an arbitrary link (both are app-only for that), so those
+ * two copy the link instead and show a hint to paste it in manually — an
+ * honest fallback rather than a broken-looking "share" that goes nowhere.
+ * @param string $theme 'dark' for a translucent pill on a dark hero (the
+ *   default course-hero background), 'light' for a plain-card/dashboard context.
+ */
+function render_share_button(string $url, string $title, string $label = 'Share Course', string $theme = 'dark'): void {
+    $encodedUrl = urlencode($url);
+    $encodedTitle = urlencode($title);
+    $waText = urlencode("$title\n$url");
+    $linkIcon = '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>';
+    ?>
+    <div class="share-menu-wrap" data-share-wrap>
+      <button type="button" class="btn-share<?= $theme === 'light' ? ' btn-share-light' : '' ?>" data-share-toggle aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><?= $linkIcon ?></svg>
+        <?= e($label) ?>
+      </button>
+      <div class="share-menu" data-share-menu hidden>
+        <div class="share-menu-head">Share this course</div>
+
+        <button type="button" class="share-row" data-share-copy="<?= e($url) ?>" data-share-hint="Link copied to your clipboard.">
+          <span class="share-row-icon" style="background:#5b6670;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><?= $linkIcon ?></svg></span>
+          Copy Link
+        </button>
+        <a class="share-row" href="https://wa.me/?text=<?= $waText ?>" target="_blank" rel="noopener noreferrer">
+          <span class="share-row-icon" style="background:#25D366;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.81L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.86 14.02c-.25.7-1.25 1.29-1.98 1.44-.53.11-1.22.2-3.55-.76-2.98-1.24-4.89-4.24-5.04-4.44-.15-.2-1.21-1.6-1.21-3.06 0-1.46.76-2.17 1.03-2.47.27-.3.6-.37.8-.37h.57c.18 0 .43-.07.67.51.25.6.85 2.06.92 2.21.07.15.12.32.02.52-.1.2-.15.32-.3.5-.15.17-.32.38-.45.51-.15.15-.31.31-.13.62.18.3.8 1.32 1.72 2.14 1.18 1.05 2.18 1.38 2.5 1.53.32.15.5.13.68-.08.18-.2.78-.9.99-1.21.2-.3.4-.25.68-.15.27.1 1.73.82 2.03.97.3.15.5.22.57.35.07.13.07.75-.18 1.45z"/></svg></span>
+          WhatsApp
+        </a>
+        <a class="share-row" href="https://www.facebook.com/sharer/sharer.php?u=<?= $encodedUrl ?>" target="_blank" rel="noopener noreferrer">
+          <span class="share-row-icon" style="background:#1877F2;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13.5 21v-7.5h2.5l.5-3H13.5V8.5c0-.9.25-1.5 1.53-1.5H16.5V4.34C16.19 4.3 15.13 4.2 14 4.2c-2.34 0-3.94 1.43-3.94 4.05V10.5H7.5v3H10V21h3.5z"/></svg></span>
+          Facebook
+        </a>
+        <a class="share-row" href="https://twitter.com/intent/tweet?url=<?= $encodedUrl ?>&text=<?= $encodedTitle ?>" target="_blank" rel="noopener noreferrer">
+          <span class="share-row-icon" style="background:#000;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M18.9 2.3h3.2l-7 8 8.2 10.8h-6.4l-5-6.6-5.8 6.6H2.9l7.5-8.6L2.5 2.3h6.6l4.6 6.1 5.2-6.1zm-1.1 17h1.8L7.3 4.1H5.4l12.4 15.2z"/></svg></span>
+          X (Twitter)
+        </a>
+        <a class="share-row" href="https://www.linkedin.com/sharing/share-offsite/?url=<?= $encodedUrl ?>" target="_blank" rel="noopener noreferrer">
+          <span class="share-row-icon" style="background:#0A66C2;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M6.9 8.4H3.6V20h3.3V8.4zM5.3 3.4a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8zM20.4 20h-3.3v-6.1c0-1.5-.5-2.5-1.9-2.5-1 0-1.6.7-1.9 1.4-.1.2-.1.6-.1.9V20H10s0-10.6 0-11.6h3.3v1.6c.4-.7 1.2-1.7 3-1.7 2.2 0 3.8 1.4 3.8 4.5V20z"/></svg></span>
+          LinkedIn
+        </a>
+        <button type="button" class="share-row" data-share-copy="<?= e($url) ?>" data-share-hint="Link copied — paste it in your Instagram bio, story, or DM.">
+          <span class="share-row-icon" style="background:radial-gradient(circle at 30% 110%, #fdf497, #fd5949 45%, #d6249f 60%, #285AEB 90%);"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2zM12 2c-2.7 0-3.1 0-4.1.1-1.1 0-1.8.2-2.4.5A4.8 4.8 0 0 0 2.6 5.5c-.3.6-.5 1.3-.5 2.4C2 8.9 2 9.3 2 12s0 3.1.1 4.1c.1 1.1.2 1.8.5 2.4a4.8 4.8 0 0 0 2.9 2.9c.6.3 1.3.5 2.4.5C8.9 22 9.3 22 12 22s3.1 0 4.1-.1c1.1-.1 1.8-.2 2.4-.5a4.8 4.8 0 0 0 2.9-2.9c.3-.6.5-1.3.5-2.4.1-1 .1-1.4.1-4.1s0-3.1-.1-4.1c-.1-1.1-.2-1.8-.5-2.4a4.8 4.8 0 0 0-2.9-2.9c-.6-.3-1.3-.5-2.4-.5C15.1 2 14.7 2 12 2zm0 1.8c2.6 0 3 0 4 .1.9 0 1.5.2 1.8.3.5.2.8.4 1.1.7.3.3.5.6.7 1.1.1.3.3.9.3 1.8.1 1 .1 1.4.1 4s0 3-.1 4c0 .9-.2 1.5-.3 1.8-.2.5-.4.8-.7 1.1-.3.3-.6.5-1.1.7-.3.1-.9.3-1.8.3-1 .1-1.4.1-4 .1s-3 0-4-.1c-.9 0-1.5-.2-1.8-.3a3 3 0 0 1-1.1-.7 3 3 0 0 1-.7-1.1c-.1-.3-.3-.9-.3-1.8-.1-1-.1-1.4-.1-4s0-3 .1-4c0-.9.2-1.5.3-1.8.2-.5.4-.8.7-1.1.3-.3.6-.5 1.1-.7.3-.1.9-.3 1.8-.3 1-.1 1.4-.1 4-.1z"/></svg></span>
+          Instagram
+        </button>
+        <button type="button" class="share-row" data-share-copy="<?= e($url) ?>" data-share-hint="Link copied — paste it in your TikTok bio or video caption.">
+          <span class="share-row-icon" style="background:#000;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M16.5 2h-3v13.5a2.5 2.5 0 1 1-2.5-2.5c.2 0 .4 0 .6.05V9.9a5.6 5.6 0 0 0-.6 0 5.6 5.6 0 1 0 5.6 5.6V8.4a7.4 7.4 0 0 0 4.4 1.4V6.7a4.4 4.4 0 0 1-4.5-4.4Z"/></svg></span>
+          TikTok
+        </button>
+      </div>
+    </div>
+    <?php
 }
 
 function redirect(string $path): never {

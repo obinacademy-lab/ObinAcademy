@@ -177,6 +177,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <span class="badge <?= $badgeClass[$course['status']] ?>" style="margin-top:10px; display:inline-flex;"><?= $statusLabel[$course['status']] ?></span>
   </div>
   <div class="row gap-2 wrap">
+    <?php if ($course['status'] === 'PUBLISHED'): ?>
+      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light'); ?>
+    <?php endif; ?>
     <?php if (in_array($course['status'], ['DRAFT', 'REJECTED'], true)): ?>
       <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="submit_for_review"><button class="btn btn-primary btn-sm">Submit for Review</button></form>
     <?php elseif ($course['status'] === 'PENDING_REVIEW'): ?>
@@ -313,4 +316,5 @@ document.querySelectorAll('form[data-confirm]').forEach((f) => {
   f.addEventListener('submit', (e) => { if (!confirm(f.dataset.confirm)) e.preventDefault(); });
 });
 </script>
+<script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

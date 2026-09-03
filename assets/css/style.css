@@ -1025,7 +1025,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-hero .stars { color: var(--gold); letter-spacing: 1px; }
 
 .course-hero .instructor {
-  margin-top: 26px; display:inline-flex; align-items:center; gap:12px;
+  display:inline-flex; align-items:center; gap:12px;
   background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
   padding: 10px 18px 10px 10px; border-radius: var(--radius-full); text-decoration:none;
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
@@ -1672,3 +1672,39 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .trending-post-meta { font-size: 11px; color: #8a5c05; margin-top: 4px; font-weight: 600; }
 
 .community-activity-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; color: #fff; background: rgba(0,0,0,0.35); backdrop-filter: blur(4px); padding: 4px 10px; border-radius: var(--radius-full); position: absolute; top: 12px; right: 12px; z-index: 1; }
+
+/* ---------- share button + popover ---------- */
+.share-menu-wrap { position: relative; display: inline-block; }
+.btn-share {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); color: #fff;
+  font: inherit; font-size: 13.5px; font-weight: 700; padding: 10px 20px 10px 16px; border-radius: var(--radius-full);
+  cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.btn-share:hover, .btn-share[aria-expanded="true"] { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); transform: translateY(-1px); }
+.btn-share svg { width: 16px; height: 16px; flex-shrink: 0; }
+/* Explicit light variant for a white-card/dashboard context, not a dark hero. */
+.btn-share-light { background: var(--surface); border-color: var(--border); color: var(--ink); }
+.btn-share-light:hover, .btn-share-light[aria-expanded="true"] { background: var(--border); border-color: var(--border-strong); }
+
+.share-menu {
+  position: absolute; z-index: 30; top: calc(100% + 10px); left: 0; width: 264px;
+  background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--border);
+  box-shadow: 0 20px 44px -18px rgba(16,24,27,0.35); padding: 8px;
+  opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+.share-menu:not([hidden]) { opacity: 1; visibility: visible; transform: translateY(0); }
+.share-menu-head { padding: 8px 10px 10px; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.share-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: none; padding: 9px 10px; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; transition: background-color 0.15s ease; }
+.share-row:hover { background: var(--surface); }
+.share-row-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.share-row-icon svg { width: 16px; height: 16px; }
+
+.share-toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(12px);
+  background: var(--ink); color: #fff; font-size: 13.5px; font-weight: 600;
+  padding: 12px 20px; border-radius: var(--radius-full); box-shadow: 0 12px 30px -10px rgba(0,0,0,0.4);
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.share-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce) { .btn-share, .share-menu, .share-row, .share-toast { transition: none; } }

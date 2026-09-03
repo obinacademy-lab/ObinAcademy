@@ -138,17 +138,20 @@ require __DIR__ . '/../includes/header.php';
         <span class="meta-chip"><?php dash_icon('play'); ?><?= $totalLessons ?> lessons</span>
       </div>
 
-      <a href="#instructor-card" class="instructor">
-        <div class="avatar">
-          <?php if (!empty($course['creator_avatar_url'])): ?>
-            <img src="<?= e(asset_src($course['creator_avatar_url'])) ?>" alt="">
-          <?php else: ?><?= e(mb_substr($course['creator_name'], 0, 1)) ?><?php endif; ?>
-        </div>
-        <div>
-          <div class="name"><?= e($course['creator_name']) ?></div>
-          <div class="headline"><?= e($course['creator_headline'] ?: 'Instructor') ?></div>
-        </div>
-      </a>
+      <div class="row gap-2 wrap" style="align-items:center; margin-top:26px;">
+        <a href="#instructor-card" class="instructor">
+          <div class="avatar">
+            <?php if (!empty($course['creator_avatar_url'])): ?>
+              <img src="<?= e(asset_src($course['creator_avatar_url'])) ?>" alt="">
+            <?php else: ?><?= e(mb_substr($course['creator_name'], 0, 1)) ?><?php endif; ?>
+          </div>
+          <div>
+            <div class="name"><?= e($course['creator_name']) ?></div>
+            <div class="headline"><?= e($course['creator_headline'] ?: 'Instructor') ?></div>
+          </div>
+        </a>
+        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title']); ?>
+      </div>
     </div>
   </div>
 </section>
@@ -297,4 +300,5 @@ require __DIR__ . '/../includes/header.php';
 
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/review.js')) ?>"></script>
+<script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
