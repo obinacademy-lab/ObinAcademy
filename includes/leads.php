@@ -67,6 +67,40 @@ function capture_lead(array $data, ?string $visitorId, string $referrerSource): 
 
 const LEAD_STATUSES = ['NEW', 'CONTACTED', 'INTERESTED', 'ENROLLED', 'CREATOR', 'LOST'];
 
+/** New leads captured per day for the last $days days — for the CRM's trend chart. */
+function get_leads_daily_series(int $days = 30): array {
+    $rows = db_all(
+        'SELECT DATE(created_at) AS d, COUNT(*) AS n FROM leads
+         WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) GROUP BY DATE(created_at)',
+        [$days - 1]
+    );
+    $byDate = [];
+    foreach ($rows as $r) $byDate[$r['d']] = (int) $r['n'];
+
+    $series = [];
+    for ($i = $days - 1; $i >= 0; $i--) {
+        $date = date('Y-m-d', strtotime("-$i days"));
+        $series[] = ['date' => $date, 'count' => $byDate[$date] ?? 0];
+    }
+    return $series;
+}
+
+/** @return array<string,int> counts of every status, in LEAD_STATUSES order, zero-filled */
+function get_lead_status_breakdown(): array {
+    $rows = db_all('SELECT status, COUNT(*) AS n FROM leads GROUP BY status');
+    $counts = array_fill_keys(LEAD_STATUSES, 0);
+    foreach ($rows as $r) $counts[$r['status']] = (int) $r['n'];
+    return $counts;
+}
+
+/** @return array<string,int> counts of every source, zero-filled */
+function get_lead_source_breakdown(): array {
+    $rows = db_all('SELECT source, COUNT(*) AS n FROM leads GROUP BY source');
+    $counts = ['google' => 0, 'social' => 0, 'direct' => 0, 'other' => 0];
+    foreach ($rows as $r) $counts[$r['source']] = (int) $r['n'];
+    return $counts;
+}
+
 /**
  * @param array{q?:string, status?:string, type?:string, source?:string} $filters
  * @return array{rows: array, total: int}

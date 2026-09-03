@@ -19,30 +19,6 @@ $osBreakdown = get_breakdown('os', $days);
 $deviceLabels = ['desktop' => 'Desktop', 'mobile' => 'Mobile', 'tablet' => 'Tablet'];
 $countryNames = ['UG' => 'Uganda', 'KE' => 'Kenya', 'TZ' => 'Tanzania', 'RW' => 'Rwanda', 'NG' => 'Nigeria', 'GH' => 'Ghana', 'US' => 'United States', 'GB' => 'United Kingdom'];
 
-function format_duration_short(int $seconds): string {
-    if ($seconds < 60) return $seconds . 's';
-    return floor($seconds / 60) . 'm ' . ($seconds % 60) . 's';
-}
-
-/** Renders a labeled horizontal bar-list — the same pattern used for Traffic Sources. */
-function render_bar_list(array $counts, array $labels = [], int $limit = 6): void {
-    $total = array_sum($counts) ?: 1;
-    arsort($counts);
-    $counts = array_slice($counts, 0, $limit, true);
-    if (!$counts) {
-        echo '<p class="muted small" style="margin-top:14px;">No data yet in this range.</p>';
-        return;
-    }
-    echo '<div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">';
-    foreach ($counts as $key => $count) {
-        $pct = round($count / $total * 100);
-        $label = $labels[$key] ?? $key;
-        echo '<div><div class="row between" style="font-size:12.5px; font-weight:700;"><span>' . e($label) . '</span>'
-           . '<span class="muted" style="font-weight:600;">' . number_format($count) . ' (' . $pct . '%)</span></div>'
-           . '<div class="progress-track" style="margin-top:5px;"><div class="progress-fill" style="width:' . $pct . '%;"></div></div></div>';
-    }
-    echo '</div>';
-}
 
 $sourceLabels = [
     'google' => ['label' => 'Google / Search', 'color' => '#2563eb'],

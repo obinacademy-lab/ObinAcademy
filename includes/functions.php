@@ -137,6 +137,31 @@ function dash_icon(string $name, string $class = ''): void {
     echo '<svg class="' . e($class) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' . $paths[$name] . '</svg>';
 }
 
+function format_duration_short(int $seconds): string {
+    if ($seconds < 60) return $seconds . 's';
+    return floor($seconds / 60) . 'm ' . ($seconds % 60) . 's';
+}
+
+/** Renders a labeled horizontal bar-list — used by every admin breakdown panel (traffic sources, device/browser/OS, lead status/source, etc). */
+function render_bar_list(array $counts, array $labels = [], int $limit = 6): void {
+    $total = array_sum($counts) ?: 1;
+    arsort($counts);
+    $counts = array_slice($counts, 0, $limit, true);
+    if (!$counts) {
+        echo '<p class="muted small" style="margin-top:14px;">No data yet in this range.</p>';
+        return;
+    }
+    echo '<div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">';
+    foreach ($counts as $key => $count) {
+        $pct = round($count / $total * 100);
+        $label = $labels[$key] ?? $key;
+        echo '<div><div class="row between" style="font-size:12.5px; font-weight:700;"><span>' . e($label) . '</span>'
+           . '<span class="muted" style="font-weight:600;">' . number_format($count) . ' (' . $pct . '%)</span></div>'
+           . '<div class="progress-track" style="margin-top:5px;"><div class="progress-fill" style="width:' . $pct . '%;"></div></div></div>';
+    }
+    echo '</div>';
+}
+
 /**
  * Builds a smooth SVG path ('d' attribute) through a series of [x, y] points using
  * Catmull-Rom-to-Bezier interpolation, so charts render as a curve rather than
