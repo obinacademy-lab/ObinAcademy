@@ -40,10 +40,15 @@ if ($detailId) {
     ?>
     <a href="<?= e(base_url('dashboard/admin/leads.php')) ?>" class="muted small" style="display:inline-flex; align-items:center; gap:6px;">&larr; Back to Leads</a>
 
+    <?php
+      $location = trim(($lead['city'] ?? '') . ($lead['city'] && $lead['country'] ? ', ' : '') . ($lead['country'] ? country_name($lead['country']) : ''), ' ,');
+    ?>
     <div class="dash-page-head" style="margin-top:14px;">
       <div>
         <h1 class="h2"><?= e($lead['name']) ?></h1>
-        <p class="muted" style="margin-top:6px;"><?= e($lead['email']) ?><?= $lead['phone'] ? ' &middot; ' . e($lead['phone']) : '' ?></p>
+        <p class="muted" style="margin-top:6px;">
+          <?= e($lead['email']) ?><?= $lead['phone'] ? ' &middot; ' . e($lead['phone']) : '' ?><?= $location ? ' &middot; 📍 ' . e($location) : '' ?>
+        </p>
       </div>
       <span class="role-pill" style="--tint:<?= e($statusTint[$lead['status']]) ?>; font-size:12px; padding:6px 14px;"><?= e($statusLabels[$lead['status']]) ?></span>
     </div>
@@ -297,9 +302,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="table-wrap" style="margin-top:14px;">
   <?php if ($leads): ?>
     <table>
-      <thead><tr><th>Lead</th><th>Type</th><th>Source</th><th>Status</th><th>Visits</th><th>Last Visit</th><th></th></tr></thead>
+      <thead><tr><th>Lead</th><th>Type</th><th>Source</th><th>Location</th><th>Status</th><th>Visits</th><th>Last Visit</th><th></th></tr></thead>
       <tbody>
-        <?php foreach ($leads as $l): ?>
+        <?php foreach ($leads as $l): $rowLocation = trim(($l['city'] ?? '') . ($l['city'] && $l['country'] ? ', ' : '') . ($l['country'] ? country_name($l['country']) : ''), ' ,'); ?>
           <tr>
             <td>
               <div class="row gap-2" style="align-items:center;">
@@ -312,6 +317,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             </td>
             <td><?= $l['lead_type'] === 'creator' ? '🚀 Creator' : '🎓 Learner' ?></td>
             <td class="small"><?= e($sourceLabels[$l['source']] ?? $l['source']) ?></td>
+            <td class="small"><?= $rowLocation ? e($rowLocation) : '<span class="muted">—</span>' ?></td>
             <td><span class="role-pill" style="--tint:<?= e($statusTint[$l['status']]) ?>;"><?= e($statusLabels[$l['status']]) ?></span></td>
             <td style="font-variant-numeric:tabular-nums;"><?= (int) $l['visit_count'] ?></td>
             <td class="small"><?= e(format_date($l['last_visit_at'])) ?></td>

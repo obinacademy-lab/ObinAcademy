@@ -134,15 +134,22 @@ function get_leads(array $filters = [], int $page = 1, int $perPage = 25): array
     $perPage = max(1, min(100, $perPage));
     $offset = max(0, ($page - 1) * $perPage);
     $rows = db_all(
-        "SELECT * FROM leads $whereSql ORDER BY created_at DESC LIMIT $perPage OFFSET $offset",
+        "SELECT l.*, " . LEAD_LOCATION_SUBQUERY . "
+         FROM leads l $whereSql ORDER BY created_at DESC LIMIT $perPage OFFSET $offset",
         $params
     );
 
     return ['rows' => $rows, 'total' => $total];
 }
 
+/** Most recent known country/city for the lead's visitor, if any session ever resolved one. */
+const LEAD_LOCATION_SUBQUERY = "
+    (SELECT vs.country FROM visitor_sessions vs WHERE vs.visitor_id = l.visitor_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) AS country,
+    (SELECT vs.city FROM visitor_sessions vs WHERE vs.visitor_id = l.visitor_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) AS city
+";
+
 function get_lead_by_id(int $id): ?array {
-    return db_one('SELECT * FROM leads WHERE id = ?', [$id]);
+    return db_one("SELECT l.*, " . LEAD_LOCATION_SUBQUERY . " FROM leads l WHERE l.id = ?", [$id]);
 }
 
 function set_lead_status(int $leadId, string $status): bool {

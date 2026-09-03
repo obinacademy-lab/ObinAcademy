@@ -137,6 +137,13 @@ function dash_icon(string $name, string $class = ''): void {
     echo '<svg class="' . e($class) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' . $paths[$name] . '</svg>';
 }
 
+/** ISO country code -> display name, for the handful of countries this platform's traffic realistically comes from. Falls back to the raw code for anything else. */
+function country_name(?string $code): string {
+    if (!$code) return '—';
+    $names = ['UG' => 'Uganda', 'KE' => 'Kenya', 'TZ' => 'Tanzania', 'RW' => 'Rwanda', 'NG' => 'Nigeria', 'GH' => 'Ghana', 'US' => 'United States', 'GB' => 'United Kingdom'];
+    return $names[$code] ?? $code;
+}
+
 function format_duration_short(int $seconds): string {
     if ($seconds < 60) return $seconds . 's';
     return floor($seconds / 60) . 'm ' . ($seconds % 60) . 's';

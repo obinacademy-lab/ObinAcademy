@@ -59,9 +59,17 @@ function parse_user_agent(string $ua): array {
     return ['device_type' => $device, 'browser' => $browser, 'os' => $os];
 }
 
+/**
+ * The app sits behind Hostinger's edge CDN (confirmed via a "Server: hcdn"
+ * response header), so REMOTE_ADDR alone is the proxy's own address, not
+ * the visitor's. Checked in order of how common each header is across
+ * CDN/proxy setups — the first non-empty one wins.
+ */
 function get_client_ip(): string {
-    $fwd = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-    if ($fwd !== '') return trim(explode(',', $fwd)[0]);
+    foreach (['HTTP_X_FORWARDED_FOR', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_TRUE_CLIENT_IP'] as $header) {
+        $value = trim((string) ($_SERVER[$header] ?? ''));
+        if ($value !== '') return trim(explode(',', $value)[0]);
+    }
     return $_SERVER['REMOTE_ADDR'] ?? '';
 }
 
@@ -300,9 +308,14 @@ function get_most_viewed_courses(int $days = 30, int $limit = 8): array {
  */
 function geo_backfill_sweep(int $limit = 30): int {
     $limit = max(1, min(100, $limit));
+    // No age cutoff — an hourly sweep only clears its own small backlog if
+    // every session is guaranteed to be looked up eventually. A cutoff here
+    // meant any session older than the window when the cron first started
+    // running (or after any gap in it running) would be permanently
+    // skipped rather than just caught up on the next run.
     $pending = db_all(
         "SELECT id, ip_address FROM visitor_sessions
-         WHERE country IS NULL AND ip_address IS NOT NULL AND started_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+         WHERE country IS NULL AND ip_address IS NOT NULL
          ORDER BY started_at DESC LIMIT $limit"
     );
 

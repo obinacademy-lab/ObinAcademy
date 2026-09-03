@@ -17,7 +17,6 @@ $browserBreakdown = get_breakdown('browser', $days);
 $osBreakdown = get_breakdown('os', $days);
 
 $deviceLabels = ['desktop' => 'Desktop', 'mobile' => 'Mobile', 'tablet' => 'Tablet'];
-$countryNames = ['UG' => 'Uganda', 'KE' => 'Kenya', 'TZ' => 'Tanzania', 'RW' => 'Rwanda', 'NG' => 'Nigeria', 'GH' => 'Ghana', 'US' => 'United States', 'GB' => 'United Kingdom'];
 
 
 $sourceLabels = [
@@ -247,7 +246,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <?php foreach ($topCities as $c): ?>
           <tr>
             <td><?= e($c['city']) ?></td>
-            <td><?= e($countryNames[$c['country']] ?? $c['country'] ?? '—') ?></td>
+            <td><?= e(country_name($c['country'])) ?></td>
             <td><?= number_format((int) $c['n']) ?></td>
           </tr>
         <?php endforeach; ?>
