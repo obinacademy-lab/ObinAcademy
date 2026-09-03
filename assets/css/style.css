@@ -1470,3 +1470,17 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (prefers-reduced-motion: reduce) {
   .lead-overlay, .lead-modal { transition: none; }
 }
+
+/* ---------- cookie consent banner ---------- */
+.consent-banner {
+  position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 190;
+  max-width: 620px; margin: 0 auto;
+  background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg);
+  padding: 18px 20px; box-shadow: 0 20px 44px -18px rgba(16,24,27,0.35);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+}
+.consent-banner[hidden] { display: none; }
+.consent-banner-text { flex: 1 1 260px; min-width: 0; }
+.consent-banner-text p { font-size: 13px; line-height: 1.5; color: var(--muted); margin: 0; }
+.consent-banner-text a { color: var(--ink); text-decoration: underline; }
+.consent-banner-actions { display: flex; gap: 8px; flex-shrink: 0; }

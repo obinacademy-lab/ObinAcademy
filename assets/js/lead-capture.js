@@ -6,6 +6,7 @@
   if (window.OBIN_LOGGED_IN) return;
   if (document.cookie.split("; ").some((c) => c.startsWith("oa_lead_status="))) return;
 
+  function start() {
   const overlay = document.querySelector("[data-lead-overlay]");
   if (!overlay) return;
   const panels = {
@@ -144,4 +145,15 @@
       }
     });
   });
+  } // end start()
+
+  const consent = window.obinConsent ? window.obinConsent() : null;
+  if (consent === "accepted") {
+    start();
+  } else if (consent === null) {
+    document.addEventListener("obin:consent-changed", (e) => {
+      if (e.detail && e.detail.value === "accepted") start();
+    }, { once: true });
+  }
+  // consent === "rejected": popups never show.
 })();

@@ -161,6 +161,54 @@ function get_lead_courses_viewed(?string $visitorId): array {
     return db_all("SELECT slug, title FROM courses WHERE slug IN ($placeholders)", $slugList);
 }
 
+/**
+ * Sends whatever drip-sequence step (3/5/7) is due for each eligible lead —
+ * range-based ("at least N days old"), not exact-day equality, so a missed
+ * cron run never permanently skips a step. lead_sequence_log's UNIQUE
+ * constraint is the only double-send guard. Enrolled/lost/unsubscribed
+ * leads are skipped. Returns counts sent per step, for the cron log line.
+ */
+function send_due_sequence_emails(): array {
+    return [
+        'day3' => send_due_step(3),
+        'day5' => send_due_step(5),
+        'day7' => send_due_step(7),
+    ];
+}
+
+function send_due_step(int $step): int {
+    $due = db_all(
+        "SELECT * FROM leads
+         WHERE DATE(created_at) <= CURDATE() - INTERVAL ? DAY
+           AND unsubscribed = 0 AND status NOT IN ('ENROLLED', 'LOST')
+           AND NOT EXISTS (SELECT 1 FROM lead_sequence_log s WHERE s.lead_id = leads.id AND s.step = ?)",
+        [$step, $step]
+    );
+
+    foreach ($due as $lead) {
+        $unsubscribeUrl = base_url('unsubscribe.php?token=' . unsubscribe_token((int) $lead['id']));
+        match ($step) {
+            3 => send_lead_day3_email($lead['email'], $lead['name'], $lead['lead_type'], $unsubscribeUrl),
+            5 => send_lead_day5_email($lead['email'], $lead['name'], get_trending_courses(3), $unsubscribeUrl),
+            7 => send_lead_day7_email($lead['email'], $lead['name'], get_courses_on_sale(3), $unsubscribeUrl),
+            default => null,
+        };
+        // Logged whether or not the send actually succeeded (resend_send()
+        // fails soft and logs server-side) — a permanently-failing address
+        // must not be retried forever, same philosophy as the geo sweep.
+        db_run('INSERT IGNORE INTO lead_sequence_log (lead_id, step) VALUES (?, ?)', [$lead['id'], $step]);
+    }
+    return count($due);
+}
+
+/** Courses genuinely on sale right now — for the day-7 email. Never a fabricated "limited time" claim. */
+function get_courses_on_sale(int $limit = 3): array {
+    return get_course_cards(
+        'c.sale_price IS NOT NULL AND c.sale_price > 0 AND c.sale_price < c.price',
+        [], 'c.created_at DESC', $limit
+    );
+}
+
 function lead_whatsapp_url(string $name, string $leadType): string {
     $message = $leadType === 'creator'
         ? "Hi! I'm {$name} — I just signed up on Obin Academy and I'm interested in becoming a creator."

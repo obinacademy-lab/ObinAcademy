@@ -246,6 +246,131 @@ function send_lead_creator_invitation_email(string $to, string $name, string $un
         HTML);
 }
 
+/** Day 3 of the lead drip sequence — why the platform is worth their time, branched by lead type. */
+function send_lead_day3_email(string $to, string $name, string $leadType, string $unsubscribeUrl): void {
+    $isCreator = $leadType === 'creator';
+    $subject = $isCreator ? "Why creators are choosing Obin Academy" : "3 reasons learners love Obin Academy";
+    $bullets = $isCreator
+        ? "<li style=\"margin-bottom:10px;\">Keep 90% of every sale — we take a 10% platform fee, nothing hidden</li>"
+          . "<li style=\"margin-bottom:10px;\">Get paid instantly by mobile money — no waiting on bank transfers</li>"
+          . "<li style=\"margin-bottom:10px;\">Reach learners across East Africa without building your own website</li>"
+        : "<li style=\"margin-bottom:10px;\">Practical courses in finance, tech, business and more — taught by real African creators</li>"
+          . "<li style=\"margin-bottom:10px;\">Pay instantly with MTN or Airtel Mobile Money — no card needed</li>"
+          . "<li style=\"margin-bottom:10px;\">Earn a real Certificate of Completion for every course you finish</li>";
+    $ctaUrl = $isCreator ? base_url('become-creator.php') : base_url('courses/index.php');
+    $ctaLabel = $isCreator ? 'Apply to Become a Creator' : 'Browse Courses';
+
+    resend_send($to, $subject, <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">Hey {$name}, quick follow-up 👋</h2>
+          <p>Here's what makes Obin Academy worth a closer look:</p>
+          <ul style="padding-left: 20px; color: #14181b; font-size: 14px;">{$bullets}</ul>
+          <p style="margin-top: 20px;">
+            <a href="{$ctaUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">{$ctaLabel}</a>
+          </p>
+          <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            You're receiving this because you asked to hear from us on obinacademy.site.
+            <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from marketing emails</a>.
+          </p>
+        </div>
+        HTML);
+}
+
+/** Day 5 — a fresh set of popular courses (same real trending data the homepage uses). */
+function send_lead_day5_email(string $to, string $name, array $courses, string $unsubscribeUrl): void {
+    $courseRows = '';
+    foreach ($courses as $c) {
+        $url = base_url('courses/view.php?slug=' . $c['slug']);
+        $courseRows .= <<<HTML
+            <tr>
+              <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <a href="{$url}" style="color: #14181b; text-decoration: none; font-weight: 700; font-size: 14px;">{$c['title']}</a>
+                <div style="color: #5b6670; font-size: 12.5px; margin-top: 2px;">by {$c['creator_name']} &middot; {$c['student_count']} students</div>
+              </td>
+            </tr>
+            HTML;
+    }
+    $exploreUrl = base_url('courses/index.php');
+
+    resend_send($to, "What other learners are taking right now", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">Still deciding, {$name}?</h2>
+          <p>Here's what's popular on Obin Academy this week:</p>
+          <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 8px;">{$courseRows}</table>
+          <p style="margin-top: 24px;">
+            <a href="{$exploreUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">See All Courses</a>
+          </p>
+          <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            You're receiving this because you asked to hear from us on obinacademy.site.
+            <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from marketing emails</a>.
+          </p>
+        </div>
+        HTML);
+}
+
+/**
+ * Day 7 — the final drip touch. Only ever surfaces courses that are
+ * genuinely on sale (a real sale_price the creator set) — if nothing is
+ * actually on sale right now, $onSaleCourses is empty and the caller sends
+ * the plain "still exploring" variant instead of inventing urgency.
+ */
+function send_lead_day7_email(string $to, string $name, array $onSaleCourses, string $unsubscribeUrl): void {
+    $exploreUrl = base_url('courses/index.php');
+
+    if (!$onSaleCourses) {
+        resend_send($to, "Still thinking it over, {$name}?", <<<HTML
+            <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+              <h2 style="color: #1e3a8a;">No pressure, {$name} — we'll be here</h2>
+              <p>
+                If now isn't the right time, that's completely fine. Whenever you're ready, Obin Academy's
+                courses are just a click away.
+              </p>
+              <p style="margin-top: 20px;">
+                <a href="{$exploreUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">Browse Courses</a>
+              </p>
+              <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                You're receiving this because you asked to hear from us on obinacademy.site.
+                <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from marketing emails</a>.
+              </p>
+            </div>
+            HTML);
+        return;
+    }
+
+    $courseRows = '';
+    foreach ($onSaleCourses as $c) {
+        $url = base_url('courses/view.php?slug=' . $c['slug']);
+        $wasPrice = format_money((float) $c['price']);
+        $nowPrice = format_money((float) $c['sale_price']);
+        $courseRows .= <<<HTML
+            <tr>
+              <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <a href="{$url}" style="color: #14181b; text-decoration: none; font-weight: 700; font-size: 14px;">{$c['title']}</a>
+                <div style="margin-top: 2px; font-size: 12.5px;">
+                  <span style="color: #9ca3af; text-decoration: line-through;">{$wasPrice}</span>
+                  <span style="color: #16a34a; font-weight: 700;"> {$nowPrice}</span>
+                </div>
+              </td>
+            </tr>
+            HTML;
+    }
+
+    resend_send($to, "These courses are on sale right now", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">A few courses are on sale, {$name}</h2>
+          <p>These are genuinely discounted right now — not a countdown gimmick, just real pricing from the creators:</p>
+          <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 8px;">{$courseRows}</table>
+          <p style="margin-top: 24px;">
+            <a href="{$exploreUrl}" style="display: inline-block; background: #f5b301; color: #1e1400; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 700;">See These Courses</a>
+          </p>
+          <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            You're receiving this because you asked to hear from us on obinacademy.site.
+            <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from marketing emails</a>.
+          </p>
+        </div>
+        HTML);
+}
+
 function send_creator_application_approved_email(string $to, string $name): void {
     $loginUrl = base_url('login.php?redirect=' . urlencode('/dashboard/creator/index.php'));
     resend_send($to, "You're Approved as an Obin Academy Creator!", <<<HTML

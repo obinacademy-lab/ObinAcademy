@@ -118,6 +118,7 @@
     </div>
   </footer>
 
+  <?php require __DIR__ . '/consent_banner.php'; ?>
   <?php require __DIR__ . '/lead_popup.php'; ?>
 
   <script>
@@ -125,6 +126,7 @@
     window.OBIN_LOGGED_IN = <?= !empty($user) ? 'true' : 'false' ?>;
   </script>
   <script src="<?= e(versioned_asset('assets/js/main.js')) ?>"></script>
+  <script src="<?= e(versioned_asset('assets/js/cookie-consent.js')) ?>"></script>
   <script src="<?= e(versioned_asset('assets/js/visitor-tracker.js')) ?>"></script>
   <script src="<?= e(versioned_asset('assets/js/lead-capture.js')) ?>"></script>
 </body>

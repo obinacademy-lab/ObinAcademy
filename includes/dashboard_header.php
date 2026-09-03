@@ -3,6 +3,8 @@
  * Dashboard shell. Requires $user (from require_login/require_role) and
  * optionally $pageTitle before include.
  */
+require_once __DIR__ . '/notifications.php';
+
 // Grouped as [group label => [href, label, icon name]] so the sidebar reads
 // as sections of related tasks rather than one flat list of links.
 $navByRole = [
@@ -53,7 +55,11 @@ $currentPath = current_path();
 // instead of sitting mostly empty below a short link list.
 $navBadges = [];
 $sidebarWidget = null;
+$adminNotifications = [];
+$unreadNotifCount = 0;
 if ($user['role'] === 'ADMIN') {
+    $adminNotifications = get_admin_notifications(8);
+    $unreadNotifCount = get_unread_notification_count();
     $navBadges = [
         '/dashboard/admin/creator-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'],
         '/dashboard/admin/withdrawals.php' => (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'],
@@ -153,9 +159,36 @@ if ($user['role'] === 'ADMIN') {
         </div>
       </div>
       <div class="dash-header-right">
-        <button class="dash-icon-btn" aria-label="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        </button>
+        <?php if ($user['role'] === 'ADMIN'): ?>
+        <div class="account-menu dash-notif-menu">
+          <button class="dash-icon-btn" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <?php if ($unreadNotifCount > 0): ?><span class="notif-dot"></span><?php endif; ?>
+          </button>
+          <div class="account-dropdown dash-notif-dropdown">
+            <div class="account-dropdown-head row between" style="align-items:center;">
+              <span class="name" style="font-size:13px;">Notifications</span>
+              <?php if ($unreadNotifCount > 0): ?>
+                <form method="post" action="<?= e(base_url('api/mark-notifications-read.php')) ?>">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="redirect" value="<?= e(current_path()) ?>">
+                  <button type="submit" class="dash-notif-mark-read">Mark all read</button>
+                </form>
+              <?php endif; ?>
+            </div>
+            <?php if ($adminNotifications): ?>
+              <?php foreach ($adminNotifications as $n): ?>
+                <div class="dash-notif-row <?= $n['is_read'] ? '' : 'unread' ?>">
+                  <p><?= e($n['message']) ?></p>
+                  <span class="muted"><?= e(format_date($n['created_at'])) ?></span>
+                </div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <p class="muted small" style="padding:12px;">No notifications yet.</p>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endif; ?>
         <div class="account-menu dash-account">
           <button class="dash-who">
             <span class="avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></span>
