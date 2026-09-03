@@ -52,11 +52,4 @@ require __DIR__ . '/includes/auth_header.php';
   <p class="small" style="margin-top: 24px; text-align:center;">
     Don't have an account? <a href="<?= e(base_url('signup.php')) ?>" style="color: var(--accent); font-weight:600;">Sign Up</a>
   </p>
-
-  <div class="auth-demo-box">
-    <strong>Demo accounts</strong>
-    Admin: admin@obinacademy.com / Passw0rd!<br>
-    Creator: sarah.namuli@obinacademy.com / Passw0rd!<br>
-    Learner: john.mukasa@example.com / Passw0rd!
-  </div>
 <?php require __DIR__ . '/includes/auth_footer.php'; ?>
