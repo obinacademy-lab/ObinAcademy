@@ -51,11 +51,16 @@ document.addEventListener("DOMContentLoaded", () => {
       videoWrap.appendChild(iframe);
 
       const fullscreenLink = document.createElement("a");
-      fullscreenLink.href = src;
+      // #toolbar=0 here too — without it, opening as its own top-level page
+      // hands a non-premium learner the browser's native PDF toolbar, which
+      // has its own Download button. That would bypass the whole point of
+      // gating downloads behind the premium upgrade; the embedded iframe
+      // above already hides it for the same reason.
+      fullscreenLink.href = src + "#toolbar=0";
       fullscreenLink.target = "_blank";
       fullscreenLink.rel = "noopener noreferrer";
       fullscreenLink.className = "pdf-fullscreen-link";
-      fullscreenLink.innerHTML = "⛶ Open Fullscreen";
+      fullscreenLink.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>Open Fullscreen</span>';
       videoWrap.appendChild(fullscreenLink);
     }
 
