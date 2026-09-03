@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
-require __DIR__ . '/includes/community.php';
 
 header('Content-Type: application/xml; charset=utf-8');
 
@@ -11,8 +10,6 @@ $urls = [];
 $staticPages = [
     ['index.php', 'daily', '1.0'],
     ['courses/index.php', 'daily', '0.9'],
-    ['community/index.php', 'weekly', '0.8'],
-    ['study-groups/index.php', 'weekly', '0.6'],
     ['skills.php', 'weekly', '0.6'],
     ['stories.php', 'weekly', '0.5'],
     ['become-creator.php', 'monthly', '0.6'],
@@ -33,16 +30,6 @@ foreach ($courses as $c) {
         'changefreq' => 'weekly',
         'priority' => '0.8',
     ];
-}
-
-$communities = search_communities('', 500);
-foreach ($communities as $c) {
-    $urls[] = ['loc' => base_url('community/view.php?slug=' . $c['slug']), 'changefreq' => 'weekly', 'priority' => '0.6'];
-}
-
-$studyGroups = get_study_groups('', 500);
-foreach ($studyGroups as $g) {
-    $urls[] = ['loc' => base_url('study-groups/view.php?slug=' . $g['slug']), 'changefreq' => 'weekly', 'priority' => '0.4'];
 }
 
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

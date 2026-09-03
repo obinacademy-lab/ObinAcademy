@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/storage.php';
-require __DIR__ . '/../includes/profiles.php';
 $user = require_login();
 
 $errors = [];
@@ -18,8 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $youtubeUrl = post('youtubeUrl');
     $tiktokUrl = post('tiktokUrl');
     $linkedinUrl = post('linkedinUrl');
-    $skills = tags_to_csv(explode(',', post('skills')));
-    $lookingFor = tags_to_csv(array_intersect($_POST['looking_for'] ?? [], LOOKING_FOR_OPTIONS));
 
     if (strlen($name) < 1) $errors[] = 'Name is required.';
     if ($phone !== '' && !preg_match('/^[0-9+\s-]{9,}$/', $phone)) $errors[] = 'Enter a valid phone number.';
@@ -37,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
-        $sql = 'UPDATE users SET name=?, phone=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?, skills=?, looking_for=?' . ($avatarUrl ? ', avatar_url=?' : '') . ' WHERE id=?';
-        $params = [$name, $phone ?: null, $headline ?: null, $bio ?: null, $facebookUrl ?: null, $instagramUrl ?: null, $youtubeUrl ?: null, $tiktokUrl ?: null, $linkedinUrl ?: null, $skills, $lookingFor];
+        $sql = 'UPDATE users SET name=?, phone=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?' . ($avatarUrl ? ', avatar_url=?' : '') . ' WHERE id=?';
+        $params = [$name, $phone ?: null, $headline ?: null, $bio ?: null, $facebookUrl ?: null, $instagramUrl ?: null, $youtubeUrl ?: null, $tiktokUrl ?: null, $linkedinUrl ?: null];
         if ($avatarUrl) $params[] = $avatarUrl;
         $params[] = $user['id'];
         db_run($sql, $params);
@@ -78,25 +75,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
   </div>
   <div class="field">
     <label for="bio">Bio</label>
-    <textarea id="bio" name="bio" rows="4" placeholder="Shown on your community profile."><?= e($user['bio'] ?? '') ?></textarea>
-  </div>
-  <div class="field">
-    <label for="skills">Skills</label>
-    <p class="help" style="margin-bottom:10px;">Comma-separated — shown as tags on your community profile.</p>
-    <input id="skills" name="skills" type="text" placeholder="e.g. Budgeting, Excel, Public Speaking" value="<?= e(implode(', ', parse_csv_tags($user['skills'] ?? null))) ?>">
-  </div>
-  <div class="field">
-    <label>Looking For</label>
-    <p class="help" style="margin-bottom:10px;">Let the community know what you're open to — shown on your profile.</p>
-    <?php $myLookingFor = parse_csv_tags($user['looking_for'] ?? null); ?>
-    <div class="chip-row">
-      <?php foreach (LOOKING_FOR_OPTIONS as $option): ?>
-        <label class="chip<?= in_array($option, $myLookingFor, true) ? ' active' : '' ?>" style="cursor:pointer;">
-          <input type="checkbox" name="looking_for[]" value="<?= e($option) ?>" <?= in_array($option, $myLookingFor, true) ? 'checked' : '' ?> style="width:auto; margin:0 6px 0 0;">
-          <?= e($option) ?>
-        </label>
-      <?php endforeach; ?>
-    </div>
+    <textarea id="bio" name="bio" rows="4" placeholder="Shown on your profile."><?= e($user['bio'] ?? '') ?></textarea>
   </div>
   <div class="field">
     <label>Social Media Links</label>

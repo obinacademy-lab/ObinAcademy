@@ -9,14 +9,12 @@ const UPLOAD_MAX_BYTES = [
     'videos' => 3 * 1024 * 1024 * 1024, // 3GB
     'pdfs' => 500 * 1024 * 1024,        // 500MB
     'thumbnails' => 5 * 1024 * 1024,    // 5MB
-    'community' => 5 * 1024 * 1024,     // 5MB — community post images
 ];
 
 const UPLOAD_ALLOWED_TYPES = [
     'videos' => ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'],
     'pdfs' => ['application/pdf'],
     'thumbnails' => ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
-    'community' => ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
 ];
 
 function private_uploads_root(): string {
@@ -61,7 +59,7 @@ function save_upload(array $file, string $folder): string {
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     $safeName = bin2hex(random_bytes(16)) . ($ext ? ".$ext" : '');
 
-    if ($folder === 'thumbnails' || $folder === 'community') {
+    if ($folder === 'thumbnails') {
         $dir = public_uploads_root() . "/$folder";
         if (!is_dir($dir)) mkdir($dir, 0755, true);
         $dest = "$dir/$safeName";

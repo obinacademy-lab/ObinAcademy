@@ -201,7 +201,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<h3 class="dash-section-label" style="margin-top:32px;">Community</h3>
+<h3 class="dash-section-label" style="margin-top:32px;">Platform</h3>
 <div class="grid md:grid-3 lg:grid-4" style="margin-top:14px;">
   <div class="stat-card" data-hoverable="true" style="--hover-color:#8b5cf6;"><div class="icon"><?php dash_icon('users'); ?></div><div class="value"><?= $userCount ?></div><div class="label">Total Users</div></div>
   <div class="stat-card" data-hoverable="true" style="--hover-color:#ec4899;"><div class="icon"><?php dash_icon('graduation-cap'); ?></div><div class="value"><?= $learnerCount ?></div><div class="label">Learners</div></div>

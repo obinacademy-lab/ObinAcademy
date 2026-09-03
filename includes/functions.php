@@ -35,6 +35,27 @@ function split_sale(float $price): array {
     return ['gross' => $gross, 'fee' => $fee, 'net' => $gross - $fee];
 }
 
+function get_profile(int $userId): ?array {
+    return db_one('SELECT * FROM users WHERE id = ?', [$userId]);
+}
+
+/** A learner's finished courses — enrollments.progress is a 0-100 percentage, same convention as the learner dashboard. */
+function get_courses_completed_count(int $userId): int {
+    return (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE user_id = ? AND progress >= 100', [$userId])['n'];
+}
+
+function get_courses_teaching(int $userId, int $limit = 20): array {
+    $limit = max(1, min(50, $limit));
+    return db_all(
+        "SELECT c.id, c.title, c.slug, c.thumbnail_url,
+                (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id) AS student_count
+         FROM courses c
+         WHERE c.creator_id = ? AND c.status = 'PUBLISHED'
+         ORDER BY c.created_at DESC LIMIT $limit",
+        [$userId]
+    );
+}
+
 /**
  * Generates a guest access token. Only the hash is ever stored (same pattern
  * as password_reset_tokens) — the plaintext is returned once, to embed in an
@@ -56,7 +77,7 @@ function format_date(string $datetime): string {
     return date('M j, Y', strtotime($datetime));
 }
 
-/** Relative time ("3m ago", "2h ago") for the community feed; falls back to a plain date past 7 days. */
+/** Relative time ("3m ago", "2h ago"); falls back to a plain date past 7 days. */
 function time_ago(string $datetime): string {
     $diff = time() - strtotime($datetime);
     if ($diff < 60) return 'just now';

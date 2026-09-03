@@ -37,7 +37,6 @@ function require_role(array $roles): array {
 function login_user(array $user): void {
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];
-    record_daily_activity((int) $user['id']);
 }
 
 function logout_user(): void {

@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/iotec.php';
 require_once __DIR__ . '/email.php';
-require_once __DIR__ . '/community.php';
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -105,10 +104,6 @@ function resolve_payment_with_iotec(array $payment): array {
                 db()->rollBack();
                 throw $e;
             }
-            // Guests have no persistent user_id to join a community with —
-            // they get a "sign up to join the discussion" prompt on the
-            // course page instead (Phase 1 UI), not silent membership.
-            if (!$isGuestPayment) auto_join_course_community((int) $payment['user_id'], (int) $payment['course_id']);
             send_payment_receipt_email($payment, $isGuestPayment, 'Course Enrollment');
         } else {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);

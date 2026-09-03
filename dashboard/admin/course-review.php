@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/audit.php';
-require __DIR__ . '/../../includes/community.php';
 $user = require_role(['ADMIN']);
 
 $courseId = (int) query_param('id');
@@ -13,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = post('_action');
     if ($action === 'approve') {
         db_run("UPDATE courses SET status='PUBLISHED', reviewed_at=NOW(), rejection_reason=NULL WHERE id=?", [$courseId]);
-        create_course_community($courseId);
         log_admin_action((int) $user['id'], $user['name'], 'course.approved', 'Course', $course['title']);
         flash_set('success', 'Course approved and published.');
     } elseif ($action === 'reject') {
