@@ -2,6 +2,7 @@
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/audit.php';
 require __DIR__ . '/../../includes/email.php';
+require __DIR__ . '/../../includes/community.php';
 $user = require_role(['ADMIN']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         db_run("UPDATE creator_applications SET status='APPROVED', reviewed_at=NOW() WHERE id=?", [$id]);
         db_run("UPDATE users SET role='CREATOR' WHERE id=?", [$app['user_id']]);
         db()->commit();
+        create_creator_community((int) $app['user_id']);
         log_admin_action((int) $user['id'], $user['name'], 'creator_application.approved', 'User', $app['applicant_name']);
         send_creator_application_approved_email($app['applicant_email'], $app['applicant_name']);
     } elseif ($app && $app['status'] === 'PENDING' && $action === 'reject') {

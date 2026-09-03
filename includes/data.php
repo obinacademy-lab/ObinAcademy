@@ -197,42 +197,6 @@ function get_day_collection_summary(string $date): array {
     ];
 }
 
-/** Every creator with at least one published course — the "Communities" directory. */
-function get_active_creators(): array {
-    return db_all(
-        "SELECT u.*,
-            (SELECT COUNT(*) FROM courses c WHERE c.creator_id = u.id AND c.status = 'PUBLISHED') AS course_count,
-            (SELECT COUNT(*) FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE c.creator_id = u.id AND c.status = 'PUBLISHED') AS student_count,
-            (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN courses c ON c.id = r.course_id WHERE c.creator_id = u.id AND c.status = 'PUBLISHED') AS avg_rating,
-            (SELECT COUNT(*) FROM reviews r JOIN courses c ON c.id = r.course_id WHERE c.creator_id = u.id AND c.status = 'PUBLISHED') AS review_count
-         FROM users u
-         WHERE u.role = 'CREATOR'
-           AND (SELECT COUNT(*) FROM courses c WHERE c.creator_id = u.id AND c.status = 'PUBLISHED') > 0
-         ORDER BY student_count DESC, u.name ASC"
-    );
-}
-
-/** One creator's public "community" profile — null if they don't have a published course to show for it. */
-function get_creator_profile(int $creatorId): ?array {
-    $creator = db_one("SELECT * FROM users WHERE id = ? AND role = 'CREATOR'", [$creatorId]);
-    if (!$creator) return null;
-
-    $stats = db_one(
-        "SELECT
-            (SELECT COUNT(*) FROM courses c WHERE c.creator_id = ? AND c.status = 'PUBLISHED') AS course_count,
-            (SELECT COUNT(*) FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE c.creator_id = ? AND c.status = 'PUBLISHED') AS student_count,
-            (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN courses c ON c.id = r.course_id WHERE c.creator_id = ? AND c.status = 'PUBLISHED') AS avg_rating,
-            (SELECT COUNT(*) FROM reviews r JOIN courses c ON c.id = r.course_id WHERE c.creator_id = ? AND c.status = 'PUBLISHED') AS review_count",
-        [$creatorId, $creatorId, $creatorId, $creatorId]
-    );
-    if ((int) $stats['course_count'] === 0) return null;
-
-    $creator['course_count'] = (int) $stats['course_count'];
-    $creator['student_count'] = (int) $stats['student_count'];
-    $creator['avg_rating'] = (float) $stats['avg_rating'];
-    $creator['review_count'] = (int) $stats['review_count'];
-    return $creator;
-}
 
 function get_published_testimonials(): array {
     return db_all("

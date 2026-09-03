@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/certificates.php';
+require_once __DIR__ . '/community.php';
 
 /** @throws RuntimeException */
 function enroll_in_course(int $userId, int $courseId): void {
@@ -12,7 +13,13 @@ function enroll_in_course(int $userId, int $courseId): void {
     }
 
     $existing = db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$userId, $courseId]);
-    if ($existing) return;
+    if ($existing) {
+        // Not a new enrollment, but may still be someone who enrolled before
+        // this feature existed and was never joined to the community —
+        // join_community() is idempotent, so this is always safe to call.
+        auto_join_course_community($userId, $courseId);
+        return;
+    }
 
     $split = split_sale((float) $course['price']);
     $expiresAt = compute_expires_at($course['access_duration_days'] !== null ? (int) $course['access_duration_days'] : null);
@@ -29,6 +36,8 @@ function enroll_in_course(int $userId, int $courseId): void {
         db()->rollBack();
         throw $e;
     }
+
+    auto_join_course_community($userId, $courseId);
 }
 
 /** @return array|null the newly-issued (or already-existing) certificate, if this update completed the course. */
