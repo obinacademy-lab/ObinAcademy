@@ -28,6 +28,7 @@ $navByRole = [
         'Overview' => [
             ['/dashboard/admin/index.php', 'Overview', 'layout-dashboard'],
             ['/dashboard/admin/analytics.php', 'Visitors', 'globe'],
+            ['/dashboard/admin/leads.php', 'Leads', 'sparkle'],
         ],
         'Manage' => [
             ['/dashboard/admin/users.php', 'Users', 'users'],
@@ -57,6 +58,7 @@ if ($user['role'] === 'ADMIN') {
         '/dashboard/admin/creator-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'],
         '/dashboard/admin/withdrawals.php' => (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'],
         '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW'")['n'],
+        '/dashboard/admin/leads.php' => (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'],
     ];
     $sidebarWidget = [
         'title' => 'This Month',

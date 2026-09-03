@@ -65,6 +65,102 @@ function capture_lead(array $data, ?string $visitorId, string $referrerSource): 
     return ['ok' => true, 'leadType' => $leadType, 'whatsappUrl' => lead_whatsapp_url($name, $leadType)];
 }
 
+const LEAD_STATUSES = ['NEW', 'CONTACTED', 'INTERESTED', 'ENROLLED', 'CREATOR', 'LOST'];
+
+/**
+ * @param array{q?:string, status?:string, type?:string, source?:string} $filters
+ * @return array{rows: array, total: int}
+ */
+function get_leads(array $filters = [], int $page = 1, int $perPage = 25): array {
+    $where = [];
+    $params = [];
+
+    $q = trim((string) ($filters['q'] ?? ''));
+    if ($q !== '') {
+        $where[] = '(name LIKE ? OR email LIKE ?)';
+        $params[] = "%$q%";
+        $params[] = "%$q%";
+    }
+    if (!empty($filters['status']) && in_array($filters['status'], LEAD_STATUSES, true)) {
+        $where[] = 'status = ?';
+        $params[] = $filters['status'];
+    }
+    if (!empty($filters['type']) && in_array($filters['type'], ['learner', 'creator'], true)) {
+        $where[] = 'lead_type = ?';
+        $params[] = $filters['type'];
+    }
+    if (!empty($filters['source']) && in_array($filters['source'], ['google', 'social', 'direct', 'other'], true)) {
+        $where[] = 'source = ?';
+        $params[] = $filters['source'];
+    }
+
+    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+    $total = (int) db_one("SELECT COUNT(*) AS n FROM leads $whereSql", $params)['n'];
+
+    $perPage = max(1, min(100, $perPage));
+    $offset = max(0, ($page - 1) * $perPage);
+    $rows = db_all(
+        "SELECT * FROM leads $whereSql ORDER BY created_at DESC LIMIT $perPage OFFSET $offset",
+        $params
+    );
+
+    return ['rows' => $rows, 'total' => $total];
+}
+
+function get_lead_by_id(int $id): ?array {
+    return db_one('SELECT * FROM leads WHERE id = ?', [$id]);
+}
+
+function set_lead_status(int $leadId, string $status): bool {
+    if (!in_array($status, LEAD_STATUSES, true)) return false;
+    db_run('UPDATE leads SET status = ? WHERE id = ?', [$status, $leadId]);
+    return true;
+}
+
+function get_lead_notes(int $leadId): array {
+    return db_all(
+        'SELECT ln.*, u.name AS admin_name FROM lead_notes ln JOIN users u ON u.id = ln.admin_id
+         WHERE ln.lead_id = ? ORDER BY ln.created_at DESC',
+        [$leadId]
+    );
+}
+
+function add_lead_note(int $leadId, int $adminId, string $note): void {
+    $note = trim($note);
+    if ($note === '') return;
+    db_insert('INSERT INTO lead_notes (lead_id, admin_id, note) VALUES (?, ?, ?)', [$leadId, $adminId, $note]);
+}
+
+/** Every page a visitor has browsed, newest first — the CRM's "browsing history" for one lead. */
+function get_lead_page_history(?string $visitorId, int $limit = 50): array {
+    if (!$visitorId) return [];
+    $limit = max(1, min(200, $limit));
+    return db_all(
+        "SELECT path, entered_at, time_on_page_seconds, scroll_depth_pct FROM visitor_pageviews
+         WHERE visitor_id = ? ORDER BY entered_at DESC LIMIT $limit",
+        [$visitorId]
+    );
+}
+
+/** Distinct courses a visitor has viewed, resolved to real titles — same slug-parsing approach as the admin analytics page. */
+function get_lead_courses_viewed(?string $visitorId): array {
+    if (!$visitorId) return [];
+    $rows = db_all(
+        "SELECT DISTINCT path FROM visitor_pageviews WHERE visitor_id = ? AND path LIKE '%/courses/view.php?%'",
+        [$visitorId]
+    );
+    $slugs = [];
+    foreach ($rows as $r) {
+        $query = parse_url($r['path'], PHP_URL_QUERY) ?: '';
+        parse_str($query, $params);
+        if (!empty($params['slug'])) $slugs[$params['slug']] = true;
+    }
+    if (!$slugs) return [];
+    $slugList = array_keys($slugs);
+    $placeholders = implode(',', array_fill(0, count($slugList), '?'));
+    return db_all("SELECT slug, title FROM courses WHERE slug IN ($placeholders)", $slugList);
+}
+
 function lead_whatsapp_url(string $name, string $leadType): string {
     $message = $leadType === 'creator'
         ? "Hi! I'm {$name} — I just signed up on Obin Academy and I'm interested in becoming a creator."
