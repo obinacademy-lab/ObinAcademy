@@ -41,6 +41,10 @@ $navByRole = [
             ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
             ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
         ],
+        'Community' => [
+            ['/dashboard/admin/community-stats.php', 'Community Stats', 'trending-up'],
+            ['/dashboard/admin/reports.php', 'Reports', 'shield'],
+        ],
         'System' => [
             ['/dashboard/admin/audit-log.php', 'Audit Log', 'scroll-text'],
             ['/dashboard/settings.php', 'Settings', 'settings'],
@@ -65,6 +69,7 @@ if ($user['role'] === 'ADMIN') {
         '/dashboard/admin/withdrawals.php' => (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'],
         '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW'")['n'],
         '/dashboard/admin/leads.php' => (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'],
+        '/dashboard/admin/reports.php' => (int) db_one("SELECT COUNT(*) AS n FROM community_reports WHERE status='pending'")['n'],
     ];
     $sidebarWidget = [
         'title' => 'This Month',

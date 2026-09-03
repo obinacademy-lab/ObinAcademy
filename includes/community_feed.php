@@ -75,6 +75,8 @@ function create_post(
     }
 
     notify_mentions($communityId, $authorId, $mentionUserIds, 'post', $postId, 'mentioned you in a post');
+    award_xp($authorId, 5);
+    record_daily_activity($authorId);
 
     return $postId;
 }
@@ -273,6 +275,8 @@ function create_comment(int $postId, int $authorId, string $body, ?int $parentCo
     }
 
     notify_mentions((int) $post['community_id'], $authorId, $mentionUserIds, 'comment', $commentId, 'mentioned you in a comment');
+    award_xp($authorId, 2);
+    record_daily_activity($authorId);
 
     return $commentId;
 }
@@ -338,6 +342,48 @@ function get_posts_by_hashtag(int $communityId, string $tag, int $limit = 30): a
          WHERE p.community_id = ? AND p.hashtags LIKE ?
          ORDER BY p.created_at DESC LIMIT $limit",
         [$communityId, "%,$tag,%"]
+    );
+}
+
+// -----------------------------------------------------------------------
+// Admin community-stats queries — Phase 6.
+// -----------------------------------------------------------------------
+
+/** Platform-wide community module totals for the admin stats page's top cards. */
+function get_community_module_stats(): array {
+    return [
+        'communities' => (int) db_one('SELECT COUNT(*) AS n FROM communities')['n'],
+        'members' => (int) db_one('SELECT COUNT(DISTINCT user_id) AS n FROM community_members')['n'],
+        'posts' => (int) db_one('SELECT COUNT(*) AS n FROM community_posts')['n'],
+        'pending_reports' => get_pending_report_count(),
+    ];
+}
+
+/** Posts created per day for the last $days days, zero-filled — same shape as get_leads_daily_series(). */
+function get_community_posts_daily_series(int $days = 30): array {
+    $rows = db_all(
+        'SELECT DATE(created_at) AS d, COUNT(*) AS n FROM community_posts
+         WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) GROUP BY DATE(created_at)',
+        [$days - 1]
+    );
+    $byDate = [];
+    foreach ($rows as $r) $byDate[$r['d']] = (int) $r['n'];
+
+    $series = [];
+    for ($i = $days - 1; $i >= 0; $i--) {
+        $date = date('Y-m-d', strtotime("-$i days"));
+        $series[] = ['date' => $date, 'count' => $byDate[$date] ?? 0];
+    }
+    return $series;
+}
+
+/** Communities ranked by post count — the admin stats page's "Most Active" list. */
+function get_most_active_communities(int $limit = 8): array {
+    $limit = max(1, min(50, $limit));
+    return db_all(
+        "SELECT c.name, c.slug, c.member_count, COUNT(p.id) AS post_count
+         FROM communities c LEFT JOIN community_posts p ON p.community_id = c.id
+         GROUP BY c.id ORDER BY post_count DESC, c.member_count DESC LIMIT $limit"
     );
 }
 
@@ -468,6 +514,9 @@ function render_post_card(array $post, int $communityId, ?array $user, bool $isM
           <span class="feed-action-btn">💬 <?= (int) $post['comment_count'] ?></span>
         <?php endif; ?>
         <span class="spacer"></span>
+        <?php if ($user && (int) $post['author_id'] !== (int) $user['id']): ?>
+          <a class="feed-action-btn" href="<?= e(base_url('community/report.php?type=post&id=' . $post['id'])) ?>">Report</a>
+        <?php endif; ?>
         <?php if ($isModerator): ?>
           <form method="post" style="display:inline;">
             <?= csrf_field() ?>
@@ -511,6 +560,9 @@ function render_comment_node(array $comment, int $communityId, ?array $user, boo
             <button type="button" data-reply-toggle="reply-form-<?= (int) $comment['id'] ?>">Reply</button>
           <?php else: ?>
             <span><?= (int) $comment['like_count'] ?> like<?= (int) $comment['like_count'] === 1 ? '' : 's' ?></span>
+          <?php endif; ?>
+          <?php if ($user && (int) $comment['author_id'] !== (int) $user['id']): ?>
+            <a href="<?= e(base_url('community/report.php?type=comment&id=' . $comment['id'])) ?>">Report</a>
           <?php endif; ?>
           <?php if ($user && ((int) $comment['author_id'] === (int) $user['id'] || $isModerator)): ?>
             <form method="post" style="display:inline;" onsubmit="return confirm('Delete this comment?');">

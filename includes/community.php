@@ -12,6 +12,7 @@ require_once __DIR__ . '/profiles.php';
 require_once __DIR__ . '/study_groups.php';
 require_once __DIR__ . '/messaging.php';
 require_once __DIR__ . '/search.php';
+require_once __DIR__ . '/moderation.php';
 
 const DEFAULT_COMMUNITY_CATEGORIES = [
     ['📢', 'Announcements'],

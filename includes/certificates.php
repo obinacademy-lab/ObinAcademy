@@ -23,6 +23,13 @@ function issue_certificate_if_eligible(int $enrollmentId): ?array {
     );
     $cert = db_one('SELECT * FROM certificates WHERE id = ?', [$id]);
 
+    // Guaranteed to run once per enrollment — the $existing check above
+    // means a repeat 100%-progress call never re-awards this.
+    if ($enrollment['user_id']) {
+        award_xp((int) $enrollment['user_id'], 50);
+        record_daily_activity((int) $enrollment['user_id']);
+    }
+
     $full = get_certificate_by_code($code);
     if ($full) {
         $to = $full['learner_email'] ?? $full['guest_email'] ?? null;

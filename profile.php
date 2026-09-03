@@ -96,6 +96,10 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="profile-stats-row" style="width:100%;">
+      <div class="stat"><span class="value">⚡ <?= number_format((int) $profile['xp_points']) ?></span><span class="label">XP</span></div>
+      <?php if ((int) $profile['current_streak'] > 0): ?>
+        <div class="stat"><span class="value">🔥 <?= (int) $profile['current_streak'] ?></span><span class="label">Day Streak</span></div>
+      <?php endif; ?>
       <?php if ($profile['role'] === 'LEARNER' || $stats['completed'] > 0): ?>
         <div class="stat"><span class="value"><?= number_format($stats['completed']) ?></span><span class="label">Completed</span></div>
       <?php endif; ?>
