@@ -43,7 +43,7 @@ if ($activeCategoryName) {
 $noindex = $q !== ''; // search-result pages: let the base browse/category pages get indexed, not every query variation
 require __DIR__ . '/../includes/header.php';
 ?>
-<section class="course-hero browse-hero">
+<section class="course-hero browse-hero page-hero-light">
   <div class="container" style="max-width:820px; text-align:center;">
     <span class="pill">Browse the Marketplace</span>
     <h1 style="text-align:center;">Find Your Next Skill</h1>

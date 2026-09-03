@@ -1037,6 +1037,25 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-hero .instructor .headline { font-size:12.5px; color: rgba(255,255,255,0.6); }
 @media (prefers-reduced-motion: reduce) { .course-hero .instructor { transition:none; } }
 
+/* Light hero variant for courses/index.php + courses/view.php only —
+   everywhere else .course-hero keeps its dark navy treatment. */
+.page-hero-light { background: var(--surface); color: var(--ink); }
+.page-hero-light .breadcrumb,
+.page-hero-light .breadcrumb a { color: var(--muted); }
+.page-hero-light .breadcrumb a:hover { color: var(--ink); }
+.page-hero-light .pill { background: color-mix(in srgb, var(--accent) 12%, white); color: var(--brand-800); }
+.page-hero-light h1 { color: var(--ink); }
+.page-hero-light .summary { color: var(--muted); }
+.page-hero-light .meta-chip { background: #fff; border-color: var(--border); color: var(--ink); }
+.page-hero-light .meta-chip svg { color: var(--muted); }
+.page-hero-light .instructor { background: #fff; border-color: var(--border); }
+.page-hero-light .instructor:hover { background: var(--surface); border-color: var(--border-strong); }
+.page-hero-light .instructor .avatar { background: var(--surface); color: var(--brand-900); }
+.page-hero-light .instructor .name { color: var(--ink); }
+.page-hero-light .instructor .headline { color: var(--muted); }
+.page-hero-light .browse-hero-stats { color: var(--muted); }
+.page-hero-light .browse-hero-stats strong { color: var(--ink); }
+
 /* ---------- live stat strip (about page) ---------- */
 .stat-strip { background: #fff; border-bottom: 1px solid var(--border); padding: 32px 0; }
 .stat-strip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; text-align: center; }
