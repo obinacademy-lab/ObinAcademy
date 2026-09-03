@@ -1611,3 +1611,26 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .chat-author { font-size: 11.5px; font-weight: 700; color: var(--brand-800); margin-bottom: 2px; }
 .chat-text { font-size: 13.5px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; }
 .chat-time { font-size: 10px; margin-top: 4px; opacity: 0.6; }
+
+/* ---------- header notifications + messages ---------- */
+.site-icon-btn {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+  color: #fff; cursor: pointer; text-decoration: none; flex-shrink: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.site-icon-btn:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.3); }
+.site-icon-btn svg { width: 17px; height: 17px; }
+.site-notif-dot { position: absolute; top: 6px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: #e0245e; border: 2px solid var(--brand-950, var(--ink)); }
+.site-notif-menu { position: relative; }
+.site-notif-dropdown { width: 320px; padding: 4px 0; }
+.site-notif-dropdown .account-dropdown-head { padding: 10px 14px 10px; }
+.site-notif-mark-read { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; }
+.site-notif-row { display: block; padding: 10px 14px; border-radius: 0; text-decoration: none; }
+.site-notif-row:hover { background: var(--surface); }
+.site-notif-row.unread { background: rgba(37,99,235,0.05); }
+.site-notif-row p { font-size: 13px; color: var(--ink); line-height: 1.5; }
+.site-notif-row span { font-size: 11px; color: var(--muted); display: block; margin-top: 3px; }
+.site-notif-see-all { display: block; text-align: center; padding: 10px; font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; border-top: 1px solid var(--border); margin-top: 4px; }
+.site-notif-see-all:hover { background: var(--surface); }

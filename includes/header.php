@@ -8,7 +8,11 @@
  *   $noindex         — set true on pages that shouldn't be indexed (defaults false)
  * Usage: require __DIR__ . '/../includes/header.php';
  */
+require_once __DIR__ . '/community.php';
 $user = current_user();
+$unreadUserNotifCount = $user ? get_unread_user_notification_count((int) $user['id']) : 0;
+$recentUserNotifications = $user ? get_user_notifications((int) $user['id'], 8) : [];
+$unreadMessageCount = $user ? get_unread_message_count((int) $user['id']) : 0;
 $navLinks = [
     '/index.php' => 'Home',
     '/courses/index.php' => 'Explore Courses',
@@ -67,7 +71,43 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
       </nav>
 
       <div class="nav-actions">
+        <a href="<?= e(base_url('search.php')) ?>" class="site-icon-btn" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </a>
         <?php if ($user): ?>
+          <a href="<?= e(base_url('messages/index.php')) ?>" class="site-icon-btn" aria-label="Messages">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <?php if ($unreadMessageCount > 0): ?><span class="site-notif-dot"></span><?php endif; ?>
+          </a>
+          <div class="account-menu site-notif-menu">
+            <button class="site-icon-btn" aria-label="Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <?php if ($unreadUserNotifCount > 0): ?><span class="site-notif-dot"></span><?php endif; ?>
+            </button>
+            <div class="account-dropdown site-notif-dropdown">
+              <div class="account-dropdown-head row between" style="align-items:center;">
+                <span class="name" style="font-size:13px;">Notifications</span>
+                <?php if ($unreadUserNotifCount > 0): ?>
+                  <form method="post" action="<?= e(base_url('api/mark-user-notifications-read.php')) ?>">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="redirect" value="<?= e(current_path()) ?>">
+                    <button type="submit" class="site-notif-mark-read">Mark all read</button>
+                  </form>
+                <?php endif; ?>
+              </div>
+              <?php if ($recentUserNotifications): ?>
+                <?php foreach ($recentUserNotifications as $n): ?>
+                  <a href="<?= e(base_url(ltrim($n['link_url'] ?? 'notifications.php', '/'))) ?>" class="site-notif-row <?= $n['is_read'] ? '' : 'unread' ?>">
+                    <p><?= e($n['message']) ?></p>
+                    <span class="muted"><?= e(time_ago($n['created_at'])) ?></span>
+                  </a>
+                <?php endforeach; ?>
+                <a href="<?= e(base_url('notifications.php')) ?>" class="site-notif-see-all">See all notifications</a>
+              <?php else: ?>
+                <p class="muted small" style="padding:12px;">No notifications yet.</p>
+              <?php endif; ?>
+            </div>
+          </div>
           <div class="account-menu">
             <button class="account-trigger" aria-haspopup="true">
               <span class="account-avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></span>
@@ -124,11 +164,14 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
       <?php
         $navIcons = ['/index.php' => '🏠', '/courses/index.php' => '📚', '/stories.php' => '💬', '/about.php' => 'ℹ️', '/contact.php' => '✉️'];
       ?>
+      <a href="<?= e(base_url('search.php')) ?>"><span class="mm-icon">🔍</span>Search</a>
       <?php foreach ($navLinks as $href => $label): ?>
         <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>"><span class="mm-icon"><?= $navIcons[$href] ?? '' ?></span><?= e($label) ?></a>
       <?php endforeach; ?>
       <?php if ($user): ?>
         <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>"><span class="mm-icon">👤</span>My Profile</a>
+        <a href="<?= e(base_url('messages/index.php')) ?>"><span class="mm-icon">✉️</span>Messages<?= $unreadMessageCount > 0 ? ' (' . $unreadMessageCount . ')' : '' ?></a>
+        <a href="<?= e(base_url('notifications.php')) ?>"><span class="mm-icon">🔔</span>Notifications<?= $unreadUserNotifCount > 0 ? ' (' . $unreadUserNotifCount . ')' : '' ?></a>
         <a href="<?= e(base_url('dashboard.php')) ?>"><span class="mm-icon">📊</span>Dashboard</a>
         <a href="<?= e(base_url('dashboard/settings.php')) ?>"><span class="mm-icon">⚙️</span>Settings</a>
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>

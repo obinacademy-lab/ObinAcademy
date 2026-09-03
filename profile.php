@@ -88,6 +88,7 @@ require __DIR__ . '/../includes/header.php';
             <input type="hidden" name="_action" value="<?= $isFollowing ? 'unfollow' : 'follow' ?>">
             <button type="submit" class="btn <?= $isFollowing ? 'btn-outline' : 'btn-primary' ?>"><?= $isFollowing ? '✓ Following' : '+ Follow' ?></button>
           </form>
+          <a href="<?= e(base_url('messages/start.php?to=' . $profileId)) ?>" class="btn btn-outline">✉ Message</a>
         <?php else: ?>
           <a href="<?= e(base_url('login.php?redirect=' . urlencode('/profile.php?id=' . $profileId))) ?>" class="btn btn-primary">Log in to Follow</a>
         <?php endif; ?>

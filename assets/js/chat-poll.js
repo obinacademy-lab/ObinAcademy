@@ -1,15 +1,21 @@
-// Polling group chat for study groups — same interval-polling pattern as
-// payment.js's payment-status check, just recurring instead of one-shot.
-// No WebSocket server on this host, so polling is the deliberate v1 choice.
+// Generic polling chat widget — reused by study-group chat and 1:1 direct
+// messages. No WebSocket server on this host, so polling is the deliberate
+// v1 choice, same interval-polling pattern as payment.js's status check.
+//
+// Attach to a container: [data-chat-log] with data-chat-endpoint (the API
+// URL), data-chat-id-param (the field name the API expects, e.g. "groupId"
+// or "conversationId"), data-chat-id (its value), and data-my-user-id.
+// A sibling [data-chat-form] must contain input[name="body"].
 (function () {
   const POLL_INTERVAL_MS = 4000;
 
-  const log = document.querySelector("[data-group-chat-log]");
-  const form = document.querySelector("[data-group-chat-form]");
+  const log = document.querySelector("[data-chat-log]");
+  const form = document.querySelector("[data-chat-form]");
   if (!log || !form) return;
 
-  const baseUrl = window.OBIN_BASE_URL || "";
-  const groupId = log.dataset.groupId;
+  const endpoint = log.dataset.chatEndpoint;
+  const idParam = log.dataset.chatIdParam;
+  const chatId = log.dataset.chatId;
   const myUserId = Number(log.dataset.myUserId);
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
   const input = form.querySelector('input[name="body"]');
@@ -35,17 +41,18 @@
   }
 
   function renderMessage(m) {
-    const mine = Number(m.author_id) === myUserId;
+    const mine = Number(m.author_id ?? m.sender_id) === myUserId;
+    const authorName = m.author_name;
     const wrap = document.createElement("div");
     wrap.className = "chat-message" + (mine ? " mine" : "");
     wrap.dataset.messageId = m.id;
 
-    const avatarHtml = mine
+    const avatarHtml = mine || !authorName
       ? ""
       : `<div class="avatar-circle" style="width:28px; height:28px; font-size:11px; flex-shrink:0;">${
-          m.author_avatar_url ? `<img src="${escapeHtml(m.author_avatar_url)}" alt="">` : escapeHtml(initials(m.author_name))
+          m.author_avatar_url ? `<img src="${escapeHtml(m.author_avatar_url)}" alt="">` : escapeHtml(initials(authorName))
         }</div>`;
-    const authorHtml = mine ? "" : `<div class="chat-author">${escapeHtml(m.author_name)}</div>`;
+    const authorHtml = mine || !authorName ? "" : `<div class="chat-author">${escapeHtml(authorName)}</div>`;
 
     wrap.innerHTML = `${avatarHtml}<div class="chat-bubble">${authorHtml}<div class="chat-text">${escapeHtml(m.body)}</div><div class="chat-time">just now</div></div>`;
     return wrap;
@@ -68,7 +75,7 @@
   async function poll() {
     if (document.hidden) return;
     try {
-      const res = await fetch(`${baseUrl}/api/study-group-chat.php?groupId=${groupId}&after=${lastId}`);
+      const res = await fetch(`${endpoint}?${idParam}=${chatId}&after=${lastId}`);
       const data = await res.json();
       if (data.ok) appendMessages(data.messages);
     } catch {
@@ -85,10 +92,10 @@
     input.disabled = true;
 
     try {
-      const res = await fetch(`${baseUrl}/api/study-group-chat.php`, {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ groupId, body: text, csrf_token: csrfToken }),
+        body: JSON.stringify({ [idParam]: chatId, body: text, csrf_token: csrfToken }),
       });
       const data = await res.json();
       if (data.error) {

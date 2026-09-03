@@ -91,13 +91,13 @@ require __DIR__ . '/../includes/header.php';
         <p class="card card-pad muted small" style="margin-top:12px; border-style:dashed;">Join this group to see and take part in the chat.</p>
       <?php else: ?>
         <div class="card card-pad" style="margin-top:12px; padding:0; display:flex; flex-direction:column; height:480px;">
-          <div id="group-chat-log" data-group-chat-log data-group-id="<?= $groupId ?>" data-my-user-id="<?= (int) $user['id'] ?>" style="flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:12px;">
+          <div data-chat-log data-chat-endpoint="<?= e(base_url('api/study-group-chat.php')) ?>" data-chat-id-param="groupId" data-chat-id="<?= $groupId ?>" data-my-user-id="<?= (int) $user['id'] ?>" style="flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:12px;">
             <?php if (!$messages): ?>
               <p class="muted small" data-chat-empty>No messages yet. Say hello 👋</p>
             <?php endif; ?>
             <?php foreach ($messages as $m): render_chat_message($m, (int) $user['id']); endforeach; ?>
           </div>
-          <form id="group-chat-form" data-group-chat-form style="display:flex; gap:8px; padding:12px; border-top:1px solid var(--border);">
+          <form data-chat-form style="display:flex; gap:8px; padding:12px; border-top:1px solid var(--border);">
             <input type="text" name="body" placeholder="Message the group…" maxlength="2000" autocomplete="off" required style="margin:0;">
             <button type="submit" class="btn btn-primary" style="flex-shrink:0;">Send</button>
           </form>
@@ -126,5 +126,5 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </div>
 </div>
-<script src="<?= e(versioned_asset('assets/js/study-group-chat.js')) ?>"></script>
+<script src="<?= e(versioned_asset('assets/js/chat-poll.js')) ?>"></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
