@@ -38,7 +38,25 @@ document.addEventListener("DOMContentLoaded", () => {
       const iframe = document.createElement("iframe");
       iframe.src = src + "#toolbar=0";
       iframe.title = lesson.title;
+      // A PDF's own scroll living inside an iframe, inside a page that also
+      // scrolls, is exactly the "nested scrollable region" case mobile touch
+      // gesture arbitration handles unreliably across browsers — desktop's
+      // mouse wheel doesn't have that ambiguity, which is why this only ever
+      // shows up on phones. scrolling="yes" is a legacy attribute some mobile
+      // WebKit versions still respect for it; the fullscreen link below is
+      // the actual reliable fix — it opens the PDF as its own top-level page,
+      // which every mobile browser's native PDF viewer scrolls correctly by
+      // design, since there's no nested scroll region to arbitrate at all.
+      iframe.setAttribute("scrolling", "yes");
       videoWrap.appendChild(iframe);
+
+      const fullscreenLink = document.createElement("a");
+      fullscreenLink.href = src;
+      fullscreenLink.target = "_blank";
+      fullscreenLink.rel = "noopener noreferrer";
+      fullscreenLink.className = "pdf-fullscreen-link";
+      fullscreenLink.innerHTML = "⛶ Open Fullscreen";
+      videoWrap.appendChild(fullscreenLink);
     }
 
     heading.textContent = lesson.title;

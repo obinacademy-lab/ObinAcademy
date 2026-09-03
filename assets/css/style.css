@@ -1410,7 +1410,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 .learn-main { flex:1; background:#fff; }
 .learn-main-inner { max-width: 880px; margin: 0 auto; padding: 32px 20px 60px; }
-.learn-video-wrap { border-radius: var(--radius); overflow:hidden; background:#000; }
+.learn-video-wrap { position:relative; border-radius: var(--radius); overflow:hidden; background:#000; }
 .learn-video-wrap video { width:100%; aspect-ratio:16/9; display:block; border:0; }
 .learn-video-wrap iframe {
   width:100%; height:80vh; min-height:520px; display:block; border:0; background:#fff;
@@ -1423,6 +1423,20 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @supports (height: 100dvh) {
   .learn-video-wrap iframe { height:80dvh; }
 }
+/* A PDF's scroll living inside an iframe nested in a scrolling page is an
+   unreliable touch-gesture-arbitration case on mobile browsers (desktop's
+   mouse wheel doesn't have the same ambiguity, which is why this is
+   mobile-only) — this link opens the same PDF as its own top-level page
+   instead, where the phone's native PDF viewer scrolls it correctly by
+   construction, since there's no nested scroll region left to arbitrate. */
+.pdf-fullscreen-link {
+  position:absolute; top:12px; right:12px; z-index:5;
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(20,24,27,0.75); backdrop-filter:blur(4px); color:#fff;
+  font-size:12.5px; font-weight:700; padding:8px 14px; border-radius: var(--radius-full);
+  text-decoration:none; transition: background-color 0.15s ease;
+}
+.pdf-fullscreen-link:hover { background:rgba(20,24,27,0.92); }
 .expiry-banner { background: var(--warning-bg); color: var(--warning-ink); border-radius: 12px; padding: 10px 16px; font-size:12.5px; font-weight:700; margin-bottom:16px; }
 .certificate-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
