@@ -164,11 +164,14 @@ require __DIR__ . '/../includes/header.php';
       <?php endif; ?>
 
       <div class="card card-pad">
-        <h3>Members (<?= number_format((int) $community['member_count']) ?>)</h3>
+        <div class="row between" style="align-items:center;">
+          <h3 style="margin-bottom:0;">Members (<?= number_format((int) $community['member_count']) ?>)</h3>
+          <a href="<?= e(base_url('community/members.php?slug=' . $slug)) ?>" class="small" style="color:var(--accent); font-weight:600;">See all</a>
+        </div>
         <?php if ($members): ?>
-          <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">
             <?php foreach (array_slice($members, 0, 10) as $m): ?>
-              <div class="row gap-2" style="align-items:center;">
+              <a href="<?= e(base_url('profile.php?id=' . $m['id'])) ?>" class="row gap-2" style="align-items:center; color:inherit; text-decoration:none;">
                 <div class="avatar-circle" style="width:34px; height:34px; font-size:13px;">
                   <?php if ($m['avatar_url']): ?><img src="<?= e(asset_src($m['avatar_url'])) ?>" alt="">
                   <?php else: ?><?= e(mb_substr($m['name'], 0, 1)) ?><?php endif; ?>
@@ -177,7 +180,7 @@ require __DIR__ . '/../includes/header.php';
                   <div style="font-weight:700; font-size:13px;"><?= e($m['name']) ?></div>
                   <div class="small muted"><?= e($m['headline'] ?: ($m['role'] !== 'member' ? ucfirst($m['role']) : 'Member')) ?></div>
                 </div>
-              </div>
+              </a>
             <?php endforeach; ?>
           </div>
         <?php else: ?>

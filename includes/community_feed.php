@@ -438,7 +438,7 @@ function render_post_card(array $post, int $communityId, ?array $user, bool $isM
         </div>
         <div class="meta">
           <div class="name-row">
-            <span class="author"><?= e($post['author_name']) ?></span>
+            <a class="author" href="<?= e(base_url('profile.php?id=' . $post['author_id'])) ?>"><?= e($post['author_name']) ?></a>
             <?php if (in_array($post['author_role'], ['CREATOR', 'ADMIN'], true)): ?>
               <span class="role-badge"><?= $post['author_role'] === 'ADMIN' ? 'Admin' : 'Creator' ?></span>
             <?php endif; ?>
@@ -499,7 +499,7 @@ function render_comment_node(array $comment, int $communityId, ?array $user, boo
       </div>
       <div style="flex:1; min-width:0;">
         <div class="bubble">
-          <div class="author"><?= e($comment['author_name']) ?></div>
+          <a class="author" href="<?= e(base_url('profile.php?id=' . $comment['author_id'])) ?>"><?= e($comment['author_name']) ?></a>
           <div class="text"><?= nl2br(e($comment['body'])) ?></div>
         </div>
         <div class="comment-meta">

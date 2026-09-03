@@ -8,6 +8,7 @@
  */
 
 require_once __DIR__ . '/community_feed.php';
+require_once __DIR__ . '/profiles.php';
 
 const DEFAULT_COMMUNITY_CATEGORIES = [
     ['📢', 'Announcements'],
