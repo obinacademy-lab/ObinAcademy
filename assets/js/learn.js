@@ -39,6 +39,18 @@ document.addEventListener("DOMContentLoaded", () => {
       iframe.src = src + "#toolbar=0";
       iframe.title = lesson.title;
       videoWrap.appendChild(iframe);
+
+      const fullscreenBtn = document.createElement("a");
+      // #toolbar=0 here too — it hides the native PDF viewer's own toolbar,
+      // which has its own Download button. Without it, tapping this would
+      // hand every learner, premium or not, a working download regardless
+      // of stream.php's own premium check on the download=1 path below.
+      fullscreenBtn.href = src + "#toolbar=0";
+      fullscreenBtn.target = "_blank";
+      fullscreenBtn.rel = "noopener noreferrer";
+      fullscreenBtn.className = "pdf-fullscreen-btn";
+      fullscreenBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>View Full PDF in Fullscreen</span>';
+      videoWrap.appendChild(fullscreenBtn);
     }
 
     heading.textContent = lesson.title;
