@@ -46,7 +46,7 @@ function activity_icon(string $action): string {
 }
 
 $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
-$roleTint = ['ADMIN' => '#dc2626', 'CREATOR' => '#b45309', 'LEARNER' => '#64748b'];
+$roleTint = ['ADMIN' => '#f87171', 'CREATOR' => '#fbbf24', 'LEARNER' => '#94a3b8'];
 
 // ---------------------------------------------------------------------
 // Revenue growth chart data — cumulative platform fee income, last 30 days
@@ -214,7 +214,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <div class="leaderboard" style="margin-top:14px;">
     <?php foreach ($pendingCourses as $c): ?>
       <div class="leaderboard-row">
-        <div class="row-avatar" style="--tint:#f59e0b; background:color-mix(in srgb, var(--tint) 15%, white); color:var(--tint);"><?php dash_icon('clipboard-check'); ?></div>
+        <div class="row-avatar" style="--tint:#f59e0b; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint);"><?php dash_icon('clipboard-check'); ?></div>
         <div class="leaderboard-info">
           <div style="font-weight:600;"><?= e($c['title']) ?></div>
           <div class="small muted"><?= e($c['creator_name']) ?> &middot; submitted <?= e(format_date($c['submitted_at'] ?? $c['created_at'])) ?></div>
@@ -277,7 +277,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <div class="leaderboard" style="margin-top:14px;">
       <?php foreach ($recentUsers as $u): $tint = $roleTint[$u['role']] ?? '#64748b'; ?>
         <div class="leaderboard-row">
-          <div class="row-avatar" style="--tint:<?= e($tint) ?>; background:color-mix(in srgb, var(--tint) 15%, white); color:var(--tint);"><?= e(mb_substr($u['name'], 0, 1)) ?></div>
+          <div class="row-avatar" style="--tint:<?= e($tint) ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint);"><?= e(mb_substr($u['name'], 0, 1)) ?></div>
           <div class="leaderboard-info">
             <div style="font-weight:600;"><?= e($u['name']) ?></div>
             <div class="small muted"><?= e($u['email']) ?></div>

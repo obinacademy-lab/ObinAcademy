@@ -371,3 +371,57 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .reject-details summary::-webkit-details-marker { display: none; }
 .reject-summary { color: var(--danger); border-color: var(--danger); }
 .btn-icon { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* =====================================================================
+   ADMIN DARK THEME — scoped to .dash-admin only (dashboard_header.php
+   adds this class for role ADMIN), so the shared shell above stays
+   light for the creator/learner dashboards. Redefining --ink/--muted
+   here is enough to flip ambient text color everywhere in this file
+   that references them; the rules below handle the remaining spots
+   that hardcoded a light-mode-only literal (a light border/bg color,
+   or a color-mix mixed toward white for a soft tint).
+   ===================================================================== */
+.dash.dash-admin {
+  --dash-bg: #0a0c12;
+  --dash-panel: #12141d;
+  --dash-panel-2: #171a26;
+  --dash-border: rgba(255,255,255,0.08);
+  --dash-border-soft: rgba(255,255,255,0.05);
+  --dash-tint: rgba(59,130,246,0.14);
+  --dash-good: #34d399; --dash-good-bg: rgba(52,211,153,0.12);
+  --dash-warn: #fbbf24; --dash-warn-bg: rgba(251,191,36,0.12);
+  --dash-bad: #f87171; --dash-bad-bg: rgba(248,113,113,0.12);
+  --dash-shadow: none;
+  --dash-accent-text: #93c5fd;
+
+  --ink: #f2f4fa;
+  --muted: #8b93a8;
+  color: var(--ink);
+}
+
+.dash-admin .dash-widget { background: var(--dash-panel-2); border: 1px solid var(--dash-border); box-shadow: none; }
+.dash-admin .dash-nav a.active { color: var(--dash-accent-text); }
+
+.dash-admin .stat-card.highlight { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.06); }
+.dash-admin .stat-card.highlight .icon { color: var(--gold); }
+.dash-admin .stat-card[data-hoverable="true"]:hover .icon { background-color: color-mix(in srgb, var(--hover-color) 22%, transparent); }
+
+.dash-admin .status-pill { border-color: transparent; }
+.dash-admin .all-caught-up { border-color: transparent; color: var(--dash-good); }
+.dash-admin .activity-dot.tone-success { color: var(--dash-good); }
+.dash-admin .activity-dot.tone-danger { color: var(--dash-bad); }
+.dash-admin .waiting-badge.urgent { color: var(--dash-bad); }
+.dash-admin .icon-btn-danger:hover { color: var(--dash-bad); border-color: var(--dash-bad); }
+
+.dash-admin .row-avatar,
+.dash-admin .leaderboard-value { color: var(--dash-accent-text); }
+.dash-admin .role-pill,
+.dash-admin .qa-icon { background: color-mix(in srgb, var(--tint) 18%, transparent); }
+
+.dash-admin .chart-tooltip { background: var(--dash-panel-2); color: var(--ink); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.5); }
+.dash-admin .chart-tooltip::after { border-top-color: var(--dash-panel-2); }
+
+.dash-admin .table-wrap { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: var(--dash-shadow); }
+.dash-admin table th { background: var(--dash-panel-2); color: var(--muted); border-color: var(--dash-border); }
+.dash-admin table td { border-color: var(--dash-border-soft); }
+.dash-admin table tbody tr:hover td { background: var(--dash-border-soft); }

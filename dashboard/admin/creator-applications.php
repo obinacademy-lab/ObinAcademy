@@ -61,7 +61,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <div class="application-card">
         <div class="application-head">
           <div class="row gap-2" style="align-items:center;">
-            <div class="row-avatar" style="--tint:#f59e0b; background:color-mix(in srgb, var(--tint) 15%, white); color:var(--tint); width:42px; height:42px; font-size:15px;"><?= e(mb_substr($a['name'], 0, 1)) ?></div>
+            <div class="row-avatar" style="--tint:#f59e0b; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint); width:42px; height:42px; font-size:15px;"><?= e(mb_substr($a['name'], 0, 1)) ?></div>
             <div>
               <div style="font-weight:700;"><?= e($a['name']) ?></div>
               <div class="small muted"><?= e($a['email']) ?></div>
@@ -95,9 +95,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
 <h3 class="dash-section-label" style="margin-top:36px;">Recent Decisions</h3>
 <div class="leaderboard" style="margin-top:14px;">
-  <?php foreach ($resolved as $a): $approved = $a['status'] === 'APPROVED'; $tint = $approved ? '#16a34a' : '#dc2626'; ?>
+  <?php foreach ($resolved as $a): $approved = $a['status'] === 'APPROVED'; $tint = $approved ? '#34d399' : '#f87171'; ?>
     <div class="leaderboard-row">
-      <div class="row-avatar" style="--tint:<?= $tint ?>; background:color-mix(in srgb, var(--tint) 15%, white); color:var(--tint);"><?php dash_icon($approved ? 'check-circle' : 'x-circle'); ?></div>
+      <div class="row-avatar" style="--tint:<?= $tint ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint);"><?php dash_icon($approved ? 'check-circle' : 'x-circle'); ?></div>
       <div class="leaderboard-info">
         <div style="font-weight:600;"><?= e($a['name']) ?></div>
         <div class="small muted"><?= e($a['email']) ?></div>

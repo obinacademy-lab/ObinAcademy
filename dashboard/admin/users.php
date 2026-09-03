@@ -34,7 +34,7 @@ $totalLearners = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role='LEARN
 $totalCreators = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role='CREATOR'")['n'];
 $totalAdmins = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role='ADMIN'")['n'];
 
-$roleTint = ['ADMIN' => '#dc2626', 'CREATOR' => '#b45309', 'LEARNER' => '#64748b'];
+$roleTint = ['ADMIN' => '#f87171', 'CREATOR' => '#fbbf24', 'LEARNER' => '#94a3b8'];
 $roleIcon = ['ADMIN' => 'shield', 'CREATOR' => 'sparkle', 'LEARNER' => 'graduation-cap'];
 
 $pageTitle = 'Users — Admin — Obin Academy';
@@ -49,9 +49,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
 <div class="grid md:grid-4" style="margin-top:20px; gap:14px;">
   <div class="mini-stat"><span class="mini-stat-value"><?= $totalUsers ?></span><span class="mini-stat-label">Total Users</span></div>
-  <div class="mini-stat" style="--tint:#64748b;"><span class="mini-stat-value"><?= $totalLearners ?></span><span class="mini-stat-label">Learners</span></div>
-  <div class="mini-stat" style="--tint:#b45309;"><span class="mini-stat-value"><?= $totalCreators ?></span><span class="mini-stat-label">Creators</span></div>
-  <div class="mini-stat" style="--tint:#dc2626;"><span class="mini-stat-value"><?= $totalAdmins ?></span><span class="mini-stat-label">Admins</span></div>
+  <div class="mini-stat" style="--tint:#94a3b8;"><span class="mini-stat-value"><?= $totalLearners ?></span><span class="mini-stat-label">Learners</span></div>
+  <div class="mini-stat" style="--tint:#fbbf24;"><span class="mini-stat-value"><?= $totalCreators ?></span><span class="mini-stat-label">Creators</span></div>
+  <div class="mini-stat" style="--tint:#f87171;"><span class="mini-stat-value"><?= $totalAdmins ?></span><span class="mini-stat-label">Admins</span></div>
 </div>
 
 <div class="row between wrap gap-3" style="margin-top:26px; align-items:center;">
@@ -70,7 +70,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <tr>
           <td class="cell-nowrap-reset">
             <div class="row gap-2" style="align-items:center;">
-              <div class="row-avatar" style="--tint:<?= e($roleTint[$u['role']] ?? '#64748b') ?>; background:color-mix(in srgb, var(--tint) 15%, white); color:var(--tint);"><?= e(mb_substr($u['name'], 0, 1)) ?></div>
+              <div class="row-avatar" style="--tint:<?= e($roleTint[$u['role']] ?? '#94a3b8') ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint);"><?= e(mb_substr($u['name'], 0, 1)) ?></div>
               <div style="min-width:0;">
                 <div style="font-weight:700; display:flex; align-items:center; gap:6px;">
                   <?= e($u['name']) ?>
@@ -86,7 +86,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
               <input type="hidden" name="_action" value="set_role">
               <input type="hidden" name="userId" value="<?= (int) $u['id'] ?>">
               <select name="role" class="role-select" onchange="this.form.submit()" <?= $isSelf ? 'disabled' : '' ?>
-                style="--tint:<?= e($roleTint[$u['role']] ?? '#64748b') ?>; background-color:color-mix(in srgb, var(--tint) 12%, white); color:var(--tint);">
+                style="--tint:<?= e($roleTint[$u['role']] ?? '#94a3b8') ?>; background-color:color-mix(in srgb, var(--tint) 18%, transparent); color:var(--tint);">
                 <?php foreach (['LEARNER', 'CREATOR', 'ADMIN'] as $r): ?>
                   <option value="<?= $r ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= $r ?></option>
                 <?php endforeach; ?>
