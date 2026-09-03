@@ -50,20 +50,29 @@ function seed_default_categories(int $communityId): void {
  * Idempotent — safe to call from a re-approval or any retry path. Returns
  * the existing community's id if one already exists for this course rather
  * than throwing on the UNIQUE(course_id) constraint.
+ *
+ * Always ensures the course's creator is an 'owner' member, whether the
+ * community is brand new or already existed — this doubles as the backfill
+ * for every course community created before that was true, since this
+ * function runs on every enrollment and every course-review approval.
  */
 function create_course_community(int $courseId): int {
-    $existing = db_one('SELECT id FROM communities WHERE course_id = ?', [$courseId]);
-    if ($existing) return (int) $existing['id'];
-
-    $course = db_one('SELECT title, thumbnail_url FROM courses WHERE id = ?', [$courseId]);
+    $course = db_one('SELECT title, thumbnail_url, creator_id FROM courses WHERE id = ?', [$courseId]);
     if (!$course) throw new InvalidArgumentException("No course $courseId");
 
-    $name = $course['title'] . ' Community';
-    $communityId = db_insert(
-        'INSERT INTO communities (type, course_id, name, slug, description, banner_url) VALUES (?, ?, ?, ?, ?, ?)',
-        ['course', $courseId, $name, unique_community_slug($name), 'The discussion space for everyone learning ' . $course['title'] . '.', $course['thumbnail_url']]
-    );
-    seed_default_categories($communityId);
+    $existing = db_one('SELECT id FROM communities WHERE course_id = ?', [$courseId]);
+    if ($existing) {
+        $communityId = (int) $existing['id'];
+    } else {
+        $name = $course['title'] . ' Community';
+        $communityId = db_insert(
+            'INSERT INTO communities (type, course_id, name, slug, description, banner_url) VALUES (?, ?, ?, ?, ?, ?)',
+            ['course', $courseId, $name, unique_community_slug($name), 'The discussion space for everyone learning ' . $course['title'] . '.', $course['thumbnail_url']]
+        );
+        seed_default_categories($communityId);
+    }
+
+    ensure_community_owner($communityId, (int) $course['creator_id']);
     return $communityId;
 }
 
@@ -81,9 +90,23 @@ function create_creator_community(int $creatorId): int {
         ['creator', $creatorId, $name, unique_community_slug($name), 'Follow ' . $creator['name'] . ' for announcements, Q&A, and what\'s coming next.', $creator['avatar_url']]
     );
     seed_default_categories($communityId);
-    // The creator is automatically an owner of their own community.
-    join_community($communityId, $creatorId, 'owner');
+    ensure_community_owner($communityId, $creatorId);
     return $communityId;
+}
+
+/**
+ * Makes $userId an 'owner' of the community — joins them if they aren't a
+ * member yet, upgrades them from plain 'member' if they already joined some
+ * other way (e.g. a creator who auto-enrolled in their own course before
+ * this existed), no-ops if they're already owner/moderator. Idempotent.
+ */
+function ensure_community_owner(int $communityId, int $userId): void {
+    $member = db_one('SELECT role FROM community_members WHERE community_id = ? AND user_id = ?', [$communityId, $userId]);
+    if (!$member) {
+        join_community($communityId, $userId, 'owner');
+    } elseif ($member['role'] === 'member') {
+        db_run("UPDATE community_members SET role = 'owner' WHERE community_id = ? AND user_id = ?", [$communityId, $userId]);
+    }
 }
 
 /**

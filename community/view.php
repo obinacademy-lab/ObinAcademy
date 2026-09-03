@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user) {
         leave_community($communityId, (int) $user['id']);
         redirect($redirectBack);
     } elseif ($action === 'create_post') {
-        if (!$isMember) { flash_set('error', 'Join this community before posting.'); redirect($redirectBack); }
+        if (!$isModerator) { flash_set('error', "Only this community's creator or moderators can start a new post."); redirect($redirectBack); }
 
         $body = post('body');
         $type = post('type', 'post');
@@ -171,8 +171,10 @@ require __DIR__ . '/../includes/header.php';
         </div>
       <?php endif; ?>
 
-      <?php if ($isMember): render_composer($community, $categories, $members); elseif ($user): ?>
-        <p class="card card-pad muted small" style="border-style:dashed;">Join this community to start posting and commenting.</p>
+      <?php if ($isModerator): render_composer($community, $categories, $members); elseif ($isMember): ?>
+        <p class="card card-pad muted small" style="border-style:dashed;">Only this community's creator and moderators can start new posts — you can still comment and reply below.</p>
+      <?php elseif ($user): ?>
+        <p class="card card-pad muted small" style="border-style:dashed;">Join this community to comment on posts.</p>
       <?php else: ?>
         <p class="card card-pad muted small" style="border-style:dashed;">
           <a href="<?= e(base_url('login.php?redirect=' . urlencode('/community/view.php?slug=' . $slug))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to join the discussion.
