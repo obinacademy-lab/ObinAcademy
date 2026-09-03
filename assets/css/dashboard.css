@@ -445,3 +445,30 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-notif-row .muted { font-size: 11px; margin-top: 4px; display: block; color: #5b6670; }
 .dash-notif-row.unread { background: #eaf1ff; }
 .dash-notif-row.unread p { font-weight: 600; }
+
+/* Every plain <input>/<select>/<textarea> across the admin panel (search
+   boxes, filter dropdowns, note textareas) was inheriting a hardcoded
+   white background paired with --ink text — invisible/near-invisible
+   once --ink flips to near-white for the dark theme. This is the fix,
+   applied once here rather than per-page. */
+.dash-admin input,
+.dash-admin select,
+.dash-admin textarea {
+  background: var(--dash-panel);
+  color: var(--ink);
+  border-color: var(--dash-border);
+}
+.dash-admin input::placeholder,
+.dash-admin textarea::placeholder { color: var(--muted); }
+.dash-admin input:focus,
+.dash-admin select:focus,
+.dash-admin textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+/* <option> inherits the <select>'s color but browsers render the dropdown
+   list itself with system chrome — force it legible regardless of theme. */
+.dash-admin select option { background: var(--dash-panel); color: var(--ink); }
+
+.leads-filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.leads-filter-bar select { width: auto; min-width: 0; }

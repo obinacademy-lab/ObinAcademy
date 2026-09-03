@@ -266,20 +266,23 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
 <h3 class="dash-section-label" style="margin-top:32px;">All Leads</h3>
 <div class="chart-card" style="margin-top:14px; padding:18px 20px;">
-  <form method="get" class="row gap-2 wrap" style="align-items:center;">
-    <input type="text" name="q" placeholder="Search by name or email" value="<?= e($filters['q']) ?>" style="max-width:240px;">
-    <select name="status">
+  <form method="get" class="leads-filter-bar">
+    <div class="field-icon" style="flex:1 1 220px; max-width:280px; margin:0;">
+      <?php dash_icon('search'); ?>
+      <input type="text" name="q" placeholder="Search by name or email" value="<?= e($filters['q']) ?>">
+    </div>
+    <select name="status" style="flex:0 1 160px;">
       <option value="">All Statuses</option>
       <?php foreach ($statusLabels as $val => $label): ?>
         <option value="<?= $val ?>" <?= $filters['status'] === $val ? 'selected' : '' ?>><?= e($label) ?></option>
       <?php endforeach; ?>
     </select>
-    <select name="type">
+    <select name="type" style="flex:0 1 140px;">
       <option value="">All Types</option>
       <option value="learner" <?= $filters['type'] === 'learner' ? 'selected' : '' ?>>Learner</option>
       <option value="creator" <?= $filters['type'] === 'creator' ? 'selected' : '' ?>>Creator</option>
     </select>
-    <select name="source">
+    <select name="source" style="flex:0 1 170px;">
       <option value="">All Sources</option>
       <?php foreach ($sourceLabels as $val => $label): ?>
         <option value="<?= $val ?>" <?= $filters['source'] === $val ? 'selected' : '' ?>><?= e($label) ?></option>
@@ -287,7 +290,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     </select>
     <button type="submit" class="btn btn-primary btn-sm">Filter</button>
     <?php if (array_filter($filters)): ?><a href="<?= e(base_url('dashboard/admin/leads.php')) ?>" class="small muted">Clear</a><?php endif; ?>
-    <span class="muted small" style="margin-left:auto;"><?= number_format($totalLeads) ?> lead<?= $totalLeads === 1 ? '' : 's' ?></span>
+    <span class="muted small" style="margin-left:auto; white-space:nowrap;"><?= number_format($totalLeads) ?> lead<?= $totalLeads === 1 ? '' : 's' ?></span>
   </form>
 </div>
 
