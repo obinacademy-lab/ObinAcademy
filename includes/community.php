@@ -9,6 +9,7 @@
 
 require_once __DIR__ . '/community_feed.php';
 require_once __DIR__ . '/profiles.php';
+require_once __DIR__ . '/study_groups.php';
 
 const DEFAULT_COMMUNITY_CATEGORIES = [
     ['📢', 'Announcements'],

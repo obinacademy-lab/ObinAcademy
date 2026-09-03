@@ -73,6 +73,15 @@ function render_community_card(array $c): void {
     <?php endif; ?>
   <?php else: ?>
 
+    <a href="<?= e(base_url('study-groups/index.php')) ?>" class="card card-pad card-hover" style="display:flex; align-items:center; gap:16px; margin-bottom:32px;">
+      <div style="font-size:28px; flex-shrink:0;">👥</div>
+      <div style="flex:1;">
+        <div style="font-weight:800; font-size:15px;">Study Groups</div>
+        <div class="small muted" style="margin-top:2px;">Small groups learning together — group chat, a meeting link, and a shared schedule.</div>
+      </div>
+      <span class="btn btn-outline btn-sm" style="flex-shrink:0;">Browse →</span>
+    </a>
+
     <?php if ($yours): ?>
       <h2 class="h3">Your Communities</h2>
       <div class="grid sm:grid-2 lg:grid-3" style="margin-top:16px;">
