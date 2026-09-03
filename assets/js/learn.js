@@ -35,33 +35,65 @@ document.addEventListener("DOMContentLoaded", () => {
       video.src = src;
       videoWrap.appendChild(video);
     } else {
-      const iframe = document.createElement("iframe");
-      iframe.src = src + "#toolbar=0";
-      iframe.title = lesson.title;
-      // A PDF's own scroll living inside an iframe, inside a page that also
-      // scrolls, is exactly the "nested scrollable region" case mobile touch
-      // gesture arbitration handles unreliably across browsers — desktop's
-      // mouse wheel doesn't have that ambiguity, which is why this only ever
-      // shows up on phones. scrolling="yes" is a legacy attribute some mobile
-      // WebKit versions still respect for it; the fullscreen link below is
-      // the actual reliable fix — it opens the PDF as its own top-level page,
-      // which every mobile browser's native PDF viewer scrolls correctly by
-      // design, since there's no nested scroll region to arbitrate at all.
-      iframe.setAttribute("scrolling", "yes");
-      videoWrap.appendChild(iframe);
+      // #toolbar=0 hides the native PDF viewer's own toolbar — which has its
+      // own Download button — so a non-premium learner can't get a download
+      // out of the "view" path; stream.php's own premium check is the only
+      // thing that ever hands out download=1.
+      const fullscreenUrl = src + "#toolbar=0";
+      const expandIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
 
-      const fullscreenLink = document.createElement("a");
-      // #toolbar=0 here too — without it, opening as its own top-level page
-      // hands a non-premium learner the browser's native PDF toolbar, which
-      // has its own Download button. That would bypass the whole point of
-      // gating downloads behind the premium upgrade; the embedded iframe
-      // above already hides it for the same reason.
-      fullscreenLink.href = src + "#toolbar=0";
-      fullscreenLink.target = "_blank";
-      fullscreenLink.rel = "noopener noreferrer";
-      fullscreenLink.className = "pdf-fullscreen-link";
-      fullscreenLink.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>Open Fullscreen</span>';
-      videoWrap.appendChild(fullscreenLink);
+      // A PDF's own scroll living inside an iframe, inside a page that also
+      // scrolls, is a "nested scrollable region" that mobile touch-gesture
+      // arbitration handles unreliably across browsers — desktop's mouse
+      // wheel has no equivalent ambiguity, which is why the embedded iframe
+      // works fine there but not on phones (reported as stuck scrolling,
+      // and separately as the iframe rendering as a plain black box —
+      // both symptoms of the same underlying nested-iframe-PDF unreliability
+      // on mobile). Rather than keep chasing that, mobile skips the iframe
+      // entirely and shows a plain card whose only job is the fullscreen
+      // link below — nothing left in that space that can render broken.
+      if (window.matchMedia("(max-width: 640px)").matches) {
+        const card = document.createElement("div");
+        card.className = "pdf-mobile-card";
+
+        const icon = document.createElement("div");
+        icon.className = "pdf-mobile-icon";
+        icon.textContent = "📄";
+        card.appendChild(icon);
+
+        const title = document.createElement("p");
+        title.className = "pdf-mobile-title";
+        title.textContent = lesson.title;
+        card.appendChild(title);
+
+        const hint = document.createElement("p");
+        hint.className = "pdf-mobile-hint";
+        hint.textContent = "PDFs open best in fullscreen on mobile";
+        card.appendChild(hint);
+
+        const link = document.createElement("a");
+        link.href = fullscreenUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.className = "pdf-fullscreen-link pdf-fullscreen-link-lg";
+        link.innerHTML = expandIcon + "<span>Open Fullscreen</span>";
+        card.appendChild(link);
+
+        videoWrap.appendChild(card);
+      } else {
+        const iframe = document.createElement("iframe");
+        iframe.src = fullscreenUrl;
+        iframe.title = lesson.title;
+        videoWrap.appendChild(iframe);
+
+        const fullscreenLink = document.createElement("a");
+        fullscreenLink.href = fullscreenUrl;
+        fullscreenLink.target = "_blank";
+        fullscreenLink.rel = "noopener noreferrer";
+        fullscreenLink.className = "pdf-fullscreen-link";
+        fullscreenLink.innerHTML = expandIcon + "<span>Open Fullscreen</span>";
+        videoWrap.appendChild(fullscreenLink);
+      }
     }
 
     heading.textContent = lesson.title;

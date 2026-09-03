@@ -1423,12 +1423,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @supports (height: 100dvh) {
   .learn-video-wrap iframe { height:80dvh; }
 }
-/* A PDF's scroll living inside an iframe nested in a scrolling page is an
-   unreliable touch-gesture-arbitration case on mobile browsers (desktop's
-   mouse wheel doesn't have the same ambiguity, which is why this is
-   mobile-only) — this link opens the same PDF as its own top-level page
-   instead, where the phone's native PDF viewer scrolls it correctly by
-   construction, since there's no nested scroll region left to arbitrate. */
+/* Desktop: the fullscreen link overlays the corner of the working embedded
+   iframe (mouse-wheel scroll over an iframe has no ambiguity about which
+   scroll region it targets, so the embedded view is fine there). */
 .pdf-fullscreen-link {
   position:absolute; top:14px; right:14px; z-index:5;
   display:inline-flex; align-items:center; gap:8px;
@@ -1440,16 +1437,26 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .pdf-fullscreen-link:hover { background:#ffc93d; transform:translateY(-2px); box-shadow: 0 14px 28px -8px rgba(0,0,0,0.5); }
 .pdf-fullscreen-link:active { transform:translateY(0); }
 .pdf-fullscreen-link svg { width:16px; height:16px; flex-shrink:0; }
-@media (max-width: 640px) {
-  /* Full-width bar under the frame on small screens instead of a corner
-     pill — small, thumb-precision overlay buttons are easy to miss/mistap
-     exactly on the device this is meant to help most. */
-  .pdf-fullscreen-link {
-    position: static; width:100%; justify-content:center; margin-top:10px;
-    border-radius: var(--radius); padding:14px;
-  }
-}
 @media (prefers-reduced-motion: reduce) { .pdf-fullscreen-link { transition:none; } }
+
+/* Mobile: no embedded iframe at all (see learn.js) — a PDF's own scroll
+   nested inside an iframe inside a scrolling page is an unreliable
+   touch-gesture-arbitration case across mobile browsers, which is what was
+   showing up as stuck scrolling and, separately, as the iframe rendering
+   as a plain black box. This card replaces that space entirely, so there's
+   nothing left in it that can render broken — just a clear prompt to view
+   the PDF as its own page, where the phone's native viewer scrolls it
+   correctly by construction. */
+.pdf-mobile-card {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:4px; min-height:340px; padding:40px 24px;
+}
+.pdf-mobile-icon { font-size:42px; line-height:1; margin-bottom:8px; }
+.pdf-mobile-title { color:#fff; font-weight:800; font-size:15.5px; max-width:280px; }
+.pdf-mobile-hint { color:rgba(255,255,255,0.6); font-size:12.5px; margin-bottom:18px; }
+.pdf-fullscreen-link-lg {
+  position:static; width:auto; padding:15px 30px; font-size:14.5px;
+}
 .expiry-banner { background: var(--warning-bg); color: var(--warning-ink); border-radius: 12px; padding: 10px 16px; font-size:12.5px; font-weight:700; margin-bottom:16px; }
 .certificate-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
