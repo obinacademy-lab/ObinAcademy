@@ -9,6 +9,40 @@ if (!isset($allowedRanges[$days])) $days = 30;
 
 $summary = get_visit_summary($days);
 $topPages = get_top_landing_pages($days, 8);
+$exitPages = get_top_exit_pages($days, 8);
+$topCourses = get_most_viewed_courses($days, 8);
+$topCities = get_top_cities($days, 8);
+$deviceBreakdown = get_breakdown('device_type', $days);
+$browserBreakdown = get_breakdown('browser', $days);
+$osBreakdown = get_breakdown('os', $days);
+
+$deviceLabels = ['desktop' => 'Desktop', 'mobile' => 'Mobile', 'tablet' => 'Tablet'];
+$countryNames = ['UG' => 'Uganda', 'KE' => 'Kenya', 'TZ' => 'Tanzania', 'RW' => 'Rwanda', 'NG' => 'Nigeria', 'GH' => 'Ghana', 'US' => 'United States', 'GB' => 'United Kingdom'];
+
+function format_duration_short(int $seconds): string {
+    if ($seconds < 60) return $seconds . 's';
+    return floor($seconds / 60) . 'm ' . ($seconds % 60) . 's';
+}
+
+/** Renders a labeled horizontal bar-list — the same pattern used for Traffic Sources. */
+function render_bar_list(array $counts, array $labels = [], int $limit = 6): void {
+    $total = array_sum($counts) ?: 1;
+    arsort($counts);
+    $counts = array_slice($counts, 0, $limit, true);
+    if (!$counts) {
+        echo '<p class="muted small" style="margin-top:14px;">No data yet in this range.</p>';
+        return;
+    }
+    echo '<div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">';
+    foreach ($counts as $key => $count) {
+        $pct = round($count / $total * 100);
+        $label = $labels[$key] ?? $key;
+        echo '<div><div class="row between" style="font-size:12.5px; font-weight:700;"><span>' . e($label) . '</span>'
+           . '<span class="muted" style="font-weight:600;">' . number_format($count) . ' (' . $pct . '%)</span></div>'
+           . '<div class="progress-track" style="margin-top:5px;"><div class="progress-fill" style="width:' . $pct . '%;"></div></div></div>';
+    }
+    echo '</div>';
+}
 
 $sourceLabels = [
     'google' => ['label' => 'Google / Search', 'color' => '#2563eb'],
@@ -81,6 +115,17 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
+<div class="grid md:grid-2" style="margin-top:14px;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#06b6d4;">
+    <div class="icon"><?php dash_icon('clock'); ?></div>
+    <div class="value"><?= e(format_duration_short($summary['avg_session_duration'])) ?></div><div class="label">Avg. Session Duration</div>
+  </div>
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#ec4899;">
+    <div class="icon"><?php dash_icon('file-text'); ?></div>
+    <div class="value"><?= number_format($summary['avg_pages_per_session'], 1) ?></div><div class="label">Avg. Pages / Session</div>
+  </div>
+</div>
+
 <div class="growth-layout" style="margin-top:28px;">
   <div class="chart-card">
     <div class="chart-card-head">
@@ -146,22 +191,94 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<h3 class="dash-section-label" style="margin-top:32px;">Top Pages</h3>
+<h3 class="dash-section-label" style="margin-top:32px;">Device &amp; Browser</h3>
+<div class="grid md:grid-3" style="margin-top:14px;">
+  <div class="chart-card">
+    <h2 class="h3">Device Type</h2>
+    <?php render_bar_list($deviceBreakdown, $deviceLabels); ?>
+  </div>
+  <div class="chart-card">
+    <h2 class="h3">Browser</h2>
+    <?php render_bar_list($browserBreakdown); ?>
+  </div>
+  <div class="chart-card">
+    <h2 class="h3">Operating System</h2>
+    <?php render_bar_list($osBreakdown); ?>
+  </div>
+</div>
+
+<h3 class="dash-section-label" style="margin-top:32px;">Entry &amp; Exit Pages</h3>
+<div class="grid md:grid-2" style="margin-top:14px; gap:16px;">
+  <div>
+    <p class="muted small" style="margin-bottom:8px;">Where sessions started</p>
+    <div class="table-wrap">
+      <?php if ($topPages): ?>
+        <table>
+          <thead><tr><th>Page</th><th>Sessions</th></tr></thead>
+          <tbody>
+            <?php foreach ($topPages as $p): ?>
+              <tr><td><?= e($p['landing_path']) ?></td><td><?= number_format((int) $p['visitors']) ?></td></tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      <?php else: ?>
+        <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet.</div>
+      <?php endif; ?>
+    </div>
+  </div>
+  <div>
+    <p class="muted small" style="margin-bottom:8px;">Where sessions ended</p>
+    <div class="table-wrap">
+      <?php if ($exitPages): ?>
+        <table>
+          <thead><tr><th>Page</th><th>Sessions</th></tr></thead>
+          <tbody>
+            <?php foreach ($exitPages as $p): ?>
+              <tr><td><?= e($p['exit_path']) ?></td><td><?= number_format((int) $p['n']) ?></td></tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      <?php else: ?>
+        <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet.</div>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
+
+<h3 class="dash-section-label" style="margin-top:32px;">Most-Viewed Courses</h3>
 <div class="table-wrap" style="margin-top:14px;">
-  <?php if ($topPages): ?>
+  <?php if ($topCourses): ?>
     <table>
-      <thead><tr><th>Page</th><th>Visitors</th></tr></thead>
+      <thead><tr><th>Course</th><th>Views</th></tr></thead>
       <tbody>
-        <?php foreach ($topPages as $p): ?>
+        <?php foreach ($topCourses as $c): ?>
+          <tr><td><?= e($c['title']) ?></td><td><?= number_format($c['views']) ?></td></tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  <?php else: ?>
+    <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No course views recorded yet in this range.</div>
+  <?php endif; ?>
+</div>
+
+<h3 class="dash-section-label" style="margin-top:32px;">Location</h3>
+<p class="muted small" style="margin-top:4px;">Approximate, resolved from IP address — never a precise location, and the address itself isn't kept.</p>
+<div class="table-wrap" style="margin-top:14px;">
+  <?php if ($topCities): ?>
+    <table>
+      <thead><tr><th>City</th><th>Country</th><th>Sessions</th></tr></thead>
+      <tbody>
+        <?php foreach ($topCities as $c): ?>
           <tr>
-            <td><?= e($p['landing_path']) ?></td>
-            <td><?= number_format((int) $p['visitors']) ?></td>
+            <td><?= e($c['city']) ?></td>
+            <td><?= e($countryNames[$c['country']] ?? $c['country'] ?? '—') ?></td>
+            <td><?= number_format((int) $c['n']) ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>
     </table>
   <?php else: ?>
-    <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet in this range.</div>
+    <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">Location data resolves gradually in the background — check back shortly.</div>
   <?php endif; ?>
 </div>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

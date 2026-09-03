@@ -118,6 +118,8 @@
     </div>
   </footer>
 
+  <script>window.OBIN_BASE_URL = <?= json_encode(rtrim(base_url(''), '/')) ?>;</script>
   <script src="<?= e(versioned_asset('assets/js/main.js')) ?>"></script>
+  <script src="<?= e(versioned_asset('assets/js/visitor-tracker.js')) ?>"></script>
 </body>
 </html>

@@ -232,18 +232,114 @@ CREATE TABLE password_reset_tokens (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
--- One row per visitor per calendar day (not per pageview) — the first
--- pageview of the day wins and records that day's referrer/landing page, so
--- repeat browsing within the same day doesn't inflate the visit count.
-CREATE TABLE page_visits (
+-- Visitor Intelligence — one row per browsing session (device/geo/referrer,
+-- plus running counters kept as a cache so the analytics dashboard doesn't
+-- have to GROUP BY the (much larger) pageviews table for every summary
+-- query). session_token is a separate, short sliding-window cookie from
+-- visitor_id (the long-lived identity cookie) so a session naturally expires
+-- after ~30 minutes of inactivity without needing a cron sweep to close it.
+CREATE TABLE visitor_sessions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   visitor_id VARCHAR(32) NOT NULL,
-  visit_date DATE NOT NULL,
+  session_token VARCHAR(32) NOT NULL,
+  started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_seen_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  entry_path VARCHAR(500) NOT NULL,
+  exit_path VARCHAR(500) NOT NULL,
   referrer_source ENUM('google','social','direct','other') NOT NULL DEFAULT 'direct',
-  landing_path VARCHAR(500) NOT NULL,
+  device_type ENUM('desktop','mobile','tablet') NOT NULL DEFAULT 'desktop',
+  browser VARCHAR(40) NULL,
+  os VARCHAR(40) NULL,
+  country CHAR(2) NULL,
+  city VARCHAR(100) NULL,
+  -- Transient only — set at pageview time so the cron geo sweep has something
+  -- to look up later, and cleared (set NULL) by that same sweep the moment
+  -- it resolves country/city (or gives up). Never queried, never displayed,
+  -- never kept once geo resolution is done.
+  ip_address VARCHAR(45) NULL,
+  pageview_count INT NOT NULL DEFAULT 0,
+  max_scroll_depth INT NOT NULL DEFAULT 0,
+  is_new_visitor TINYINT(1) NOT NULL DEFAULT 0,
+  UNIQUE KEY uniq_session_token (session_token),
+  INDEX idx_visitor_id (visitor_id),
+  INDEX idx_started_at (started_at),
+  INDEX idx_geo_pending (country, started_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- One row per pageview. visitor_id is denormalized here (not just reachable
+-- via session_id) so "pages/courses this lead viewed" is a single-hop query
+-- against a lead's visitor_id, not a join through visitor_sessions.
+CREATE TABLE visitor_pageviews (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  session_id INT NOT NULL,
+  visitor_id VARCHAR(32) NOT NULL,
+  path VARCHAR(500) NOT NULL,
+  entered_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  time_on_page_seconds INT NULL,
+  scroll_depth_pct INT NOT NULL DEFAULT 0,
+  FOREIGN KEY (session_id) REFERENCES visitor_sessions(id) ON DELETE CASCADE,
+  INDEX idx_session_id (session_id),
+  INDEX idx_visitor_id (visitor_id),
+  INDEX idx_path (path(191))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- A voluntary lead capture — only ever created from a submitted form, never
+-- from tracking data alone. visitor_id (nullable — a lead could in principle
+-- be added manually) links back to visitor_sessions/visitor_pageviews so the
+-- CRM can show a lead's real browsing history on demand.
+CREATE TABLE leads (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(191) NOT NULL,
+  email VARCHAR(191) NOT NULL,
+  phone VARCHAR(32) NULL,
+  lead_type ENUM('learner','creator') NOT NULL DEFAULT 'learner',
+  source ENUM('google','social','direct','other') NOT NULL DEFAULT 'direct',
+  status ENUM('NEW','CONTACTED','INTERESTED','ENROLLED','CREATOR','LOST') NOT NULL DEFAULT 'NEW',
+  visitor_id VARCHAR(32) NULL,
+  first_visit_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_visit_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  visit_count INT NOT NULL DEFAULT 1,
+  consent_marketing TINYINT(1) NOT NULL DEFAULT 0,
+  unsubscribed TINYINT(1) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uniq_visitor_day (visitor_id, visit_date),
-  INDEX idx_visit_date (visit_date)
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_email (email),
+  INDEX idx_status (status),
+  INDEX idx_visitor_id (visitor_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE lead_notes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  lead_id INT NOT NULL,
+  admin_id INT NOT NULL,
+  note TEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE,
+  FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Tracks which drip-sequence steps (day 3/5/7 — day 1 is the immediate
+-- welcome email, not logged here) have been sent, so the cron sweep can use
+-- an idempotent "insert once" guard instead of trusting its own timing.
+CREATE TABLE lead_sequence_log (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  lead_id INT NOT NULL,
+  step TINYINT NOT NULL,
+  sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_lead_step (lead_id, step)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE admin_notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  type ENUM('new_lead','creator_request','pricing_revisit','stale_returning_visitor') NOT NULL,
+  message VARCHAR(500) NOT NULL,
+  related_lead_id INT NULL,
+  is_read TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (related_lead_id) REFERENCES leads(id) ON DELETE CASCADE,
+  INDEX idx_is_read (is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;

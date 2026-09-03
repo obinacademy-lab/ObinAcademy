@@ -9,7 +9,6 @@
  * Usage: require __DIR__ . '/../includes/header.php';
  */
 $user = current_user();
-track_visit();
 $navLinks = [
     '/index.php' => 'Home',
     '/courses/index.php' => 'Explore Courses',
