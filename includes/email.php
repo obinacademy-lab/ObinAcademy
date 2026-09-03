@@ -172,6 +172,80 @@ function send_certificate_email(string $to, string $name, string $courseTitle, s
         HTML);
 }
 
+/**
+ * Sent immediately after a Learner lead popup is submitted — welcome plus a
+ * short, real course-recommendations list (get_trending_courses(), the same
+ * data the homepage spotlight uses — never invented content).
+ */
+function send_lead_welcome_email(string $to, string $name, array $courses, string $unsubscribeUrl): void {
+    $exploreUrl = base_url('courses/index.php');
+    $courseRows = '';
+    foreach ($courses as $c) {
+        $url = base_url('courses/view.php?slug=' . $c['slug']);
+        $price = !empty($c['sale_price']) && (float) $c['sale_price'] > 0 && (float) $c['sale_price'] < (float) $c['price']
+            ? format_money((float) $c['sale_price']) . ' <span style="color:#9ca3af; text-decoration:line-through; font-weight:400;">' . format_money((float) $c['price']) . '</span>'
+            : format_money((float) $c['price']);
+        $courseRows .= <<<HTML
+            <tr>
+              <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <a href="{$url}" style="color: #14181b; text-decoration: none; font-weight: 700; font-size: 14px;">{$c['title']}</a>
+                <div style="color: #5b6670; font-size: 12.5px; margin-top: 2px;">by {$c['creator_name']} &middot; {$price}</div>
+              </td>
+            </tr>
+            HTML;
+    }
+
+    resend_send($to, "Welcome to Obin Academy, {$name}!", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">Welcome, {$name}! 🎓</h2>
+          <p>
+            Thanks for your interest in Obin Academy — East Africa's learning marketplace for
+            practical, real-world skills. As promised, here's a head start: a few courses learners
+            like you are enjoying right now.
+          </p>
+          <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+            {$courseRows}
+          </table>
+          <p style="margin-top: 24px;">
+            <a href="{$exploreUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              Explore All Courses
+            </a>
+          </p>
+          <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            You're receiving this because you asked to hear from us on obinacademy.site.
+            <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from marketing emails</a>.
+          </p>
+        </div>
+        HTML);
+}
+
+/** Sent immediately (alongside the welcome email) when a Creator lead popup is submitted. */
+function send_lead_creator_invitation_email(string $to, string $name, string $unsubscribeUrl): void {
+    $applyUrl = base_url('become-creator.php');
+    resend_send($to, "Let's get you set up as a creator, {$name}", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">Ready to teach, {$name}? 🚀</h2>
+          <p>
+            You told us you're interested in becoming a creator on Obin Academy — share what you know,
+            earn income from mobile money payments, and build a real following of learners across
+            East Africa.
+          </p>
+          <p>
+            The next step is a short creator application so we can get your first course live.
+          </p>
+          <p style="margin-top: 20px;">
+            <a href="{$applyUrl}" style="display: inline-block; background: #f5b301; color: #1e1400; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 700;">
+              Apply to Become a Creator
+            </a>
+          </p>
+          <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            You're receiving this because you asked to hear from us on obinacademy.site.
+            <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from marketing emails</a>.
+          </p>
+        </div>
+        HTML);
+}
+
 function send_creator_application_approved_email(string $to, string $name): void {
     $loginUrl = base_url('login.php?redirect=' . urlencode('/dashboard/creator/index.php'));
     resend_send($to, "You're Approved as an Obin Academy Creator!", <<<HTML

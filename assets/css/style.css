@@ -1427,3 +1427,46 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (prefers-reduced-motion: reduce) {
   .reveal { transition: none; opacity: 1; transform: none; }
 }
+
+/* ---------- lead capture popup ---------- */
+.lead-overlay {
+  position: fixed; inset: 0; z-index: 200; background: rgba(16,24,27,0.55);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+  opacity: 0; transition: opacity 0.25s ease;
+}
+.lead-overlay.open { display: flex; }
+.lead-overlay.visible { opacity: 1; }
+.lead-modal {
+  position: relative; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto;
+  background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg);
+  padding: 32px 28px 28px; box-shadow: 0 30px 60px -20px rgba(16,24,27,0.4);
+  transform: translateY(16px) scale(0.98); transition: transform 0.25s cubic-bezier(0.2,0.8,0.2,1);
+}
+.lead-overlay.visible .lead-modal { transform: translateY(0) scale(1); }
+.lead-modal-close {
+  position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: var(--surface); color: var(--muted); font-size: 18px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.lead-modal-close:hover { background: var(--border); color: var(--ink); }
+.lead-modal-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--dash-tint, #eaf1ff); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.lead-modal[data-lead-variant="creator"] .lead-modal-icon,
+.lead-modal-success .lead-modal-icon { background: color-mix(in srgb, var(--gold) 18%, white); }
+.lead-modal h2 { margin-top: 16px; font-size: 22px; line-height: 1.15; }
+.lead-modal p.lead-sub { margin-top: 8px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+.lead-modal form { margin-top: 20px; }
+.lead-consent {
+  display: flex; align-items: flex-start; gap: 9px; margin-top: 6px;
+  font-size: 12px; color: var(--muted); line-height: 1.5; cursor: pointer;
+}
+.lead-consent input { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; accent-color: var(--accent); }
+.lead-consent a { color: var(--ink); text-decoration: underline; }
+.lead-modal .btn { margin-top: 16px; }
+.lead-form-error { color: var(--danger); font-size: 13px; margin-top: 10px; text-align: center; }
+.lead-success-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--success-bg); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.lead-whatsapp-btn { background: #25D366; border-color: #25D366; color: #fff; }
+.lead-whatsapp-btn:hover { background: #1fb855; border-color: #1fb855; }
+@media (prefers-reduced-motion: reduce) {
+  .lead-overlay, .lead-modal { transition: none; }
+}

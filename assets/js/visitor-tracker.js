@@ -52,6 +52,9 @@
     body: JSON.stringify({ path: location.pathname + location.search, referrer: document.referrer || null }),
   })
     .then((res) => res.json())
-    .then((data) => { if (data && data.pageviewId) pageviewId = data.pageviewId; })
+    .then((data) => {
+      if (data && data.pageviewId) pageviewId = data.pageviewId;
+      document.dispatchEvent(new CustomEvent("obin:pageview-tracked", { detail: data || {} }));
+    })
     .catch(() => {});
 })();

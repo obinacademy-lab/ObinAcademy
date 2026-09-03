@@ -91,7 +91,7 @@ function get_or_create_session(string $visitorId, string $path, string $referrer
     $sessionToken = $_COOKIE[SESSION_COOKIE] ?? '';
     if (preg_match('/^[a-f0-9]{32}$/', $sessionToken)) {
         $existing = db_one(
-            "SELECT id FROM visitor_sessions WHERE session_token = ? AND last_seen_at >= DATE_SUB(NOW(), INTERVAL ? MINUTE)",
+            "SELECT id, is_new_visitor FROM visitor_sessions WHERE session_token = ? AND last_seen_at >= DATE_SUB(NOW(), INTERVAL ? MINUTE)",
             [$sessionToken, SESSION_WINDOW_MINUTES]
         );
         if ($existing) {
@@ -100,7 +100,7 @@ function get_or_create_session(string $visitorId, string $path, string $referrer
                 [$path, $existing['id']]
             );
             refresh_session_cookie($sessionToken);
-            return ['id' => (int) $existing['id'], 'is_new' => false];
+            return ['id' => (int) $existing['id'], 'is_new' => false, 'is_new_visitor' => (bool) $existing['is_new_visitor']];
         }
     }
 
@@ -117,7 +117,7 @@ function get_or_create_session(string $visitorId, string $path, string $referrer
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)',
         [$visitorId, $sessionToken, $path, $path, $referrerSource, $ua['device_type'], $ua['browser'], $ua['os'], get_client_ip(), $isNewVisitor ? 1 : 0]
     );
-    return ['id' => $sessionId, 'is_new' => true];
+    return ['id' => $sessionId, 'is_new' => true, 'is_new_visitor' => $isNewVisitor];
 }
 
 function refresh_session_cookie(string $token): void {

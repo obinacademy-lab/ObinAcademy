@@ -17,4 +17,4 @@ $parsedUa = parse_user_agent($ua);
 $session = get_or_create_session($visitorId, $path, $referrerSource, $parsedUa);
 $pageviewId = record_pageview($session['id'], $visitorId, $path);
 
-json_response(['tracked' => true, 'pageviewId' => $pageviewId, 'sessionId' => $session['id']]);
+json_response(['tracked' => true, 'pageviewId' => $pageviewId, 'sessionId' => $session['id'], 'isReturning' => !$session['is_new_visitor']]);
