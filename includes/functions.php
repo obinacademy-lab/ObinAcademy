@@ -56,6 +56,16 @@ function format_date(string $datetime): string {
     return date('M j, Y', strtotime($datetime));
 }
 
+/** Relative time ("3m ago", "2h ago") for the community feed; falls back to a plain date past 7 days. */
+function time_ago(string $datetime): string {
+    $diff = time() - strtotime($datetime);
+    if ($diff < 60) return 'just now';
+    if ($diff < 3600) return floor($diff / 60) . 'm ago';
+    if ($diff < 86400) return floor($diff / 3600) . 'h ago';
+    if ($diff < 7 * 86400) return floor($diff / 86400) . 'd ago';
+    return format_date($datetime);
+}
+
 function base_url(string $path = ''): string {
     return rtrim(APP_URL, '/') . '/' . ltrim($path, '/');
 }

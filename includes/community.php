@@ -7,6 +7,8 @@
  * C:\Users\hp\.claude\plans\iterative-scribbling-turing.md.
  */
 
+require_once __DIR__ . '/community_feed.php';
+
 const DEFAULT_COMMUNITY_CATEGORIES = [
     ['📢', 'Announcements'],
     ['❓', 'Questions & Answers'],
