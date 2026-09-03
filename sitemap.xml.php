@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/data.php';
-require __DIR__ . '/../includes/community.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
+require __DIR__ . '/includes/community.php';
 
 header('Content-Type: application/xml; charset=utf-8');
 

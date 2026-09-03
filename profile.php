@@ -1,6 +1,6 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/community.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/community.php';
 
 $profileId = (int) query_param('id');
 $profile = $profileId ? get_profile($profileId) : null;
@@ -43,7 +43,7 @@ $socials = [
 
 $pageTitle = $profile['name'] . ' — Obin Academy';
 $pageDescription = $profile['headline'] ?: ($profile['bio'] ? mb_strimwidth($profile['bio'], 0, 155, '…') : 'View ' . $profile['name'] . '\'s profile on Obin Academy.');
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/includes/header.php';
 ?>
 <div class="container" style="max-width:820px; padding-top:32px; padding-bottom:72px;">
   <div class="card card-pad profile-hero">
@@ -149,4 +149,4 @@ require __DIR__ . '/../includes/header.php';
     </div>
   <?php endif; ?>
 </div>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>

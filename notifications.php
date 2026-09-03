@@ -1,6 +1,6 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/community.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/community.php';
 
 $user = require_login();
 
@@ -14,7 +14,7 @@ $notifications = get_user_notifications((int) $user['id'], 50);
 
 $pageTitle = 'Notifications — Obin Academy';
 $noindex = true;
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/includes/header.php';
 ?>
 <div class="container" style="max-width:600px; padding-top:32px; padding-bottom:72px;">
   <div class="row between" style="align-items:center;">
@@ -39,4 +39,4 @@ require __DIR__ . '/../includes/header.php';
     </div>
   <?php endif; ?>
 </div>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>

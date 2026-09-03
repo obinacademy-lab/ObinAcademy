@@ -1,6 +1,6 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/community.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/community.php';
 
 $q = trim(query_param('q'));
 $user = current_user();
@@ -11,7 +11,7 @@ $posts = $q !== '' ? search_posts($q, 15) : [];
 
 $pageTitle = ($q !== '' ? "\"$q\" — Search" : 'Search') . ' — Obin Academy';
 $noindex = true;
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/includes/header.php';
 ?>
 <div class="container" style="max-width:720px; padding-top:32px; padding-bottom:72px;">
   <h1 class="h2">Search</h1>
@@ -82,4 +82,4 @@ require __DIR__ . '/../includes/header.php';
 
   <?php endif; ?>
 </div>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>
