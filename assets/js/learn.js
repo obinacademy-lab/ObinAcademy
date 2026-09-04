@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const updateProgressUrl = window.OBIN_UPDATE_PROGRESS_URL || "/api/update-progress.php";
   const certificateUrlBase = window.OBIN_CERTIFICATE_URL_BASE || "/certificate.php";
   const courseId = window.OBIN_COURSE_ID;
-  const isPremium = !!window.OBIN_IS_PREMIUM;
+  const canDownload = !!window.OBIN_CAN_DOWNLOAD;
   let progress = Number(window.OBIN_INITIAL_PROGRESS) || 0;
   const total = lessons.length;
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
@@ -40,12 +40,16 @@ document.addEventListener("DOMContentLoaded", () => {
       // page 1 with no way to swipe through it). Opening it as its own
       // top-level page instead uses the browser's own full-screen PDF
       // viewer, which scrolls/pinches normally on every device.
+      // #toolbar=0 hides the native viewer's own download/print controls
+      // for anything that isn't freely downloadable (see canDownload above)
+      // — a paid course without a premium download purchase stays protected
+      // even in the full-screen view.
+      const toolbarParam = canDownload ? "" : "#toolbar=0";
       const opener = document.createElement("div");
       opener.className = "pdf-open-card";
       opener.innerHTML = `
         <span class="pdf-open-icon">📄</span>
-        <a class="btn btn-primary btn-lg" href="${src}#toolbar=0" target="_blank" rel="noopener">Open Full PDF</a>
-        <p class="pdf-open-hint">Opens in a new tab — scroll or swipe to read on any device.</p>
+        <a class="btn btn-primary btn-lg" href="${src}${toolbarParam}" target="_blank" rel="noopener">Open Full PDF</a>
       `;
       videoWrap.appendChild(opener);
     }
@@ -53,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     heading.textContent = lesson.title;
     counter.textContent = `Lesson ${index + 1} of ${total}`;
     if (downloadLink) {
-      if (isPremium) {
+      if (canDownload) {
         downloadLink.href = `${src}&download=1`;
         downloadLink.classList.remove("hidden");
       } else {

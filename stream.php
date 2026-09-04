@@ -10,7 +10,7 @@ $user = current_user();
 
 $lessonId = (int) query_param('lesson');
 $lesson = db_one('
-    SELECT l.*, m.course_id, c.creator_id, c.slug AS course_slug
+    SELECT l.*, m.course_id, c.creator_id, c.slug AS course_slug, c.price AS course_price, c.premium_price
     FROM lessons l
     JOIN modules m ON m.id = l.module_id
     JOIN courses c ON c.id = m.course_id
@@ -34,7 +34,11 @@ if (!$isOwner && !$isAdmin) {
     $isPremium = (bool) $enrollment['is_premium'];
 }
 
-$canDownload = $isOwner || $isAdmin || $isPremium;
+// A free course the creator never set a premium download price on has no
+// paywall to protect — matches the same rule learn.php uses to decide
+// whether to show the download button and skip #toolbar=0 in the PDF view.
+$isFreeCourseWithNoPremiumTier = (float) $lesson['course_price'] <= 0 && empty($lesson['premium_price']);
+$canDownload = $isOwner || $isAdmin || $isPremium || $isFreeCourseWithNoPremiumTier;
 $wantsDownload = query_param('download') === '1';
 $disposition = ($wantsDownload && $canDownload) ? 'attachment' : 'inline';
 

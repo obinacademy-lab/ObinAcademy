@@ -41,6 +41,11 @@ $isPremium = $isOwner || ($enrollment && (bool) $enrollment['is_premium']);
 // Premium upgrade needs an account today (its payment API is login-gated), so
 // hide the upsell for guests rather than show a button that would 401.
 $canUpgrade = !$isOwner && !$isGuest && !empty($course['premium_price']) && !$isPremium;
+// A free course the creator never set a premium download price on has no
+// paywall to protect — let downloads through without requiring a premium
+// upgrade that doesn't exist. Any course with a premium price stays gated
+// behind $isPremium regardless of whether the course itself is free or paid.
+$canDownloadFiles = $isPremium || ((float) $course['price'] <= 0 && empty($course['premium_price']));
 $expiresAt = $enrollment['expires_at'] ?? null;
 $progress = (float) ($enrollment['progress'] ?? 0);
 
@@ -155,7 +160,7 @@ $pageTitle = $course['title'] . ' — Learn — Obin Academy';
   window.OBIN_UPDATE_PROGRESS_URL = <?= json_encode(base_url('api/update-progress.php')) ?>;
   window.OBIN_CERTIFICATE_URL_BASE = <?= json_encode(base_url('certificate.php')) ?>;
   window.OBIN_COURSE_ID = <?= (int) $course['id'] ?>;
-  window.OBIN_IS_PREMIUM = <?= $isPremium ? 'true' : 'false' ?>;
+  window.OBIN_CAN_DOWNLOAD = <?= $canDownloadFiles ? 'true' : 'false' ?>;
   window.OBIN_INITIAL_PROGRESS = <?= json_encode($progress) ?>;
 </script>
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
