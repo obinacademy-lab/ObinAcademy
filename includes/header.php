@@ -57,7 +57,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
 <body id="top">
   <header class="site-header" data-site-header>
     <div class="container">
-      <?php render_logo(); ?>
+      <?php render_logo(true); ?>
 
       <nav class="nav-links">
         <?php foreach ($navLinks as $href => $label): ?>
