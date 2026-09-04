@@ -35,23 +35,22 @@ document.addEventListener("DOMContentLoaded", () => {
       video.src = src;
       videoWrap.appendChild(video);
     } else {
-      // A PDF nested in an <iframe> doesn't get proper touch-scroll on most
-      // mobile browsers (the native PDF viewer inside the frame just shows
-      // page 1 with no way to swipe through it). Opening it as its own
-      // top-level page instead uses the browser's own full-screen PDF
-      // viewer, which scrolls/pinches normally on every device.
-      // #toolbar=0 hides the native viewer's own download/print controls
-      // for anything that isn't freely downloadable (see canDownload above)
-      // — a paid course without a premium download purchase stays protected
-      // even in the full-screen view.
-      const toolbarParam = canDownload ? "" : "#toolbar=0";
-      const opener = document.createElement("div");
-      opener.className = "pdf-open-card";
-      opener.innerHTML = `
-        <span class="pdf-open-icon">📄</span>
-        <a class="btn btn-primary btn-lg" href="${src}${toolbarParam}" target="_blank" rel="noopener">Open Full PDF</a>
-      `;
-      videoWrap.appendChild(opener);
+      // The browser's own native PDF plugin doesn't reliably support
+      // touch-scroll when embedded in an iframe on mobile (it just shows
+      // page 1 with no way to swipe through the rest). Our own bundled
+      // PDF.js viewer (assets/pdfjs) renders to <canvas> with its own touch
+      // handling, so it scrolls/pinches correctly on every device while
+      // staying embedded — which also means Ctrl+S targets our page, not a
+      // standalone PDF tab, and we control which toolbar buttons it shows
+      // (obin-overrides.css/js) so a non-premium learner on a paid course
+      // doesn't get a save/print button at all.
+      const viewerBase = window.OBIN_PDFJS_VIEWER_URL || "/assets/pdfjs/web/viewer.html";
+      const viewerSrc = `${viewerBase}?file=${encodeURIComponent(src)}&download=${canDownload ? "1" : "0"}`;
+      const iframe = document.createElement("iframe");
+      iframe.src = viewerSrc;
+      iframe.title = lesson.title;
+      iframe.className = "pdf-viewer-frame";
+      videoWrap.appendChild(iframe);
     }
 
     heading.textContent = lesson.title;

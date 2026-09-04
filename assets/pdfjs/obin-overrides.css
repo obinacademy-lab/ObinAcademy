@@ -1,0 +1,13 @@
+/* Obin Academy addition — not part of the upstream PDF.js distribution.
+   Hides the viewer's own save/print controls when the URL says this
+   learner hasn't paid for downloads. The real access control still lives
+   server-side in stream.php (Content-Disposition) — this just removes the
+   obvious "click here to save it" affordances from the UI. */
+body.obin-no-download #download,
+body.obin-no-download #secondaryDownload,
+body.obin-no-download #print,
+body.obin-no-download #secondaryPrint,
+body.obin-no-download #openFile,
+body.obin-no-download #secondaryOpenFile {
+  display: none !important;
+}

@@ -157,6 +157,7 @@ $pageTitle = $course['title'] . ' — Learn — Obin Academy';
 <script>
   window.OBIN_LESSONS = <?= json_encode(array_map(fn($l) => ['id' => (int) $l['id'], 'type' => $l['type'], 'title' => $l['title']], $allLessons)) ?>;
   window.OBIN_STREAM_BASE = <?= json_encode(base_url('stream.php')) ?>;
+  window.OBIN_PDFJS_VIEWER_URL = <?= json_encode(base_url('assets/pdfjs/web/viewer.html')) ?>;
   window.OBIN_UPDATE_PROGRESS_URL = <?= json_encode(base_url('api/update-progress.php')) ?>;
   window.OBIN_CERTIFICATE_URL_BASE = <?= json_encode(base_url('certificate.php')) ?>;
   window.OBIN_COURSE_ID = <?= (int) $course['id'] ?>;
