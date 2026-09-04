@@ -948,9 +948,8 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   box-shadow: 0 2px 8px rgba(20,24,27,0.05), 0 24px 48px -24px rgba(20,24,27,0.25);
 }
 /* Bigger, more prominent product shot right where the learner decides to
-   buy — square, and paired with a wider sidebar column (.course-detail-grid)
-   so it reads as a real hero image, not a small crop. */
-.enroll-panel .thumb { aspect-ratio: 1/1; background: var(--brand-900); position: relative; }
+   buy — taller than the 16:10 browse-card thumb on purpose. */
+.enroll-panel .thumb { aspect-ratio: 4/3; background: var(--brand-900); position: relative; }
 .enroll-panel .thumb img { width:100%; height:100%; object-fit:cover; }
 .enroll-panel .thumb::after { content:""; position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.35), transparent 45%); pointer-events:none; }
 .enroll-panel .thumb .placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; height:100%; color:rgba(255,255,255,0.75); font-weight:700; background: linear-gradient(135deg, var(--brand-800), var(--brand-950)); }
@@ -1309,12 +1308,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .hero-trust-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px; margin-top: 30px; }
 .hero-trust-row .item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,0.78); }
 .hero-trust-row svg { width: 16px; height: 16px; color: var(--gold); flex-shrink: 0; }
-
-/* Wider than the shared .lg\:grid-3 (2:1) so the enroll panel — thumbnail
-   and pay button together — reads as a real, prominent product/checkout
-   column instead of a squeezed third of the page. */
-.course-detail-grid { display: grid; grid-template-columns: 1fr; gap: 40px; align-items: start; }
-@media (min-width: 1024px) { .course-detail-grid { grid-template-columns: 1.6fr 1.15fr; gap: 48px; } }
 
 /* ---------- sticky sidebar (enroll panel + instructor card) ---------- */
 .course-sidebar { display:flex; flex-direction:column; gap:20px; }

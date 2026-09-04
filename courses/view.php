@@ -156,8 +156,8 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <section class="section">
-  <div class="container course-detail-grid">
-    <div class="reveal reveal-delay-1">
+  <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
+    <div style="grid-column: span 2;" class="reveal reveal-delay-1">
       <h2 class="h3">About This Course</h2>
       <p class="muted" style="margin-top:14px; line-height:1.75; white-space:pre-line;"><?= e($course['description']) ?></p>
 
