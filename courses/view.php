@@ -108,7 +108,7 @@ require __DIR__ . '/../includes/header.php';
   </div>
 <?php endif; ?>
 
-<section class="course-hero page-hero-light">
+<section class="course-hero">
   <div class="course-hero-glow" aria-hidden="true"></div>
   <div class="container">
     <nav class="breadcrumb reveal">
