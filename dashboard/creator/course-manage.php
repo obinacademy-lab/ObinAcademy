@@ -240,7 +240,16 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="field"><label>Price (UGX)</label><input name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" required></div>
+      <?php $isFreeChecked = (float) $course['price'] === 0.0; ?>
+      <div class="field">
+        <label>Price (UGX)</label>
+        <label style="display:flex; align-items:center; gap:6px; font-weight:400; font-size:12.5px; color:var(--muted); margin-bottom:6px; cursor:pointer;">
+          <input type="checkbox" id="isFree" style="width:auto;" <?= $isFreeChecked ? 'checked' : '' ?> onchange="var p=document.getElementById('price'); p.disabled=this.checked; p.style.opacity=this.checked?'0.5':'1'; if(this.checked) p.value='0';">
+          Make this course free
+        </label>
+        <input id="price" name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" <?= $isFreeChecked ? 'disabled style="opacity:0.5;"' : '' ?> required>
+        <p class="help">Free courses still let you charge separately for downloads below.</p>
+      </div>
     </div>
     <div class="field">
       <label>Sale Price (UGX, optional)</label>
