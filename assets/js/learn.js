@@ -35,10 +35,19 @@ document.addEventListener("DOMContentLoaded", () => {
       video.src = src;
       videoWrap.appendChild(video);
     } else {
-      const iframe = document.createElement("iframe");
-      iframe.src = src + "#toolbar=0";
-      iframe.title = lesson.title;
-      videoWrap.appendChild(iframe);
+      // A PDF nested in an <iframe> doesn't get proper touch-scroll on most
+      // mobile browsers (the native PDF viewer inside the frame just shows
+      // page 1 with no way to swipe through it). Opening it as its own
+      // top-level page instead uses the browser's own full-screen PDF
+      // viewer, which scrolls/pinches normally on every device.
+      const opener = document.createElement("div");
+      opener.className = "pdf-open-card";
+      opener.innerHTML = `
+        <span class="pdf-open-icon">📄</span>
+        <a class="btn btn-primary btn-lg" href="${src}#toolbar=0" target="_blank" rel="noopener">Open Full PDF</a>
+        <p class="pdf-open-hint">Opens in a new tab — scroll or swipe to read on any device.</p>
+      `;
+      videoWrap.appendChild(opener);
     }
 
     heading.textContent = lesson.title;
