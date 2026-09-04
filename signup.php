@@ -5,12 +5,15 @@ if (is_logged_in()) redirect('/dashboard.php');
 
 $errors = [];
 $name = $email = $phone = '';
+$country = 'UG';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $name = post('name');
     $email = strtolower(post('email'));
     $phone = post('phone');
+    $country = post('country');
+    if (!isset(AFRICAN_COUNTRIES[$country])) $country = 'UG';
     $password = post('password');
 
     if (strlen($name) < 2) $errors[] = 'Enter your full name.';
@@ -24,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'An account with that email already exists.';
         } else {
             $id = db_insert(
-                'INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, ?)',
-                [$name, $email, $phone ?: null, hash_password($password), 'LEARNER']
+                'INSERT INTO users (name, email, phone, country, password_hash, role) VALUES (?, ?, ?, ?, ?, ?)',
+                [$name, $email, $phone ?: null, $country, hash_password($password), 'LEARNER']
             );
             $user = db_one('SELECT * FROM users WHERE id = ?', [$id]);
             login_user($user);
@@ -55,8 +58,17 @@ require __DIR__ . '/includes/auth_header.php';
       <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="jane@example.com">
     </div>
     <div class="field">
+      <label for="country">Country</label>
+      <select id="country" name="country">
+        <?php foreach (AFRICAN_COUNTRIES as $code => $c): ?>
+          <option value="<?= e($code) ?>" <?= $country === $code ? 'selected' : '' ?>><?= e($c['flag']) ?> <?= e($c['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="field">
       <label for="phone">Phone Number (optional)</label>
       <input id="phone" name="phone" type="tel" placeholder="e.g. 0772 123 456" value="<?= e($phone) ?>">
+      <p class="help">Mobile money checkout currently only works with Uganda MTN/Airtel numbers.</p>
     </div>
     <div class="field">
       <label for="password">Password</label>

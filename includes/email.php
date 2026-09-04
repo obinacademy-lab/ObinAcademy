@@ -199,7 +199,7 @@ function send_lead_welcome_email(string $to, string $name, array $courses, strin
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <h2 style="color: #1e3a8a;">Welcome, {$name}! 🎓</h2>
           <p>
-            Thanks for your interest in Obin Academy — East Africa's learning marketplace for
+            Thanks for your interest in Obin Academy — Africa's learning marketplace for
             practical, real-world skills. As promised, here's a head start: a few courses learners
             like you are enjoying right now.
           </p>
@@ -228,7 +228,7 @@ function send_lead_creator_invitation_email(string $to, string $name, string $un
           <p>
             You told us you're interested in becoming a creator on Obin Academy — share what you know,
             earn income from mobile money payments, and build a real following of learners across
-            East Africa.
+            Africa.
           </p>
           <p>
             The next step is a short creator application so we can get your first course live.
@@ -253,7 +253,7 @@ function send_lead_day3_email(string $to, string $name, string $leadType, string
     $bullets = $isCreator
         ? "<li style=\"margin-bottom:10px;\">Keep 90% of every sale — we take a 10% platform fee, nothing hidden</li>"
           . "<li style=\"margin-bottom:10px;\">Get paid instantly by mobile money — no waiting on bank transfers</li>"
-          . "<li style=\"margin-bottom:10px;\">Reach learners across East Africa without building your own website</li>"
+          . "<li style=\"margin-bottom:10px;\">Reach learners across Africa without building your own website</li>"
         : "<li style=\"margin-bottom:10px;\">Practical courses in finance, tech, business and more — taught by real African creators</li>"
           . "<li style=\"margin-bottom:10px;\">Pay instantly with MTN or Airtel Mobile Money — no card needed</li>"
           . "<li style=\"margin-bottom:10px;\">Earn a real Certificate of Completion for every course you finish</li>";

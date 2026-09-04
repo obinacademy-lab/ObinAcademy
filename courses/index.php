@@ -35,7 +35,7 @@ function browse_url(string $q, string $category, string $sort, array $override =
 
 if ($activeCategoryName) {
     $pageTitle = "$activeCategoryName Courses — Obin Academy";
-    $pageDescription = "Explore $activeCategoryName courses on Obin Academy — practical, real-world skills taught by East African creators, paid for instantly with mobile money.";
+    $pageDescription = "Explore $activeCategoryName courses on Obin Academy — practical, real-world skills taught by African creators, paid for instantly with mobile money.";
 } else {
     $pageTitle = 'Explore Courses — Obin Academy';
     $pageDescription = 'Browse practical courses in Finance, Tech, Business, Marketing, and more — taught by real creators and paid for instantly with MTN or Airtel Mobile Money.';

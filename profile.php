@@ -39,6 +39,8 @@ require __DIR__ . '/includes/header.php';
         <?php if ($isCreator): ?><span class="role-badge"><?= $profile['role'] === 'ADMIN' ? 'Admin' : 'Creator' ?></span><?php endif; ?>
       </div>
       <?php if ($profile['headline']): ?><p class="profile-headline"><?= e($profile['headline']) ?></p><?php endif; ?>
+      <?php $profileCountry = AFRICAN_COUNTRIES[$profile['country']] ?? null; ?>
+      <?php if ($profileCountry): ?><p class="profile-country"><?= e($profileCountry['flag']) ?> <?= e($profileCountry['name']) ?></p><?php endif; ?>
       <?php if ($profile['bio']): ?><p class="profile-bio"><?= nl2br(e($profile['bio'])) ?></p><?php endif; ?>
 
       <?php render_social_links($socials); ?>

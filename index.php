@@ -57,7 +57,7 @@ $homeFaqs = [
 ];
 
 $pageTitle = 'Obin Academy — Learn New Skills, Teach What You Know';
-$pageDescription = "Learn practical skills in Finance, Tech, Business and more from East Africa's best creators — or turn your own expertise into courses. Pay instantly with MTN or Airtel Mobile Money.";
+$pageDescription = "Learn practical skills in Finance, Tech, Business and more from Africa's best creators — or turn your own expertise into courses. Pay instantly with MTN or Airtel Mobile Money.";
 $structuredData = [
     '@context' => 'https://schema.org',
     '@graph' => [
@@ -87,7 +87,7 @@ require __DIR__ . '/includes/header.php';
     <div class="hero-row">
       <div class="hero-inner">
         <span class="hero-badge animate-blink-badge">The Knowledge Marketplace For Everyone</span>
-        <h1 class="hero-headline">Learn From East Africa's <span class="lock animate-blink-text">Best Creators</span>.</h1>
+        <h1 class="hero-headline">Learn From Africa's <span class="lock animate-blink-text">Best Creators</span>.</h1>
         <p class="tag">Finance, Tech, Business Classes etc &mdash; Paid Instantly With <span class="money">MTN</span> or <span class="money airtel">Airtel Money</span></p>
         <p class="desc">Discover practical knowledge from creators around the world&mdash;or turn your own expertise into courses and build your learning community on Obin Academy.</p>
         <div class="actions">
@@ -147,9 +147,9 @@ require __DIR__ . '/includes/header.php';
       <span class="label">Instant Access After Payment</span>
     </div>
     <div class="trust-item" style="--tint:#3b82f6;">
-      <span class="icon-badge">🇺🇬</span>
+      <span class="icon-badge">🌍</span>
       <span class="underline"></span>
-      <span class="label">Built for East Africa</span>
+      <span class="label">Built for Africa</span>
     </div>
   </div>
 </section>

@@ -40,7 +40,7 @@ require __DIR__ . '/includes/header.php';
   <div class="container" style="max-width:640px; text-align:center;">
     <span class="pill">Teach on Obin Academy</span>
     <h1 style="margin-top:14px;">Turn What You Know Into Income</h1>
-    <p class="summary" style="margin:14px auto 0;">Share your expertise with thousands of learners across East Africa. Upload video or PDF courses, get paid instantly via mobile money, and keep 90% of every sale.</p>
+    <p class="summary" style="margin:14px auto 0;">Share your expertise with thousands of learners across Africa. Upload video or PDF courses, get paid instantly via mobile money, and keep 90% of every sale.</p>
   </div>
 </section>
 

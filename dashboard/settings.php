@@ -10,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $name = post('name');
     $phone = post('phone');
+    $country = post('country');
+    if (!isset(AFRICAN_COUNTRIES[$country])) $country = $user['country'];
     $headline = post('headline');
     $bio = post('bio');
     $facebookUrl = post('facebookUrl');
@@ -34,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
-        $sql = 'UPDATE users SET name=?, phone=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?' . ($avatarUrl ? ', avatar_url=?' : '') . ' WHERE id=?';
-        $params = [$name, $phone ?: null, $headline ?: null, $bio ?: null, $facebookUrl ?: null, $instagramUrl ?: null, $youtubeUrl ?: null, $tiktokUrl ?: null, $linkedinUrl ?: null];
+        $sql = 'UPDATE users SET name=?, phone=?, country=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?' . ($avatarUrl ? ', avatar_url=?' : '') . ' WHERE id=?';
+        $params = [$name, $phone ?: null, $country, $headline ?: null, $bio ?: null, $facebookUrl ?: null, $instagramUrl ?: null, $youtubeUrl ?: null, $tiktokUrl ?: null, $linkedinUrl ?: null];
         if ($avatarUrl) $params[] = $avatarUrl;
         $params[] = $user['id'];
         db_run($sql, $params);
@@ -67,6 +69,15 @@ require __DIR__ . '/../includes/dashboard_header.php';
   <div class="field">
     <label for="phone">Phone Number</label>
     <input id="phone" name="phone" type="tel" placeholder="e.g. 0772 123 456" value="<?= e($user['phone'] ?? '') ?>">
+  </div>
+  <div class="field">
+    <label for="country">Country</label>
+    <select id="country" name="country">
+      <?php foreach (AFRICAN_COUNTRIES as $code => $c): ?>
+        <option value="<?= e($code) ?>" <?= $user['country'] === $code ? 'selected' : '' ?>><?= e($c['flag']) ?> <?= e($c['name']) ?></option>
+      <?php endforeach; ?>
+    </select>
+    <p class="help">Shown on your public profile. Mobile money checkout currently only works with Uganda MTN/Airtel numbers.</p>
   </div>
 
   <div class="field">

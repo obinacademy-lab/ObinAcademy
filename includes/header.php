@@ -19,7 +19,7 @@ $navLinks = [
 $currentPath = current_path();
 
 $seoTitle = $pageTitle ?? 'Obin Academy — Learn New Skills, Teach What You Know';
-$seoDescription = $pageDescription ?? 'Obin Academy is East Africa\'s learning marketplace — practical courses in finance, tech, business and more, taught by real creators and paid for instantly with MTN or Airtel Mobile Money.';
+$seoDescription = $pageDescription ?? 'Obin Academy is Africa\'s learning marketplace — practical courses in finance, tech, business and more, taught by real creators and paid for instantly with MTN or Airtel Mobile Money.';
 $seoImage = isset($pageImage) ? (str_starts_with($pageImage, 'http') ? $pageImage : base_url($pageImage)) : base_url('assets/img/hero-couch-learner.jpg');
 $seoType = $pageType ?? 'website';
 $canonicalUrl = base_url(ltrim($currentPath, '/'));

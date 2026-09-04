@@ -1602,6 +1602,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .profile-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .profile-name-row h1 { font-size: 24px; }
 .profile-headline { color: var(--muted); font-size: 14px; margin-top: 3px; }
+.profile-country { color: var(--muted); font-size: 13px; font-weight: 600; margin-top: 6px; }
 .profile-bio { margin-top: 12px; font-size: 14px; line-height: 1.7; color: var(--ink); max-width: 560px; }
 .profile-actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
 

@@ -12,6 +12,21 @@ const ACCESS_DURATION_OPTIONS = [
     ['label' => 'Lifetime access', 'days' => null],
 ];
 
+/**
+ * Countries a learner/creator can select on signup and in settings. Payment
+ * (mobile money via iotec) is still Uganda-only — this only opens up who can
+ * sign up and be shown publicly, not checkout, so keep 'UG' as the default
+ * for anyone who doesn't pick one.
+ */
+const AFRICAN_COUNTRIES = [
+    'UG' => ['name' => 'Uganda', 'flag' => '🇺🇬'],
+    'KE' => ['name' => 'Kenya', 'flag' => '🇰🇪'],
+    'NG' => ['name' => 'Nigeria', 'flag' => '🇳🇬'],
+    'GH' => ['name' => 'Ghana', 'flag' => '🇬🇭'],
+    'RW' => ['name' => 'Rwanda', 'flag' => '🇷🇼'],
+    'TZ' => ['name' => 'Tanzania', 'flag' => '🇹🇿'],
+];
+
 /** Escape for safe HTML output. */
 function e(?string $value): string {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
