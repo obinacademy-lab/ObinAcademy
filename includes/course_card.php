@@ -26,6 +26,11 @@ function render_course_card(array $c): void {
         <h3><?= e($c['title']) ?></h3>
         <p class="desc"><?= e($c['summary']) ?></p>
 
+        <div class="stats-row">
+          <span><?php dash_icon('users'); ?><?= number_format((int) $c['student_count']) ?> student<?= (int) $c['student_count'] === 1 ? '' : 's' ?></span>
+          <span><?php dash_icon('eye'); ?><?= number_format((int) $c['view_count']) ?> view<?= (int) $c['view_count'] === 1 ? '' : 's' ?></span>
+        </div>
+
         <div class="price-row">
           <span class="price">
             <?php if ($displayPrice > 0): ?>

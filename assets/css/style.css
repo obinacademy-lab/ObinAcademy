@@ -855,6 +855,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-card .creator-row span { font-size: 12.5px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .course-card h3 { font-size: 15px; line-height: 1.3; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .course-card .desc { font-size: 13px; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.course-card .stats-row { display: flex; gap: 12px; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.course-card .stats-row span { display: flex; align-items: center; gap: 4px; }
+.course-card .stats-row svg { width: 12px; height: 12px; flex-shrink: 0; }
 .course-card .price-row { margin-top: 2px; }
 .course-card .price { font-weight: 800; font-size: 14.5px; color: var(--ink); white-space: nowrap; }
 .course-card .price .currency { font-size: 10.5px; font-weight: 700; color: var(--muted); margin-right: 3px; vertical-align: 1px; }

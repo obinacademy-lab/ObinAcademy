@@ -57,6 +57,7 @@ CREATE TABLE courses (
   sale_price DECIMAL(12,2) NULL,
   access_duration_days INT NULL,
   premium_price DECIMAL(12,2) NULL,
+  view_count INT NOT NULL DEFAULT 0,
   status ENUM('DRAFT','PENDING_REVIEW','PUBLISHED','REJECTED','REMOVED') NOT NULL DEFAULT 'DRAFT',
   rejection_reason TEXT NULL,
   submitted_at DATETIME NULL,

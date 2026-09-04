@@ -21,6 +21,14 @@ if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
     exit;
 }
 
+// A plain, publicly-shown view counter — not deduped per visitor, and
+// excludes the course's own creator/admin so their own checks don't
+// inflate the number learners see.
+if ($course['status'] === 'PUBLISHED' && !$isOwner && !$isAdmin) {
+    db_run('UPDATE courses SET view_count = view_count + 1 WHERE id = ?', [$course['id']]);
+    $course['view_count']++;
+}
+
 $isEnrolled = $user
     ? (bool) db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : (bool) guest_enrollment_for_course((int) $course['id']);
@@ -134,6 +142,7 @@ require __DIR__ . '/../includes/header.php';
           <?php endif; ?>
         </span>
         <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> students</span>
+        <span class="meta-chip"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
         <span class="meta-chip"><?php dash_icon('play'); ?><?= $totalLessons ?> lessons</span>
       </div>
 
