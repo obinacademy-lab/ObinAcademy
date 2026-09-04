@@ -947,12 +947,14 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   border: 1px solid var(--border);
   box-shadow: 0 2px 8px rgba(20,24,27,0.05), 0 24px 48px -24px rgba(20,24,27,0.25);
 }
-.enroll-panel .thumb { aspect-ratio: 16/10; background: var(--brand-900); position: relative; }
+/* Bigger, more prominent product shot right where the learner decides to
+   buy — taller than the 16:10 browse-card thumb on purpose. */
+.enroll-panel .thumb { aspect-ratio: 4/3; background: var(--brand-900); position: relative; }
 .enroll-panel .thumb img { width:100%; height:100%; object-fit:cover; }
 .enroll-panel .thumb::after { content:""; position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.35), transparent 45%); pointer-events:none; }
-.enroll-panel .thumb .placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; height:100%; color:rgba(255,255,255,0.75); font-weight:700; background: linear-gradient(135deg, var(--brand-800), var(--brand-950)); }
-.enroll-panel .thumb .placeholder svg { width:32px; height:32px; opacity:0.8; }
-.enroll-panel .thumb .placeholder span { font-size:13px; }
+.enroll-panel .thumb .placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; height:100%; color:rgba(255,255,255,0.75); font-weight:700; background: linear-gradient(135deg, var(--brand-800), var(--brand-950)); }
+.enroll-panel .thumb .placeholder svg { width:40px; height:40px; opacity:0.8; }
+.enroll-panel .thumb .placeholder span { font-size:14px; }
 .enroll-panel .pad { padding: 28px; }
 .enroll-panel .price-row { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
 .enroll-panel .price {
