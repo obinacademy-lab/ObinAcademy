@@ -868,45 +868,49 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 /* ---------- homepage hero: Skool-style, no photo — confident type,
    restrained color, a plain light ground doing all the "premium" work. ---------- */
-.home-hero-v3 { background: var(--surface); padding: 88px 0 52px; }
+.home-hero-v3 { background: var(--surface); padding: 116px 0 84px; }
+.home-hero-v3 .container { max-width: 900px; }
 .home-hero-v3 h1 {
-  font-size: clamp(34px, 5vw, 48px); font-weight: 800; line-height: 1.08; letter-spacing: -0.02em;
+  font-size: clamp(46px, 8vw, 80px); font-weight: 800; line-height: 1.04; letter-spacing: -0.025em;
   color: var(--ink); text-wrap: balance;
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both;
 }
 .hero-subline {
-  margin-top: 10px; font-size: 20px; font-weight: 500; color: var(--muted);
+  margin-top: 14px; font-size: 28px; font-weight: 500; color: var(--muted);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.05s;
 }
 .hero-accent-link { color: var(--accent); font-weight: 600; text-decoration: none; }
 .hero-accent-link:hover { text-decoration: underline; }
 .home-hero-v3 .summary {
-  margin: 20px auto 0; max-width: 480px; font-size: 15.5px; line-height: 1.65; color: var(--muted);
+  margin: 26px auto 0; max-width: 600px; font-size: 18px; line-height: 1.65; color: var(--muted);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.1s;
 }
 .hero-search-v3 {
-  display: flex; align-items: center; gap: 10px; margin: 30px auto 0; max-width: 480px;
-  background: #fff; border-radius: 10px; padding: 4px 4px 4px 20px;
+  display: flex; align-items: center; gap: 10px; margin: 38px auto 0; max-width: 620px;
+  background: #fff; border-radius: 12px; padding: 6px 6px 6px 26px;
   box-shadow: 0 1px 2px rgba(32,33,36,0.13), 0 2px 6px rgba(32,33,36,0.06), 0 1px 10px rgba(0,0,0,0.05);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.15s;
 }
-.hero-search-v3 svg { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; }
-.hero-search-v3 input { flex: 1; border: none; outline: none; background: none; font-size: 15px; font-family: inherit; padding: 13px 0; color: var(--ink); }
-.hero-search-v3 button { background: var(--gold); color: #1a1300; border: none; border-radius: 8px; padding: 12px 24px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background-color 0.2s ease; }
+.hero-search-v3 svg { width: 20px; height: 20px; color: var(--muted); flex-shrink: 0; }
+.hero-search-v3 input { flex: 1; border: none; outline: none; background: none; font-size: 18px; font-family: inherit; padding: 17px 0; color: var(--ink); }
+.hero-search-v3 button { background: var(--gold); color: #1a1300; border: none; border-radius: 9px; padding: 15px 30px; font-size: 15.5px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background-color 0.2s ease; }
 .hero-search-v3 button:hover { background: var(--gold-dark); }
 .hero-stats-v3 {
-  margin-top: 22px; display: flex; align-items: center; justify-content: center; gap: 10px;
-  font-size: 13.5px; color: var(--muted);
+  margin-top: 28px; display: flex; align-items: center; justify-content: center; gap: 12px;
+  font-size: 16px; color: var(--muted);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.2s;
 }
-.hero-stats-v3 strong { color: var(--ink); font-weight: 800; font-variant-numeric: tabular-nums; }
+.hero-stats-v3 strong { color: var(--ink); font-weight: 800; font-variant-numeric: tabular-nums; font-size: 17px; }
 .hero-stats-v3 .dot { opacity: 0.4; }
 @media (prefers-reduced-motion: reduce) {
   .home-hero-v3 h1, .hero-subline, .home-hero-v3 .summary, .hero-search-v3, .hero-stats-v3 { animation: none; }
 }
 @media (max-width: 640px) {
-  .home-hero-v3 { padding: 56px 0 40px; }
-  .hero-subline { font-size: 17px; }
+  .home-hero-v3 { padding: 64px 0 48px; }
+  .home-hero-v3 h1 { font-size: 40px; }
+  .hero-subline { font-size: 21px; }
+  .home-hero-v3 .summary { font-size: 16px; }
+  .hero-search-v3 input { font-size: 16px; }
 }
 
 .browse-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 22px; }

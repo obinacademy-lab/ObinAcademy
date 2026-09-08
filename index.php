@@ -50,7 +50,7 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <section class="home-hero-v3">
-  <div class="container" style="max-width:720px; text-align:center;">
+  <div class="container" style="text-align:center;">
     <h1>Discover Courses</h1>
     <p class="hero-subline">or <a href="<?= e(base_url('become-creator.php')) ?>" class="hero-accent-link">teach your own</a></p>
     <p class="summary" style="margin-left:auto; margin-right:auto;">
