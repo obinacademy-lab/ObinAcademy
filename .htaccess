@@ -13,9 +13,18 @@ RedirectMatch 404 (?i)/(config|includes|migration|private-uploads)(/|$)
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# PHP upload limits previously lived here (php_value inside <IfModule
-# mod_php.c>) but the block is suspected of causing a raw HTTP 500 on
-# every POST request on this host (signup, settings — anything with a
-# body, even with no file attached) — removed entirely while that's
-# confirmed. If uploads need a higher limit, set upload_max_filesize /
-# post_max_size in hPanel > Advanced > PHP Configuration instead.
+# Raise PHP upload limits for course video uploads. Only takes effect if this
+# server runs PHP as an Apache module (mod_php) — if it runs PHP-FPM instead
+# (the case on Hostinger's LiteSpeed hosting, where this block is silently
+# ignored), set the SAME values in hPanel > Advanced > PHP Configuration.
+# Keep upload_max_filesize/post_max_size >= the largest UPLOAD_MAX_BYTES
+# entry in includes/storage.php (currently 4GB, for course videos), and
+# post_max_size a little above upload_max_filesize (it covers the whole
+# request body, not just the file).
+<IfModule mod_php.c>
+  php_value upload_max_filesize 512M
+  php_value post_max_size 512M
+  php_value max_execution_time 300
+  php_value max_input_time 300
+  php_value memory_limit 256M
+</IfModule>
