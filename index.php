@@ -49,26 +49,30 @@ $structuredData = [
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="course-hero browse-hero page-hero-light">
-  <div class="container" style="max-width:820px; text-align:center;">
-    <span class="pill">The Knowledge Marketplace For Everyone</span>
-    <h1 style="text-align:center; margin-top:14px;">Discover Courses <span class="lock">or Teach Your Own</span></h1>
-    <p class="summary" style="margin-left:auto; margin-right:auto; text-align:center;">
-      Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
-    </p>
-    <div class="browse-hero-stats">
-      <span><strong data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</strong> courses</span>
-      <span class="dot">&middot;</span>
-      <span><strong data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</strong> learners</span>
-      <span class="dot">&middot;</span>
-      <span><strong data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</strong> creators</span>
-    </div>
+<section class="course-hero browse-hero home-hero">
+  <img class="hero-bg-image" src="<?= e(versioned_asset('assets/img/hero-bg-premium.jpg')) ?>" alt="" loading="eager">
+  <div class="hero-bg-overlay"></div>
+  <div class="container">
+    <div class="home-hero-content">
+      <span class="pill">The Knowledge Marketplace For Everyone</span>
+      <h1 style="margin-top:14px;">Discover Courses <span class="lock">or Teach Your Own</span></h1>
+      <p class="summary">
+        Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
+      </p>
+      <div class="browse-hero-stats">
+        <span><strong data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</strong> courses</span>
+        <span class="dot">&middot;</span>
+        <span><strong data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</strong> learners</span>
+        <span class="dot">&middot;</span>
+        <span><strong data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</strong> creators</span>
+      </div>
 
-    <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="search-pill browse-search">
-      <?php dash_icon('search'); ?>
-      <input type="text" name="q" placeholder="What do you want to learn today?">
-      <button type="submit" class="btn btn-gold btn-sm">Search</button>
-    </form>
+      <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="search-pill browse-search">
+        <?php dash_icon('search'); ?>
+        <input type="text" name="q" placeholder="What do you want to learn today?">
+        <button type="submit" class="btn btn-gold btn-sm">Search</button>
+      </form>
+    </div>
   </div>
 </section>
 

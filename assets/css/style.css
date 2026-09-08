@@ -859,12 +859,59 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 /* A brief staggered rise for the hero content on load — no scroll trigger
    needed since it's always above the fold. */
 @keyframes hero-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-.browse-hero .container > * { animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; }
-.browse-hero .container > *:nth-child(2) { animation-delay: 0.06s; }
-.browse-hero .container > *:nth-child(3) { animation-delay: 0.12s; }
-.browse-hero .container > *:nth-child(4) { animation-delay: 0.18s; }
-.browse-hero .container > *:nth-child(5) { animation-delay: 0.24s; }
+.browse-hero:not(.home-hero) .container > * { animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+.browse-hero:not(.home-hero) .container > *:nth-child(2) { animation-delay: 0.06s; }
+.browse-hero:not(.home-hero) .container > *:nth-child(3) { animation-delay: 0.12s; }
+.browse-hero:not(.home-hero) .container > *:nth-child(4) { animation-delay: 0.18s; }
+.browse-hero:not(.home-hero) .container > *:nth-child(5) { animation-delay: 0.24s; }
 @media (prefers-reduced-motion: reduce) { .browse-hero .container > * { animation: none; } }
+
+/* ---------- homepage hero: premium editorial photo background ---------- */
+.home-hero { position: relative; padding: 96px 0 88px; min-height: 580px; display: flex; align-items: center; }
+.home-hero::before, .home-hero::after { display: none; }
+.home-hero .hero-bg-image {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: 72% 22%; z-index: 0;
+}
+/* Darkest over the text zone, fading right to let the photo itself show —
+   tinted with the brand navy rather than plain black so it reads as "on
+   brand" instead of a generic dark scrim. */
+.home-hero .hero-bg-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(100deg,
+    color-mix(in srgb, var(--brand-950) 96%, black) 0%,
+    color-mix(in srgb, var(--brand-950) 88%, black) 34%,
+    color-mix(in srgb, var(--brand-950) 55%, transparent) 60%,
+    color-mix(in srgb, var(--brand-950) 18%, transparent) 100%);
+}
+.home-hero .container { position: relative; z-index: 2; }
+.home-hero-content { max-width: 580px; }
+.home-hero-content .browse-hero-stats { justify-content: flex-start; }
+.home-hero-content .browse-search { margin-left: 0; margin-right: 0; }
+.home-hero .browse-search { box-shadow: 0 24px 50px -16px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.15); }
+.home-hero .browse-search:focus-within { box-shadow: 0 28px 56px -14px rgba(0,0,0,0.5), 0 0 0 3px color-mix(in srgb, var(--gold) 35%, white); }
+/* Gold instead of the light hero's navy-blue gradient — navy text on a
+   navy-tinted photo overlay would barely read. */
+.home-hero h1 .lock { color: var(--gold); }
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .home-hero h1 .lock {
+    background: linear-gradient(90deg, var(--gold), #ffe08a);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+}
+.home-hero-content > * { animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+.home-hero-content > *:nth-child(2) { animation-delay: 0.06s; }
+.home-hero-content > *:nth-child(3) { animation-delay: 0.12s; }
+.home-hero-content > *:nth-child(4) { animation-delay: 0.18s; }
+.home-hero-content > *:nth-child(5) { animation-delay: 0.24s; }
+@media (prefers-reduced-motion: reduce) { .home-hero-content > * { animation: none; } }
+@media (max-width: 640px) {
+  .home-hero { padding: 72px 0 64px; min-height: 480px; }
+  .home-hero .hero-bg-image { object-position: 65% 20%; }
+  .home-hero .browse-search { padding: 5px 5px 5px 18px; }
+  .home-hero .browse-search .btn { padding-left: 16px; padding-right: 16px; }
+  .home-hero .browse-search input { font-size: 14px; }
+}
 
 .browse-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 22px; }
 .browse-result-info { font-size: 13.5px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
