@@ -6,9 +6,9 @@
 // directly web-accessible.
 
 const UPLOAD_MAX_BYTES = [
-    'videos' => 3 * 1024 * 1024 * 1024, // 3GB
-    'pdfs' => 500 * 1024 * 1024,        // 500MB
-    'thumbnails' => 5 * 1024 * 1024,    // 5MB
+    'videos' => 4 * 1024 * 1024 * 1024, // 4GB — keep in sync with post_max_size in public/.htaccess
+    'pdfs' => 1024 * 1024 * 1024,       // 1GB
+    'thumbnails' => 25 * 1024 * 1024,   // 25MB — comfortable for a big banner/thumbnail image
 ];
 
 const UPLOAD_ALLOWED_TYPES = [
