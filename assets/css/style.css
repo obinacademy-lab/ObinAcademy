@@ -813,19 +813,58 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .page-ellipsis { color: var(--muted); font-size: 13.5px; padding: 0 4px; }
 
 /* ---------- browse/explore courses page ---------- */
-.browse-hero { position: relative; overflow: hidden; }
+.browse-hero { position: relative; overflow: hidden; padding-top: 64px; padding-bottom: 56px; }
 .browse-hero::before {
   content: ""; position: absolute; width: 480px; height: 480px; border-radius: 50%;
   background: var(--accent); filter: blur(120px); opacity: 0.18;
   top: -220px; left: 50%; transform: translateX(-50%); pointer-events: none;
 }
+/* A second, warmer blob balances the cool accent one — together they read
+   as deliberate depth rather than a flat tint, without competing for
+   attention with the content sitting on top. */
+.browse-hero::after {
+  content: ""; position: absolute; width: 380px; height: 380px; border-radius: 50%;
+  background: var(--gold); filter: blur(130px); opacity: 0.13;
+  bottom: -210px; right: -60px; pointer-events: none;
+}
 .browse-hero .container { position: relative; z-index: 1; }
-.browse-hero-stats { margin-top: 18px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; font-size: 13.5px; color: rgba(255,255,255,0.65); }
-.browse-hero-stats strong { color: #fff; font-weight: 800; }
-.browse-hero-stats .dot { opacity: 0.4; }
-.browse-search { max-width: 560px; margin: 26px auto 0; padding: 5px 6px 5px 22px; }
-.browse-search input { font-size: 15px; }
-.browse-search .btn { flex-shrink: 0; }
+.browse-hero-stats { margin-top: 22px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 14px; font-size: 14px; color: rgba(255,255,255,0.65); }
+.browse-hero-stats strong { color: #fff; font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; }
+.browse-hero-stats .dot { opacity: 0.3; }
+.browse-search { max-width: 560px; margin: 28px auto 0; padding: 6px 8px 6px 24px; border-color: transparent; box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--brand-800) 35%, transparent), 0 2px 8px rgba(20,24,27,0.06); transition: box-shadow 0.25s ease, transform 0.25s ease; }
+.browse-search:focus-within { box-shadow: 0 24px 48px -18px color-mix(in srgb, var(--brand-800) 45%, transparent), 0 0 0 3px color-mix(in srgb, var(--accent) 18%, white); transform: translateY(-2px); }
+.browse-search input { font-size: 15.5px; }
+.browse-search .btn { flex-shrink: 0; padding-left: 22px; padding-right: 22px; }
+
+/* Premium headline treatment for the light browse hero — bigger, tighter
+   tracking, and a brand-gradient highlight on the accent phrase. Falls
+   back to a solid ink color if background-clip:text isn't supported. */
+.browse-hero h1 { font-size: clamp(30px, 5vw, 46px); letter-spacing: -0.02em; }
+.browse-hero h1 .lock { color: var(--brand-800); }
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .browse-hero h1 .lock {
+    background: linear-gradient(90deg, var(--brand-800), var(--accent));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+}
+
+/* A soft dot-grid texture under the gradient wash — the classic premium
+   SaaS-hero cue that reads as "considered" rather than a flat fill. */
+.page-hero-light {
+  background:
+    radial-gradient(rgba(20,24,27,0.05) 1px, transparent 1px) 0 0/26px 26px,
+    linear-gradient(180deg, #fff 0%, var(--surface) 100%);
+}
+
+/* A brief staggered rise for the hero content on load — no scroll trigger
+   needed since it's always above the fold. */
+@keyframes hero-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.browse-hero .container > * { animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+.browse-hero .container > *:nth-child(2) { animation-delay: 0.06s; }
+.browse-hero .container > *:nth-child(3) { animation-delay: 0.12s; }
+.browse-hero .container > *:nth-child(4) { animation-delay: 0.18s; }
+.browse-hero .container > *:nth-child(5) { animation-delay: 0.24s; }
+@media (prefers-reduced-motion: reduce) { .browse-hero .container > * { animation: none; } }
 
 .browse-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 22px; }
 .browse-result-info { font-size: 13.5px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -1065,7 +1104,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .page-hero-light .breadcrumb,
 .page-hero-light .breadcrumb a { color: var(--muted); }
 .page-hero-light .breadcrumb a:hover { color: var(--ink); }
-.page-hero-light .pill { background: color-mix(in srgb, var(--accent) 12%, white); color: var(--brand-800); }
+.page-hero-light .pill { background: color-mix(in srgb, var(--accent) 12%, white); color: var(--brand-800); border: 1px solid color-mix(in srgb, var(--accent) 20%, white); box-shadow: 0 4px 14px -8px color-mix(in srgb, var(--accent) 45%, transparent); }
 .page-hero-light h1 { color: var(--ink); }
 .page-hero-light .summary { color: var(--muted); }
 .page-hero-light .meta-chip { background: #fff; border-color: var(--border); color: var(--ink); }

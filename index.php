@@ -57,11 +57,11 @@ require __DIR__ . '/includes/header.php';
       Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
     </p>
     <div class="browse-hero-stats">
-      <span><strong><?= (int) $stats['course_count'] ?>+</strong> courses</span>
+      <span><strong data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</strong> courses</span>
       <span class="dot">&middot;</span>
-      <span><strong><?= (int) $stats['learner_count'] ?>+</strong> learners</span>
+      <span><strong data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</strong> learners</span>
       <span class="dot">&middot;</span>
-      <span><strong><?= (int) $stats['creator_count'] ?>+</strong> creators</span>
+      <span><strong data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</strong> creators</span>
     </div>
 
     <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="search-pill browse-search">
