@@ -1,7 +1,24 @@
   </main>
 
+  <?php
+    // Page links live only here now — the top nav was trimmed down to just
+    // Log In / Become a Creator, so this is the site's one remaining way to
+    // reach Home/Courses/Stories/About/Contact from anywhere on the site.
+    $footerNavLinks = [
+        '/index.php' => 'Home',
+        '/courses/index.php' => 'Explore Courses',
+        '/stories.php' => 'Stories',
+        '/about.php' => 'About Us',
+        '/contact.php' => 'Contact',
+    ];
+  ?>
   <footer class="site-footer site-footer-minimal">
     <div class="container">
+      <nav class="footer-legal-links" style="justify-content:center; flex-wrap:wrap; padding:22px 0 0;">
+        <?php foreach ($footerNavLinks as $href => $label): ?>
+          <a href="<?= e(base_url($href)) ?>"><?= e($label) ?></a>
+        <?php endforeach; ?>
+      </nav>
       <div class="footer-bottom footer-bottom-minimal">
         <?php render_logo(); ?>
         <p class="made-for">&copy; <?= date('Y') ?> Obin Academy</p>

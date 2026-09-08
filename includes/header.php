@@ -9,13 +9,6 @@
  * Usage: require __DIR__ . '/../includes/header.php';
  */
 $user = current_user();
-$navLinks = [
-    '/index.php' => 'Home',
-    '/courses/index.php' => 'Explore Courses',
-    '/stories.php' => 'Stories',
-    '/about.php' => 'About Us',
-    '/contact.php' => 'Contact',
-];
 $currentPath = current_path();
 
 $seoTitle = $pageTitle ?? 'Obin Academy — Learn New Skills, Teach What You Know';
@@ -59,12 +52,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
     <div class="container">
       <?php render_logo(true); ?>
 
-      <nav class="nav-links">
-        <?php foreach ($navLinks as $href => $label): ?>
-          <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>"><?= e($label) ?></a>
-        <?php endforeach; ?>
-      </nav>
-
       <div class="nav-actions">
         <?php if ($user): ?>
           <div class="account-menu">
@@ -98,7 +85,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         <?php else: ?>
           <a href="<?= e(base_url('login.php')) ?>" class="link">Log In</a>
-          <a href="<?= e(base_url('signup.php')) ?>" class="btn btn-primary btn-sm shine">Start Learning <span class="btn-arrow">→</span></a>
+          <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-primary btn-sm shine">Become a Creator <span class="btn-arrow">→</span></a>
         <?php endif; ?>
       </div>
 
@@ -120,12 +107,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         </div>
       <?php endif; ?>
-      <?php
-        $navIcons = ['/index.php' => '🏠', '/courses/index.php' => '📚', '/stories.php' => '💬', '/about.php' => 'ℹ️', '/contact.php' => '✉️'];
-      ?>
-      <?php foreach ($navLinks as $href => $label): ?>
-        <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>"><span class="mm-icon"><?= $navIcons[$href] ?? '' ?></span><?= e($label) ?></a>
-      <?php endforeach; ?>
       <?php if ($user): ?>
         <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>"><span class="mm-icon">👤</span>My Profile</a>
         <a href="<?= e(base_url('dashboard.php')) ?>"><span class="mm-icon">📊</span>Dashboard</a>
@@ -133,7 +114,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>
       <?php else: ?>
         <a href="<?= e(base_url('login.php')) ?>"><span class="mm-icon">🔑</span>Log In</a>
-        <a href="<?= e(base_url('signup.php')) ?>" class="mm-cta">Start Learning →</a>
+        <a href="<?= e(base_url('become-creator.php')) ?>" class="mm-cta">Become a Creator →</a>
       <?php endif; ?>
     </div>
   </div>
