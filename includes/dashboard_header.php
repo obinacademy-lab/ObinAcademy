@@ -20,6 +20,7 @@ $navByRole = [
         'Teaching' => [
             ['/dashboard/creator/index.php', 'My Courses', 'book-open'],
             ['/dashboard/creator/course-new.php', 'Create Course', 'plus-circle'],
+            ['/dashboard/creator/learners.php', 'Learners', 'users'],
             ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
         ],
         'Account' => [

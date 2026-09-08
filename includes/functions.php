@@ -43,6 +43,31 @@ function slugify(string $text): string {
     return trim($slug, '-');
 }
 
+/** Base slug + incrementing suffix until unique — same convention as course slugs. */
+function unique_creator_slug(string $base): string {
+    $base = slugify($base) ?: 'creator';
+    $slug = $base;
+    $n = 1;
+    while (db_one('SELECT id FROM users WHERE slug = ?', [$slug])) {
+        $slug = "$base-" . $n++;
+    }
+    return $slug;
+}
+
+/**
+ * Idempotent — safe to call on every creator-application approval or every
+ * School-page-link render. Backfills a slug for any creator approved
+ * before this feature existed, on their next natural trigger.
+ */
+function ensure_creator_slug(int $userId): string {
+    $user = db_one('SELECT slug, name FROM users WHERE id = ?', [$userId]);
+    if (!$user) return '';
+    if ($user['slug']) return $user['slug'];
+    $slug = unique_creator_slug($user['name']);
+    db_run('UPDATE users SET slug = ? WHERE id = ?', [$slug, $userId]);
+    return $slug;
+}
+
 /** Splits a sale into gross/fee/net using the 10% platform commission. */
 function split_sale(float $price): array {
     $gross = round($price);
