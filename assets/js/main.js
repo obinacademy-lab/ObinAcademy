@@ -216,6 +216,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Learner dashboard "My Courses": client-side search/filter/sort over the
+  // already-rendered enrolled-course cards — no reload, since it's a small,
+  // personal list rather than a paginated catalog.
+  const myCoursesToolbar = document.querySelector("[data-mycourses-toolbar]");
+  if (myCoursesToolbar) {
+    const grid = document.querySelector("[data-mycourses-grid]");
+    const cards = Array.from(grid.children);
+    const searchInput = myCoursesToolbar.querySelector("[data-mycourses-search]");
+    const categorySelect = myCoursesToolbar.querySelector("[data-mycourses-category]");
+    const sortSelect = myCoursesToolbar.querySelector("[data-mycourses-sort]");
+    const emptyMsg = document.querySelector("[data-mycourses-empty]");
+
+    function applyMyCourses() {
+      const q = searchInput.value.trim().toLowerCase();
+      const cat = categorySelect.value;
+      let visibleCount = 0;
+      cards.forEach((card) => {
+        const matchesQuery = !q || card.dataset.title.includes(q);
+        const matchesCategory = !cat || card.dataset.category === cat;
+        const show = matchesQuery && matchesCategory;
+        card.classList.toggle("is-hidden", !show);
+        if (show) visibleCount++;
+      });
+      if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? "block" : "none";
+
+      const sortBy = sortSelect.value;
+      const sorted = [...cards].sort((a, b) => {
+        if (sortBy === "progress-high") return parseFloat(b.dataset.progress) - parseFloat(a.dataset.progress);
+        if (sortBy === "progress-low") return parseFloat(a.dataset.progress) - parseFloat(b.dataset.progress);
+        if (sortBy === "az") return a.dataset.title.localeCompare(b.dataset.title);
+        return new Date(b.dataset.enrolled) - new Date(a.dataset.enrolled);
+      });
+      sorted.forEach((card) => grid.appendChild(card));
+    }
+
+    searchInput.addEventListener("input", applyMyCourses);
+    categorySelect.addEventListener("change", applyMyCourses);
+    sortSelect.addEventListener("change", applyMyCourses);
+  }
+
   // Adds a spinner + disables the submit button the instant a form with
   // [data-loading-submit] is submitted, so slower connections get instant
   // feedback while the normal full-page POST completes.
