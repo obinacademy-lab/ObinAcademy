@@ -29,11 +29,10 @@ $pageTitle = 'Stories — Obin Academy';
 $pageDescription = 'Real stories from learners and creators building real skills — and real income — on Obin Academy.';
 require __DIR__ . '/includes/header.php';
 ?>
-<section class="course-hero">
-  <div class="container" style="max-width:640px; text-align:center;">
-    <span class="pill">Real Results</span>
-    <h1 style="margin-top:14px;">Stories From Our Community</h1>
-    <p class="summary" style="margin:14px auto 0;">Hear from learners and creators building real skills and real income on Obin Academy.</p>
+<section class="home-hero-v3">
+  <div class="container" style="text-align:center;">
+    <h1>Stories From Our Community</h1>
+    <p class="summary" style="margin-left:auto; margin-right:auto;">Hear from learners and creators building real skills and real income on Obin Academy.</p>
   </div>
 </section>
 
