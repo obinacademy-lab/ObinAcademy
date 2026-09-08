@@ -76,6 +76,10 @@ require __DIR__ . '/includes/header.php';
 <div class="container" style="padding-top:28px;">
   <div class="chip-row">
     <a href="<?= e(base_url('courses/index.php')) ?>" class="chip">✨ All</a>
+    <a href="<?= e(base_url('courses/index.php?sort=popular')) ?>" class="chip">🔥 Trending</a>
+    <a href="<?= e(base_url('courses/index.php?price=free')) ?>" class="chip">🆓 Free</a>
+    <a href="<?= e(base_url('courses/index.php?price=paid')) ?>" class="chip">💳 Paid</a>
+    <a href="<?= e(base_url('courses/index.php?sort=rating')) ?>" class="chip">⭐ Top</a>
     <?php foreach ($industries as [$name, $slug, $emoji]): ?>
       <a href="<?= e(base_url('courses/index.php?category=' . $slug)) ?>" class="chip"><?= $emoji ?> <?= e($name) ?></a>
     <?php endforeach; ?>

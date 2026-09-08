@@ -7,11 +7,13 @@ $q = query_param('q');
 $categorySlug = query_param('category');
 $sort = query_param('sort', 'newest');
 if (!isset(COURSE_SORT_OPTIONS[$sort])) $sort = 'newest';
+$price = query_param('price');
+if (!in_array($price, ['free', 'paid'], true)) $price = '';
 
-$courses = search_courses($q, $categorySlug, $sort);
+$courses = search_courses($q, $categorySlug, $sort, $price);
 $categories = get_categories();
 $stats = get_platform_stats();
-$hasFilters = $q !== '' || $categorySlug !== '';
+$hasFilters = $q !== '' || $categorySlug !== '' || $price !== '' || $sort !== 'newest';
 $trending = !$hasFilters ? get_trending_courses(3) : [];
 
 $activeCategoryName = null;
@@ -27,8 +29,8 @@ $categoryEmoji = [
 ];
 
 /** Rebuilds the browse URL with one param overridden, keeping the others intact. */
-function browse_url(string $q, string $category, string $sort, array $override = []): string {
-    $params = array_merge(['q' => $q, 'category' => $category, 'sort' => $sort], $override);
+function browse_url(string $q, string $category, string $sort, string $price = '', array $override = []): string {
+    $params = array_merge(['q' => $q, 'category' => $category, 'sort' => $sort, 'price' => $price], $override);
     $params = array_filter($params, fn($v) => $v !== '' && $v !== 'newest');
     return base_url('courses/index.php') . ($params ? '?' . http_build_query($params) : '');
 }
@@ -63,6 +65,7 @@ require __DIR__ . '/../includes/header.php';
       <input type="text" name="q" placeholder="What do you want to learn today?" value="<?= e($q) ?>">
       <?php if ($categorySlug): ?><input type="hidden" name="category" value="<?= e($categorySlug) ?>"><?php endif; ?>
       <?php if ($sort !== 'newest'): ?><input type="hidden" name="sort" value="<?= e($sort) ?>"><?php endif; ?>
+      <?php if ($price): ?><input type="hidden" name="price" value="<?= e($price) ?>"><?php endif; ?>
       <button type="submit" class="btn btn-gold btn-sm">Search</button>
     </form>
   </div>
@@ -70,21 +73,27 @@ require __DIR__ . '/../includes/header.php';
 
 <div class="container" style="padding-top:32px; padding-bottom:72px;">
   <div class="chip-row">
-    <a href="<?= e(browse_url($q, '', $sort)) ?>" class="chip <?= !$categorySlug ? 'active' : '' ?>">✨ All</a>
+    <a href="<?= e(browse_url($q, '', 'newest', '')) ?>" class="chip <?= (!$categorySlug && !$price && $sort === 'newest') ? 'active' : '' ?>">✨ All</a>
+    <a href="<?= e(browse_url($q, $categorySlug, $sort === 'popular' ? 'newest' : 'popular', $price)) ?>" class="chip <?= $sort === 'popular' ? 'active' : '' ?>">🔥 Trending</a>
+    <a href="<?= e(browse_url($q, $categorySlug, $sort, $price === 'free' ? '' : 'free')) ?>" class="chip <?= $price === 'free' ? 'active' : '' ?>">🆓 Free</a>
+    <a href="<?= e(browse_url($q, $categorySlug, $sort, $price === 'paid' ? '' : 'paid')) ?>" class="chip <?= $price === 'paid' ? 'active' : '' ?>">💳 Paid</a>
+    <a href="<?= e(browse_url($q, $categorySlug, $sort === 'rating' ? 'newest' : 'rating', $price)) ?>" class="chip <?= $sort === 'rating' ? 'active' : '' ?>">⭐ Top</a>
     <?php foreach ($categories as $cat): ?>
-      <a href="<?= e(browse_url($q, $cat['slug'], $sort)) ?>" class="chip <?= $categorySlug === $cat['slug'] ? 'active' : '' ?>"><?= $categoryEmoji[$cat['slug']] ?? '📚' ?> <?= e($cat['name']) ?></a>
+      <a href="<?= e(browse_url($q, $cat['slug'], $sort, $price)) ?>" class="chip <?= $categorySlug === $cat['slug'] ? 'active' : '' ?>"><?= $categoryEmoji[$cat['slug']] ?? '📚' ?> <?= e($cat['name']) ?></a>
     <?php endforeach; ?>
   </div>
 
   <div class="browse-toolbar">
     <div class="browse-result-info">
       <strong><?= count($courses) ?></strong> course<?= count($courses) === 1 ? '' : 's' ?>
-      <?php if ($activeCategoryName): ?>in <a href="<?= e(browse_url($q, '', $sort)) ?>" class="filter-pill"><?= e($activeCategoryName) ?> <span>&times;</span></a><?php endif; ?>
-      <?php if ($q): ?>matching <a href="<?= e(browse_url('', $categorySlug, $sort)) ?>" class="filter-pill">&ldquo;<?= e($q) ?>&rdquo; <span>&times;</span></a><?php endif; ?>
+      <?php if ($activeCategoryName): ?>in <a href="<?= e(browse_url($q, '', $sort, $price)) ?>" class="filter-pill"><?= e($activeCategoryName) ?> <span>&times;</span></a><?php endif; ?>
+      <?php if ($price): ?><a href="<?= e(browse_url($q, $categorySlug, $sort, '')) ?>" class="filter-pill"><?= $price === 'free' ? 'Free' : 'Paid' ?> <span>&times;</span></a><?php endif; ?>
+      <?php if ($q): ?>matching <a href="<?= e(browse_url('', $categorySlug, $sort, $price)) ?>" class="filter-pill">&ldquo;<?= e($q) ?>&rdquo; <span>&times;</span></a><?php endif; ?>
     </div>
     <form method="get" class="sort-select-wrap">
       <?php if ($q): ?><input type="hidden" name="q" value="<?= e($q) ?>"><?php endif; ?>
       <?php if ($categorySlug): ?><input type="hidden" name="category" value="<?= e($categorySlug) ?>"><?php endif; ?>
+      <?php if ($price): ?><input type="hidden" name="price" value="<?= e($price) ?>"><?php endif; ?>
       <label for="sort" class="small muted" style="flex-shrink:0;">Sort by</label>
       <select name="sort" id="sort" class="sort-select" onchange="this.form.submit()">
         <?php foreach (COURSE_SORT_OPTIONS as $key => $opt): ?>
