@@ -20,8 +20,6 @@ $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'P
 $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
 
 $hasSocialLinks = $user['facebook_url'] || $user['instagram_url'] || $user['youtube_url'] || $user['tiktok_url'] || $user['linkedin_url'];
-$schoolSlug = ensure_creator_slug((int) $user['id']);
-$schoolUrl = base_url('school.php?slug=' . $schoolSlug);
 
 $pageTitle = 'My Courses — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
@@ -32,17 +30,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <p class="muted" style="margin-top:6px;">Manage your courses and track performance.</p>
   </div>
   <a href="<?= e(base_url('dashboard/creator/course-new.php')) ?>" class="btn btn-primary">+ Create Course</a>
-</div>
-
-<div class="card card-pad row between wrap gap-3" style="margin-top:20px;">
-  <div class="row gap-2" style="align-items:center;">
-    <span class="icon-badge" style="--tint:#f5b301; font-size:20px;">🎓</span>
-    <div>
-      <h3 class="small" style="font-weight:700;">Your School</h3>
-      <p class="small muted" style="margin-top:2px; word-break:break-all;">Share this link on social media — it takes visitors straight to your courses. <?= e($schoolUrl) ?></p>
-    </div>
-  </div>
-  <?php render_share_button($schoolUrl, $user['name'] . "'s School", 'Share School', 'light'); ?>
 </div>
 
 <?php if (!$hasSocialLinks): ?>

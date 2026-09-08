@@ -49,9 +49,6 @@ require __DIR__ . '/includes/header.php';
         <?php if ($isMe): ?>
           <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="btn btn-outline">Edit Profile</a>
         <?php endif; ?>
-        <?php if ($teaching): $schoolSlug = ensure_creator_slug($profileId); ?>
-          <a href="<?= e(base_url('school.php?slug=' . $schoolSlug)) ?>" class="btn btn-primary">Visit School →</a>
-        <?php endif; ?>
       </div>
     </div>
 
