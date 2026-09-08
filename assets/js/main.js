@@ -49,7 +49,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function runCountUp(el) {
     const target = parseInt(el.getAttribute("data-count-value"), 10) || 0;
-    const suffix = el.textContent.replace(/^[0-9]+/, "") || "+";
+    const suffix = el.hasAttribute("data-count-suffix")
+      ? el.getAttribute("data-count-suffix")
+      : (el.textContent.replace(/^[0-9]+/, "") || "+");
     if (prefersReducedMotion) { el.textContent = target + suffix; return; }
     const duration = 2800;
     const start = performance.now();
@@ -82,6 +84,18 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Learner dashboard: animate the overall-progress ring's stroke-dashoffset
+  // from full (empty ring) to its real value on load, so it visibly fills in
+  // instead of appearing instantly at rest. Double rAF forces the browser to
+  // paint the starting state first, or the CSS transition gets skipped.
+  document.querySelectorAll("[data-ring-offset]").forEach((ring) => {
+    const target = ring.getAttribute("data-ring-offset");
+    if (prefersReducedMotion) { ring.style.strokeDashoffset = target; return; }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { ring.style.strokeDashoffset = target; });
+    });
+  });
 
   // Testimonials slider: a horizontal scroll-snap track (swipeable natively
   // on touch) with arrow buttons, dot indicators, and autoplay that pauses
