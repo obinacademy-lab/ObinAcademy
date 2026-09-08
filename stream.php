@@ -43,9 +43,49 @@ $wantsDownload = query_param('download') === '1';
 $disposition = ($wantsDownload && $canDownload) ? 'attachment' : 'inline';
 
 // Seed/demo lessons may reference external sample media rather than an
-// uploaded file — nothing to protect there, so just redirect once auth passes.
+// uploaded file. This used to just redirect once auth passed, but a
+// redirect sends the browser straight to the external host — and PDF.js's
+// own file loader fetches that URL with CORS, which fails (blank viewer,
+// no error shown) against any host that doesn't send an
+// Access-Control-Allow-Origin header, like this placeholder's. Proxying the
+// bytes through our own origin instead avoids that entirely and keeps the
+// same auth-gate/Range-request behavior as a locally-stored file.
 if (preg_match('#^https?://#', $lesson['file_url'])) {
-    header('Location: ' . $lesson['file_url']);
+    $ch = curl_init($lesson['file_url']);
+    $responseHeaders = [];
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$responseHeaders) {
+            $responseHeaders[] = $header;
+            return strlen($header);
+        },
+    ]);
+    if (!empty($_SERVER['HTTP_RANGE'])) {
+        curl_setopt($ch, CURLOPT_RANGE, str_replace('bytes=', '', $_SERVER['HTTP_RANGE']));
+    }
+    $body = curl_exec($ch);
+    $upstreamStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $upstreamType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    curl_close($ch);
+
+    if ($body === false || $upstreamStatus >= 400) {
+        http_response_code(502);
+        exit('Upstream file unavailable');
+    }
+
+    $externalFileName = $lesson['file_name'] ?: basename((string) parse_url($lesson['file_url'], PHP_URL_PATH));
+    http_response_code($upstreamStatus === 206 ? 206 : 200);
+    header('Content-Type: ' . ($upstreamType ?: 'application/octet-stream'));
+    header('Accept-Ranges: bytes');
+    header('Content-Disposition: ' . $disposition . '; filename="' . addslashes($externalFileName) . '"');
+    header('Cache-Control: private, no-store');
+    foreach ($responseHeaders as $h) {
+        if (stripos($h, 'Content-Range:') === 0) header(trim($h));
+    }
+    header('Content-Length: ' . strlen($body));
+    echo $body;
     exit;
 }
 
