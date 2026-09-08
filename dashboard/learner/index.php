@@ -78,41 +78,75 @@ $ringR = 38;
 $ringC = 2 * M_PI * $ringR;
 $ringOffset = $ringC * (1 - $avgProgress / 100);
 
+// "Almost there" nudge: whichever in-progress course the learner is
+// furthest through — a real, data-driven prompt to come back and finish it,
+// with lessons-remaining estimated from their lesson count and % progress.
+$nextUp = null;
+foreach ($continuing as $en) {
+    if (!$nextUp || (float) $en['progress'] > (float) $nextUp['progress']) $nextUp = $en;
+}
+$lessonsLeft = $nextUp ? max(0, (int) round((float) $nextUp['lesson_count'] * (1 - (float) $nextUp['progress'] / 100))) : 0;
+
 $pageTitle = 'My Learning — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="dash-editorial-head reveal">
-  <div>
-    <h1>Welcome back, <?= e($firstName) ?></h1>
+<div class="dash-hero-premium reveal">
+  <div class="dash-hero-text">
+    <h1>Welcome back, <?= e($firstName) ?> 👋</h1>
     <p><?= e($quote) ?></p>
+    <div class="row gap-2" style="margin-top:18px; flex-wrap:wrap;">
+      <?php if ($nextUp): ?>
+        <a href="<?= e(base_url('learn.php?slug=' . $nextUp['slug'])) ?>" class="btn btn-gold">▶ Resume Learning</a>
+      <?php endif; ?>
+      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline-light">Browse Courses</a>
+    </div>
   </div>
+
   <?php if ($enrollments): ?>
-    <div class="ring-block">
+    <div class="dash-hero-actions">
+      <?php if ($nextUp): ?>
+        <div class="momentum-callout">
+          <span class="flame">🔥</span>
+          <div>
+            <strong><?= e(mb_strimwidth($nextUp['title'], 0, 34, '…')) ?></strong>
+            <span><?= round((float) $nextUp['progress']) ?>% done &middot; ~<?= $lessonsLeft ?> lesson<?= $lessonsLeft === 1 ? '' : 's' ?> left</span>
+          </div>
+        </div>
+      <?php endif; ?>
       <div class="progress-ring-wrap">
-        <svg viewBox="0 0 64 64">
-          <circle class="progress-ring-track" cx="32" cy="32" r="27"></circle>
-          <circle class="progress-ring-fill" cx="32" cy="32" r="27" stroke-dasharray="<?= round(2 * M_PI * 27, 2) ?>" stroke-dashoffset="<?= round(2 * M_PI * 27, 2) ?>" data-ring-offset="<?= round((2 * M_PI * 27) * (1 - $avgProgress / 100), 2) ?>"></circle>
+        <svg viewBox="0 0 92 92">
+          <circle class="progress-ring-track" cx="46" cy="46" r="<?= $ringR ?>"></circle>
+          <circle class="progress-ring-fill" cx="46" cy="46" r="<?= $ringR ?>" stroke-dasharray="<?= round($ringC, 2) ?>" stroke-dashoffset="<?= round($ringC, 2) ?>" data-ring-offset="<?= round($ringOffset, 2) ?>"></circle>
         </svg>
-        <div class="progress-ring-label"><?= $avgProgress ?>%</div>
+        <div class="progress-ring-label"><strong><?= $avgProgress ?>%</strong><span>Overall</span></div>
       </div>
-      <div class="ring-text"><strong>Overall progress</strong><span>Across <?= $enrolledCount ?> course<?= $enrolledCount === 1 ? '' : 's' ?></span></div>
     </div>
   <?php endif; ?>
 </div>
 
-<div class="stat-strip reveal">
-  <div class="stat-cell"><div class="num" data-count-up data-count-value="<?= $enrolledCount ?>" data-count-suffix="">0</div><div class="lbl">Enrolled</div></div>
-  <div class="stat-cell"><div class="num" data-count-up data-count-value="<?= $completedCount ?>" data-count-suffix="">0</div><div class="lbl">Completed</div></div>
-  <div class="stat-cell"><div class="num" data-count-up data-count-value="<?= $inProgressCount ?>" data-count-suffix="">0</div><div class="lbl">In Progress</div></div>
-  <div class="stat-cell"><div class="num" data-count-up data-count-value="<?= $certificateCount ?>" data-count-suffix="">0</div><div class="lbl">Certificates</div></div>
+<div class="grid md:grid-2 lg:grid-4" style="margin-top:24px;">
+  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#2563eb;">
+    <div class="icon"><?php dash_icon('graduation-cap'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= $enrolledCount ?>" data-count-suffix="">0</div><div class="label">Enrolled Courses</div>
+  </div>
+  <div class="stat-card reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#10b981;">
+    <div class="icon"><?php dash_icon('check-circle'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= $completedCount ?>" data-count-suffix="">0</div><div class="label">Completed</div>
+  </div>
+  <div class="stat-card reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#f5b301;">
+    <div class="icon"><?php dash_icon('clock'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= $inProgressCount ?>" data-count-suffix="">0</div><div class="label">In Progress</div>
+  </div>
+  <div class="stat-card reveal reveal-delay-3" data-hoverable="true" style="--hover-color:#8b5cf6;">
+    <div class="icon"><?php dash_icon('award'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= $certificateCount ?>" data-count-suffix="">0</div><div class="label">Certificates</div>
+  </div>
 </div>
 
 <?php if ($continuing): ?>
   <h3 class="dash-section-label" style="margin-top:36px;">Continue Learning</h3>
   <div class="continue-track" style="margin-top:14px;">
-    <?php foreach ($continuing as $i => $en):
-      $left = max(0, (int) round((float) $en['lesson_count'] * (1 - (float) $en['progress'] / 100)));
-    ?>
+    <?php foreach ($continuing as $i => $en): ?>
       <div class="continue-card reveal reveal-delay-<?= min($i + 1, 5) ?>">
         <div class="continue-thumb">
           <?php if ($en['thumbnail_url']): ?><img src="<?= e(asset_src($en['thumbnail_url'])) ?>" alt="">
@@ -126,8 +160,8 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             <div class="progress-track"><div class="progress-fill" style="width:<?= round((float) $en['progress']) ?>%;"></div></div>
             <span><?= round((float) $en['progress']) ?>%</span>
           </div>
-          <p class="muted small" style="margin-top:8px;"><?= (int) $en['lesson_count'] ?> lesson<?= (int) $en['lesson_count'] === 1 ? '' : 's' ?> total &middot; ~<?= $left ?> remaining</p>
-          <a href="<?= e(base_url('learn.php?slug=' . $en['slug'])) ?>" class="continue-resume-btn">Resume learning →</a>
+          <p class="muted small" style="margin-top:8px;"><?= (int) $en['lesson_count'] ?> lesson<?= (int) $en['lesson_count'] === 1 ? '' : 's' ?> total</p>
+          <a href="<?= e(base_url('learn.php?slug=' . $en['slug'])) ?>" class="btn btn-primary" style="margin-top:14px;">▶ Resume Learning</a>
         </div>
       </div>
     <?php endforeach; ?>
@@ -183,7 +217,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
               <?= (float) $en['progress'] > 0 ? '▶ Continue' : '▶ Start' ?>
             </a>
             <?php if ($en['certificate_code']): ?>
-              <a href="<?= e(base_url('certificate.php?code=' . $en['certificate_code'])) ?>" target="_blank" rel="noopener" class="btn btn-outline btn-sm" aria-label="View certificate"><?php dash_icon('award'); ?></a>
+              <a href="<?= e(base_url('certificate.php?code=' . $en['certificate_code'])) ?>" target="_blank" rel="noopener" class="btn btn-gold btn-sm">🎓</a>
             <?php endif; ?>
           </div>
         </div>
@@ -258,7 +292,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </a>
 </div>
 
-<div class="dash-quote-block">
-  <p>Success is built one lesson at a time. Keep learning. Keep growing.</p>
+<div class="dash-motivation">
+  <p>"Success is built one lesson at a time. Keep learning. Keep growing."</p>
 </div>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
