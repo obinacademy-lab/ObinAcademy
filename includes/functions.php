@@ -382,6 +382,13 @@ function csrf_verify(): void {
     $token = $_POST['csrf_token'] ?? '';
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
         http_response_code(403);
+        // PHP silently empties $_POST/$_FILES (without a catchable error) when
+        // an upload exceeds the server's post_max_size/upload_max_filesize —
+        // that looks identical to a missing CSRF token, so give a message that
+        // points at the real cause instead of "form submission" jargon.
+        if (empty($_POST) && empty($_FILES) && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            die('That file was too large for the server to accept. Please try a smaller file and submit again.');
+        }
         die('Invalid or expired form submission. Please go back and try again.');
     }
 }
