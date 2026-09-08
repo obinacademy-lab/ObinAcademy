@@ -12,6 +12,7 @@ $user = current_user();
 $navLinks = [
     '/index.php' => 'Home',
     '/courses/index.php' => 'Explore Courses',
+    '/schools.php' => 'Schools',
     '/stories.php' => 'Stories',
     '/about.php' => 'About Us',
     '/contact.php' => 'Contact',
@@ -121,7 +122,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         </div>
       <?php endif; ?>
       <?php
-        $navIcons = ['/index.php' => '🏠', '/courses/index.php' => '📚', '/stories.php' => '💬', '/about.php' => 'ℹ️', '/contact.php' => '✉️'];
+        $navIcons = ['/index.php' => '🏠', '/courses/index.php' => '📚', '/schools.php' => '🎓', '/stories.php' => '💬', '/about.php' => 'ℹ️', '/contact.php' => '✉️'];
       ?>
       <?php foreach ($navLinks as $href => $label): ?>
         <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>"><span class="mm-icon"><?= $navIcons[$href] ?? '' ?></span><?= e($label) ?></a>
