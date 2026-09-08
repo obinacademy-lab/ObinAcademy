@@ -81,14 +81,13 @@ $pageDescription = "Obin Academy is a modern online learning marketplace built t
 require __DIR__ . '/includes/header.php';
 ?>
 <!-- 1. Hero -->
-<section class="course-hero">
-  <div class="container" style="max-width:720px; text-align:center;">
-    <span class="pill">About Obin Academy</span>
-    <h1 style="text-align:center;">Learn. Teach. Earn.</h1>
-    <p class="summary" style="margin-left:auto; margin-right:auto; text-align:center;">A modern online learning marketplace built to empower people with practical, income-generating skills that create real opportunities in today's digital economy.</p>
-    <div class="row gap-2" style="justify-content:center; margin-top:26px;">
+<section class="home-hero-v3">
+  <div class="container" style="text-align:center;">
+    <h1>Learn. Teach. Earn.</h1>
+    <p class="summary" style="margin-left:auto; margin-right:auto;">A modern online learning marketplace built to empower people with practical, income-generating skills that create real opportunities in today's digital economy.</p>
+    <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:34px;">
       <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-gold">Start Learning <span class="btn-arrow">→</span></a>
-      <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-outline-light">▶ Become a Creator</a>
+      <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-outline">▶ Become a Creator</a>
     </div>
   </div>
 </section>
