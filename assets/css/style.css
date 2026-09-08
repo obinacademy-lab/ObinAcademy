@@ -866,88 +866,47 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .browse-hero .container > *:nth-child(5) { animation-delay: 0.24s; }
 @media (prefers-reduced-motion: reduce) { .browse-hero .container > * { animation: none; } }
 
-/* ---------- homepage hero: premium split panel (photo + navy text panel) ---------- */
-.home-hero-v2 {
-  position: relative; overflow: hidden; padding: 0;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--brand-950) 92%, black) 0%, var(--brand-950) 100%);
+/* ---------- homepage hero: Skool-style, no photo — confident type,
+   restrained color, a plain light ground doing all the "premium" work. ---------- */
+.home-hero-v3 { background: var(--surface); padding: 88px 0 52px; }
+.home-hero-v3 h1 {
+  font-size: clamp(34px, 5vw, 48px); font-weight: 800; line-height: 1.08; letter-spacing: -0.02em;
+  color: var(--ink); text-wrap: balance;
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both;
 }
-.home-hero-v2::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background-image:
-    radial-gradient(circle at 8% 12%, color-mix(in srgb, var(--gold) 12%, transparent), transparent 40%),
-    radial-gradient(circle at 92% 88%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 45%);
+.hero-subline {
+  margin-top: 10px; font-size: 20px; font-weight: 500; color: var(--muted);
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.05s;
 }
-.home-hero-v2 .container { max-width: 1280px; position: relative; z-index: 1; padding: 0; }
-.hero-grid { display: grid; grid-template-columns: 1.35fr 1fr; align-items: stretch; min-height: 620px; }
-.hero-text-col { display: flex; flex-direction: column; justify-content: center; padding: 72px 48px 72px 40px; }
-.hero-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 12.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); width: fit-content; animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-eyebrow-rule { width: 28px; height: 1.5px; background: var(--gold); display: block; }
-.home-hero-v2 h1 {
-  font-size: clamp(34px, 4.2vw, 58px); font-weight: 800; line-height: 1.06; letter-spacing: -0.03em;
-  margin: 24px 0 0; text-wrap: balance; max-width: 560px; color: #fff;
-  animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.06s;
+.hero-accent-link { color: var(--accent); font-weight: 600; text-decoration: none; }
+.hero-accent-link:hover { text-decoration: underline; }
+.home-hero-v3 .summary {
+  margin: 20px auto 0; max-width: 480px; font-size: 15.5px; line-height: 1.65; color: var(--muted);
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.1s;
 }
-.home-hero-v2 .accent-gold { color: var(--gold); }
-@supports (background-clip: text) or (-webkit-background-clip: text) {
-  .home-hero-v2 .accent-gold {
-    background: linear-gradient(100deg, var(--gold), #ffd966);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
+.hero-search-v3 {
+  display: flex; align-items: center; gap: 10px; margin: 30px auto 0; max-width: 480px;
+  background: #fff; border-radius: 10px; padding: 4px 4px 4px 20px;
+  box-shadow: 0 1px 2px rgba(32,33,36,0.13), 0 2px 6px rgba(32,33,36,0.06), 0 1px 10px rgba(0,0,0,0.05);
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.15s;
 }
-.home-hero-v2 .summary {
-  margin: 20px 0 0; font-size: 16.5px; line-height: 1.65; color: rgba(255,255,255,0.68);
-  max-width: 460px; font-weight: 400;
-  animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.12s;
+.hero-search-v3 svg { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; }
+.hero-search-v3 input { flex: 1; border: none; outline: none; background: none; font-size: 15px; font-family: inherit; padding: 13px 0; color: var(--ink); }
+.hero-search-v3 button { background: var(--gold); color: #1a1300; border: none; border-radius: 8px; padding: 12px 24px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background-color 0.2s ease; }
+.hero-search-v3 button:hover { background: var(--gold-dark); }
+.hero-stats-v3 {
+  margin-top: 22px; display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 13.5px; color: var(--muted);
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.2s;
 }
-.hero-stats-row {
-  display: flex; gap: 26px; margin-top: 32px; padding-top: 20px;
-  border-top: 1px solid rgba(255,255,255,0.14);
-  animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.18s;
-}
-.hero-stat-num { font-size: 24px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-.hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
-.hero-search {
-  display: flex; align-items: center; gap: 0; margin-top: 34px; max-width: 460px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16);
-  border-radius: var(--radius-full); padding: 6px 6px 6px 22px;
-  animation: hero-rise 0.7s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.24s;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-.hero-search:focus-within { border-color: color-mix(in srgb, var(--gold) 45%, transparent); background: rgba(255,255,255,0.09); }
-.hero-search svg { width: 17px; height: 17px; color: rgba(255,255,255,0.5); flex-shrink: 0; }
-.hero-search input { flex: 1; background: none; border: none; outline: none; color: #fff; font-size: 15px; font-family: inherit; padding: 12px 14px; }
-.hero-search input::placeholder { color: rgba(255,255,255,0.45); }
-.hero-search button { background: var(--gold); color: #1a1300; border: none; border-radius: var(--radius-full); padding: 13px 26px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background-color 0.2s ease; }
-.hero-search button:hover { background: var(--gold-dark); }
-.hero-photo-col { position: relative; display: flex; align-items: center; justify-content: center; padding: 40px 40px 40px 12px; }
-.hero-photo-frame {
-  position: relative; width: 100%; height: 100%; min-height: 420px; border-radius: var(--radius-lg); overflow: hidden;
-  box-shadow: 0 40px 80px -24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08);
-  animation: hero-rise 0.8s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.1s;
-}
-.hero-photo-frame img { width: 100%; height: 100%; object-fit: cover; object-position: 62% 18%; display: block; }
-.hero-photo-frame::after { content: ""; position: absolute; inset: 0; background: linear-gradient(200deg, transparent 55%, color-mix(in srgb, var(--brand-950) 60%, transparent) 100%); }
-.hero-live-badge {
-  position: absolute; bottom: 20px; left: 20px; z-index: 2;
-  background: rgba(20,24,27,0.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-full);
-  padding: 8px 16px 8px 8px; display: flex; align-items: center; gap: 10px;
-  font-size: 12.5px; font-weight: 700; color: #fff;
-}
-.hero-live-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,0.25); }
+.hero-stats-v3 strong { color: var(--ink); font-weight: 800; font-variant-numeric: tabular-nums; }
+.hero-stats-v3 .dot { opacity: 0.4; }
 @media (prefers-reduced-motion: reduce) {
-  .hero-eyebrow, .home-hero-v2 h1, .home-hero-v2 .summary, .hero-stats-row, .hero-search, .hero-photo-frame { animation: none; }
+  .home-hero-v3 h1, .hero-subline, .home-hero-v3 .summary, .hero-search-v3, .hero-stats-v3 { animation: none; }
 }
-@media (max-width: 900px) {
-  .hero-grid { grid-template-columns: 1fr; min-height: 0; }
-  .hero-photo-col { padding: 0 24px 40px; order: -1; height: 260px; }
-  .hero-photo-frame { min-height: 0; }
-  .hero-text-col { padding: 48px 24px 56px; }
-  .home-hero-v2 h1 { font-size: 34px; }
-  .hero-stats-row { gap: 20px; }
-  .hero-search { max-width: none; padding-left: 16px; }
-  .hero-search input { font-size: 14px; padding: 12px 8px; }
-  .hero-search button { padding: 12px 18px; }
+@media (max-width: 640px) {
+  .home-hero-v3 { padding: 56px 0 40px; }
+  .hero-subline { font-size: 17px; }
 }
 
 .browse-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 22px; }

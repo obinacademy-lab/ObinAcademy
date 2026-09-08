@@ -49,33 +49,26 @@ $structuredData = [
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="course-hero home-hero-v2">
-  <div class="container">
-    <div class="hero-grid">
-      <div class="hero-text-col">
-        <span class="hero-eyebrow"><span class="hero-eyebrow-rule"></span>The Knowledge Marketplace For Everyone</span>
-        <h1>Discover Courses <span class="accent-gold">or Teach Your Own</span></h1>
-        <p class="summary">
-          Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
-        </p>
-        <div class="hero-stats-row">
-          <div><div class="hero-stat-num" data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</div><div class="hero-stat-label">Courses</div></div>
-          <div><div class="hero-stat-num" data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</div><div class="hero-stat-label">Learners</div></div>
-          <div><div class="hero-stat-num" data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</div><div class="hero-stat-label">Creators</div></div>
-        </div>
+<section class="home-hero-v3">
+  <div class="container" style="max-width:720px; text-align:center;">
+    <h1>Discover Courses</h1>
+    <p class="hero-subline">or <a href="<?= e(base_url('become-creator.php')) ?>" class="hero-accent-link">teach your own</a></p>
+    <p class="summary" style="margin-left:auto; margin-right:auto;">
+      Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
+    </p>
 
-        <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="hero-search">
-          <?php dash_icon('search'); ?>
-          <input type="text" name="q" placeholder="What do you want to learn today?">
-          <button type="submit">Search</button>
-        </form>
-      </div>
-      <div class="hero-photo-col">
-        <div class="hero-photo-frame">
-          <img src="<?= e(versioned_asset('assets/img/hero-bg-premium.jpg')) ?>" alt="" loading="eager">
-          <span class="hero-live-badge"><span class="dot"></span>Live on Obin Academy</span>
-        </div>
-      </div>
+    <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="hero-search-v3">
+      <?php dash_icon('search'); ?>
+      <input type="text" name="q" placeholder="Search for anything">
+      <button type="submit">Search</button>
+    </form>
+
+    <div class="hero-stats-v3">
+      <span><strong data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</strong> courses</span>
+      <span class="dot">&middot;</span>
+      <span><strong data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</strong> learners</span>
+      <span class="dot">&middot;</span>
+      <span><strong data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</strong> creators</span>
     </div>
   </div>
 </section>
