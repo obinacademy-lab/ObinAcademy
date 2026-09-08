@@ -5,7 +5,7 @@ function get_categories(): array {
 }
 
 /** Course rows (+ category name, creator name/avatar, student count, avg rating) for card rendering. */
-function get_course_cards(string $whereSql = '', array $params = [], string $orderBy = 'c.created_at DESC', ?int $limit = null): array {
+function get_course_cards(string $whereSql = '', array $params = [], string $orderBy = 'c.created_at DESC', ?int $limit = null, ?int $offset = null): array {
     $sql = "
         SELECT c.*, cat.name AS category_name, u.name AS creator_name, u.avatar_url AS creator_avatar_url,
           (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id) AS student_count,
@@ -17,7 +17,10 @@ function get_course_cards(string $whereSql = '', array $params = [], string $ord
         WHERE c.status = 'PUBLISHED' " . ($whereSql ? "AND $whereSql" : '') . "
         ORDER BY $orderBy
     ";
-    if ($limit) $sql .= " LIMIT $limit";
+    if ($limit) {
+        $sql .= " LIMIT $limit";
+        if ($offset) $sql .= " OFFSET $offset";
+    }
     return db_all($sql, $params);
 }
 

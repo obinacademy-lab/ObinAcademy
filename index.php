@@ -3,9 +3,17 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/course_card.php';
 
-$courses = get_featured_courses(9);
 $stats = get_platform_stats();
 $testimonials = array_slice(get_published_testimonials(), 0, 3);
+
+// Skool-style numbered pagination for the homepage course grid, instead of
+// a single curated batch — the "Explore Courses" page still exists for
+// search/category/sort; this is just a plain paged view of everything.
+const HOME_COURSES_PER_PAGE = 9;
+$totalCourseCount = (int) $stats['course_count'];
+$totalPages = max(1, (int) ceil($totalCourseCount / HOME_COURSES_PER_PAGE));
+$page = max(1, min($totalPages, (int) query_param('page', '1')));
+$courses = get_course_cards('', [], 'c.created_at DESC', HOME_COURSES_PER_PAGE, ($page - 1) * HOME_COURSES_PER_PAGE);
 
 // A curated highlight, not the full list — keeps the homepage from feeling
 // crowded. The complete set lives on skills.php. Slugs point at real
@@ -118,9 +126,26 @@ require __DIR__ . '/includes/header.php';
     </div>
 
     <?php if ($courses): ?>
-      <div class="grid sm:grid-2 lg:grid-3">
+      <div class="grid sm:grid-2 lg:grid-3" id="courses">
         <?php foreach ($courses as $c) render_course_card($c); ?>
       </div>
+      <?php if ($totalPages > 1): ?>
+        <nav class="pagination" aria-label="Course pages">
+          <?php if ($page > 1): ?>
+            <a href="<?= e(base_url('index.php?page=' . ($page - 1) . '#courses')) ?>" class="page-link page-prev">Previous</a>
+          <?php endif; ?>
+          <?php foreach (paginate_window($page, $totalPages) as $p): ?>
+            <?php if ($p === null): ?>
+              <span class="page-ellipsis">…</span>
+            <?php else: ?>
+              <a href="<?= e(base_url('index.php?page=' . $p . '#courses')) ?>" class="page-link <?= $p === $page ? 'active' : '' ?>"><?= $p ?></a>
+            <?php endif; ?>
+          <?php endforeach; ?>
+          <?php if ($page < $totalPages): ?>
+            <a href="<?= e(base_url('index.php?page=' . ($page + 1) . '#courses')) ?>" class="page-link page-next">Next</a>
+          <?php endif; ?>
+        </nav>
+      <?php endif; ?>
     <?php else: ?>
       <div class="card" style="padding:48px; text-align:center; border-style:dashed; color:var(--muted);">No courses published yet. Check back soon.</div>
     <?php endif; ?>

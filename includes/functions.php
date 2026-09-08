@@ -28,6 +28,26 @@ function slugify(string $text): string {
     return trim($slug, '-');
 }
 
+/**
+ * Page numbers to render for numbered pagination, with null standing in
+ * for an ellipsis gap — e.g. [1, null, 4, 5, 6, null, 34]. Always keeps
+ * the first and last page visible plus a small window around the current
+ * page, same convention as most "1 2 3 ... 34" paginators.
+ * @return array<int|null>
+ */
+function paginate_window(int $current, int $total, int $window = 1): array {
+    $pages = [];
+    $last = 0;
+    for ($p = 1; $p <= $total; $p++) {
+        if ($p === 1 || $p === $total || abs($p - $current) <= $window) {
+            if ($last && $p - $last > 1) $pages[] = null;
+            $pages[] = $p;
+            $last = $p;
+        }
+    }
+    return $pages;
+}
+
 /** Splits a sale into gross/fee/net using the 10% platform commission. */
 function split_sale(float $price): array {
     $gross = round($price);

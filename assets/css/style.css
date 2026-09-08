@@ -542,6 +542,12 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .footer-bottom { display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: space-between; padding: 22px 0 28px; font-size: 12.5px; color: rgba(255,255,255,0.5); }
 @media (min-width: 640px) { .footer-bottom { flex-direction: row; } }
 .footer-bottom .made-for { font-weight: 600; color: rgba(255,255,255,0.55); }
+
+/* A footer with nothing but the logo, copyright, and a WhatsApp contact —
+   no link columns, so it needs far less vertical padding than the full
+   .site-footer default. */
+.site-footer-minimal { padding: 32px 0; margin-top: 48px; }
+.footer-bottom-minimal { padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   .site-footer::before { animation: none; }
   .whatsapp-btn .ping::before { animation: none; }
@@ -783,6 +789,14 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .chip.active { background: var(--brand-800); border-color: var(--brand-800); color: #fff; }
 .chip:has(input:checked) { background: var(--brand-800); border-color: var(--brand-800); color: #fff; }
 .chip:hover .btn-arrow { transform: translateX(3px); }
+
+/* ---------- numbered pagination (homepage course grid) ---------- */
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin-top: 40px; }
+.page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-full); color: var(--ink); font-size: 13.5px; font-weight: 700; text-decoration: none; transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease; }
+.page-link:hover { border-color: var(--brand-800); color: var(--brand-800); }
+.page-link.active { background: var(--brand-800); border-color: var(--brand-800); color: #fff; }
+.page-link.page-prev, .page-link.page-next { padding: 0 18px; color: var(--muted); }
+.page-ellipsis { color: var(--muted); font-size: 13.5px; padding: 0 4px; }
 
 /* ---------- browse/explore courses page ---------- */
 .browse-hero { position: relative; overflow: hidden; }
