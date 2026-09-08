@@ -12,6 +12,8 @@
 -- (idempotent); re-running the INSERTs would create duplicate accounts, so
 -- don't run this file twice.
 
+SET NAMES utf8mb4; -- guards against the em dash in Ibrahim's quote getting mangled by a client whose default connection charset isn't utf8mb4
+
 -- Existing 3 authors: add avatar + district
 UPDATE users SET avatar_url = 'assets/img/testimonials/mary-nabirye.png', headline = 'Jinja, Uganda' WHERE email = 'mary.nabirye@example.com';
 UPDATE users SET avatar_url = 'assets/img/testimonials/john-mukasa.png', headline = 'Kampala, Uganda' WHERE email = 'john.mukasa@example.com';

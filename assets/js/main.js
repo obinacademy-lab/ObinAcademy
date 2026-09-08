@@ -83,6 +83,90 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Testimonials slider: a horizontal scroll-snap track (swipeable natively
+  // on touch) with arrow buttons, dot indicators, and autoplay that pauses
+  // on hover/touch. Dots stay in sync even when the visitor swipes manually
+  // by watching for the slide whose center lands closest to the track center.
+  const storiesSlider = document.querySelector("[data-stories-slider]");
+  if (storiesSlider) {
+    const track = storiesSlider.querySelector("[data-stories-track]");
+    const slides = Array.from(track.children);
+    const dotsWrap = storiesSlider.querySelector("[data-stories-dots]");
+    let current = 0;
+    let autoplayTimer = null;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.setAttribute("aria-label", `Go to story ${i + 1}`);
+      dot.addEventListener("click", () => { goTo(i); resetAutoplay(); });
+      dotsWrap?.appendChild(dot);
+    });
+    const dots = dotsWrap ? Array.from(dotsWrap.children) : [];
+
+    function setActive(i) {
+      current = i;
+      dots.forEach((d, idx) => d.classList.toggle("active", idx === i));
+    }
+
+    function goTo(i) {
+      const clamped = (i + slides.length) % slides.length;
+      const slide = slides[clamped];
+      // scrollIntoView's inline centering is unreliable for a nested horizontal
+      // scroller in some browsers, so compute the delta to the slide's center
+      // directly off live geometry and scroll the track itself by that amount.
+      const trackRect = track.getBoundingClientRect();
+      const slideRect = slide.getBoundingClientRect();
+      const delta = (slideRect.left + slideRect.width / 2) - (trackRect.left + trackRect.width / 2);
+      track.scrollBy({ left: delta, behavior: prefersReducedMotion ? "auto" : "smooth" });
+      setActive(clamped);
+    }
+
+    storiesSlider.querySelector("[data-stories-prev]")?.addEventListener("click", () => { goTo(current - 1); resetAutoplay(); });
+    storiesSlider.querySelector("[data-stories-next]")?.addEventListener("click", () => { goTo(current + 1); resetAutoplay(); });
+
+    function syncActiveFromGeometry() {
+      const centerX = track.getBoundingClientRect().left + track.clientWidth / 2;
+      let closest = 0, closestDist = Infinity;
+      slides.forEach((slide, i) => {
+        const r = slide.getBoundingClientRect();
+        const dist = Math.abs((r.left + r.width / 2) - centerX);
+        if (dist < closestDist) { closestDist = dist; closest = i; }
+      });
+      setActive(closest);
+    }
+    // "scrollend" fires exactly once, once scrolling has truly stopped — the
+    // reliable signal here. A "scroll"+debounce fallback covers older
+    // browsers, but firing it on every scroll tick risks recomputing mid-
+    // animation (a brief pause between dispatched scroll events can look
+    // like "settled" before a smooth-scroll actually finishes), so it only
+    // runs where "scrollend" isn't supported.
+    if ("onscrollend" in window) {
+      track.addEventListener("scrollend", syncActiveFromGeometry, { passive: true });
+    } else {
+      let scrollSettleTimer;
+      track.addEventListener("scroll", () => {
+        clearTimeout(scrollSettleTimer);
+        scrollSettleTimer = setTimeout(syncActiveFromGeometry, 200);
+      }, { passive: true });
+    }
+
+    function startAutoplay() {
+      clearInterval(autoplayTimer); // guards against stacked timers if start fires more than once in a row (e.g. repeated mouseleave)
+      if (prefersReducedMotion || slides.length < 2) return;
+      autoplayTimer = setInterval(() => goTo(current + 1), 6000);
+    }
+    function stopAutoplay() { clearInterval(autoplayTimer); }
+    function resetAutoplay() { stopAutoplay(); startAutoplay(); }
+
+    storiesSlider.addEventListener("mouseenter", stopAutoplay);
+    storiesSlider.addEventListener("mouseleave", startAutoplay);
+    storiesSlider.addEventListener("touchstart", stopAutoplay, { passive: true });
+
+    setActive(0);
+    startAutoplay();
+  }
+
   // Scroll-reveal: fade/slide elements in as they enter the viewport. Reused
   // across any page — just add class="reveal" (optionally with a
   // "reveal-delay-N" class for staggered groups, N = 1..6).

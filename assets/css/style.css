@@ -695,6 +695,33 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .testimonial-card .author .role { font-size: 12px; color: var(--muted); margin-top: 1px; }
 .testimonial-card .author .verified { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: #10b981; margin-top: 3px; }
 .testimonial-card .author .verified svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+.stories-slider { position: relative; }
+.stories-track {
+  display: flex; gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  padding: 4px 4px 8px; margin: 0 -4px;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.stories-track::-webkit-scrollbar { display: none; }
+.stories-track .testimonial-card { flex: 0 0 min(560px, 86vw); scroll-snap-align: center; height: auto; }
+.stories-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--border); background: #fff; color: var(--ink);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(20,24,27,0.25);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.stories-nav svg { width: 18px; height: 18px; }
+.stories-nav:hover { background: var(--surface); border-color: var(--ink); transform: translateY(-50%) scale(1.06); }
+.stories-nav.prev { left: -6px; }
+.stories-nav.next { right: -6px; }
+@media (max-width: 760px) { .stories-nav { display: none; } }
+.stories-dots { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 20px; }
+.stories-dots button {
+  width: 8px; height: 8px; padding: 0; border: none; border-radius: 50%; background: var(--border-strong);
+  cursor: pointer; transition: background-color 0.2s ease, transform 0.2s ease; flex-shrink: 0;
+}
+.stories-dots button.active { background: var(--accent); transform: scale(1.35); }
 .hero-badge { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--border-strong); background: #fff; color: var(--ink); padding: 6px 16px; border-radius: var(--radius-full); font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
 .hero h1 { font-size: clamp(38px, 6.6vw, 64px); line-height: 1.02; margin-top: 22px; color: var(--ink); }
 .hero h1 .lock { white-space: nowrap; }
