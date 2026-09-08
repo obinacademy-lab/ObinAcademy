@@ -41,6 +41,35 @@ $commitments = [
 
 $communityTags = ['Learners', 'Creators', 'Professionals', 'Entrepreneurs', 'Students', 'Innovators'];
 
+$learnerSteps = [
+    ['Browse Courses', 'Explore courses across Finance, Tech, Business, and more — filter by category, price, or rating to find the right fit.'],
+    ['Enroll & Pay Instantly', 'Pay securely with MTN or Airtel Mobile Money and get instant access — no card, no waiting.'],
+    ['Learn at Your Own Pace', 'Watch video lessons and download materials whenever it suits you, on any device.'],
+    ['Earn Your Certificate', 'Complete the course and receive a Certificate of Completion to showcase your new skill.'],
+];
+$creatorSteps = [
+    ['Apply to Become a Creator', 'Tell us about your expertise and submit your application for review.'],
+    ['Build Your Course', 'Use the Creator Dashboard to add modules, upload video or PDF lessons, and set your price.'],
+    ['Publish to the Marketplace', 'Once approved, your course goes live to every learner on Obin Academy.'],
+    ['Earn From Every Sale', 'Keep 90% of every sale, paid straight to your mobile money.'],
+];
+
+$features = [
+    ['📚', 'Real-World Skills', 'Access high-quality courses across every industry, taught by working professionals with practical experience.'],
+    ['👥', 'Learn On Your Terms', 'Study at your own pace through video lessons and resources you can revisit any time.'],
+    ['🏆', 'Certificates', 'Earn a certificate of completion for every course to showcase your new skills and advance your career.'],
+];
+
+$aboutTestimonials = array_slice(get_published_testimonials(), 0, 3);
+
+// A short subset — the full FAQ list lives on contact.php.
+$aboutFaqs = [
+    ['How fast can I start learning?', 'Enroll and pay with MTN or Airtel Mobile Money, and you get instant access to the course — no waiting, no card required.'],
+    ['Do I need a laptop to learn?', "No. Obin Academy works in any phone, tablet, or laptop browser, so you can learn from wherever you already are."],
+    ['How much can creators earn?', 'Creators set their own price and keep 90% of every sale. Obin Academy takes a transparent 10% platform fee — nothing hidden.'],
+    ['Will I get a certificate?', 'Yes — completing all lessons in a course automatically unlocks a Certificate of Completion in your learner dashboard.'],
+];
+
 $industries = [
     ['Finance', 'finance', '💰'], ['Business', 'business', '💼'], ['Artificial Intelligence', 'artificial-intelligence', '🤖'],
     ['Technology', 'technology-software-development', '💻'], ['Marketing', 'marketing-digital-marketing', '📣'],
@@ -285,4 +314,154 @@ require __DIR__ . '/includes/header.php';
     </div>
   </div>
 </section>
+<!-- 13. How Obin Academy Works -->
+<div class="section" style="background:var(--surface);">
+  <div class="container">
+    <div class="text-center reveal" style="max-width:580px; margin:0 auto 40px;">
+      <span class="eyebrow">Simple By Design</span>
+      <h2 class="h2" style="margin-top:10px;">How Obin Academy Works</h2>
+      <p class="lede" style="margin-top:10px; max-width:none;">Whether you're here to learn or to teach, getting started takes just a few steps.</p>
+    </div>
+    <div class="grid lg:grid-2" style="gap:28px;">
+      <div class="how-panel panel-learners reveal">
+        <span class="how-panel-tag">🎓 For Learners</span>
+        <div class="stack gap-3" style="margin-top:24px; position:relative; z-index:1;">
+          <?php foreach ($learnerSteps as $i => [$title, $desc]): ?>
+            <div class="step-row">
+              <span class="step-num"><?= $i + 1 ?></span>
+              <div><h4><?= e($title) ?></h4><p><?= e($desc) ?></p></div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary" style="margin-top:26px; position:relative; z-index:1;">Explore Courses <span class="btn-arrow">→</span></a>
+      </div>
+      <div class="how-panel panel-creators reveal reveal-delay-2">
+        <span class="how-panel-tag tag-gold">💰 For Creators</span>
+        <div class="stack gap-3" style="margin-top:24px; position:relative; z-index:1;">
+          <?php foreach ($creatorSteps as $i => [$title, $desc]): ?>
+            <div class="step-row">
+              <span class="step-num num-gold"><?= $i + 1 ?></span>
+              <div><h4><?= e($title) ?></h4><p><?= e($desc) ?></p></div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-gold" style="margin-top:26px; position:relative; z-index:1;">Become a Creator <span class="btn-arrow">→</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<?php if ($aboutTestimonials): ?>
+<!-- 14. What Our Learners Say -->
+<div class="section testimonials-decor">
+  <div class="container">
+    <div class="text-center" style="max-width:560px; margin:0 auto 40px;">
+      <span class="eyebrow">Real Results</span>
+      <h2 class="h2" style="margin-top:10px;">What Our Learners Say</h2>
+      <p class="lede" style="margin-top:10px; max-width:none;">Real stories from people building real skills — and real income — on Obin Academy.</p>
+    </div>
+    <div class="grid sm:grid-2 lg:grid-3">
+      <?php foreach ($aboutTestimonials as $t): ?>
+        <div class="testimonial-card">
+          <span class="quote-mark">&ldquo;</span>
+          <div class="rating-row">
+            <span class="stars"><?= str_repeat('★', (int) $t['rating']) . str_repeat('☆', 5 - (int) $t['rating']) ?></span>
+            <span class="rating-num"><?= number_format((float) $t['rating'], 1) ?></span>
+          </div>
+          <p class="quote"><?= e($t['quote']) ?></p>
+          <div class="author">
+            <div class="avatar">
+              <?php if (!empty($t['author_avatar_url'])): ?>
+                <img src="<?= e(asset_src($t['author_avatar_url'])) ?>" alt="">
+              <?php else: ?><?= e(mb_substr($t['author_name'], 0, 1)) ?><?php endif; ?>
+            </div>
+            <div>
+              <div class="name"><?= e($t['author_name']) ?></div>
+              <?php if (!empty($t['author_headline'])): ?><div class="role"><?= e($t['author_headline']) ?></div><?php endif; ?>
+              <div class="verified">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                Verified Learner
+              </div>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <div class="text-center" style="margin-top:36px;">
+      <a href="<?= e(base_url('stories.php')) ?>" class="btn btn-dark">Read More Stories →</a>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
+<!-- 15. Feature highlights + pace CTA -->
+<section class="section feature-cta-section" style="background-image: url('<?= e(versioned_asset('assets/img/hero-couch-learner.jpg')) ?>');">
+  <div class="container">
+    <div class="grid lg:grid-3" style="gap: 40px;">
+      <?php foreach ($features as [$emoji, $title, $desc]): ?>
+        <div class="feature-block">
+          <span class="bar"></span>
+          <div class="icon"><?= $emoji ?></div>
+          <h3><?= e($title) ?></h3>
+          <p><?= e($desc) ?></p>
+        </div>
+      <?php endforeach; ?>
+    </div>
+
+    <div class="cta-panel" style="margin-top:56px;">
+      <div>
+        <span class="eyebrow">Study at Your Own Pace</span>
+        <h3 class="h3" style="margin-top:10px; max-width: 420px;">Boost Your Career by Learning Skills in High Demand</h3>
+      </div>
+      <a href="<?= e(base_url('signup.php')) ?>" class="btn btn-primary btn-lg">Get Started →</a>
+    </div>
+  </div>
+</section>
+
+<!-- 16. FAQ -->
+<div class="section">
+  <div class="container" style="max-width:760px;">
+    <div class="text-center reveal" style="max-width:560px; margin:0 auto 36px;">
+      <span class="eyebrow">FAQ</span>
+      <h2 class="h2" style="margin-top:10px;">Questions? We've Got Answers</h2>
+    </div>
+    <div class="faq-list reveal">
+      <?php foreach ($aboutFaqs as $i => [$q, $a]): ?>
+        <div class="faq-item">
+          <button type="button" class="faq-question" aria-expanded="false" aria-controls="about-faq-panel-<?= $i ?>" id="about-faq-q-<?= $i ?>">
+            <span><?= e($q) ?></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="faq-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </button>
+          <div class="faq-answer" id="about-faq-panel-<?= $i ?>" role="region" aria-labelledby="about-faq-q-<?= $i ?>">
+            <div class="faq-answer-inner"><p><?= e($a) ?></p></div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <div class="text-center" style="margin-top:28px;">
+      <a href="<?= e(base_url('contact.php')) ?>" class="chip" style="padding:11px 22px; font-size:13px;">See All FAQs <span class="btn-arrow">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- 17. Newsletter -->
+<div class="section" style="background: var(--surface);">
+  <div class="container" style="max-width:640px;">
+    <div class="newsletter-panel reveal">
+      <span class="icon-badge" style="--tint:#2563eb; margin:0 auto;">✉️</span>
+      <h2 class="h2" style="margin-top:18px;">Stay Ahead With Obin Academy</h2>
+      <p class="lede" style="margin:10px auto 0; max-width:440px;">Subscribe for updates on new courses, creator opportunities, and learning resources — straight to your inbox.</p>
+      <form method="post" action="<?= e(base_url('contact.php')) ?>#newsletter" class="newsletter-form" data-loading-submit>
+        <?= csrf_field() ?>
+        <input type="hidden" name="form_type" value="newsletter">
+        <div class="field">
+          <label for="about-newsletter-email" class="hidden">Email address</label>
+          <input id="about-newsletter-email" name="newsletter_email" type="email" placeholder="you@example.com" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <?php require __DIR__ . '/includes/footer.php'; ?>
