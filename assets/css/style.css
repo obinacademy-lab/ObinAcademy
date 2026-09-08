@@ -644,6 +644,11 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   overflow: hidden; padding: 0; background: var(--surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--tint, var(--accent)) 25%, white);
 }
+/* Two payment-provider logos shown together (MTN + Airtel) — each badge
+   shrinks a little so the pair occupies about the same visual weight as
+   a single 64px badge elsewhere in the row. */
+.trust-item .icon-badge-pair { display: flex; gap: 6px; }
+.trust-item .icon-badge-pair .icon-badge-photo { width: 48px; height: 48px; }
 .trust-item .icon-badge-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .trust-item span.label { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.35; letter-spacing: 0.01em; }
 .trust-item .underline { width: 22px; height: 3px; border-radius: var(--radius-full); background: var(--tint, var(--accent)); opacity: 0.55; }

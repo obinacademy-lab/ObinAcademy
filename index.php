@@ -127,7 +127,10 @@ require __DIR__ . '/includes/header.php';
 <section class="trust-bar">
   <div class="container trust-bar-inner">
     <div class="trust-item" style="--tint:#10b981;">
-      <span class="icon-badge icon-badge-photo"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN Mobile Money" loading="lazy"></span>
+      <span class="icon-badge-pair">
+        <span class="icon-badge icon-badge-photo"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN Mobile Money" loading="lazy"></span>
+        <span class="icon-badge icon-badge-photo"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel Money" loading="lazy"></span>
+      </span>
       <span class="underline"></span>
       <span class="label">Secure Mobile Money Payments</span>
     </div>
