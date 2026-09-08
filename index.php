@@ -49,29 +49,33 @@ $structuredData = [
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="course-hero browse-hero home-hero">
-  <img class="hero-bg-image" src="<?= e(versioned_asset('assets/img/hero-bg-premium.jpg')) ?>" alt="" loading="eager">
-  <div class="hero-bg-overlay"></div>
+<section class="course-hero home-hero-v2">
   <div class="container">
-    <div class="home-hero-content">
-      <span class="pill">The Knowledge Marketplace For Everyone</span>
-      <h1 style="margin-top:14px;">Discover Courses <span class="lock">or Teach Your Own</span></h1>
-      <p class="summary">
-        Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
-      </p>
-      <div class="browse-hero-stats">
-        <span><strong data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</strong> courses</span>
-        <span class="dot">&middot;</span>
-        <span><strong data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</strong> learners</span>
-        <span class="dot">&middot;</span>
-        <span><strong data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</strong> creators</span>
-      </div>
+    <div class="hero-grid">
+      <div class="hero-text-col">
+        <span class="hero-eyebrow"><span class="hero-eyebrow-rule"></span>The Knowledge Marketplace For Everyone</span>
+        <h1>Discover Courses <span class="accent-gold">or Teach Your Own</span></h1>
+        <p class="summary">
+          Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
+        </p>
+        <div class="hero-stats-row">
+          <div><div class="hero-stat-num" data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</div><div class="hero-stat-label">Courses</div></div>
+          <div><div class="hero-stat-num" data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</div><div class="hero-stat-label">Learners</div></div>
+          <div><div class="hero-stat-num" data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</div><div class="hero-stat-label">Creators</div></div>
+        </div>
 
-      <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="search-pill browse-search">
-        <?php dash_icon('search'); ?>
-        <input type="text" name="q" placeholder="What do you want to learn today?">
-        <button type="submit" class="btn btn-gold btn-sm">Search</button>
-      </form>
+        <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="hero-search">
+          <?php dash_icon('search'); ?>
+          <input type="text" name="q" placeholder="What do you want to learn today?">
+          <button type="submit">Search</button>
+        </form>
+      </div>
+      <div class="hero-photo-col">
+        <div class="hero-photo-frame">
+          <img src="<?= e(versioned_asset('assets/img/hero-bg-premium.jpg')) ?>" alt="" loading="eager">
+          <span class="hero-live-badge"><span class="dot"></span>Live on Obin Academy</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
