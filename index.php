@@ -3,22 +3,9 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/course_card.php';
 
-$courses = get_featured_courses(6);
+$courses = get_featured_courses(9);
 $stats = get_platform_stats();
-$rating = get_platform_rating();
 $testimonials = array_slice(get_published_testimonials(), 0, 3);
-$spotlightQuote = $testimonials[0] ?? null;
-
-$GLOW_COLORS = ['blue', 'cyan', 'purple', 'pink', 'gold', 'emerald', 'orange', 'indigo'];
-
-$heroSlides = [
-    ['hero-couch-learner.jpg', 'A learner studying online from her couch on a laptop'],
-    ['hero-slide-1.jpg', 'A creator recording a video lesson for Obin Academy'],
-    ['hero-slide-2.jpg', 'A learner working through a course on her laptop'],
-    ['hero-slide-3.jpg', 'A learner practicing new skills from home'],
-    ['hero-slide-4.jpg', 'A professional analyzing course data on multiple screens'],
-    ['hero-slide-5.jpg', 'A learner studying outdoors on her laptop'],
-];
 
 // A curated highlight, not the full list — keeps the homepage from feeling
 // crowded. The complete set lives on skills.php. Slugs point at real
@@ -82,50 +69,61 @@ $structuredData = [
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="hero">
-  <div class="container">
-    <div class="hero-row">
-      <div class="hero-inner">
-        <span class="hero-badge animate-blink-badge">The Knowledge Marketplace For Everyone</span>
-        <h1 class="hero-headline">Learn From East Africa's <span class="lock animate-blink-text">Best Creators</span>.</h1>
-        <p class="tag">Finance, Tech, Business Classes etc &mdash; Paid Instantly With <span class="money">MTN</span> or <span class="money airtel">Airtel Money</span></p>
-        <p class="desc">Discover practical knowledge from creators around the world&mdash;or turn your own expertise into courses and build your learning community on Obin Academy.</p>
-        <div class="actions">
-          <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Start Learning →</a>
-          <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-gold btn-lg">▶ Become a Creator</a>
-        </div>
-      </div>
-
-      <div class="hero-visual">
-        <div class="hero-photo" data-hero-slides data-interval="5000">
-          <?php foreach ($heroSlides as $i => [$file, $alt]): ?>
-            <img src="<?= e(base_url('assets/img/' . $file)) ?>" alt="<?= e($alt) ?>" class="<?= $i === 0 ? 'active' : '' ?>" <?= $i === 0 ? '' : 'loading="lazy"' ?>>
-          <?php endforeach; ?>
-        </div>
-
-        <div class="hero-card">
-          <span class="hero-card-title"><span class="live-dot"></span>Platform Snapshot</span>
-          <div class="hero-card-stats">
-            <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</div><div class="hc-label">Courses</div></div>
-            <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</div><div class="hc-label">Learners</div></div>
-            <div class="hc-stat"><div class="hc-value" data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</div><div class="hc-label">Creators</div></div>
-          </div>
-          <hr>
-          <?php if ($rating['count'] > 0): ?>
-            <div class="hero-card-rating">
-              <span class="stars"><?= str_repeat('★', (int) round($rating['avg'])) . str_repeat('☆', 5 - (int) round($rating['avg'])) ?></span>
-              <?= number_format($rating['avg'], 1) ?>/5 average rating
-            </div>
-          <?php endif; ?>
-          <?php if ($spotlightQuote): ?>
-            <div class="hero-card-quote">
-              <p>&ldquo;<?= e(mb_strimwidth($spotlightQuote['quote'], 0, 110, '…')) ?>&rdquo;</p>
-              <span class="who"><?= e($spotlightQuote['author_name']) ?></span>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
+<section class="course-hero browse-hero page-hero-light">
+  <div class="container" style="max-width:820px; text-align:center;">
+    <span class="pill">The Knowledge Marketplace For Everyone</span>
+    <h1 style="text-align:center; margin-top:14px;">Discover Courses <span class="lock">or Teach Your Own</span></h1>
+    <p class="summary" style="margin-left:auto; margin-right:auto; text-align:center;">
+      Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
+    </p>
+    <div class="browse-hero-stats">
+      <span><strong><?= (int) $stats['course_count'] ?>+</strong> courses</span>
+      <span class="dot">&middot;</span>
+      <span><strong><?= (int) $stats['learner_count'] ?>+</strong> learners</span>
+      <span class="dot">&middot;</span>
+      <span><strong><?= (int) $stats['creator_count'] ?>+</strong> creators</span>
     </div>
+
+    <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="search-pill browse-search">
+      <?php dash_icon('search'); ?>
+      <input type="text" name="q" placeholder="What do you want to learn today?">
+      <button type="submit" class="btn btn-gold btn-sm">Search</button>
+    </form>
+  </div>
+</section>
+
+<div class="container" style="padding-top:28px;">
+  <div class="chip-row">
+    <a href="<?= e(base_url('courses/index.php')) ?>" class="chip">✨ All</a>
+    <?php foreach ($industries as [$name, $slug, $emoji]): ?>
+      <a href="<?= e(base_url('courses/index.php?category=' . $slug)) ?>" class="chip"><?= $emoji ?> <?= e($name) ?></a>
+    <?php endforeach; ?>
+    <a href="<?= e(base_url('skills.php')) ?>" class="chip">More…</a>
+  </div>
+</div>
+
+<section class="section" style="padding-top:32px;">
+  <div class="container">
+    <div class="row between wrap gap-3" style="align-items:flex-end; margin-bottom: 36px;">
+      <div>
+        <div class="row gap-2 wrap" style="align-items:center;">
+          <span class="eyebrow">Fresh On The Marketplace</span>
+          <?php if ((int) $stats['course_count'] > 0): ?>
+            <span class="live-pill"><span class="live-dot"></span><?= (int) $stats['course_count'] ?> course<?= (int) $stats['course_count'] === 1 ? '' : 's' ?> live now</span>
+          <?php endif; ?>
+        </div>
+        <h2 class="h2" style="margin-top:10px;">Popular Courses</h2>
+      </div>
+      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary">Explore All Courses <span class="btn-arrow">→</span></a>
+    </div>
+
+    <?php if ($courses): ?>
+      <div class="grid sm:grid-2 lg:grid-3">
+        <?php foreach ($courses as $c) render_course_card($c); ?>
+      </div>
+    <?php else: ?>
+      <div class="card" style="padding:48px; text-align:center; border-style:dashed; color:var(--muted);">No courses published yet. Check back soon.</div>
+    <?php endif; ?>
   </div>
 </section>
 
@@ -151,53 +149,6 @@ require __DIR__ . '/includes/header.php';
       <span class="underline"></span>
       <span class="label">Built for East Africa</span>
     </div>
-  </div>
-</section>
-
-<section class="section" style="padding-bottom:56px; border-bottom: 1px solid var(--border);">
-  <div class="container">
-    <div class="text-center" style="max-width:560px; margin:0 auto 36px;">
-      <span class="eyebrow">Skills Across Every Industry</span>
-      <h2 class="h2" style="margin-top:10px;">Find Your Field</h2>
-      <p class="lede" style="margin-top:10px; max-width:none;">A few of the industries growing fastest on Obin Academy right now.</p>
-    </div>
-    <div class="industry-grid">
-      <?php foreach ($industries as $i => [$name, $slug, $emoji]): ?>
-        <a href="<?= e(base_url('courses/index.php?category=' . $slug)) ?>" class="industry-item industry-glow industry-glow-<?= $GLOW_COLORS[$i % count($GLOW_COLORS)] ?>">
-          <span class="icon-wrap"><?= $emoji ?></span>
-          <span class="label"><?= e($name) ?></span>
-        </a>
-      <?php endforeach; ?>
-    </div>
-    <div class="text-center" style="margin-top:28px;">
-      <a href="<?= e(base_url('skills.php')) ?>" class="chip" style="padding:11px 22px; font-size:13px;">View All 26 Skills <span class="btn-arrow">→</span></a>
-    </div>
-  </div>
-</section>
-
-<section class="section" style="background: var(--surface);">
-  <div class="container">
-    <div class="row between wrap gap-3" style="align-items:flex-end; margin-bottom: 36px;">
-      <div>
-        <div class="row gap-2 wrap" style="align-items:center;">
-          <span class="eyebrow">Top Categories</span>
-          <?php if ((int) $stats['course_count'] > 0): ?>
-            <span class="live-pill"><span class="live-dot"></span><?= (int) $stats['course_count'] ?> course<?= (int) $stats['course_count'] === 1 ? '' : 's' ?> live now</span>
-          <?php endif; ?>
-        </div>
-        <h2 class="h2" style="margin-top:10px;">Popular Courses</h2>
-        <p class="lede" style="margin-top:10px;">Explore courses in Finance, AI, Business, Health, Agriculture, Ecommerce, and more — taught by creators with real industry experience.</p>
-      </div>
-      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary">Explore Courses <span class="btn-arrow">→</span></a>
-    </div>
-
-    <?php if ($courses): ?>
-      <div class="grid sm:grid-2 lg:grid-3">
-        <?php foreach ($courses as $c) render_course_card($c); ?>
-      </div>
-    <?php else: ?>
-      <div class="card" style="padding:48px; text-align:center; border-style:dashed; color:var(--muted);">No courses published yet. Check back soon.</div>
-    <?php endif; ?>
   </div>
 </section>
 
