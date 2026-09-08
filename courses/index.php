@@ -45,29 +45,29 @@ if ($activeCategoryName) {
 $noindex = $q !== ''; // search-result pages: let the base browse/category pages get indexed, not every query variation
 require __DIR__ . '/../includes/header.php';
 ?>
-<section class="course-hero browse-hero page-hero-light">
-  <div class="container" style="max-width:820px; text-align:center;">
-    <span class="pill">Browse the Marketplace</span>
-    <h1 style="text-align:center;">Find Your Next Skill</h1>
-    <p class="summary" style="margin-left:auto; margin-right:auto; text-align:center;">
+<section class="home-hero-v3">
+  <div class="container" style="text-align:center;">
+    <h1><?= $activeCategoryName ? e($activeCategoryName) . ' Courses' : 'Find Your Next Skill' ?></h1>
+    <p class="summary" style="margin-left:auto; margin-right:auto;">
       Real, practical courses from real African creators &mdash; taught by people doing the work, paid for instantly with mobile money.
     </p>
-    <div class="browse-hero-stats">
-      <span><strong><?= (int) $stats['course_count'] ?>+</strong> courses</span>
-      <span class="dot">&middot;</span>
-      <span><strong><?= (int) $stats['learner_count'] ?>+</strong> learners</span>
-      <span class="dot">&middot;</span>
-      <span><strong><?= (int) $stats['creator_count'] ?>+</strong> creators</span>
-    </div>
 
-    <form method="get" class="search-pill browse-search">
+    <form method="get" class="hero-search-v3">
       <?php dash_icon('search'); ?>
       <input type="text" name="q" placeholder="What do you want to learn today?" value="<?= e($q) ?>">
       <?php if ($categorySlug): ?><input type="hidden" name="category" value="<?= e($categorySlug) ?>"><?php endif; ?>
       <?php if ($sort !== 'newest'): ?><input type="hidden" name="sort" value="<?= e($sort) ?>"><?php endif; ?>
       <?php if ($price): ?><input type="hidden" name="price" value="<?= e($price) ?>"><?php endif; ?>
-      <button type="submit" class="btn btn-gold btn-sm">Search</button>
+      <button type="submit">Search</button>
     </form>
+
+    <div class="hero-stats-v3">
+      <span><strong data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</strong> courses</span>
+      <span class="dot">&middot;</span>
+      <span><strong data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</strong> learners</span>
+      <span class="dot">&middot;</span>
+      <span><strong data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</strong> creators</span>
+    </div>
   </div>
 </section>
 
