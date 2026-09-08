@@ -35,10 +35,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    $bannerUrl = null;
+    if ($isCreator && !empty($_FILES['schoolBanner']['name'])) {
+        try {
+            $bannerUrl = save_upload($_FILES['schoolBanner'], 'thumbnails');
+        } catch (Throwable $e) {
+            $errors[] = $e->getMessage();
+        }
+    }
+
     if (!$errors) {
-        $sql = 'UPDATE users SET name=?, phone=?, country=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?' . ($avatarUrl ? ', avatar_url=?' : '') . ' WHERE id=?';
+        $sql = 'UPDATE users SET name=?, phone=?, country=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?'
+            . ($avatarUrl ? ', avatar_url=?' : '') . ($bannerUrl ? ', school_banner_url=?' : '') . ' WHERE id=?';
         $params = [$name, $phone ?: null, $country, $headline ?: null, $bio ?: null, $facebookUrl ?: null, $instagramUrl ?: null, $youtubeUrl ?: null, $tiktokUrl ?: null, $linkedinUrl ?: null];
         if ($avatarUrl) $params[] = $avatarUrl;
+        if ($bannerUrl) $params[] = $bannerUrl;
         $params[] = $user['id'];
         db_run($sql, $params);
 
@@ -104,6 +115,17 @@ require __DIR__ . '/../includes/dashboard_header.php';
     <label for="avatar">Profile Photo</label>
     <input id="avatar" name="avatar" type="file" accept="image/*">
   </div>
+
+  <?php if ($isCreator): ?>
+    <div class="field">
+      <label for="schoolBanner">School Banner</label>
+      <p class="help" style="margin-bottom:10px;">A big image shown at the top of your School page and as a preview on the Schools directory — use it to show what you teach.</p>
+      <?php if (!empty($user['school_banner_url'])): ?>
+        <img src="<?= e(asset_src($user['school_banner_url'])) ?>" alt="" style="width:100%; max-width:420px; aspect-ratio:16/6; object-fit:cover; border-radius:var(--radius-lg); margin-bottom:10px; display:block;">
+      <?php endif; ?>
+      <input id="schoolBanner" name="schoolBanner" type="file" accept="image/*">
+    </div>
+  <?php endif; ?>
 
   <button type="submit" class="btn btn-primary">Save Changes</button>
 </form>

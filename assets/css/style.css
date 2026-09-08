@@ -1613,6 +1613,12 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 .profile-tag-group { margin-top: 16px; }
 .profile-tag-group h4 { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); margin-bottom: 8px; }
+
+/* ---------- School page banner ---------- */
+.school-banner { width: 100%; height: clamp(140px, 26vw, 260px); border-radius: var(--radius-lg) var(--radius-lg) 0 0; overflow: hidden; }
+.school-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.school-hero .profile-hero.has-banner { border-top-left-radius: 0; border-top-right-radius: 0; }
+.school-hero .profile-hero.has-banner .profile-avatar { margin-top: -52px; border: 4px solid #fff; box-shadow: 0 6px 16px -6px rgba(20,24,27,0.3); }
 .profile-chip { display: inline-flex; align-items: center; border: 1px solid var(--border); color: var(--ink); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: var(--radius-full); }
 .profile-chip.looking-for { border-color: rgba(37,99,235,0.3); color: var(--brand-800); background: rgba(37,99,235,0.06); }
 
