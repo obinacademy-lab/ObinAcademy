@@ -50,11 +50,7 @@ require __DIR__ . '/includes/header.php';
               </div>
               <p class="quote"><?= e($t['quote']) ?></p>
               <div class="author">
-                <div class="avatar">
-                  <?php if (!empty($t['author_avatar_url'])): ?>
-                    <img src="<?= e(asset_src($t['author_avatar_url'])) ?>" alt="">
-                  <?php else: ?><?= e(mb_substr($t['author_name'], 0, 1)) ?><?php endif; ?>
-                </div>
+                <div class="avatar"><?= e(mb_substr($t['author_name'], 0, 1)) ?></div>
                 <div>
                   <div class="name"><?= e($t['author_name']) ?></div>
                   <?php if (!empty($t['author_headline'])): ?><div class="role"><?= e($t['author_headline']) ?></div><?php endif; ?>
