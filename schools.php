@@ -2,7 +2,7 @@
 require __DIR__ . '/includes/bootstrap.php';
 
 $schools = db_all(
-    "SELECT u.id, u.name, u.slug, u.avatar_url, u.school_banner_url, u.headline,
+    "SELECT u.id, u.name, u.slug, u.avatar_url, u.headline,
             COUNT(DISTINCT c.id) AS course_count,
             COUNT(e.id) AS student_count
      FROM users u
@@ -40,7 +40,7 @@ require __DIR__ . '/includes/header.php';
     <div class="grid sm:grid-2 lg:grid-3" style="row-gap:48px;">
       <?php foreach ($schools as $s): $slug = $s['slug'] ?: ensure_creator_slug((int) $s['id']); ?>
         <a href="<?= e(base_url('school.php?slug=' . $slug)) ?>" class="creator-card">
-          <div class="banner" <?php if ($s['school_banner_url']): ?>style="background-image:url('<?= e(asset_src($s['school_banner_url'])) ?>'); background-size:cover; background-position:center;"<?php endif; ?>></div>
+          <div class="banner"></div>
           <div class="avatar">
             <?php if ($s['avatar_url']): ?><img src="<?= e(asset_src($s['avatar_url'])) ?>" alt="">
             <?php else: ?><?= e(mb_substr($s['name'], 0, 1)) ?><?php endif; ?>

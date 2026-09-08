@@ -32,13 +32,7 @@ $pageDescription = $creator['headline'] ?: ($creator['bio'] ? mb_strimwidth($cre
 require __DIR__ . '/includes/header.php';
 ?>
 <div class="container" style="max-width:1100px; padding-top:32px; padding-bottom:72px;">
-  <div class="school-hero">
-    <?php if ($creator['school_banner_url']): ?>
-      <div class="school-banner">
-        <img src="<?= e(asset_src($creator['school_banner_url'])) ?>" alt="">
-      </div>
-    <?php endif; ?>
-    <div class="card card-pad profile-hero<?= $creator['school_banner_url'] ? ' has-banner' : '' ?>">
+  <div class="card card-pad profile-hero">
     <div class="profile-avatar">
       <?php if ($creator['avatar_url']): ?><img src="<?= e(asset_src($creator['avatar_url'])) ?>" alt="">
       <?php else: ?><?= e(mb_substr($creator['name'], 0, 1)) ?><?php endif; ?>
@@ -60,7 +54,6 @@ require __DIR__ . '/includes/header.php';
     <div class="profile-stats-row" style="width:100%;">
       <div class="stat"><span class="value"><?= number_format($courseCount) ?></span><span class="label">Course<?= $courseCount === 1 ? '' : 's' ?></span></div>
       <div class="stat"><span class="value"><?= number_format($studentCount) ?></span><span class="label">Student<?= $studentCount === 1 ? '' : 's' ?></span></div>
-    </div>
     </div>
   </div>
 

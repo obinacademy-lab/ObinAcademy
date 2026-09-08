@@ -18,7 +18,6 @@ CREATE TABLE users (
   headline VARCHAR(191) NULL,
   bio TEXT NULL,
   avatar_url VARCHAR(500) NULL,
-  school_banner_url VARCHAR(500) NULL,
   facebook_url VARCHAR(500) NULL,
   instagram_url VARCHAR(500) NULL,
   youtube_url VARCHAR(500) NULL,
