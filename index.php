@@ -129,32 +129,4 @@ require __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<section class="trust-bar">
-  <div class="container trust-bar-inner">
-    <div class="trust-item" style="--tint:#10b981;">
-      <span class="icon-badge-pair">
-        <span class="icon-badge icon-badge-photo"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN Mobile Money" loading="lazy"></span>
-        <span class="icon-badge icon-badge-photo"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel Money" loading="lazy"></span>
-      </span>
-      <span class="underline"></span>
-      <span class="label">Secure Mobile Money Payments</span>
-    </div>
-    <div class="trust-item" style="--tint:#f5b301;">
-      <span class="icon-badge icon-badge-photo"><img src="<?= e(versioned_asset('assets/img/trust-certificate.jpg')) ?>" alt="Certificate of completion" loading="lazy"></span>
-      <span class="underline"></span>
-      <span class="label">Certificate of Completion</span>
-    </div>
-    <div class="trust-item" style="--tint:#f97316;">
-      <span class="icon-badge icon-badge-photo"><img src="<?= e(versioned_asset('assets/img/trust-secure-payment.jpg')) ?>" alt="Secure instant payment" loading="lazy"></span>
-      <span class="underline"></span>
-      <span class="label">Instant Access After Payment</span>
-    </div>
-    <div class="trust-item" style="--tint:#3b82f6;">
-      <span class="icon-badge icon-badge-photo"><img src="<?= e(versioned_asset('assets/img/trust-uganda-flag.svg')) ?>" alt="Uganda flag" loading="lazy"></span>
-      <span class="underline"></span>
-      <span class="label">Built for East Africa</span>
-    </div>
-  </div>
-</section>
-
 <?php require __DIR__ . '/includes/footer.php'; ?>
