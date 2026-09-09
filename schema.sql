@@ -103,6 +103,9 @@ CREATE TABLE lessons (
 CREATE TABLE enrollments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   progress DECIMAL(5,2) NOT NULL DEFAULT 0,
+  -- Stamped on enrollment and bumped on every update_lesson_progress() call —
+  -- the signal the learner-retention cron sweep uses to detect inactivity.
+  last_activity_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   enrolled_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME NULL,
   is_premium TINYINT(1) NOT NULL DEFAULT 0,
@@ -114,7 +117,30 @@ CREATE TABLE enrollments (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_user_course (user_id, course_id),
-  UNIQUE KEY uniq_access_token_hash (access_token_hash)
+  UNIQUE KEY uniq_access_token_hash (access_token_hash),
+  INDEX idx_enrollments_activity (user_id, last_activity_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- One row per retention nudge actually sent, so the cron sweep never repeats
+-- the same stage twice for one inactivity episode, and picks a template the
+-- learner hasn't seen the last time this stage fired for them. sent_at is
+-- compared against the enrollment's CURRENT last_activity_at at query time —
+-- once a learner returns and last_activity_at moves forward, every past row
+-- here reads as "before their last activity" again, so the stage becomes
+-- eligible again next time they go quiet. That's the whole reset mechanism;
+-- there's no separate "reset timer" step.
+CREATE TABLE retention_notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  stage VARCHAR(10) NOT NULL,
+  template_key VARCHAR(30) NOT NULL,
+  sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  user_id INT NOT NULL,
+  enrollment_id INT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (enrollment_id) REFERENCES enrollments(id) ON DELETE CASCADE,
+  INDEX idx_retention_enrollment_stage (enrollment_id, stage),
+  INDEX idx_retention_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

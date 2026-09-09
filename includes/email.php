@@ -371,6 +371,28 @@ function send_lead_day7_email(string $to, string $name, array $onSaleCourses, st
         HTML);
 }
 
+/**
+ * A short re-engagement nudge for a learner inactive 5h+ — the emoji/headline/
+ * body/cta come from retention.php's template pool, already personalized
+ * with the learner's course, progress, and next lesson where known. Kept
+ * visually spare (no receipt-style table, no course list) since the whole
+ * point is a quick "come back" prompt, not another thing to read.
+ */
+function send_retention_nudge_email(string $to, string $subject, string $emoji, string $headline, string $body, string $ctaLabel, string $ctaUrl): void {
+    resend_send($to, $subject, <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
+          <div style="font-size: 34px;">{$emoji}</div>
+          <h2 style="color: #1e3a8a; margin-top: 8px;">{$headline}</h2>
+          <p style="color: #14181b; font-size: 15px; line-height: 1.6;">{$body}</p>
+          <p style="margin-top: 22px;">
+            <a href="{$ctaUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              {$ctaLabel}
+            </a>
+          </p>
+        </div>
+        HTML);
+}
+
 function send_creator_application_approved_email(string $to, string $name): void {
     $loginUrl = base_url('login.php?redirect=' . urlencode('/dashboard/creator/index.php'));
     resend_send($to, "You're Approved as an Obin Academy Creator!", <<<HTML

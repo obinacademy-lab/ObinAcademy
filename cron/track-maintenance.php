@@ -17,6 +17,7 @@ if (PHP_SAPI !== 'cli') {
 require __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/leads.php';
 require_once __DIR__ . '/../includes/notifications.php';
+require_once __DIR__ . '/../includes/retention.php';
 
 $processed = geo_backfill_sweep(40);
 echo "[" . date('Y-m-d H:i:s') . "] geo_backfill_sweep: {$processed} session(s) processed\n";
@@ -29,3 +30,6 @@ echo "[" . date('Y-m-d H:i:s') . "] lead sequence: day3={$sequenceCounts['day3']
 
 $notifCounts = sweep_visitor_notifications();
 echo "[" . date('Y-m-d H:i:s') . "] notification sweep: pricing_revisit={$notifCounts['pricing_revisit']} stale_returning_visitor={$notifCounts['stale_returning_visitor']}\n";
+
+$retentionCounts = send_due_retention_notifications();
+echo "[" . date('Y-m-d H:i:s') . "] learner retention: 5h={$retentionCounts['5h']} 24h={$retentionCounts['24h']} 72h={$retentionCounts['72h']}\n";
