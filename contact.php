@@ -1,6 +1,5 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/email.php';
 
 /** Inline stroke-icon set (Lucide-style: 24x24, stroke-width 2, round caps) — matches the icons already used in header.php/footer.php. */
 function ci(string $name, string $class = ''): string {

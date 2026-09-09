@@ -4,7 +4,6 @@
 // configured) and also emails a durable access link for later.
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/enrollment.php';
-require __DIR__ . '/../includes/email.php';
 require __DIR__ . '/../includes/data.php';
 
 csrf_verify();

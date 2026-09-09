@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/audit.php';
-require __DIR__ . '/../../includes/email.php';
 $user = require_role(['ADMIN']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

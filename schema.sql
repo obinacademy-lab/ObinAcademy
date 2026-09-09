@@ -190,16 +190,22 @@ CREATE TABLE earnings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
+-- payee_type says which of creator_id/affiliate_id is the one that's set —
+-- app logic (not a DB constraint) always sets exactly one, same convention
+-- as enrollments' user_id-vs-guest_email split elsewhere in this schema.
 CREATE TABLE withdrawal_requests (
   id INT AUTO_INCREMENT PRIMARY KEY,
   amount DECIMAL(12,2) NOT NULL,
   phone VARCHAR(32) NOT NULL DEFAULT '',
+  payee_type ENUM('CREATOR','AFFILIATE') NOT NULL DEFAULT 'CREATOR',
   status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
   note VARCHAR(500) NULL,
   requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   resolved_at DATETIME NULL,
-  creator_id INT NOT NULL,
-  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+  creator_id INT NULL,
+  affiliate_id INT NULL,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/email.php';
 
 const RESET_TOKEN_TTL_SECONDS = 3600;
 
