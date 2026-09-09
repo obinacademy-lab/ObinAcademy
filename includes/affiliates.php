@@ -11,12 +11,30 @@ const AFFILIATE_COOKIE = 'oa_aff';
  * "link ready immediately" requirement. Nothing here touches users.role.
  */
 
+/**
+ * Both lookups here are called unconditionally on effectively every page
+ * (get_affiliate_by_ref_code() from header.php's attribution-cookie check,
+ * get_affiliate_by_user_id() from dashboard_header.php's nav) — so if the
+ * `affiliates` table doesn't exist yet (deploy landed before its migration
+ * ran), a PDOException here must not become a site-wide 500. Degrading to
+ * "no affiliate" is always a safe fallback for a read like this.
+ */
 function get_affiliate_by_user_id(int $userId): ?array {
-    return db_one('SELECT * FROM affiliates WHERE user_id = ?', [$userId]);
+    try {
+        return db_one('SELECT * FROM affiliates WHERE user_id = ?', [$userId]);
+    } catch (PDOException $e) {
+        error_log('[affiliates] get_affiliate_by_user_id failed: ' . $e->getMessage());
+        return null;
+    }
 }
 
 function get_affiliate_by_ref_code(string $refCode): ?array {
-    return db_one("SELECT * FROM affiliates WHERE ref_code = ? AND status = 'ACTIVE'", [$refCode]);
+    try {
+        return db_one("SELECT * FROM affiliates WHERE ref_code = ? AND status = 'ACTIVE'", [$refCode]);
+    } catch (PDOException $e) {
+        error_log('[affiliates] get_affiliate_by_ref_code failed: ' . $e->getMessage());
+        return null;
+    }
 }
 
 /** Like require_role(), but for affiliate status rather than users.role — redirects to the application page if the learner isn't an approved, active affiliate. */
