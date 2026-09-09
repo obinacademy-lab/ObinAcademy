@@ -178,6 +178,34 @@ function get_daily_collections_series(int $days = 30): array {
 }
 
 /**
+ * Same shape as get_daily_collections_series(), scoped to one creator's own
+ * net earnings (after the platform's 10% fee) — the series behind the
+ * creator dashboard's own revenue growth chart, so a creator sees what they
+ * actually earned each day/date, not the platform-wide gross.
+ */
+function get_creator_daily_earnings_series(int $creatorId, int $days = 30): array {
+    $rows = db_all(
+        "SELECT DATE(created_at) AS d, SUM(amount) AS collected
+         FROM earnings
+         WHERE creator_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+         GROUP BY DATE(created_at)",
+        [$creatorId, $days - 1]
+    );
+    $byDate = [];
+    foreach ($rows as $r) $byDate[$r['d']] = (float) $r['collected'];
+
+    $series = [];
+    $cumulative = 0.0;
+    for ($i = $days - 1; $i >= 0; $i--) {
+        $date = date('Y-m-d', strtotime("-$i days"));
+        $collected = $byDate[$date] ?? 0.0;
+        $cumulative += $collected;
+        $series[] = ['date' => $date, 'collected' => $collected, 'cumulative' => $cumulative];
+    }
+    return $series;
+}
+
+/**
  * Totals + individual sales for one calendar day — what the admin "Revenue"
  * tab shows when looking up a specific date's collections.
  */

@@ -252,6 +252,18 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .chart-point:hover { r: 6.5; }
 @media (prefers-reduced-motion: reduce) { .chart-line-blue { animation: none; stroke-dashoffset: 0; } }
 
+/* ---------- green variant (creator revenue growth chart) — fixed green
+   regardless of dashboard theme (creator's is purple), since the color
+   here means "money earned," not "this page's accent." Reuses --dash-good
+   rather than a hardcoded literal, since that token is already green in
+   every dashboard theme. ---------- */
+.chart-line-green { stroke: var(--dash-good); stroke-width: 2.5; filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--dash-good) 40%, transparent)); }
+.chart-area-green { fill: url(#creatorRevFill); }
+.chart-point-green { fill: var(--dash-good); stroke: var(--dash-panel); stroke-width: 2; cursor: pointer; r: 4; transition: r 0.15s ease; }
+.chart-point-green:hover { r: 6.5; }
+.chart-end-dot-green { fill: var(--dash-good); stroke: var(--dash-panel); stroke-width: 2.5; }
+@media (prefers-reduced-motion: reduce) { .chart-line-green { animation: none; stroke-dashoffset: 0; } }
+
 /* ---------- day lookup (admin Revenue tab) ---------- */
 .day-lookup-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .day-lookup-form .field { margin-bottom: 0; }
@@ -403,20 +415,27 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 }
 
 .dash.dash-creator {
-  --dash-bg: #0b1230;
-  --dash-panel: #121b42;
-  --dash-panel-2: #182453;
-  --dash-border: rgba(147,181,255,0.14);
-  --dash-border-soft: rgba(147,181,255,0.07);
-  --dash-tint: rgba(59,130,246,0.16);
+  --dash-bg: #130b28;
+  --dash-panel: #1c1240;
+  --dash-panel-2: #251854;
+  --dash-border: rgba(196,163,255,0.15);
+  --dash-border-soft: rgba(196,163,255,0.07);
+  --dash-tint: rgba(139,92,246,0.18);
   --dash-good: #34d399; --dash-good-bg: rgba(52,211,153,0.12);
   --dash-warn: #fbbf24; --dash-warn-bg: rgba(251,191,36,0.12);
   --dash-bad: #f87171; --dash-bad-bg: rgba(248,113,113,0.12);
-  --dash-shadow: 0 1px 2px rgba(4,8,24,0.4), 0 16px 40px -20px rgba(4,8,24,0.7);
-  --dash-accent-text: #9dc0ff;
+  --dash-shadow: 0 1px 2px rgba(10,4,24,0.4), 0 16px 40px -20px rgba(10,4,24,0.7);
+  --dash-accent-text: #c4b5fd;
 
-  --ink: #f3f5fc;
-  --muted: #8d96c2;
+  /* Retints every var(--accent)-driven element inside the creator shell
+     (primary buttons, the sidebar logo mark, stat-card icons, focus rings,
+     table row hovers) to purple, without touching --accent site-wide —
+     custom properties cascade, so this scoped redefinition is enough. */
+  --accent: #8b5cf6;
+  --accent-dark: #7c3aed;
+
+  --ink: #f5f3ff;
+  --muted: #9c90c2;
   color: var(--ink);
 }
 

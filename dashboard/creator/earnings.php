@@ -1,11 +1,42 @@
 <?php
 require __DIR__ . '/../../includes/bootstrap.php';
+require __DIR__ . '/../../includes/data.php';
 $user = require_role(['CREATOR', 'ADMIN']);
 
 $totalEarnings = (float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM earnings WHERE creator_id = ?', [$user['id']])['n'] ?? 0);
 $pendingWithdrawals = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE creator_id = ? AND status = 'PENDING'", [$user['id']])['n'] ?? 0);
 $approvedWithdrawals = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE creator_id = ? AND status = 'APPROVED'", [$user['id']])['n'] ?? 0);
 $available = $totalEarnings - $pendingWithdrawals - $approvedWithdrawals;
+
+// ---------------------------------------------------------------------
+// Daily revenue growth chart — this creator's own net earnings (after the
+// 10% platform fee) per calendar day, so every point answers "how much did
+// I earn on this date" directly, same convention as the admin collections
+// chart it's modeled on.
+// ---------------------------------------------------------------------
+$revenueSeries = get_creator_daily_earnings_series((int) $user['id'], 30);
+$dailyRevenue = array_column($revenueSeries, 'collected');
+$monthRevenue = array_sum($dailyRevenue);
+$bestRevenueDay = $dailyRevenue ? max($dailyRevenue) : 0.0;
+$dailyRevenueAvg = $revenueSeries ? $monthRevenue / count($revenueSeries) : 0.0;
+
+$revLast7 = array_sum(array_slice($dailyRevenue, -7));
+$revPrev7 = array_sum(array_slice($dailyRevenue, -14, 7));
+$revTrendPct = $revPrev7 > 0 ? round((($revLast7 - $revPrev7) / $revPrev7) * 100) : null;
+
+$revChartW = 700; $revChartH = 220; $revPadTop = 16; $revPadBottom = 4;
+$revN = count($revenueSeries);
+$revYMax = ($bestRevenueDay ?: 1) * 1.15;
+$revXStep = $revN > 1 ? $revChartW / ($revN - 1) : 0;
+$revPoints = [];
+foreach ($revenueSeries as $i => $row) {
+    $x = $i * $revXStep;
+    $y = $revPadTop + ($revChartH - $revPadTop - $revPadBottom) * (1 - $row['collected'] / $revYMax);
+    $revPoints[] = [$x, $y];
+}
+$revLinePath = smooth_svg_path($revPoints);
+$revAreaPath = $revPoints ? $revLinePath . sprintf(' L%.2f,%d L0,%d Z', end($revPoints)[0], $revChartH, $revChartH) : '';
+$revLabelIdxs = $revN > 1 ? [0, (int) round(($revN - 1) * 0.2), (int) round(($revN - 1) * 0.4), (int) round(($revN - 1) * 0.6), (int) round(($revN - 1) * 0.8), $revN - 1] : [0];
 
 $recentEarnings = db_all('
     SELECT e.*, c.title FROM earnings e JOIN courses c ON c.id = e.course_id
@@ -47,6 +78,56 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <?php if ($errors): ?><div class="alert alert-error" style="margin-top:20px;"><?= e(implode(' ', $errors)) ?></div><?php endif; ?>
+
+<h3 class="dash-section-label" style="margin-top:32px;">Revenue Growth</h3>
+<div class="chart-card" style="margin-top:14px;">
+  <div class="chart-card-head">
+    <div>
+      <h2 class="h3">Your Daily Revenue</h2>
+      <p class="muted small" style="margin-top:4px;">What you earned each day (after the platform's 10% fee) &middot; last 30 days</p>
+    </div>
+    <?php if ($revTrendPct !== null): ?>
+      <div class="chart-trend <?= $revTrendPct >= 0 ? 'up' : 'down' ?>">
+        <?php dash_icon('trending-up'); ?><?= $revTrendPct >= 0 ? '+' : '' ?><?= $revTrendPct ?>% vs last week
+      </div>
+    <?php endif; ?>
+  </div>
+
+  <div class="chart-stats-row">
+    <div><span class="value"><?= e(format_money($monthRevenue)) ?></span><span class="label">Total (30d)</span></div>
+    <div><span class="value"><?= e(format_money($dailyRevenueAvg)) ?></span><span class="label">Daily Average</span></div>
+    <div><span class="value"><?= e(format_money($bestRevenueDay)) ?></span><span class="label">Best Day</span></div>
+  </div>
+
+  <div class="chart-wrap">
+    <svg viewBox="0 0 <?= $revChartW ?> <?= $revChartH ?>" preserveAspectRatio="none" class="revenue-chart">
+      <defs>
+        <linearGradient id="creatorRevFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--dash-good)" stop-opacity="0.24"/>
+          <stop offset="100%" stop-color="var(--dash-good)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <?php for ($g = 1; $g <= 3; $g++): $gy = $revPadTop + ($revChartH - $revPadTop - $revPadBottom) * ($g / 4); ?>
+        <line x1="0" y1="<?= round($gy, 1) ?>" x2="<?= $revChartW ?>" y2="<?= round($gy, 1) ?>" class="chart-gridline"></line>
+      <?php endfor; ?>
+      <path d="<?= e($revAreaPath) ?>" class="chart-area-green"></path>
+      <path d="<?= e($revLinePath) ?>" class="chart-line chart-line-green"></path>
+      <?php foreach ($revPoints as $i => [$px, $py]): ?>
+        <circle cx="<?= round($px, 1) ?>" cy="<?= round($py, 1) ?>" class="chart-point-green" tabindex="0"
+          data-chart-label="<?= e(format_date($revenueSeries[$i]['date'] . ' 00:00:00')) ?>"
+          data-chart-value="<?= e(format_money($revenueSeries[$i]['collected'])) ?>"></circle>
+      <?php endforeach; ?>
+      <?php if ($revPoints): [$rlx, $rly] = end($revPoints); ?>
+        <circle cx="<?= round($rlx, 1) ?>" cy="<?= round($rly, 1) ?>" r="5" class="chart-end-dot-green" style="pointer-events:none;"></circle>
+      <?php endif; ?>
+    </svg>
+    <div class="chart-x-labels">
+      <?php foreach ($revLabelIdxs as $idx): ?>
+        <span><?= e(date('M j', strtotime($revenueSeries[$idx]['date']))) ?></span>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</div>
 
 <div class="card card-pad" style="margin-top:24px; max-width:420px;">
   <h3 style="font-size:15px; font-weight:700;">Request a Withdrawal</h3>
