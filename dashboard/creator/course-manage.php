@@ -178,7 +178,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
   <div class="row gap-2 wrap">
     <?php if ($course['status'] === 'PUBLISHED'): ?>
-      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light'); ?>
+      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light', (int) $course['id']); ?>
     <?php endif; ?>
     <?php if (in_array($course['status'], ['DRAFT', 'REJECTED'], true)): ?>
       <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="submit_for_review"><button class="btn btn-primary btn-sm">Submit for Review</button></form>

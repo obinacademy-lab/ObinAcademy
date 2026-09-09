@@ -29,6 +29,19 @@ if ($course['status'] === 'PUBLISHED' && !$isOwner && !$isAdmin) {
     $course['view_count']++;
 }
 
+// If this visit arrived via a tracked share link (?ref=<token>), attribute
+// it back to that exact share so the admin "Course Shares" page can tell a
+// direct single-recipient share from one that's been passed around further.
+// Silently does nothing for a bad/missing/foreign token — never breaks the
+// page over what's purely an analytics side-effect.
+$refToken = query_param('ref');
+if ($refToken && preg_match('/^[a-f0-9]{12}$/', $refToken)) {
+    $share = db_one('SELECT id FROM course_shares WHERE share_token = ? AND course_id = ?', [$refToken, $course['id']]);
+    if ($share) {
+        db_run('INSERT INTO course_share_visits (share_id, visitor_id) VALUES (?, ?)', [$share['id'], ensure_visitor_id()]);
+    }
+}
+
 $isEnrolled = $user
     ? (bool) db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : (bool) guest_enrollment_for_course((int) $course['id']);
@@ -158,7 +171,7 @@ require __DIR__ . '/../includes/header.php';
             <div class="headline"><?= e($course['creator_headline'] ?: 'Instructor') ?></div>
           </div>
         </a>
-        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title']); ?>
+        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'dark', (int) $course['id']); ?>
       </div>
     </div>
   </div>
