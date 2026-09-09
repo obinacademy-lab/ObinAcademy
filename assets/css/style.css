@@ -827,6 +827,15 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .search-pill input { border: none; padding: 12px 0; background: transparent; }
 .search-pill input:focus { outline: none; box-shadow: none; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Homepage-only: a quick-jump strip, not the full filter bar (that's
+   courses/index.php, which keeps wrapping so every filter stays visible) —
+   one scrollable line keeps the homepage from feeling congested under it. */
+.chip-row-scroll {
+  flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;
+}
+.chip-row-scroll::-webkit-scrollbar { display: none; }
+.chip-row-scroll .chip { flex-shrink: 0; }
 .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); color: var(--muted); font-size: 12.5px; font-weight: 700; padding: 8px 16px; border-radius: var(--radius-full); text-decoration: none; transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease; }
 .chip:hover { border-color: var(--brand-800); color: var(--brand-800); }
 .chip.active { background: var(--brand-800); border-color: var(--brand-800); color: #fff; }

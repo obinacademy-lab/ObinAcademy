@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/data.php';
-require __DIR__ . '/includes/course_card.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/data.php';
+require __DIR__ . '/../includes/course_card.php';
 
 $stats = get_platform_stats();
 
@@ -46,7 +46,7 @@ $structuredData = [
         ],
     ],
 ];
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <section class="home-hero-v3">
@@ -74,7 +74,7 @@ require __DIR__ . '/includes/header.php';
 </section>
 
 <div class="container" style="padding-top:28px;">
-  <div class="chip-row">
+  <div class="chip-row chip-row-scroll">
     <a href="<?= e(base_url('courses/index.php')) ?>" class="chip">✨ All</a>
     <a href="<?= e(base_url('courses/index.php?sort=popular')) ?>" class="chip">🔥 Trending</a>
     <a href="<?= e(base_url('courses/index.php?price=free')) ?>" class="chip">🆓 Free</a>
@@ -129,4 +129,4 @@ require __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
