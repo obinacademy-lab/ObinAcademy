@@ -218,6 +218,38 @@ CREATE TABLE login_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
+-- One row per share-button click (not per page view — only actual shares).
+-- share_token is embedded in the URL that channel actually sends out, so a
+-- visit back on courses/view.php?...&ref=<token> can be attributed to this
+-- exact share. sharer_id is null for a guest/logged-out sharer.
+CREATE TABLE course_shares (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  channel VARCHAR(20) NOT NULL,
+  share_token VARCHAR(16) NOT NULL UNIQUE,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  course_id INT NOT NULL,
+  sharer_id INT NULL,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (sharer_id) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_course_shares_course (course_id),
+  INDEX idx_course_shares_token (share_token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- One row per visit that arrives carrying a share_token — how a single share
+-- link's reach is measured. A share visited by only one distinct visitor_id
+-- reads as a direct, single-recipient share; the same token visited by many
+-- distinct visitor_ids is evidence the link left that one recipient's hands
+-- and got passed around further (or posted somewhere public).
+CREATE TABLE course_share_visits (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  visitor_id VARCHAR(32) NULL,
+  visited_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  share_id INT NOT NULL,
+  FOREIGN KEY (share_id) REFERENCES course_shares(id) ON DELETE CASCADE,
+  INDEX idx_csv_share (share_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
 CREATE TABLE testimonials (
   id INT AUTO_INCREMENT PRIMARY KEY,
   quote TEXT NOT NULL,

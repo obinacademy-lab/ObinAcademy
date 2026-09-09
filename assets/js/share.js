@@ -73,6 +73,28 @@
     menu.style.top = `${top}px`;
   }
 
+  // Fire-and-forget: tells the admin "Course Shares" page a share actually
+  // happened (as opposed to just opening the menu). sendBeacon is built for
+  // exactly this — it doesn't block or delay the actual share/copy action,
+  // and still delivers even as the page navigates away (e.g. WhatsApp/
+  // Facebook opening in a new tab). Silently does nothing if the row has no
+  // course id or token — happens when render_share_button() was called
+  // without a course id, i.e. tracking wasn't wired up for that caller.
+  function logShareClick(row) {
+    const wrap = row.closest("[data-share-wrap]");
+    const courseId = wrap ? parseInt(wrap.dataset.shareCourseId, 10) : 0;
+    const token = row.dataset.shareToken;
+    const channel = row.dataset.shareChannel;
+    if (!courseId || !token || !channel) return;
+    const payload = JSON.stringify({ course_id: courseId, channel, token });
+    const url = (window.OBIN_BASE_URL || "") + "/api/log-share.php";
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([payload], { type: "application/json" }));
+    } else {
+      fetch(url, { method: "POST", body: payload, keepalive: true });
+    }
+  }
+
   document.addEventListener("click", async (e) => {
     const toggle = e.target.closest("[data-share-toggle]");
     if (toggle) {
@@ -87,8 +109,12 @@
       return;
     }
 
+    const shareLink = e.target.closest(".share-row[data-share-token]");
+    if (shareLink && shareLink.tagName === "A") logShareClick(shareLink);
+
     const copyBtn = e.target.closest("[data-share-copy]");
     if (copyBtn) {
+      logShareClick(copyBtn);
       const url = copyBtn.dataset.shareCopy;
       const hint = copyBtn.dataset.shareHint || "Link copied.";
       const ok = await copyText(url);
