@@ -397,6 +397,33 @@ function send_retention_nudge_email(string $to, string $subject, string $emoji, 
         HTML);
 }
 
+/** Sent the moment an affiliate application is approved — the affiliate link already exists by the time this lands, since approve_affiliate_application() creates it in the same transaction. */
+function send_affiliate_application_approved_email(string $to, string $name, string $refCode): void {
+    $dashboardUrl = base_url('login.php?redirect=' . urlencode('/dashboard/affiliate.php'));
+    $shareUrl = base_url('') . '?aff=' . $refCode;
+    resend_send($to, "You're Approved as an Obin Academy Affiliate Partner!", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">Congratulations, {$name}!</h2>
+          <p>
+            Your application to become an affiliate partner on Obin Academy has been approved.
+            Your affiliate link is ready right now — share it anywhere, and you'll earn 2%
+            commission whenever someone buys any course, from any creator, through it.
+          </p>
+          <p style="text-align: center; background: #f7f6f2; border-radius: 12px; padding: 14px; font-weight: 700; word-break: break-all; margin: 20px 0;">
+            {$shareUrl}
+          </p>
+          <p>
+            <a href="{$dashboardUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              Sign In &amp; View Your Affiliate Dashboard
+            </a>
+          </p>
+          <p style="margin-top: 24px;">
+            We're excited to grow together. Welcome aboard!
+          </p>
+        </div>
+        HTML);
+}
+
 function send_creator_application_approved_email(string $to, string $name): void {
     $loginUrl = base_url('login.php?redirect=' . urlencode('/dashboard/creator/index.php'));
     resend_send($to, "You're Approved as an Obin Academy Creator!", <<<HTML

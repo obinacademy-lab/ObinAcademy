@@ -290,6 +290,11 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <span class="qa-text">Become a Creator</span>
     <?php dash_icon('arrow-right', 'qa-arrow'); ?>
   </a>
+  <a href="<?= e(base_url('become-affiliate.php')) ?>" class="quick-action">
+    <span class="qa-icon" style="--tint:#8b5cf6;"><?php dash_icon('tag'); ?></span>
+    <span class="qa-text">Become an Affiliate</span>
+    <?php dash_icon('arrow-right', 'qa-arrow'); ?>
+  </a>
 </div>
 
 <div class="dash-motivation">

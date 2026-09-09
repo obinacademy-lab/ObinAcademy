@@ -10,6 +10,7 @@
  */
 $user = current_user();
 $currentPath = current_path();
+ensure_affiliate_attribution_cookie();
 
 $seoTitle = $pageTitle ?? 'Obin Academy — Learn New Skills, Teach What You Know';
 $seoDescription = $pageDescription ?? 'Obin Academy is East Africa\'s learning marketplace — practical courses in finance, tech, business and more, taught by real creators and paid for instantly with MTN or Airtel Mobile Money.';

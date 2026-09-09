@@ -164,8 +164,14 @@ CREATE TABLE payments (
   guest_email VARCHAR(191) NULL,
   access_token_hash VARCHAR(64) NULL,
   course_id INT NOT NULL,
+  -- Captured at initiate_payment() time from the oa_aff attribution cookie
+  -- (see includes/affiliates.php), not re-resolved later — so a payment
+  -- keeps the affiliate who was actually credited at checkout even if that
+  -- affiliate's status changes afterward.
+  affiliate_id INT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE SET NULL,
   INDEX idx_payments_user_course_status (user_id, course_id, status),
   UNIQUE KEY uniq_access_token_hash (access_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -194,6 +200,52 @@ CREATE TABLE withdrawal_requests (
   resolved_at DATETIME NULL,
   creator_id INT NOT NULL,
   FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Affiliate program. Affiliate status is independent of role — a LEARNER
+-- (or any user) applies here, an admin approves/rejects the same way
+-- creator_applications works, and approval creates one row in `affiliates`
+-- immediately (with its ref_code) rather than changing the user's role.
+CREATE TABLE affiliate_applications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL UNIQUE,
+  status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+  motivation TEXT NOT NULL,
+  rejection_reason TEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reviewed_at DATETIME NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ref_code is the one stable link every affiliate shares platform-wide
+-- (?aff=<ref_code> on any page, not tied to one course — see
+-- includes/affiliates.php's attribution cookie) — generated the moment an
+-- application is approved, per the program's "link ready immediately" rule.
+CREATE TABLE affiliates (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ref_code VARCHAR(20) NOT NULL UNIQUE,
+  status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE',
+  approved_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  user_id INT NOT NULL UNIQUE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- One row per affiliate-attributed sale's 2% cut — mirrors `earnings`
+-- (the creator-side equivalent) but for the affiliate side of the same
+-- payment. UNIQUE on payment_id guards against ever double-crediting one
+-- payment if resolve_payment_with_iotec() is somehow invoked twice for it.
+CREATE TABLE affiliate_earnings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  amount DECIMAL(12,2) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  affiliate_id INT NOT NULL,
+  course_id INT NOT NULL,
+  payment_id INT NOT NULL,
+  FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_affiliate_payment (payment_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

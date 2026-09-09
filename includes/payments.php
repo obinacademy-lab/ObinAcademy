@@ -82,7 +82,7 @@ function resolve_payment_with_iotec(array $payment): array {
             // The actual amount charged — reflects any sale price active at
             // checkout, and stays correct even if the course's list price
             // changed while this payment was pending (course_price would not).
-            $split = split_sale((float) $payment['amount']);
+            $split = split_sale((float) $payment['amount'], $payment['affiliate_id'] !== null);
             $expiresAt = compute_expires_at($payment['access_duration_days'] !== null ? (int) $payment['access_duration_days'] : null);
             db()->beginTransaction();
             try {
@@ -99,6 +99,12 @@ function resolve_payment_with_iotec(array $payment): array {
                     'INSERT INTO earnings (creator_id, course_id, amount, gross_amount, platform_fee) VALUES (?, ?, ?, ?, ?)',
                     [$payment['course_creator_id'], $payment['course_id'], $split['net'], $split['gross'], $split['fee']]
                 );
+                if ($payment['affiliate_id'] !== null) {
+                    db_insert(
+                        'INSERT INTO affiliate_earnings (amount, affiliate_id, course_id, payment_id) VALUES (?, ?, ?, ?)',
+                        [$split['affiliate_cut'], $payment['affiliate_id'], $payment['course_id'], $paymentId]
+                    );
+                }
                 db()->commit();
             } catch (Throwable $e) {
                 db()->rollBack();
@@ -189,17 +195,19 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
         // FAILED — fall through and start a fresh collection below.
     }
 
+    $affiliateId = resolve_affiliate_id_from_cookie($userId);
+
     $pollToken = null;
     if ($isGuest) {
         [$pollToken, $pollTokenHash] = make_access_token();
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, amount, original_amount, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$guestName, $guestEmail, $pollTokenHash, $courseId, $finalPrice, $originalAmount, $phone]
+            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, affiliate_id, amount, original_amount, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$guestName, $guestEmail, $pollTokenHash, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone]
         );
     } else {
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, course_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$userId, $courseId, $finalPrice, $originalAmount, $phone]
+            "INSERT INTO payments (user_id, course_id, affiliate_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$userId, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone]
         );
     }
 

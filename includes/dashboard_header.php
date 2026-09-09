@@ -38,6 +38,7 @@ $navByRole = [
         'Manage' => [
             ['/dashboard/admin/users.php', 'Users', 'users'],
             ['/dashboard/admin/creator-applications.php', 'Creator Applications', 'user-plus'],
+            ['/dashboard/admin/affiliate-applications.php', 'Affiliate Applications', 'tag'],
             ['/dashboard/admin/courses.php', 'Courses', 'book-open'],
             ['/dashboard/admin/revenue.php', 'Revenue', 'trending-up'],
             ['/dashboard/admin/categories.php', 'Categories', 'tag'],
@@ -53,6 +54,17 @@ $navByRole = [
 $navGroups = $navByRole[$user['role']];
 $currentPath = current_path();
 
+// Affiliate status is independent of role (see includes/affiliates.php) —
+// this appends an extra nav group for any user who's an active affiliate,
+// on top of whatever their role's own groups already are.
+$myAffiliate = get_affiliate_by_user_id((int) $user['id']);
+$isActiveAffiliate = $myAffiliate && $myAffiliate['status'] === 'ACTIVE';
+if ($isActiveAffiliate) {
+    $navGroups['Affiliate'] = [
+        ['/dashboard/affiliate.php', 'Affiliate Dashboard', 'tag'],
+    ];
+}
+
 // Live counts shown as badges on the relevant nav item, and a small
 // role-specific snapshot widget — so the sidebar carries real information
 // instead of sitting mostly empty below a short link list.
@@ -65,6 +77,7 @@ if ($user['role'] === 'ADMIN') {
     $unreadNotifCount = get_unread_notification_count();
     $navBadges = [
         '/dashboard/admin/creator-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'],
+        '/dashboard/admin/affiliate-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM affiliate_applications WHERE status='PENDING'")['n'],
         '/dashboard/admin/withdrawals.php' => (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'],
         '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW'")['n'],
         '/dashboard/admin/leads.php' => (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'],

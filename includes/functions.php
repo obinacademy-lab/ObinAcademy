@@ -1,6 +1,11 @@
 <?php
 
 const PLATFORM_FEE_RATE = 0.10;
+// Paid only on a sale attributed to an affiliate's link (see
+// includes/affiliates.php) — carved out of the creator's share, not added on
+// top, so the platform's own 10% never changes: 88% creator / 10% platform /
+// 2% affiliate on an affiliate-referred sale, vs. the normal 90% / 10%.
+const AFFILIATE_COMMISSION_RATE = 0.02;
 const MIN_WITHDRAWAL_UGX = 75000;
 const MAX_DAILY_WITHDRAWAL_UGX = 3000000;
 
@@ -48,11 +53,16 @@ function paginate_window(int $current, int $total, int $window = 1): array {
     return $pages;
 }
 
-/** Splits a sale into gross/fee/net using the 10% platform commission. */
-function split_sale(float $price): array {
+/**
+ * Splits a sale into gross/fee/affiliate_cut/net. $hasAffiliate carves the
+ * affiliate's 2% out of what would otherwise be the creator's share — the
+ * platform's own 10% fee is identical either way.
+ */
+function split_sale(float $price, bool $hasAffiliate = false): array {
     $gross = round($price);
     $fee = round($gross * PLATFORM_FEE_RATE);
-    return ['gross' => $gross, 'fee' => $fee, 'net' => $gross - $fee];
+    $affiliateCut = $hasAffiliate ? round($gross * AFFILIATE_COMMISSION_RATE) : 0.0;
+    return ['gross' => $gross, 'fee' => $fee, 'affiliate_cut' => $affiliateCut, 'net' => $gross - $fee - $affiliateCut];
 }
 
 function get_profile(int $userId): ?array {
