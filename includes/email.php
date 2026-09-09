@@ -378,7 +378,7 @@ function send_lead_day7_email(string $to, string $name, array $onSaleCourses, st
  * visually spare (no receipt-style table, no course list) since the whole
  * point is a quick "come back" prompt, not another thing to read.
  */
-function send_retention_nudge_email(string $to, string $subject, string $emoji, string $headline, string $body, string $ctaLabel, string $ctaUrl): void {
+function send_retention_nudge_email(string $to, string $subject, string $emoji, string $headline, string $body, string $ctaLabel, string $ctaUrl, string $unsubscribeUrl): void {
     resend_send($to, $subject, <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
           <div style="font-size: 34px;">{$emoji}</div>
@@ -388,6 +388,10 @@ function send_retention_nudge_email(string $to, string $subject, string $emoji, 
             <a href="{$ctaUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               {$ctaLabel}
             </a>
+          </p>
+          <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            You're getting this because you have a course in progress on Obin Academy.
+            <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from these reminders</a>.
           </p>
         </div>
         HTML);

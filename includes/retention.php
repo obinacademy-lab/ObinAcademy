@@ -21,6 +21,25 @@ require_once __DIR__ . '/enrollment.php';
  * early because last_activity_at itself no longer satisfies the threshold.
  */
 
+/**
+ * Signed, stateless unsubscribe token for retention emails specifically —
+ * separate token space from unsubscribe_token()/leads (different table,
+ * different HMAC message, and a 'u' prefix), so the two can't collide even
+ * if a lead id and a user id happen to match numerically.
+ */
+function retention_unsubscribe_token(int $userId): string {
+    return 'u' . $userId . '.' . hash_hmac('sha256', 'retention:' . $userId, APP_SECRET);
+}
+
+function retention_unsubscribe_token_user_id(string $token): ?int {
+    if (!str_starts_with($token, 'u')) return null;
+    $parts = explode('.', substr($token, 1), 2);
+    if (count($parts) !== 2 || !ctype_digit($parts[0])) return null;
+    [$userId, $signature] = $parts;
+    if (!hash_equals(hash_hmac('sha256', 'retention:' . $userId, APP_SECRET), $signature)) return null;
+    return (int) $userId;
+}
+
 /** @return array{title:string, url:string} pointing at where "Continue Learning" should land. */
 function retention_course_target(array $enrollment): array {
     $course = db_one('SELECT title, slug FROM courses WHERE id = ?', [$enrollment['course_id']]);
@@ -102,6 +121,7 @@ function get_due_retention_learners(int $minHours, string $stage): array {
          FROM enrollments e
          JOIN users u ON u.id = e.user_id
          WHERE e.user_id IS NOT NULL
+           AND u.retention_emails_opt_out = 0
            AND e.progress < 100
            AND e.last_activity_at = (
              SELECT MAX(e2.last_activity_at) FROM enrollments e2
@@ -135,7 +155,8 @@ function send_one_retention_notification(array $enrollment, string $stage): void
     $templateKey = array_rand($choices);
     $t = $pool[$templateKey];
 
-    send_retention_nudge_email($enrollment['learner_email'], $t['subject'], $t['emoji'], $t['headline'], $t['body'], $t['cta'], $target['url']);
+    $unsubscribeUrl = base_url('unsubscribe.php?token=' . retention_unsubscribe_token((int) $enrollment['user_id']));
+    send_retention_nudge_email($enrollment['learner_email'], $t['subject'], $t['emoji'], $t['headline'], $t['body'], $t['cta'], $target['url'], $unsubscribeUrl);
 
     db_insert(
         'INSERT INTO retention_notifications (stage, template_key, user_id, enrollment_id) VALUES (?, ?, ?, ?)',

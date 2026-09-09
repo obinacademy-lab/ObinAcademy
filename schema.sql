@@ -21,6 +21,10 @@ CREATE TABLE users (
   youtube_url VARCHAR(500) NULL,
   tiktok_url VARCHAR(500) NULL,
   linkedin_url VARCHAR(500) NULL,
+  -- Opt-out for retention nudge emails specifically (see retention.php) —
+  -- separate from leads.unsubscribed, which governs a different audience
+  -- (pre-signup marketing emails) via a different token/table entirely.
+  retention_emails_opt_out TINYINT(1) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

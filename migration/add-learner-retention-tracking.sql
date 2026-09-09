@@ -2,6 +2,9 @@ ALTER TABLE enrollments
   ADD COLUMN last_activity_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER progress,
   ADD INDEX idx_enrollments_activity (user_id, last_activity_at);
 
+ALTER TABLE users
+  ADD COLUMN retention_emails_opt_out TINYINT(1) NOT NULL DEFAULT 0;
+
 CREATE TABLE retention_notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   stage VARCHAR(10) NOT NULL,
