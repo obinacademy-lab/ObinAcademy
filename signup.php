@@ -1,10 +1,11 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/../includes/bootstrap.php';
 
 if (is_logged_in()) redirect('/dashboard.php');
 
 $errors = [];
 $name = $email = $phone = '';
+$redirectTo = query_param('redirect', '/dashboard.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
@@ -12,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(post('email'));
     $phone = post('phone');
     $password = post('password');
+    $redirectTo = post('redirect', '/dashboard.php');
 
     if (strlen($name) < 2) $errors[] = 'Enter your full name.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Enter a valid email address.';
@@ -29,13 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $user = db_one('SELECT * FROM users WHERE id = ?', [$id]);
             login_user($user);
-            redirect('/dashboard.php');
+            redirect($redirectTo ?: '/dashboard.php');
         }
     }
 }
 
 $pageTitle = 'Sign Up — Obin Academy';
-require __DIR__ . '/includes/auth_header.php';
+require __DIR__ . '/../includes/auth_header.php';
 ?>
   <h1>Create Your Account</h1>
   <p class="lede">Start learning, or apply to teach, in a couple of minutes.</p>
@@ -46,6 +48,7 @@ require __DIR__ . '/includes/auth_header.php';
 
   <form method="post" style="margin-top: 24px;">
     <?= csrf_field() ?>
+    <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
       <label for="name">Full Name</label>
       <input id="name" name="name" type="text" required value="<?= e($name) ?>">
@@ -67,6 +70,6 @@ require __DIR__ . '/includes/auth_header.php';
   </form>
 
   <p class="small" style="margin-top: 24px; text-align:center;">
-    Already have an account? <a href="<?= e(base_url('login.php')) ?>" style="color: var(--accent); font-weight:600;">Log In</a>
+    Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode($redirectTo))) ?>" style="color: var(--accent); font-weight:600;">Log In</a>
   </p>
-<?php require __DIR__ . '/includes/auth_footer.php'; ?>
+<?php require __DIR__ . '/../includes/auth_footer.php'; ?>

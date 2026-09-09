@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/../includes/bootstrap.php';
 
 $user = current_user();
 $errors = [];
@@ -34,7 +34,7 @@ $myApplication = $user ? db_one('SELECT * FROM creator_applications WHERE user_i
 
 $pageTitle = 'Become a Creator — Obin Academy';
 $pageDescription = 'Turn your knowledge into income. Apply to become a creator on Obin Academy — publish courses, set your own price, and keep 90% of every sale, paid instantly to mobile money.';
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 <section class="course-hero">
   <div class="container" style="max-width:640px; text-align:center;">
@@ -63,7 +63,7 @@ require __DIR__ . '/includes/header.php';
         <p class="muted">Log in or create an account first to apply.</p>
         <div class="row gap-2 center" style="margin-top:14px;">
           <a href="<?= e(base_url('login.php?redirect=/become-creator.php')) ?>" class="btn btn-outline">Log In</a>
-          <a href="<?= e(base_url('signup.php')) ?>" class="btn btn-primary">Sign Up</a>
+          <a href="<?= e(base_url('signup.php?redirect=/become-creator.php')) ?>" class="btn btn-primary">Sign Up</a>
         </div>
       </div>
     <?php else: ?>
@@ -76,4 +76,4 @@ require __DIR__ . '/includes/header.php';
     <?php endif; ?>
   <?php endif; ?>
 </div>
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
