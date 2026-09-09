@@ -47,7 +47,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
     <h3 class="small" style="font-weight:700;">Your Affiliate Link</h3>
     <p class="small" style="margin-top:6px; word-break:break-all; font-weight:600;"><?= e($shareUrl) ?></p>
   </div>
-  <?php render_share_button($shareUrl, 'Obin Academy', 'Share Your Link', 'light'); ?>
+  <?php render_share_button($shareUrl, 'Obin Academy', 'Share Your Link', 'light', null, 'Share your affiliate link'); ?>
 </div>
 
 <div class="grid md:grid-3" style="margin-top:24px;">
@@ -112,4 +112,5 @@ require __DIR__ . '/../includes/dashboard_header.php';
     </tbody>
   </table>
 </div>
+<script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 <?php require __DIR__ . '/../includes/dashboard_footer.php'; ?>

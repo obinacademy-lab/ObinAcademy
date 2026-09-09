@@ -296,7 +296,7 @@ function render_social_links(array $socials): void {
  * @param string $theme 'dark' for a translucent pill on a dark hero (the
  *   default course-hero background), 'light' for a plain-card/dashboard context.
  */
-function render_share_button(string $url, string $title, string $label = 'Share Course', string $theme = 'dark', ?int $courseId = null): void {
+function render_share_button(string $url, string $title, string $label = 'Share Course', string $theme = 'dark', ?int $courseId = null, string $menuHeading = 'Share this course'): void {
     // Each channel gets its own token embedded in the URL it actually sends
     // out (no DB write yet — that only happens if share.js reports the row
     // was actually clicked). A visit later arriving with that exact token
@@ -339,7 +339,7 @@ function render_share_button(string $url, string $title, string $label = 'Share 
         <?= e($label) ?>
       </button>
       <div class="share-menu" data-share-menu hidden>
-        <div class="share-menu-head">Share this course</div>
+        <div class="share-menu-head"><?= e($menuHeading) ?></div>
 
         <button type="button" class="share-row" data-share-copy="<?= e($urlCopy) ?>" data-share-hint="Link copied to your clipboard." data-share-token="<?= e($tCopy) ?>" data-share-channel="copy_link">
           <span class="share-row-icon" style="background:#5b6670;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><?= $linkIcon ?></svg></span>
