@@ -31,6 +31,7 @@ $navByRole = [
             ['/dashboard/admin/index.php', 'Overview', 'layout-dashboard'],
             ['/dashboard/admin/analytics.php', 'Visitors', 'globe'],
             ['/dashboard/admin/leads.php', 'Leads', 'sparkle'],
+            ['/dashboard/admin/logins.php', 'Login Activity', 'shield'],
         ],
         'Manage' => [
             ['/dashboard/admin/users.php', 'Users', 'users'],

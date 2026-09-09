@@ -195,6 +195,29 @@ CREATE TABLE audit_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
+-- One row per successful sign-in (role stored at the time of login, since a
+-- user's role can change later and the historical record should reflect what
+-- they were then). country/city are resolved after the fact by the same
+-- cron geo sweep that backfills visitor_sessions — never looked up on the
+-- request path — and ip_address is cleared the moment that resolution runs
+-- (or gives up), so it's never kept longer than one sweep needs it for.
+CREATE TABLE login_log (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  role ENUM('LEARNER','CREATOR','ADMIN') NOT NULL,
+  logged_in_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  device_type ENUM('desktop','mobile','tablet') NOT NULL DEFAULT 'desktop',
+  browser VARCHAR(40) NULL,
+  os VARCHAR(40) NULL,
+  country CHAR(2) NULL,
+  city VARCHAR(100) NULL,
+  ip_address VARCHAR(45) NULL,
+  user_id INT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_login_log_user (user_id),
+  INDEX idx_login_log_time (logged_in_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
 CREATE TABLE testimonials (
   id INT AUTO_INCREMENT PRIMARY KEY,
   quote TEXT NOT NULL,

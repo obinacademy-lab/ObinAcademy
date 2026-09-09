@@ -332,6 +332,71 @@ function geo_backfill_sweep(int $limit = 30): int {
     return count($pending);
 }
 
+/** Same backfill as geo_backfill_sweep(), for login_log instead of
+ * visitor_sessions — kept as its own small function rather than a shared
+ * parameterized one, since the two tables' columns (started_at vs
+ * logged_in_at) differ. A smaller default limit than the visitor sweep: logins
+ * are far less frequent than pageviews, and running both sweeps back to back
+ * in the same cron tick should stay comfortably under ip-api.com's rate limit. */
+function login_log_geo_backfill_sweep(int $limit = 20): int {
+    $limit = max(1, min(100, $limit));
+    $pending = db_all(
+        "SELECT id, ip_address FROM login_log
+         WHERE country IS NULL AND ip_address IS NOT NULL
+         ORDER BY logged_in_at DESC LIMIT $limit"
+    );
+
+    foreach ($pending as $row) {
+        $geo = geo_lookup_ip($row['ip_address']);
+        if ($geo) {
+            db_run('UPDATE login_log SET country = ?, city = ?, ip_address = NULL WHERE id = ?', [$geo['country'], $geo['city'], $row['id']]);
+        } else {
+            db_run('UPDATE login_log SET ip_address = NULL WHERE id = ?', [$row['id']]);
+        }
+        usleep(150000);
+    }
+    return count($pending);
+}
+
+/**
+ * Paginated login-activity rows for the admin dashboard, newest first.
+ * @param array{q:string,role:string,when:string} $filters
+ * @return array{rows:array,total:int}
+ */
+function get_login_log(array $filters, int $page, int $perPage = 30): array {
+    $where = [];
+    $params = [];
+    if ($filters['q']) {
+        $where[] = '(u.name LIKE ? OR u.email LIKE ?)';
+        $params[] = '%' . $filters['q'] . '%';
+        $params[] = '%' . $filters['q'] . '%';
+    }
+    if ($filters['role']) {
+        $where[] = 'l.role = ?';
+        $params[] = $filters['role'];
+    }
+    if ($filters['when'] === 'today') {
+        $where[] = 'DATE(l.logged_in_at) = CURDATE()';
+    } elseif ($filters['when'] === '7d') {
+        $where[] = 'l.logged_in_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+    } elseif ($filters['when'] === '30d') {
+        $where[] = 'l.logged_in_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+    }
+    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+    $total = (int) db_one("SELECT COUNT(*) AS n FROM login_log l JOIN users u ON u.id = l.user_id $whereSql", $params)['n'];
+
+    $perPage = max(1, min(100, $perPage));
+    $offset = (max(1, $page) - 1) * $perPage;
+    $rows = db_all(
+        "SELECT l.*, u.name, u.email
+         FROM login_log l JOIN users u ON u.id = l.user_id
+         $whereSql ORDER BY l.logged_in_at DESC LIMIT $perPage OFFSET $offset",
+        $params
+    );
+    return ['rows' => $rows, 'total' => $total];
+}
+
 /** @return array{country:?string,city:?string}|null */
 function geo_lookup_ip(string $ip): ?array {
     // Private/local addresses (common in dev, and behind some proxies) can't be geolocated.

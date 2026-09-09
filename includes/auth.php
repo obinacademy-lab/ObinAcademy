@@ -37,6 +37,19 @@ function require_role(array $roles): array {
 function login_user(array $user): void {
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];
+    log_login($user);
+}
+
+/** Records a sign-in for the admin "Login Activity" dashboard. Device/browser/
+ * OS are parsed immediately (cheap, no network call); country/city are left
+ * null and resolved later by the same cron geo sweep that backfills
+ * visitor_sessions, never on the request path. */
+function log_login(array $user): void {
+    $ua = parse_user_agent($_SERVER['HTTP_USER_AGENT'] ?? '');
+    db_insert(
+        'INSERT INTO login_log (user_id, role, device_type, browser, os, ip_address) VALUES (?, ?, ?, ?, ?, ?)',
+        [$user['id'], $user['role'], $ua['device_type'], $ua['browser'], $ua['os'], get_client_ip()]
+    );
 }
 
 function logout_user(): void {

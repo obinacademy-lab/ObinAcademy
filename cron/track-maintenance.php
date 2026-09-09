@@ -21,6 +21,9 @@ require_once __DIR__ . '/../includes/notifications.php';
 $processed = geo_backfill_sweep(40);
 echo "[" . date('Y-m-d H:i:s') . "] geo_backfill_sweep: {$processed} session(s) processed\n";
 
+$loginProcessed = login_log_geo_backfill_sweep(20);
+echo "[" . date('Y-m-d H:i:s') . "] login_log_geo_backfill_sweep: {$loginProcessed} login(s) processed\n";
+
 $sequenceCounts = send_due_sequence_emails();
 echo "[" . date('Y-m-d H:i:s') . "] lead sequence: day3={$sequenceCounts['day3']} day5={$sequenceCounts['day5']} day7={$sequenceCounts['day7']}\n";
 
