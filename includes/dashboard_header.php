@@ -116,7 +116,7 @@ if ($user['role'] === 'ADMIN') {
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/dashboard.css')) ?>">
 </head>
 <body>
-<div class="dash<?= $user['role'] === 'ADMIN' ? ' dash-admin' : '' ?>">
+<div class="dash<?= $user['role'] === 'ADMIN' ? ' dash-admin' : ($user['role'] === 'CREATOR' ? ' dash-creator' : '') ?>">
   <div class="dash-overlay" data-dash-overlay data-dash-close></div>
   <aside class="dash-sidebar" data-dash-sidebar>
     <div class="dash-sidebar-head">

@@ -33,9 +33,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <?php if (!$hasSocialLinks): ?>
-  <div class="card card-pad row between wrap gap-3" style="margin-top:20px; background: color-mix(in srgb, var(--accent) 5%, white); border-color: color-mix(in srgb, var(--accent) 20%, var(--border));">
+  <div class="card card-pad row between wrap gap-3" style="margin-top:20px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--dash-panel)), var(--dash-panel)); border-color: var(--dash-border);">
     <div class="row gap-2" style="align-items:center;">
-      <span class="icon-badge" style="--tint:#2563eb; font-size:20px;">🔗</span>
+      <span class="icon-badge" style="--tint:#2563eb;"><?php dash_icon('share'); ?></span>
       <div>
         <h3 class="small" style="font-weight:700;">Connect your social accounts</h3>
         <p class="small muted" style="margin-top:2px;">Add your Facebook, Instagram, YouTube, TikTok, and LinkedIn — they'll show right on your course pages so learners can follow you.</p>
@@ -46,9 +46,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php endif; ?>
 
 <div class="grid md:grid-3" style="margin-top:24px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon">💰</div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earnings</div></div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#3b82f6;"><div class="icon">📚</div><div class="value"><?= $publishedCount ?></div><div class="label">Published Courses</div></div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#06b6d4;"><div class="icon">🎓</div><div class="value"><?= $totalEnrollments ?></div><div class="label">Total Enrollments</div></div>
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earnings</div></div>
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#60a5fa;"><div class="icon"><?php dash_icon('book-open'); ?></div><div class="value"><?= $publishedCount ?></div><div class="label">Published Courses</div></div>
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('graduation-cap'); ?></div><div class="value"><?= $totalEnrollments ?></div><div class="label">Total Enrollments</div></div>
 </div>
 
 <?php if (!$courses): ?>

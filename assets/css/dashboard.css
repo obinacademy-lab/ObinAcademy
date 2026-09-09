@@ -373,13 +373,16 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .btn-icon { width: 14px; height: 14px; flex-shrink: 0; }
 
 /* =====================================================================
-   ADMIN DARK THEME — scoped to .dash-admin only (dashboard_header.php
-   adds this class for role ADMIN), so the shared shell above stays
-   light for the creator/learner dashboards. Redefining --ink/--muted
-   here is enough to flip ambient text color everywhere in this file
-   that references them; the rules below handle the remaining spots
-   that hardcoded a light-mode-only literal (a light border/bg color,
-   or a color-mix mixed toward white for a soft tint).
+   DASHBOARD DARK THEMES — .dash-admin (role ADMIN) and .dash-creator
+   (role CREATOR), both added by dashboard_header.php, so the shared
+   shell above stays light for the learner dashboard only. Each defines
+   its own --dash-bg/--dash-panel/etc — admin uses a neutral gray-black,
+   creator uses the site's own brand navy (--brand-950 family) so it
+   reads as "Obin Academy" rather than generic dark-SaaS chrome — while
+   every structural fix below (form controls, cards, tables, dropdown
+   text pinning) applies identically to both, since both flip --ink/
+   --muted to light-on-dark and need the same light-mode-only literals
+   corrected.
    ===================================================================== */
 .dash.dash-admin {
   --dash-bg: #0a0c12;
@@ -399,41 +402,105 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   color: var(--ink);
 }
 
-.dash-admin .dash-widget { background: var(--dash-panel-2); border: 1px solid var(--dash-border); box-shadow: none; }
-.dash-admin .dash-nav a.active { color: var(--dash-accent-text); }
+.dash.dash-creator {
+  --dash-bg: #0b1230;
+  --dash-panel: #121b42;
+  --dash-panel-2: #182453;
+  --dash-border: rgba(147,181,255,0.14);
+  --dash-border-soft: rgba(147,181,255,0.07);
+  --dash-tint: rgba(59,130,246,0.16);
+  --dash-good: #34d399; --dash-good-bg: rgba(52,211,153,0.12);
+  --dash-warn: #fbbf24; --dash-warn-bg: rgba(251,191,36,0.12);
+  --dash-bad: #f87171; --dash-bad-bg: rgba(248,113,113,0.12);
+  --dash-shadow: 0 1px 2px rgba(4,8,24,0.4), 0 16px 40px -20px rgba(4,8,24,0.7);
+  --dash-accent-text: #9dc0ff;
 
-.dash-admin .stat-card.highlight { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.06); }
-.dash-admin .stat-card.highlight .icon { color: var(--gold); }
-.dash-admin .stat-card[data-hoverable="true"]:hover .icon { background-color: color-mix(in srgb, var(--hover-color) 22%, transparent); }
+  --ink: #f3f5fc;
+  --muted: #8d96c2;
+  color: var(--ink);
+}
 
-.dash-admin .status-pill { border-color: transparent; }
-.dash-admin .all-caught-up { border-color: transparent; color: var(--dash-good); }
-.dash-admin .activity-dot.tone-success { color: var(--dash-good); }
-.dash-admin .activity-dot.tone-danger { color: var(--dash-bad); }
-.dash-admin .waiting-badge.urgent { color: var(--dash-bad); }
-.dash-admin .icon-btn-danger:hover { color: var(--dash-bad); border-color: var(--dash-bad); }
+.dash-admin .dash-widget,
+.dash-creator .dash-widget { background: var(--dash-panel-2); border: 1px solid var(--dash-border); box-shadow: none; }
+.dash-admin .dash-nav a.active,
+.dash-creator .dash-nav a.active { color: var(--dash-accent-text); }
+
+.dash-admin .stat-card.highlight,
+.dash-creator .stat-card.highlight { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.06); }
+.dash-admin .stat-card.highlight .icon,
+.dash-creator .stat-card.highlight .icon { color: var(--gold); }
+.dash-admin .stat-card[data-hoverable="true"]:hover .icon,
+.dash-creator .stat-card[data-hoverable="true"]:hover .icon { background-color: color-mix(in srgb, var(--hover-color) 22%, transparent); }
+
+.dash-admin .status-pill,
+.dash-creator .status-pill { border-color: transparent; }
+.dash-admin .all-caught-up,
+.dash-creator .all-caught-up { border-color: transparent; color: var(--dash-good); }
+.dash-admin .activity-dot.tone-success,
+.dash-creator .activity-dot.tone-success { color: var(--dash-good); }
+.dash-admin .activity-dot.tone-danger,
+.dash-creator .activity-dot.tone-danger { color: var(--dash-bad); }
+.dash-admin .waiting-badge.urgent,
+.dash-creator .waiting-badge.urgent { color: var(--dash-bad); }
+.dash-admin .icon-btn-danger:hover,
+.dash-creator .icon-btn-danger:hover { color: var(--dash-bad); border-color: var(--dash-bad); }
 
 .dash-admin .row-avatar,
-.dash-admin .leaderboard-value { color: var(--dash-accent-text); }
+.dash-admin .leaderboard-value,
+.dash-creator .row-avatar,
+.dash-creator .leaderboard-value { color: var(--dash-accent-text); }
 .dash-admin .role-pill,
-.dash-admin .qa-icon { background: color-mix(in srgb, var(--tint) 18%, transparent); }
+.dash-admin .qa-icon,
+.dash-creator .role-pill,
+.dash-creator .qa-icon { background: color-mix(in srgb, var(--tint) 18%, transparent); }
 
-.dash-admin .chart-tooltip { background: var(--dash-panel-2); color: var(--ink); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.5); }
-.dash-admin .chart-tooltip::after { border-top-color: var(--dash-panel-2); }
+.dash-admin .chart-tooltip,
+.dash-creator .chart-tooltip { background: var(--dash-panel-2); color: var(--ink); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.5); }
+.dash-admin .chart-tooltip::after,
+.dash-creator .chart-tooltip::after { border-top-color: var(--dash-panel-2); }
 
-.dash-admin .table-wrap { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: var(--dash-shadow); }
-.dash-admin table th { background: var(--dash-panel-2); color: var(--muted); border-color: var(--dash-border); }
-.dash-admin table td { border-color: var(--dash-border-soft); }
-.dash-admin table tbody tr:hover td { background: var(--dash-border-soft); }
+.dash-admin .table-wrap,
+.dash-creator .table-wrap { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: var(--dash-shadow); }
+.dash-admin table th,
+.dash-creator table th { background: var(--dash-panel-2); color: var(--muted); border-color: var(--dash-border); }
+.dash-admin table td,
+.dash-creator table td { border-color: var(--dash-border-soft); }
+.dash-admin table tbody tr:hover td,
+.dash-creator table tbody tr:hover td { background: var(--dash-border-soft); }
 
 /* The account/notification dropdowns stay a light popover on purpose (a
    common pattern even inside dark UIs) — but --ink resolves near-white in
-   .dash-admin, so their text needs pinning to real dark values regardless
-   of the page theme, or it goes invisible on the dropdown's white background. */
+   both dark themes, so their text needs pinning to real dark values
+   regardless of the page theme, or it goes invisible on the dropdown's
+   white background. */
 .dash-admin .account-dropdown-head .name,
-.dash-admin .account-dropdown a { color: #14181b; }
+.dash-admin .account-dropdown a,
+.dash-creator .account-dropdown-head .name,
+.dash-creator .account-dropdown a { color: #14181b; }
 .dash-admin .account-dropdown-head .email,
-.dash-admin .account-dropdown a svg { color: #5b6670; }
+.dash-admin .account-dropdown a svg,
+.dash-creator .account-dropdown-head .email,
+.dash-creator .account-dropdown a svg { color: #5b6670; }
+
+/* Same fix, same reason, for the "Share Course" popover (.share-menu is a
+   deliberately-light floating popover, like the account dropdown above) —
+   .share-row/.share-menu-head inherit --ink, which is near-white in both
+   dark themes and invisible on the popover's white background. The toggle
+   button itself (.btn-share-light) gets a different fix: rather than pin
+   its text color against a light bg that no longer matches a dark page,
+   it's re-themed to sit on --dash-panel like every other outline button. */
+.dash-admin .share-menu-head,
+.dash-creator .share-menu-head { color: #5b6670; }
+.dash-admin .share-row,
+.dash-creator .share-row { color: #14181b; }
+.dash-admin .share-row:hover,
+.dash-creator .share-row:hover { background: #f4f5f8; }
+.dash-admin .btn-share-light,
+.dash-creator .btn-share-light { background: var(--dash-panel); border-color: var(--dash-border); color: var(--ink); }
+.dash-admin .btn-share-light:hover,
+.dash-admin .btn-share-light[aria-expanded="true"],
+.dash-creator .btn-share-light:hover,
+.dash-creator .btn-share-light[aria-expanded="true"] { background: var(--dash-border-soft); border-color: var(--ink); }
 
 /* ---------- notification bell + dropdown (admin only) ---------- */
 .notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: #f87171; box-shadow: 0 0 0 2px var(--dash-panel); }
@@ -446,45 +513,59 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-notif-row.unread { background: #eaf1ff; }
 .dash-notif-row.unread p { font-weight: 600; }
 
-/* Every plain <input>/<select>/<textarea> across the admin panel (search
-   boxes, filter dropdowns, note textareas) was inheriting a hardcoded
-   white background paired with --ink text — invisible/near-invisible
-   once --ink flips to near-white for the dark theme. This is the fix,
-   applied once here rather than per-page. */
+/* Every plain <input>/<select>/<textarea> across the admin/creator panels
+   (search boxes, filter dropdowns, note textareas) was inheriting a
+   hardcoded white background paired with --ink text — invisible/near-
+   invisible once --ink flips to near-white for a dark theme. This is the
+   fix, applied once here rather than per-page. */
 .dash-admin input,
 .dash-admin select,
-.dash-admin textarea {
+.dash-admin textarea,
+.dash-creator input,
+.dash-creator select,
+.dash-creator textarea {
   background: var(--dash-panel);
   color: var(--ink);
   border-color: var(--dash-border);
 }
 .dash-admin input::placeholder,
-.dash-admin textarea::placeholder { color: var(--muted); }
+.dash-admin textarea::placeholder,
+.dash-creator input::placeholder,
+.dash-creator textarea::placeholder { color: var(--muted); }
 .dash-admin input:focus,
 .dash-admin select:focus,
-.dash-admin textarea:focus {
+.dash-admin textarea:focus,
+.dash-creator input:focus,
+.dash-creator select:focus,
+.dash-creator textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 /* <option> inherits the <select>'s color but browsers render the dropdown
    list itself with system chrome — force it legible regardless of theme. */
-.dash-admin select option { background: var(--dash-panel); color: var(--ink); }
+.dash-admin select option,
+.dash-creator select option { background: var(--dash-panel); color: var(--ink); }
 
 .leads-filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .leads-filter-bar select { width: auto; min-width: 0; }
 
 /* The same white-bg/light-ink-text bug as the form controls above, on every
    other shared component that carries its own hardcoded white background:
-   secondary buttons, ghost-button hover, plain cards (used as admin
-   empty-states), and the search-pill used on Users. Same fix, same reason —
-   these components are correct as-is on the public site's light theme, so
-   the override stays scoped to .dash-admin rather than changing the shared
-   rule itself. */
-.dash-admin .btn-outline { background: var(--dash-panel); color: var(--ink); border-color: var(--dash-border); }
-.dash-admin .btn-outline:hover { border-color: var(--ink); }
-.dash-admin .btn-ghost:hover { background: var(--dash-border-soft); }
-.dash-admin .card { background: var(--dash-panel); border-color: var(--dash-border); }
-.dash-admin .search-pill { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: none; }
+   secondary buttons, ghost-button hover, plain cards (used as empty-states),
+   and the search-pill used on Users. Same fix, same reason — these
+   components are correct as-is on the public site's light theme, so the
+   override stays scoped to these dark themes rather than changing the
+   shared rule itself. */
+.dash-admin .btn-outline,
+.dash-creator .btn-outline { background: var(--dash-panel); color: var(--ink); border-color: var(--dash-border); }
+.dash-admin .btn-outline:hover,
+.dash-creator .btn-outline:hover { border-color: var(--ink); }
+.dash-admin .btn-ghost:hover,
+.dash-creator .btn-ghost:hover { background: var(--dash-border-soft); }
+.dash-admin .card,
+.dash-creator .card { background: var(--dash-panel); border-color: var(--dash-border); }
+.dash-admin .search-pill,
+.dash-creator .search-pill { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: none; }
 
 /* ---------- learner dashboard: premium gradient welcome hero ---------- */
 .dash-hero-premium {

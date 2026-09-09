@@ -41,9 +41,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <h1 class="h2">Earnings</h1>
 
 <div class="grid md:grid-3" style="margin-top:24px;">
-  <div class="stat-card"><div class="icon">💰</div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earned (after 10% platform fee)</div></div>
-  <div class="stat-card"><div class="icon">✅</div><div class="value"><?= e(format_money($available)) ?></div><div class="label">Available to Withdraw</div></div>
-  <div class="stat-card"><div class="icon">⏳</div><div class="value"><?= e(format_money($pendingWithdrawals)) ?></div><div class="label">Pending Withdrawals</div></div>
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earned (after 10% platform fee)</div></div>
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('check-circle'); ?></div><div class="value"><?= e(format_money($available)) ?></div><div class="label">Available to Withdraw</div></div>
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#fbbf24;"><div class="icon"><?php dash_icon('clock'); ?></div><div class="value"><?= e(format_money($pendingWithdrawals)) ?></div><div class="label">Pending Withdrawals</div></div>
 </div>
 
 <?php if ($errors): ?><div class="alert alert-error" style="margin-top:20px;"><?= e(implode(' ', $errors)) ?></div><?php endif; ?>
