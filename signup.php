@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/includes/bootstrap.php';
 
 if (is_logged_in()) redirect('/dashboard.php');
 
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Sign Up — Obin Academy';
-require __DIR__ . '/../includes/auth_header.php';
+require __DIR__ . '/includes/auth_header.php';
 ?>
   <h1>Create Your Account</h1>
   <p class="lede">Start learning, or apply to teach, in a couple of minutes.</p>
@@ -72,4 +72,4 @@ require __DIR__ . '/../includes/auth_header.php';
   <p class="small" style="margin-top: 24px; text-align:center;">
     Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode($redirectTo))) ?>" style="color: var(--accent); font-weight:600;">Log In</a>
   </p>
-<?php require __DIR__ . '/../includes/auth_footer.php'; ?>
+<?php require __DIR__ . '/includes/auth_footer.php'; ?>

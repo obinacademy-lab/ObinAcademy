@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/includes/bootstrap.php';
 
 $user = current_user();
 $errors = [];
@@ -34,7 +34,7 @@ $myApplication = $user ? db_one('SELECT * FROM affiliate_applications WHERE user
 
 $pageTitle = 'Become an Affiliate Partner — Obin Academy';
 $pageDescription = 'Earn 2% commission on every course purchase you refer through your own affiliate link, on any course from any creator on Obin Academy.';
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero">
   <div class="container" style="max-width:640px; text-align:center;">
@@ -75,4 +75,4 @@ require __DIR__ . '/../includes/header.php';
     <?php endif; ?>
   <?php endif; ?>
 </div>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>
