@@ -27,6 +27,11 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
   <link rel="canonical" href="<?= e($canonicalUrl) ?>">
   <?php if (!empty($noindex)): ?><meta name="robots" content="noindex, follow"><?php endif; ?>
 
+  <link rel="icon" href="<?= e(versioned_asset('favicon.svg')) ?>" type="image/svg+xml">
+  <link rel="icon" href="<?= e(versioned_asset('favicon-32x32.png')) ?>" type="image/png" sizes="32x32">
+  <link rel="icon" href="<?= e(versioned_asset('favicon-16x16.png')) ?>" type="image/png" sizes="16x16">
+  <link rel="apple-touch-icon" href="<?= e(versioned_asset('apple-touch-icon.png')) ?>" sizes="180x180">
+
   <meta property="og:site_name" content="Obin Academy">
   <meta property="og:type" content="<?= e($seoType) ?>">
   <meta property="og:title" content="<?= e($seoTitle) ?>">

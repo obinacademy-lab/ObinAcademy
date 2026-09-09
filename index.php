@@ -32,7 +32,7 @@ $structuredData = [
             '@type' => 'Organization',
             'name' => 'Obin Academy',
             'url' => base_url('index.php'),
-            'logo' => base_url('assets/img/hero-couch-learner.jpg'),
+            'logo' => base_url('apple-touch-icon.png'),
         ],
         [
             '@type' => 'WebSite',
