@@ -21,6 +21,7 @@ $navByRole = [
             ['/dashboard/creator/index.php', 'My Courses', 'book-open'],
             ['/dashboard/creator/course-new.php', 'Create Course', 'plus-circle'],
             ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
+            ['/dashboard/creator/shares.php', 'Course Shares', 'share'],
         ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],

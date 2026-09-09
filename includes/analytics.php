@@ -425,17 +425,21 @@ function geo_lookup_ip(string $ip): ?array {
 // ---------------------------------------------------------------------
 
 /** Totals + channel breakdown for the last $days days. */
-function get_share_summary(int $days = 30): array {
+function get_share_summary(int $days = 30, ?int $creatorId = null): array {
+    $creatorFilter = $creatorId ? ' AND c.creator_id = ?' : '';
     $totals = db_one(
-        "SELECT COUNT(*) AS shares, (SELECT COUNT(*) FROM course_share_visits v JOIN course_shares s ON s.id = v.share_id WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)) AS visits,
-                (SELECT COUNT(DISTINCT v.visitor_id) FROM course_share_visits v JOIN course_shares s ON s.id = v.share_id WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND v.visitor_id IS NOT NULL) AS reach
-         FROM course_shares WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)",
-        [$days - 1, $days - 1, $days - 1]
+        "SELECT COUNT(*) AS shares,
+                (SELECT COUNT(*) FROM course_share_visits v JOIN course_shares s ON s.id = v.share_id JOIN courses c ON c.id = s.course_id WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter) AS visits,
+                (SELECT COUNT(DISTINCT v.visitor_id) FROM course_share_visits v JOIN course_shares s ON s.id = v.share_id JOIN courses c ON c.id = s.course_id WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND v.visitor_id IS NOT NULL$creatorFilter) AS reach
+         FROM course_shares s
+         JOIN courses c ON c.id = s.course_id
+         WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter",
+        $creatorId ? [$days - 1, $creatorId, $days - 1, $creatorId, $days - 1, $creatorId] : [$days - 1, $days - 1, $days - 1]
     );
 
     $channelRows = db_all(
-        "SELECT channel, COUNT(*) AS n FROM course_shares WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) GROUP BY channel",
-        [$days - 1]
+        "SELECT s.channel, COUNT(*) AS n FROM course_shares s JOIN courses c ON c.id = s.course_id WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter GROUP BY s.channel",
+        $creatorId ? [$days - 1, $creatorId] : [$days - 1]
     );
     $byChannel = [];
     foreach ($channelRows as $r) $byChannel[$r['channel']] = (int) $r['n'];
@@ -449,19 +453,22 @@ function get_share_summary(int $days = 30): array {
 }
 
 /** Courses ranked by how many visits their share links generated — the ones actually "getting passed around" float to the top. */
-function get_top_shared_courses(int $days = 30, int $limit = 10): array {
+function get_top_shared_courses(int $days = 30, int $limit = 10, ?int $creatorId = null): array {
     $limit = max(1, min(50, $limit));
+    $creatorFilter = $creatorId ? ' AND c.creator_id = ?' : '';
+    $params = [$days - 1];
+    if ($creatorId) $params[] = $creatorId;
     return db_all(
         "SELECT c.id, c.title, c.slug, COUNT(DISTINCT s.id) AS share_count,
                 COUNT(v.id) AS visit_count, COUNT(DISTINCT v.visitor_id) AS reach
          FROM course_shares s
          JOIN courses c ON c.id = s.course_id
          LEFT JOIN course_share_visits v ON v.share_id = s.id
-         WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+         WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter
          GROUP BY c.id, c.title, c.slug
          ORDER BY visit_count DESC, share_count DESC
          LIMIT $limit",
-        [$days - 1]
+        $params
     );
 }
 
@@ -472,9 +479,13 @@ function get_top_shared_courses(int $days = 30, int $limit = 10): array {
  * reads as a link that's clearly circulating beyond that first recipient.
  * @param array{q:string,channel:string} $filters
  */
-function get_course_shares(array $filters, int $page, int $perPage = 30): array {
+function get_course_shares(array $filters, int $page, int $perPage = 30, ?int $creatorId = null): array {
     $where = [];
     $params = [];
+    if ($creatorId) {
+        $where[] = 'c.creator_id = ?';
+        $params[] = $creatorId;
+    }
     if ($filters['q']) {
         $where[] = 'c.title LIKE ?';
         $params[] = '%' . $filters['q'] . '%';
