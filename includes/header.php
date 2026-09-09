@@ -91,6 +91,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         <?php else: ?>
           <a href="<?= e(base_url('login.php')) ?>" class="link">Log In</a>
+          <a href="<?= e(base_url('become-affiliate.php')) ?>" class="btn btn-outline btn-sm">Become an Affiliate</a>
           <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-primary btn-sm shine">Become a Creator <span class="btn-arrow">→</span></a>
         <?php endif; ?>
       </div>
@@ -120,6 +121,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>
       <?php else: ?>
         <a href="<?= e(base_url('login.php')) ?>"><span class="mm-icon">🔑</span>Log In</a>
+        <a href="<?= e(base_url('become-affiliate.php')) ?>"><span class="mm-icon">🔗</span>Become an Affiliate</a>
         <a href="<?= e(base_url('become-creator.php')) ?>" class="mm-cta">Become a Creator →</a>
       <?php endif; ?>
     </div>
