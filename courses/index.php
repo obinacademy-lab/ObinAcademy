@@ -89,7 +89,6 @@ require __DIR__ . '/../includes/header.php';
 
   <div class="browse-toolbar">
     <div class="browse-result-info">
-      <strong><?= count($courses) ?></strong> course<?= count($courses) === 1 ? '' : 's' ?>
       <?php if ($activeCategoryName): ?>in <a href="<?= e(browse_url($q, '', $sort, $price)) ?>" class="filter-pill"><?= e($activeCategoryName) ?> <span>&times;</span></a><?php endif; ?>
       <?php if ($price): ?><a href="<?= e(browse_url($q, $categorySlug, $sort, '')) ?>" class="filter-pill"><?= $price === 'free' ? 'Free' : 'Paid' ?> <span>&times;</span></a><?php endif; ?>
       <?php if ($q): ?>matching <a href="<?= e(browse_url('', $categorySlug, $sort, $price)) ?>" class="filter-pill">&ldquo;<?= e($q) ?>&rdquo; <span>&times;</span></a><?php endif; ?>
