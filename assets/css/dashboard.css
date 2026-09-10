@@ -500,6 +500,22 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-premium .btn-share-light:hover,
 .dash-premium .btn-share-light[aria-expanded="true"] { background: var(--dash-border-soft); border-color: var(--ink); }
 
+/* Same fix, same reason, for render_course_card() (includes/course_card.php)
+   — shared with the public site, where it's always a white card on a light
+   page, so its title/description/price all read color from --ink/--muted
+   directly (or "inherit" for the base link). Rendered here on the learner
+   dashboard's "Recommended For You" grid, --ink/--muted resolve to the
+   dashboard theme's light-on-dark values instead, going near-invisible on
+   the card's still-hardcoded white background. */
+.dash-premium .course-card { color: #14181b; }
+.dash-premium .course-card h3,
+.dash-premium .course-card .price { color: #14181b; }
+.dash-premium .course-card .desc,
+.dash-premium .course-card .creator-row span,
+.dash-premium .course-card .creator-row .avatar,
+.dash-premium .course-card .stats-row,
+.dash-premium .course-card .price .currency { color: #5b6670; }
+
 /* ---------- notification bell + dropdown (admin only) ---------- */
 .notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: #f87171; box-shadow: 0 0 0 2px var(--dash-panel); }
 .dash-notif-dropdown { width: 320px; max-height: 380px; overflow-y: auto; }
