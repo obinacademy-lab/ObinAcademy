@@ -83,7 +83,7 @@ require __DIR__ . '/includes/header.php';
 <!-- 1. Hero -->
 <section class="home-hero-v3">
   <div class="container" style="text-align:center;">
-    <h1>Learn. Teach. Earn.</h1>
+    <h1><span class="hero-shine">Learn. Teach. Earn.</span></h1>
     <p class="summary" style="margin-left:auto; margin-right:auto;">A modern online learning marketplace built to empower people with practical, income-generating skills that create real opportunities in today's digital economy.</p>
     <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:34px;">
       <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-gold">Start Learning <span class="btn-arrow">→</span></a>

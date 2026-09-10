@@ -51,7 +51,7 @@ require __DIR__ . '/../includes/header.php';
 ?>
 <section class="home-hero-v3">
   <div class="container" style="text-align:center;">
-    <h1><?= $activeCategoryName ? e($activeCategoryName) . ' Courses' : 'Find Your Next Skill' ?></h1>
+    <h1><span class="hero-shine"><?= $activeCategoryName ? e($activeCategoryName) . ' Courses' : 'Find Your Next Skill' ?></span></h1>
     <p class="summary" style="margin-left:auto; margin-right:auto;">
       Real, practical courses from real African creators &mdash; taught by people doing the work, paid for instantly with mobile money.
     </p>

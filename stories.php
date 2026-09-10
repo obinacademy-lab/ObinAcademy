@@ -31,7 +31,7 @@ require __DIR__ . '/includes/header.php';
 ?>
 <section class="home-hero-v3">
   <div class="container" style="text-align:center;">
-    <h1>Stories From Our Community</h1>
+    <h1><span class="hero-shine">Stories From Our Community</span></h1>
     <p class="summary" style="margin-left:auto; margin-right:auto;">Hear from learners and creators building real skills and real income on Obin Academy.</p>
   </div>
 </section>
