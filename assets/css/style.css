@@ -1183,6 +1183,16 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-hero .instructor .headline { font-size:12.5px; color: rgba(255,255,255,0.6); }
 @media (prefers-reduced-motion: reduce) { .course-hero .instructor { transition:none; } }
 
+/* Course detail page only: same dark .course-hero background/colors as
+   every other page built on .course-hero — just recomposed as a centered
+   statement (like the homepage hero) instead of a left-aligned banner. */
+.course-hero-centered .container { max-width: 900px; text-align: center; }
+.course-hero-centered .breadcrumb { justify-content: center; }
+.course-hero-centered h1 { margin-left: auto; margin-right: auto; }
+.course-hero-centered .summary { margin-left: auto; margin-right: auto; }
+.course-hero-centered .meta-row { justify-content: center; }
+.course-hero-centered .row { justify-content: center; }
+
 /* Light hero variant for courses/index.php + courses/view.php only —
    everywhere else .course-hero keeps its dark navy treatment. */
 .page-hero-light { background: var(--surface); color: var(--ink); }
@@ -1201,7 +1211,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .page-hero-light .instructor .headline { color: var(--muted); }
 .page-hero-light .browse-hero-stats { color: var(--muted); }
 .page-hero-light .browse-hero-stats strong { color: var(--ink); }
-.page-hero-light .course-hero-glow { opacity: 0.06; }
 
 /* ---------- live stat strip (about page) ---------- */
 .stat-strip { background: #fff; border-bottom: 1px solid var(--border); padding: 32px 0; }

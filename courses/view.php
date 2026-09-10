@@ -129,7 +129,7 @@ require __DIR__ . '/../includes/header.php';
   </div>
 <?php endif; ?>
 
-<section class="course-hero page-hero-light">
+<section class="course-hero course-hero-centered">
   <div class="course-hero-glow" aria-hidden="true"></div>
   <div class="container">
     <nav class="breadcrumb reveal">
@@ -171,7 +171,7 @@ require __DIR__ . '/../includes/header.php';
             <div class="headline"><?= e($course['creator_headline'] ?: 'Instructor') ?></div>
           </div>
         </a>
-        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light', (int) $course['id']); ?>
+        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'dark', (int) $course['id']); ?>
       </div>
     </div>
   </div>
