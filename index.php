@@ -54,7 +54,7 @@ require __DIR__ . '/includes/header.php';
     <h1>Discover Courses</h1>
     <p class="hero-subline">or <a href="<?= e(base_url('become-creator.php')) ?>" class="hero-accent-link">teach your own</a></p>
     <p class="summary" style="margin-left:auto; margin-right:auto;">
-      Practical skills in Finance, Tech, Business and more — taught by real African creators, paid for instantly with MTN or Airtel Mobile Money.
+      Master practical skills in AI, Business, Finance, Technology, and more — taught by experienced African creators and accessible with instant MTN &amp; Airtel Mobile Money payments.
     </p>
 
     <form method="get" action="<?= e(base_url('courses/index.php')) ?>" class="hero-search-v3">
