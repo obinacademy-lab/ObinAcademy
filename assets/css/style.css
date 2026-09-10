@@ -1201,6 +1201,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .page-hero-light .instructor .headline { color: var(--muted); }
 .page-hero-light .browse-hero-stats { color: var(--muted); }
 .page-hero-light .browse-hero-stats strong { color: var(--ink); }
+.page-hero-light .course-hero-glow { opacity: 0.06; }
 
 /* ---------- live stat strip (about page) ---------- */
 .stat-strip { background: #fff; border-bottom: 1px solid var(--border); padding: 32px 0; }
