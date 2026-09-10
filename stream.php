@@ -125,9 +125,19 @@ if ($isRangeRequest) {
 }
 
 set_time_limit(0);
+// flush() alone only pushes past PHP's own output buffer — if the server
+// (or a proxy in front of it) is still buffering PHP's output internally
+// (common default on shared hosting), the browser gets nothing until the
+// whole file has been read server-side, which reads as "PDF viewer just
+// sits blank" on a large file over a slow connection even though nothing
+// is actually broken. ob_flush() empties PHP's own buffer explicitly;
+// X-Accel-Buffering tells a reverse proxy in front of PHP not to buffer.
+while (ob_get_level() > 0) ob_end_flush();
+header('X-Accel-Buffering: no');
+
 $fp = fopen($filePath, 'rb');
 fseek($fp, $start);
-$bufferSize = 8192;
+$bufferSize = 65536;
 $bytesLeft = $length;
 while ($bytesLeft > 0 && !feof($fp)) {
     $chunk = min($bufferSize, $bytesLeft);
