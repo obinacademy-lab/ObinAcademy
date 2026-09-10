@@ -10,6 +10,11 @@ function db(): PDO {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
+        // Matches date_default_timezone_set('Africa/Kampala') in bootstrap.php
+        // — without this, NOW()/CURRENT_TIMESTAMP (used by every DEFAULT
+        // CURRENT_TIMESTAMP column) write in MySQL's own server timezone,
+        // which has no reason to be East Africa Time on shared hosting.
+        $pdo->exec("SET time_zone = '+03:00'");
     }
     return $pdo;
 }
