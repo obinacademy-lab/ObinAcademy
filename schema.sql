@@ -68,6 +68,11 @@ CREATE TABLE courses (
   thumbnail_url VARCHAR(500) NULL,
   price DECIMAL(12,2) NOT NULL DEFAULT 0,
   sale_price DECIMAL(12,2) NULL,
+  -- NULL = the sale has no expiry (today's existing behavior). Once set, the
+  -- sale price automatically stops applying past this moment everywhere it's
+  -- read (course_has_active_sale() in includes/functions.php) — no cron job
+  -- clears sale_price/sale_ends_at, the timestamp itself is the source of truth.
+  sale_ends_at DATETIME NULL,
   access_duration_days INT NULL,
   premium_price DECIMAL(12,2) NULL,
   view_count INT NOT NULL DEFAULT 0,

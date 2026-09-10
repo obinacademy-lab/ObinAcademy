@@ -245,7 +245,7 @@ function send_due_step(int $step): int {
 /** Courses genuinely on sale right now — for the day-7 email. Never a fabricated "limited time" claim. */
 function get_courses_on_sale(int $limit = 3): array {
     return get_course_cards(
-        'c.sale_price IS NOT NULL AND c.sale_price > 0 AND c.sale_price < c.price',
+        "c.sale_price IS NOT NULL AND c.sale_price > 0 AND c.sale_price < c.price AND (c.sale_ends_at IS NULL OR c.sale_ends_at > NOW())",
         [], 'c.created_at DESC', $limit
     );
 }

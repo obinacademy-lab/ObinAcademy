@@ -182,7 +182,7 @@ function send_lead_welcome_email(string $to, string $name, array $courses, strin
     $courseRows = '';
     foreach ($courses as $c) {
         $url = base_url('courses/view.php?slug=' . $c['slug']);
-        $price = !empty($c['sale_price']) && (float) $c['sale_price'] > 0 && (float) $c['sale_price'] < (float) $c['price']
+        $price = course_has_active_sale($c)
             ? format_money((float) $c['sale_price']) . ' <span style="color:#9ca3af; text-decoration:line-through; font-weight:400;">' . format_money((float) $c['price']) . '</span>'
             : format_money((float) $c['price']);
         $courseRows .= <<<HTML

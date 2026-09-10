@@ -1119,6 +1119,14 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .enroll-panel .access-note { margin-top: 8px; display:flex; align-items:center; gap:6px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .enroll-panel .access-note svg { width:14px; height:14px; flex-shrink:0; }
 
+/* ---------- sale countdown (enroll panel + course card) ---------- */
+.enroll-panel .sale-countdown {
+  margin-top: 10px; display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #fff3e8, #ffe8d9); border: 1px solid #ffd0ae;
+  color: #b45309; font-size: 12.5px; font-weight: 700; padding: 8px 12px; border-radius: var(--radius-sm);
+}
+.enroll-panel .sale-countdown svg { width: 14px; height: 14px; flex-shrink: 0; color: #ea580c; }
+
 .enroll-panel ul.perks { margin-top: 24px; display:flex; flex-direction:column; gap: 12px; font-size: 14px; color: var(--ink); list-style:none; padding:0; padding-top:20px; border-top:1px solid var(--border); }
 .enroll-panel ul.perks li { display:flex; align-items:center; gap:10px; }
 .enroll-panel ul.perks li svg { width:17px; height:17px; color: var(--success); flex-shrink:0; }

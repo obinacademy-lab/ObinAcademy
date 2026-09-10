@@ -1,13 +1,15 @@
 <?php
 /** Renders a course card. Expects $c (a get_course_cards() row) in scope. */
 function render_course_card(array $c): void {
-    $displayPrice = (!empty($c['sale_price']) && (float) $c['sale_price'] > 0 && (float) $c['sale_price'] < (float) $c['price'])
-        ? (float) $c['sale_price']
-        : (float) $c['price'];
+    $hasSale = course_has_active_sale($c);
+    $displayPrice = $hasSale ? (float) $c['sale_price'] : (float) $c['price'];
+    $saleDaysLeft = $hasSale ? course_sale_days_left($c) : null;
     ?>
     <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="course-card">
       <div class="thumb">
-        <?php if (!empty($c['reviewed_at']) && strtotime($c['reviewed_at']) >= strtotime('-' . NEW_COURSE_BADGE_DAYS . ' days')): ?>
+        <?php if ($hasSale): ?>
+          <span class="badge-pill badge-sale">🔥 <?= $saleDaysLeft !== null ? $saleDaysLeft . ' day' . ($saleDaysLeft === 1 ? '' : 's') . ' left' : 'On Sale' ?></span>
+        <?php elseif (!empty($c['reviewed_at']) && strtotime($c['reviewed_at']) >= strtotime('-' . NEW_COURSE_BADGE_DAYS . ' days')): ?>
           <span class="badge-pill badge-new">New</span>
         <?php endif; ?>
         <?php if (!empty($c['thumbnail_url'])): ?>
@@ -36,6 +38,7 @@ function render_course_card(array $c): void {
 
         <div class="price-row">
           <span class="price">
+            <?php if ($hasSale): ?><span class="price-strike"><?= e(format_money((float) $c['price'])) ?></span><?php endif; ?>
             <?php if ($displayPrice > 0): ?>
               <span class="currency">UGX</span><?= number_format($displayPrice) ?>
             <?php else: ?>

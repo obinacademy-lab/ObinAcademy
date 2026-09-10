@@ -56,6 +56,37 @@ const ACCESS_DURATION_OPTIONS = [
     ['label' => 'Lifetime access', 'days' => null],
 ];
 
+const SALE_DURATION_OPTIONS = [
+    ['label' => '3 days', 'days' => 3],
+    ['label' => '5 days', 'days' => 5],
+    ['label' => '7 days', 'days' => 7],
+    ['label' => '14 days', 'days' => 14],
+    ['label' => '30 days', 'days' => 30],
+];
+
+/**
+ * True only for a sale that's a real discount right now — never a fabricated
+ * "limited time" claim (see get_courses_on_sale()'s own comment on this same
+ * philosophy). A course row needs price/sale_price (any get_course_cards()
+ * or get_course_by_slug() row already has both) and, if set, sale_ends_at.
+ * sale_ends_at is optional — a NULL end date is an indefinite sale, exactly
+ * today's existing behavior, so this is backward compatible with every
+ * sale_price already live before this column existed.
+ */
+function course_has_active_sale(array $course): bool {
+    if (empty($course['sale_price'])) return false;
+    if ((float) $course['sale_price'] <= 0 || (float) $course['sale_price'] >= (float) $course['price']) return false;
+    if (!empty($course['sale_ends_at']) && strtotime($course['sale_ends_at']) <= time()) return false;
+    return true;
+}
+
+/** Whole days left on an active, time-limited sale — null if inactive or the sale has no end date. */
+function course_sale_days_left(array $course): ?int {
+    if (empty($course['sale_ends_at']) || !course_has_active_sale($course)) return null;
+    $secondsLeft = strtotime($course['sale_ends_at']) - time();
+    return $secondsLeft > 0 ? (int) ceil($secondsLeft / 86400) : null;
+}
+
 /** Escape for safe HTML output. */
 function e(?string $value): string {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');

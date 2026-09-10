@@ -6,8 +6,9 @@
  */
 function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $isEnrolled): void {
     $price = (float) $course['price'];
-    $hasSale = !empty($course['sale_price']) && (float) $course['sale_price'] > 0 && (float) $course['sale_price'] < $price;
+    $hasSale = course_has_active_sale($course);
     $displayPrice = $hasSale ? (float) $course['sale_price'] : $price;
+    $saleDaysLeft = $hasSale ? course_sale_days_left($course) : null;
     $isPublished = $course['status'] === 'PUBLISHED';
     $showPaidFlow = $user && !$isEnrolled && !$isOwner && $isPublished && $price > 0;
     $loginUrl = base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']));
@@ -19,7 +20,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php else: ?>
           <div class="placeholder"><?php dash_icon('graduation-cap'); ?><span>Obin Academy</span></div>
         <?php endif; ?>
-        <?php if ($hasSale): ?><span class="badge-pill badge-sale">🔥 On Sale</span><?php endif; ?>
+        <?php if ($hasSale): ?><span class="badge-pill badge-sale">🔥 <?= $saleDaysLeft !== null ? $saleDaysLeft . ' day' . ($saleDaysLeft === 1 ? '' : 's') . ' left' : 'On Sale' ?></span><?php endif; ?>
       </div>
       <div class="pad">
         <div class="price-row">
@@ -29,6 +30,12 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           </div>
           <?php if ($price > 0): ?><span class="price-note">one-time payment</span><?php endif; ?>
         </div>
+        <?php if ($hasSale && $saleDaysLeft !== null): ?>
+          <div class="sale-countdown">
+            <?php dash_icon('clock'); ?>
+            Price goes back to <?= e(format_money($price)) ?> in <?= $saleDaysLeft ?> day<?= $saleDaysLeft === 1 ? '' : 's' ?>
+          </div>
+        <?php endif; ?>
         <div class="access-note">
           <?php dash_icon('clock'); ?>
           <?= $course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access after purchase' : 'Lifetime access' ?>

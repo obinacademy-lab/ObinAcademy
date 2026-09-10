@@ -99,7 +99,7 @@ if (!empty($course['thumbnail_url'])) $structuredData['image'] = asset_src($cour
 if ((float) $course['price'] > 0) {
     $structuredData['offers'] = [
         '@type' => 'Offer',
-        'price' => number_format((float) ($course['sale_price'] ?? $course['price']), 2, '.', ''),
+        'price' => number_format(course_has_active_sale($course) ? (float) $course['sale_price'] : (float) $course['price'], 2, '.', ''),
         'priceCurrency' => 'UGX',
         'url' => base_url('courses/view.php?slug=' . $course['slug']),
         'availability' => 'https://schema.org/InStock',

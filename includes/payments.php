@@ -151,13 +151,14 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if (!$isGuest && (int) $course['creator_id'] === $userId) return ['error' => 'Creators cannot enroll in their own course.'];
     if ((float) $course['price'] <= 0) return ['error' => 'This course is free — use the enroll button instead.'];
 
-    // A sale price only takes effect if it's actually a discount — a stale
+    // A sale price only takes effect if it's actually a discount and, when
+    // the creator gave it an end date, that date hasn't passed — a stale
     // sale_price left >= the current price (e.g. after the creator lowered
-    // price directly) is silently ignored rather than overcharging or
-    // no-oping strangely.
+    // price directly), or one whose time window has simply run out, is
+    // silently ignored rather than overcharging or no-oping strangely.
     $finalPrice = (float) $course['price'];
     $originalAmount = null;
-    if ($course['sale_price'] !== null && (float) $course['sale_price'] > 0 && (float) $course['sale_price'] < $finalPrice) {
+    if (course_has_active_sale($course)) {
         $originalAmount = $finalPrice;
         $finalPrice = (float) $course['sale_price'];
     }
