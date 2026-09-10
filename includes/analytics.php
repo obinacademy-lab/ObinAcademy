@@ -174,6 +174,24 @@ function get_visit_summary(int $days = 30): array {
         [$days - 1]
     )['n'] ?? 0);
 
+    // Deliberately its own query rather than unique_visitors - new_visitors:
+    // that subtraction only credits a "return" when a visitor's very first
+    // -ever session predates this window, so on any young platform (or any
+    // window wide enough to include the platform's own early days) almost
+    // every visitor's is_new_visitor=1 session falls inside the window too,
+    // quietly reporting ~0 returning visitors even when plenty of people
+    // are genuinely coming back. This instead counts anyone with 2+ sessions
+    // within the window itself — a real repeat visit, independent of when
+    // their first-ever visit happened.
+    $returningVisitors = (int) (db_one(
+        'SELECT COUNT(*) AS n FROM (
+            SELECT visitor_id FROM visitor_sessions
+            WHERE started_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            GROUP BY visitor_id HAVING COUNT(*) > 1
+         ) t',
+        [$days - 1]
+    )['n'] ?? 0);
+
     $uniqueVisitors = (int) $totals['unique_visitors'];
 
     $sourceRows = db_all(
@@ -189,7 +207,7 @@ function get_visit_summary(int $days = 30): array {
         'visits' => (int) $totals['sessions'],
         'unique_visitors' => $uniqueVisitors,
         'new_visitors' => $newVisitors,
-        'returning_visitors' => max(0, $uniqueVisitors - $newVisitors),
+        'returning_visitors' => $returningVisitors,
         'avg_pages_per_session' => round((float) $totals['avg_pages'], 1),
         'avg_session_duration' => (int) round((float) $totals['avg_duration']),
         'sources' => $sources,
