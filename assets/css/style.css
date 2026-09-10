@@ -545,11 +545,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (min-width: 640px) { .footer-bottom { flex-direction: row; } }
 .footer-bottom .made-for { font-weight: 600; color: rgba(255,255,255,0.55); }
 
-/* A footer with nothing but the logo, copyright, and a WhatsApp contact —
-   no link columns, so it needs far less vertical padding than the full
-   .site-footer default. */
-.site-footer-minimal { padding: 32px 0; margin-top: 48px; }
-.footer-bottom-minimal { padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   .site-footer::before { animation: none; }
   .whatsapp-btn .ping::before { animation: none; }

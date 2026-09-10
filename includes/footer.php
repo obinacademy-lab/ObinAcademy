@@ -1,25 +1,98 @@
   </main>
 
   <?php
-    // Page links live only here now — the top nav was trimmed down to just
-    // Log In / Become a Creator, so this is the site's one remaining way to
-    // reach Home/Courses/Stories/About/Contact from anywhere on the site.
-    $footerNavLinks = [
-        '/index.php' => 'Home',
+    require_once __DIR__ . '/data.php';
+    $footerStats = get_platform_stats();
+    $footerLearnLinks = [
         '/courses/index.php' => 'Explore Courses',
-        '/stories.php' => 'Stories',
+        '/skills.php' => 'Browse by Industry',
+        '/stories.php' => 'Success Stories',
+    ];
+    $footerTeachLinks = [
+        '/become-creator.php' => 'Become a Creator',
+        '/become-affiliate.php' => 'Become an Affiliate',
+    ];
+    $footerCompanyLinks = [
         '/about.php' => 'About Us',
         '/contact.php' => 'Contact',
     ];
+    $footerLegalLinks = [
+        '/privacy.php' => 'Privacy Policy',
+        '/terms.php' => 'Terms of Service',
+    ];
   ?>
-  <footer class="site-footer site-footer-minimal">
+  <footer class="site-footer">
+    <div class="starfield" aria-hidden="true"></div>
+    <div class="footer-glow footer-glow-a" aria-hidden="true"></div>
+    <div class="footer-glow footer-glow-b" aria-hidden="true"></div>
+
     <div class="container">
-      <nav class="footer-legal-links" style="justify-content:center; flex-wrap:wrap; padding:22px 0 0;">
-        <?php foreach ($footerNavLinks as $href => $label): ?>
-          <a href="<?= e(base_url($href)) ?>"><?= e($label) ?></a>
-        <?php endforeach; ?>
-      </nav>
-      <div class="footer-bottom footer-bottom-minimal">
+      <div class="footer-mission">
+        <p>Learn skills that actually pay off.</p>
+      </div>
+
+      <div class="footer-pulse">
+        <div class="pulse-item">
+          <span class="pulse-value" data-count-up data-count-value="<?= (int) $footerStats['course_count'] ?>" data-count-suffix="">0</span>
+          <span class="pulse-label">Courses</span>
+        </div>
+        <div class="pulse-divider"></div>
+        <div class="pulse-item">
+          <span class="pulse-value" data-count-up data-count-value="<?= (int) $footerStats['learner_count'] ?>" data-count-suffix="">0</span>
+          <span class="pulse-label">Learners</span>
+        </div>
+        <div class="pulse-divider"></div>
+        <div class="pulse-item">
+          <span class="pulse-value" data-count-up data-count-value="<?= (int) $footerStats['creator_count'] ?>" data-count-suffix="">0</span>
+          <span class="pulse-label">Creators</span>
+        </div>
+      </div>
+
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <?php render_logo(); ?>
+          <p class="brand-desc">Practical courses in Finance, Tech, Business, and more — taught by experienced African creators, paid for instantly with mobile money.</p>
+          <div class="pay-badges">
+            <span class="pay-badge pay-badge-mtn">MTN Mobile Money</span>
+            <span class="pay-badge pay-badge-airtel">Airtel Money</span>
+          </div>
+        </div>
+        <div>
+          <h4>Learn</h4>
+          <ul>
+            <?php foreach ($footerLearnLinks as $href => $label): ?>
+              <li><a href="<?= e(base_url($href)) ?>"><span><?= e($label) ?></span></a></li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+        <div>
+          <h4>Teach &amp; Earn</h4>
+          <ul>
+            <?php foreach ($footerTeachLinks as $href => $label): ?>
+              <li><a href="<?= e(base_url($href)) ?>"><span><?= e($label) ?></span></a></li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <ul>
+            <?php foreach ($footerCompanyLinks as $href => $label): ?>
+              <li><a href="<?= e(base_url($href)) ?>"><span><?= e($label) ?></span></a></li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <nav class="footer-legal-links">
+          <?php foreach ($footerLegalLinks as $href => $label): ?>
+            <a href="<?= e(base_url($href)) ?>"><?= e($label) ?></a>
+          <?php endforeach; ?>
+          <a href="#top" class="back-to-top" data-back-to-top>Back to top ↑</a>
+        </nav>
+      </div>
+
+      <div class="footer-bottom">
         <?php render_logo(); ?>
         <p class="made-for">&copy; <?= date('Y') ?> Obin Academy</p>
         <a href="https://wa.me/256775361998?text=<?= urlencode('Hi, I have a question about Obin Academy') ?>" target="_blank" rel="noopener noreferrer" class="whatsapp-btn">

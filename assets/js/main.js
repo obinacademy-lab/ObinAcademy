@@ -286,4 +286,42 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   dashOpenBtns.forEach((btn) => btn.addEventListener("click", () => setSidebar(true)));
   dashCloseBtns.forEach((btn) => btn.addEventListener("click", () => setSidebar(false)));
+
+  // Footer starfield: a handful of individually twinkling/drifting dots.
+  // Their positions/timings only vary per-element via inline custom
+  // properties (CSS alone can't randomize per element), so they're
+  // generated once here rather than hand-written in the markup. Reduced
+  // motion is handled entirely by the .starfield .star CSS rule (it turns
+  // the animation off and settles each star at its brightest, fixed
+  // opacity) — the stars still render either way, just without motion.
+  const starfield = document.querySelector(".starfield");
+  if (starfield) {
+    const STAR_COUNT = 50;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < STAR_COUNT; i++) {
+      const star = document.createElement("span");
+      star.className = "star";
+      star.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "%");
+      star.style.setProperty("--y", (Math.random() * 100).toFixed(1) + "%");
+      star.style.setProperty("--size", (Math.random() * 1.8 + 1).toFixed(1) + "px");
+      star.style.setProperty("--min-o", (Math.random() * 0.2 + 0.1).toFixed(2));
+      star.style.setProperty("--max-o", (Math.random() * 0.4 + 0.5).toFixed(2));
+      star.style.setProperty("--twinkle-dur", (Math.random() * 3 + 2).toFixed(1) + "s");
+      star.style.setProperty("--drift-dur", (Math.random() * 20 + 15).toFixed(1) + "s");
+      star.style.setProperty("--delay", (-Math.random() * 6).toFixed(1) + "s");
+      star.style.setProperty("--dx", (Math.random() * 40 - 20).toFixed(0) + "px");
+      star.style.setProperty("--dy", (Math.random() * 30 - 15).toFixed(0) + "px");
+      frag.appendChild(star);
+    }
+    starfield.appendChild(frag);
+  }
+
+  // Footer "Back to top" — a real smooth scroll rather than a bare #top
+  // jump (there's no id="top" anchor on these pages).
+  document.querySelectorAll("[data-back-to-top]").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+    });
+  });
 });
