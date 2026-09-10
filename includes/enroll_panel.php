@@ -56,43 +56,8 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           </form>
           <p class="guest-note">We'll send you a link to access this course — no account needed. <a href="<?= e($loginUrl) ?>">Have an account? Log in</a></p>
         <?php elseif (!$user): ?>
-          <div style="margin-top:20px;" data-payment-widget data-guest="1"
-               data-course-id="<?= (int) $course['id'] ?>"
-               data-initiate-url="<?= e(base_url('api/initiate-payment.php')) ?>">
-            <div data-state="idle">
-              <button class="btn btn-primary btn-block btn-lg" data-action="start">📱 Pay with Mobile Money</button>
-            </div>
-            <div data-state="phone" class="hidden guest-form">
-              <div class="field-icon">
-                <?php dash_icon('user-plus'); ?>
-                <input placeholder="Your name" data-name-input>
-              </div>
-              <div class="field-icon">
-                <?php dash_icon('scroll-text'); ?>
-                <input type="email" placeholder="Email address" data-email-input>
-              </div>
-              <div class="field-icon">
-                <?php dash_icon('wallet'); ?>
-                <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
-              </div>
-              <button class="btn btn-primary btn-block" data-action="pay">Pay <?= e(format_money($displayPrice)) ?></button>
-            </div>
-            <div data-state="waiting" class="hidden pay-waiting">
-              <div class="spinner"></div>
-              <p style="font-weight:700;">Waiting for approval...</p>
-              <p class="small muted" data-status-text></p>
-            </div>
-            <div data-state="success" class="hidden pay-success">
-              <p style="font-weight:700;">✓ Payment successful!</p>
-            </div>
-            <div data-state="failed" class="hidden pay-failed">
-              <p style="font-weight:700;">Payment not completed</p>
-              <p class="small muted" data-fail-text></p>
-              <button class="btn btn-primary btn-sm" data-action="retry">Try Again</button>
-            </div>
-            <p class="error-text hidden" data-error></p>
-          </div>
-          <p class="guest-note">We'll send you a link to access this course — no account needed. <a href="<?= e($loginUrl) ?>">Have an account? Log in</a></p>
+          <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-primary btn-block btn-lg" style="margin-top:20px;">Sign Up to Enroll</a>
+          <p class="guest-note">Paid courses need a free account first — that's where your receipt, access, and certificate live. <a href="<?= e($loginUrl) ?>">Already have an account? Log in</a></p>
         <?php elseif ($showPaidFlow): ?>
           <div style="margin-top:20px;" data-payment-widget
                data-course-id="<?= (int) $course['id'] ?>"

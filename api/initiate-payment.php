@@ -11,10 +11,18 @@ $user = current_user();
 $body = json_body();
 api_csrf_verify($body);
 
+// Paying for a course now requires an account — guest checkout still exists
+// for FREE enrollment (api/enroll-guest.php), but a real money payment
+// needs somewhere for a receipt/access/support history to live. The old
+// $guestName/$guestEmail plumbing in initiate_payment() stays in place
+// (untouched) since it's still what resolves already-existing guest
+// payments/enrollments made before this change.
+if (!$user) {
+    json_response(['error' => 'Please create a free account or log in before paying for a course.'], 401);
+}
+
 $courseId = (int) ($body['courseId'] ?? 0);
 $phone = trim((string) ($body['phone'] ?? ''));
-$guestName = $user ? null : trim((string) ($body['name'] ?? ''));
-$guestEmail = $user ? null : trim((string) ($body['email'] ?? ''));
 
-$result = initiate_payment($user ? (int) $user['id'] : null, $courseId, $phone, $guestName, $guestEmail);
+$result = initiate_payment((int) $user['id'], $courseId, $phone);
 json_response($result, isset($result['error']) ? 400 : 200);
