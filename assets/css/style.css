@@ -1535,6 +1535,117 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .review-card .stars { color: var(--gold); font-size:13px; }
 .review-card p.comment { margin-top:10px; font-size:14.5px; color: var(--ink); line-height:1.7; }
 
+/* ---------- course detail page: premium curriculum timeline ----------
+   New, unrelated class names (.timeline/.tmod-*/.tlesson-*) rather than
+   restyling .curriculum-list/.module-block in place — those are still used
+   as-is by dashboard/admin/course-review.php's plainer curriculum view,
+   so leaving them untouched keeps that page's look unaffected. */
+.curriculum-stat { font-size: 13px; font-weight: 700; color: var(--muted); }
+.curriculum-stat strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.timeline { position: relative; margin-top: 16px; }
+.timeline::before {
+  content: ""; position: absolute; left: 21px; top: 8px; bottom: 8px; width: 2px;
+  background: linear-gradient(var(--border-strong), var(--border));
+}
+.tmod { position: relative; padding-left: 58px; }
+.tmod:not(:last-child) { margin-bottom: 14px; }
+.tmod-num {
+  position: absolute; left: 0; top: 4px; width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(145deg, var(--brand-700), var(--brand-950));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--brand-900) 60%, transparent);
+  z-index: 1;
+}
+.tmod-card {
+  border: 1px solid var(--border); border-radius: var(--radius-lg); background: #fff;
+  box-shadow: var(--shadow); overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.tmod-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: 0 16px 32px -16px rgba(20,24,27,0.18); }
+.tmod-summary { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; list-style: none; }
+.tmod-summary::-webkit-details-marker { display: none; }
+.tmod-title { flex: 1; font-weight: 700; font-size: 15.5px; }
+.tmod-count { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: var(--radius-full); white-space: nowrap; }
+.tmod-chevron { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; transition: transform 0.3s cubic-bezier(.16,1,.3,1); }
+.tmod-card[open] .tmod-chevron { transform: rotate(180deg); }
+/* Native <details> jumps open/closed with no transition support of its own
+   — this grid-template-rows 0fr->1fr trick is the standard workaround for
+   an animated height on content whose real height isn't known in advance. */
+.tmod-body-outer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.35s cubic-bezier(.16,1,.3,1); }
+.tmod-card[open] .tmod-body-outer { grid-template-rows: 1fr; }
+.tmod-body-inner { overflow: hidden; }
+.tlesson { display: flex; align-items: center; gap: 12px; padding: 13px 20px; border-top: 1px solid var(--border); font-size: 14.5px; transition: background-color 0.15s ease; }
+.tlesson:hover { background: var(--surface); }
+.tlesson-icon { width: 30px; height: 30px; border-radius: 9px; background: color-mix(in srgb, var(--accent) 10%, white); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tlesson-icon svg { width: 14px; height: 14px; }
+.tlesson-dur { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .tmod-card, .tmod-chevron, .tmod-body-outer, .tlesson { transition: none; }
+}
+
+/* ---------- course detail page: premium reviews ----------
+   Same reasoning as above: new class names, .rating-summary/.review-card
+   above are left untouched (unused once view.php switches away from them,
+   but harmless — nothing else references them). */
+.reviews-grid { display: grid; grid-template-columns: 240px 1fr; gap: 28px; margin-top: 16px; align-items: start; }
+@media (max-width: 620px) { .reviews-grid { grid-template-columns: 1fr; } }
+.rsummary {
+  border-radius: var(--radius-lg); padding: 26px 22px; text-align: center;
+  background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800));
+  color: #fff; box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--brand-900) 55%, transparent);
+}
+.rsummary .num { font-size: 48px; font-weight: 900; line-height: 1; letter-spacing: -0.02em; }
+.rsummary .stars { color: var(--gold); font-size: 17px; margin-top: 8px; letter-spacing: 2px; }
+.rsummary .count { font-size: 12.5px; color: rgba(255,255,255,0.68); font-weight: 600; margin-top: 6px; }
+.rsummary .bars { margin-top: 22px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.rbar-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.7); }
+.rbar-row .label { width: 30px; flex-shrink: 0; }
+.rbar-track { flex: 1; height: 6px; border-radius: var(--radius-full); background: rgba(255,255,255,0.14); overflow: hidden; }
+/* Bar starts empty and fills to its real --pct once .rsummary scrolls into
+   view — reuses the sitewide .reveal/IntersectionObserver system (see
+   main.js) rather than a bespoke observer just for this one component. */
+.rbar-fill { display: block; height: 100%; border-radius: var(--radius-full); background: var(--gold); width: 0; transition: width 1.1s cubic-bezier(.16,1,.3,1); }
+.rsummary.in-view .rbar-fill { width: var(--pct); }
+.rbar-row .count { width: 16px; text-align: right; flex-shrink: 0; color: rgba(255,255,255,0.85); }
+
+.rform { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; background: #fff; box-shadow: var(--shadow); }
+.rform .star-input { display: flex; gap: 3px; margin-top: 8px; }
+.rform .star-input button {
+  background: none; border: none; cursor: pointer; padding: 2px; font-size: 26px; line-height: 1; color: var(--gold); font-family: inherit;
+  transition: transform 0.15s cubic-bezier(.34,1.56,.64,1);
+}
+.rform .star-input button:hover { transform: scale(1.18) rotate(-4deg); }
+.rform textarea {
+  width: 100%; margin-top: 14px; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px;
+  font-family: inherit; font-size: 14.5px; resize: vertical; color: var(--ink); transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.rform textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
+.rform .btn { margin-top: 14px; }
+
+.rlist { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+.rcard {
+  position: relative; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px 20px 26px; background: #fff;
+  box-shadow: var(--shadow); overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.rcard:hover { transform: translateY(-2px); box-shadow: 0 16px 32px -16px rgba(20,24,27,0.18); }
+.rcard::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(var(--gold), var(--brand-700)); }
+.rcard .quote { position: absolute; right: 18px; top: 10px; font-size: 46px; font-weight: 900; color: var(--surface); line-height: 1; font-family: Georgia, serif; }
+.rcard .head { display: flex; align-items: center; gap: 12px; }
+.rcard .avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(145deg, var(--brand-700), var(--brand-950)); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-700) 14%, transparent); overflow: hidden;
+}
+.rcard .avatar img { width: 100%; height: 100%; object-fit: cover; }
+.rcard .name { font-weight: 700; font-size: 14.5px; }
+.rcard .stars { color: var(--gold); font-size: 13px; margin-top: 1px; }
+.rcard .comment { margin-top: 12px; font-size: 15.5px; line-height: 1.7; color: var(--ink); position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .rbar-fill, .rform .star-input button, .rcard { transition: none; }
+}
+
 /* ---------- instructor card ---------- */
 .instructor-card .avatar-lg { width:58px; height:58px; border-radius:50%; background: var(--surface); color: var(--brand-900); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:21px; overflow:hidden; flex-shrink:0; }
 .instructor-card .avatar-lg img { width:100%; height:100%; object-fit:cover; }

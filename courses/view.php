@@ -183,100 +183,112 @@ require __DIR__ . '/../includes/header.php';
       <h2 class="h3">About This Course</h2>
       <p class="muted course-description" style="margin-top:14px; line-height:1.75; white-space:pre-line;"><?= e($course['description']) ?></p>
 
-      <h2 class="h3" style="margin-top:48px;">Curriculum</h2>
-      <div class="curriculum-list" style="margin-top:16px;">
+      <div class="row between wrap gap-2" style="margin-top:48px; align-items:baseline;">
+        <h2 class="h3">Curriculum</h2>
+        <div class="curriculum-stat"><strong><?= count($course['modules']) ?></strong> module<?= count($course['modules']) === 1 ? '' : 's' ?> &middot; <strong><?= $totalLessons ?></strong> lesson<?= $totalLessons === 1 ? '' : 's' ?></div>
+      </div>
+      <div class="timeline">
         <?php foreach ($course['modules'] as $mi => $module): ?>
-          <details class="module-block" <?= $mi === 0 ? 'open' : '' ?>>
-            <summary>
-              <span class="module-num"><?= $mi + 1 ?></span>
-              <span class="module-title"><?= e($module['title']) ?></span>
-              <span class="module-count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
-              <?php dash_icon('chevron-down', 'module-chevron'); ?>
-            </summary>
-            <ul>
-              <?php foreach ($module['lessons'] as $lesson): ?>
-                <li>
-                  <?php dash_icon($lesson['type'] === 'VIDEO' ? 'play' : 'file-text', 'lesson-icon'); ?>
-                  <span><?= e($lesson['title']) ?></span>
-                  <?php if (!empty($lesson['duration'])): $d = (int) $lesson['duration']; ?>
-                    <span class="lesson-duration"><?= sprintf('%d:%02d', intdiv($d, 60), $d % 60) ?></span>
-                  <?php endif; ?>
-                </li>
-              <?php endforeach; ?>
-            </ul>
-          </details>
+          <div class="tmod reveal reveal-delay-<?= min($mi + 1, 5) ?>">
+            <div class="tmod-num"><?= $mi + 1 ?></div>
+            <details class="tmod-card" <?= $mi === 0 ? 'open' : '' ?>>
+              <summary class="tmod-summary">
+                <span class="tmod-title"><?= e($module['title']) ?></span>
+                <span class="tmod-count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
+                <?php dash_icon('chevron-down', 'tmod-chevron'); ?>
+              </summary>
+              <div class="tmod-body-outer"><div class="tmod-body-inner">
+                <?php foreach ($module['lessons'] as $lesson): ?>
+                  <div class="tlesson">
+                    <span class="tlesson-icon"><?php dash_icon($lesson['type'] === 'VIDEO' ? 'play' : 'file-text'); ?></span>
+                    <span><?= e($lesson['title']) ?></span>
+                    <span class="tlesson-dur">
+                      <?php if (!empty($lesson['duration'])): $d = (int) $lesson['duration']; ?>
+                        <?= sprintf('%d:%02d', intdiv($d, 60), $d % 60) ?>
+                      <?php else: ?>
+                        <?= $lesson['type'] === 'VIDEO' ? 'Video' : 'PDF' ?>
+                      <?php endif; ?>
+                    </span>
+                  </div>
+                <?php endforeach; ?>
+              </div></div>
+            </details>
+          </div>
         <?php endforeach; ?>
       </div>
 
       <h2 class="h3" style="margin-top:48px;">Reviews<?= $reviewCount > 0 ? " ($reviewCount)" : '' ?></h2>
 
-      <?php if ($reviewCount > 0): ?>
-        <div class="rating-summary">
-          <div style="text-align:center;">
-            <div class="big-num"><?= number_format($avgRating, 1) ?></div>
-            <div class="big-stars"><?= str_repeat('★', (int) round($avgRating)) . str_repeat('☆', 5 - (int) round($avgRating)) ?></div>
-            <div class="big-count"><?= $reviewCount ?> review<?= $reviewCount === 1 ? '' : 's' ?></div>
-          </div>
-          <div class="bars">
-            <?php for ($star = 5; $star >= 1; $star--): $count = $ratingBreakdown[$star]; $pct = $reviewCount > 0 ? round($count / $reviewCount * 100) : 0; ?>
-              <div class="rating-bar-row">
-                <span class="label"><?= $star ?> star</span>
-                <span class="rating-bar-track"><span class="rating-bar-fill" style="width:<?= $pct ?>%;"></span></span>
-                <span class="count"><?= $count ?></span>
-              </div>
-            <?php endfor; ?>
-          </div>
-        </div>
-      <?php endif; ?>
-
-      <?php if ($isEnrolled && $user): ?>
-        <div style="margin-top:16px;" data-review-form data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-review.php')) ?>">
-          <form data-review-submit class="card card-pad stack gap-2">
-            <label>Your Rating</label>
-            <div class="row gap-1" data-star-input style="font-size:22px; cursor:pointer; color: var(--gold);">
-              <?php for ($i = 1; $i <= 5; $i++): ?>
-                <span data-star="<?= $i ?>"><?= $myReview && (int) $myReview['rating'] >= $i ? '★' : '☆' ?></span>
+      <div class="reviews-grid">
+        <?php if ($reviewCount > 0): ?>
+          <div class="rsummary reveal">
+            <div class="num"><?= number_format($avgRating, 1) ?></div>
+            <div class="stars"><?= str_repeat('★', (int) round($avgRating)) . str_repeat('☆', 5 - (int) round($avgRating)) ?></div>
+            <div class="count"><?= $reviewCount ?> review<?= $reviewCount === 1 ? '' : 's' ?></div>
+            <div class="bars">
+              <?php for ($star = 5; $star >= 1; $star--): $count = $ratingBreakdown[$star]; $pct = $reviewCount > 0 ? round($count / $reviewCount * 100) : 0; ?>
+                <div class="rbar-row">
+                  <span class="label"><?= $star ?> star</span>
+                  <span class="rbar-track"><span class="rbar-fill" style="--pct:<?= $pct ?>%;"></span></span>
+                  <span class="count"><?= $count ?></span>
+                </div>
               <?php endfor; ?>
             </div>
-            <input type="hidden" name="rating" value="<?= $myReview ? (int) $myReview['rating'] : 5 ?>">
-            <label for="comment">Your Review</label>
-            <textarea id="comment" name="comment" rows="3" placeholder="What did you learn? Would you recommend it?"><?= e($myReview['comment'] ?? '') ?></textarea>
-            <p class="error-text hidden" data-review-error></p>
-            <button type="submit" class="btn btn-primary" style="width:fit-content;"><?= $myReview ? 'Update Review' : 'Submit Review' ?></button>
-          </form>
-        </div>
-      <?php elseif ($isEnrolled): ?>
-        <p class="card card-pad muted small" style="margin-top:16px; border-style:dashed;">
-          <a href="<?= e(base_url('signup.php')) ?>" style="color:var(--accent); font-weight:600;">Create a free account</a> to leave a review after completing this course.
-        </p>
-      <?php elseif ($user): ?>
-        <p class="card card-pad muted small" style="margin-top:16px; border-style:dashed;">Enroll in this course to leave a review once you've learned from it.</p>
-      <?php else: ?>
-        <p class="card card-pad muted small" style="margin-top:16px; border-style:dashed;">
-          <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to leave a review after completing this course.
-        </p>
-      <?php endif; ?>
-
-      <div style="margin-top:20px;">
-        <?php if (!$course['reviews']): ?>
-          <p class="small muted">No reviews yet. Be the first to share your experience.</p>
-        <?php else: ?>
-          <?php foreach ($course['reviews'] as $r): ?>
-            <div class="review-card">
-              <div class="head">
-                <div class="avatar">
-                  <?php if (!empty($r['author_avatar_url'])): ?><img src="<?= e(asset_src($r['author_avatar_url'])) ?>" alt="">
-                  <?php else: ?><?= e(mb_substr($r['author_name'], 0, 1)) ?><?php endif; ?>
-                </div>
-                <div>
-                  <div class="name"><?= e($r['author_name']) ?></div>
-                  <div class="stars"><?= str_repeat('★', (int) $r['rating']) . str_repeat('☆', 5 - (int) $r['rating']) ?></div>
-                </div>
-              </div>
-              <p class="comment"><?= e($r['comment']) ?></p>
-            </div>
-          <?php endforeach; ?>
+          </div>
         <?php endif; ?>
+
+        <div>
+          <?php if ($isEnrolled && $user): ?>
+            <div data-review-form data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-review.php')) ?>">
+              <form data-review-submit class="rform reveal">
+                <label>Your Rating</label>
+                <div class="star-input" data-star-input>
+                  <?php for ($i = 1; $i <= 5; $i++): ?>
+                    <button type="button" data-star="<?= $i ?>"><?= $myReview && (int) $myReview['rating'] >= $i ? '★' : '☆' ?></button>
+                  <?php endfor; ?>
+                </div>
+                <input type="hidden" name="rating" value="<?= $myReview ? (int) $myReview['rating'] : 5 ?>">
+                <label for="comment" style="display:block; margin-top:14px;">Your Review</label>
+                <textarea id="comment" name="comment" rows="3" placeholder="What did you learn? Would you recommend it?"><?= e($myReview['comment'] ?? '') ?></textarea>
+                <p class="error-text hidden" data-review-error></p>
+                <button type="submit" class="btn btn-primary"><?= $myReview ? 'Update Review' : 'Submit Review' ?></button>
+              </form>
+            </div>
+          <?php elseif ($isEnrolled): ?>
+            <p class="card card-pad muted small reveal" style="border-style:dashed;">
+              <a href="<?= e(base_url('signup.php')) ?>" style="color:var(--accent); font-weight:600;">Create a free account</a> to leave a review after completing this course.
+            </p>
+          <?php elseif ($user): ?>
+            <p class="card card-pad muted small reveal" style="border-style:dashed;">Enroll in this course to leave a review once you've learned from it.</p>
+          <?php else: ?>
+            <p class="card card-pad muted small reveal" style="border-style:dashed;">
+              <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to leave a review after completing this course.
+            </p>
+          <?php endif; ?>
+
+          <?php if (!$course['reviews']): ?>
+            <p class="small muted" style="margin-top:16px;">No reviews yet. Be the first to share your experience.</p>
+          <?php else: ?>
+            <div class="rlist">
+              <?php foreach ($course['reviews'] as $ri => $r): ?>
+                <div class="rcard reveal reveal-delay-<?= min($ri + 1, 5) ?>">
+                  <span class="quote">&rdquo;</span>
+                  <div class="head">
+                    <div class="avatar">
+                      <?php if (!empty($r['author_avatar_url'])): ?><img src="<?= e(asset_src($r['author_avatar_url'])) ?>" alt="">
+                      <?php else: ?><?= e(mb_substr($r['author_name'], 0, 1)) ?><?php endif; ?>
+                    </div>
+                    <div>
+                      <div class="name"><?= e($r['author_name']) ?></div>
+                      <div class="stars"><?= str_repeat('★', (int) $r['rating']) . str_repeat('☆', 5 - (int) $r['rating']) ?></div>
+                    </div>
+                  </div>
+                  <p class="comment"><?= e($r['comment']) ?></p>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+        </div>
       </div>
     </div>
 

@@ -24,7 +24,11 @@ document.addEventListener("DOMContentLoaded", () => {
       ratingInput.value = String(value);
       paintStars(value);
     });
+    s.addEventListener("mouseenter", () => paintStars(Number(s.dataset.star)));
   });
+  if (starWrap) {
+    starWrap.addEventListener("mouseleave", () => paintStars(Number(ratingInput.value)));
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
