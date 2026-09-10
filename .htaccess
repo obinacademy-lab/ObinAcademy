@@ -7,6 +7,17 @@ Options -Indexes
 </FilesMatch>
 RedirectMatch 404 (?i)/(config|includes|migration|private-uploads)(/|$)
 
+# PDF.js's viewer.mjs/pdf.mjs/pdf.worker.mjs are loaded as native ES module
+# <script type="module"> — some servers' default MIME map doesn't include
+# .mjs and falls back to text/plain, which combined with the
+# X-Content-Type-Options: nosniff header below makes every browser hard-block
+# the script (no fallback, no console-visible page error — the module script
+# silently never runs, so the whole PDF viewer stays a blank shell: exactly
+# the "PDF opens but shows nothing" symptom). Explicit mapping fixes it.
+<IfModule mod_mime.c>
+  AddType text/javascript .mjs
+</IfModule>
+
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "SAMEORIGIN"
