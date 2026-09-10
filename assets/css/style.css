@@ -827,9 +827,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .search-pill input { border: none; padding: 12px 0; background: transparent; }
 .search-pill input:focus { outline: none; box-shadow: none; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
-/* Homepage-only: a quick-jump strip, not the full filter bar (that's
-   courses/index.php, which keeps wrapping so every filter stays visible) —
-   one scrollable line keeps the homepage from feeling congested under it. */
+/* Used on the homepage's quick-jump strip and the full courses/index.php
+   filter bar — one scrollable line instead of wrapping across several,
+   so a long category list doesn't dominate the page. */
 .chip-row-scroll {
   flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px;
   -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;
