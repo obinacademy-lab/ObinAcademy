@@ -69,18 +69,18 @@ $badgeClass = ['PENDING' => 'badge-pending', 'APPROVED' => 'badge-published', 'R
 $pageTitle = 'Earnings — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<h1 class="h2">Earnings</h1>
+<h1 class="h2 reveal">Earnings</h1>
 
 <div class="grid md:grid-3" style="margin-top:24px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earned (after 10% platform fee)</div></div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('check-circle'); ?></div><div class="value"><?= e(format_money($available)) ?></div><div class="label">Available to Withdraw</div></div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#fbbf24;"><div class="icon"><?php dash_icon('clock'); ?></div><div class="value"><?= e(format_money($pendingWithdrawals)) ?></div><div class="label">Pending Withdrawals</div></div>
+  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earned (after 10% platform fee)</div></div>
+  <div class="stat-card reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('check-circle'); ?></div><div class="value"><?= e(format_money($available)) ?></div><div class="label">Available to Withdraw</div></div>
+  <div class="stat-card reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#fbbf24;"><div class="icon"><?php dash_icon('clock'); ?></div><div class="value"><?= e(format_money($pendingWithdrawals)) ?></div><div class="label">Pending Withdrawals</div></div>
 </div>
 
 <?php if ($errors): ?><div class="alert alert-error" style="margin-top:20px;"><?= e(implode(' ', $errors)) ?></div><?php endif; ?>
 
 <h3 class="dash-section-label" style="margin-top:32px;">Revenue Growth</h3>
-<div class="chart-card" style="margin-top:14px;">
+<div class="chart-card reveal" style="margin-top:14px;">
   <div class="chart-card-head">
     <div>
       <h2 class="h3">Your Daily Revenue</h2>
@@ -129,7 +129,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<div class="card card-pad" style="margin-top:24px; max-width:420px;">
+<div class="card card-pad reveal" style="margin-top:24px; max-width:420px;">
   <h3 style="font-size:15px; font-weight:700;">Request a Withdrawal</h3>
   <form method="post" class="stack gap-2" style="margin-top:14px;">
     <?= csrf_field() ?>
@@ -141,7 +141,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <h2 class="h3" style="margin-top:36px;">Recent Earnings</h2>
-<div class="table-wrap" style="margin-top:14px;">
+<div class="table-wrap reveal" style="margin-top:14px;">
   <table>
     <thead><tr><th>Course</th><th>Gross</th><th>Platform Fee</th><th>Net</th><th>Date</th></tr></thead>
     <tbody>
@@ -160,7 +160,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <h2 class="h3" style="margin-top:36px;">Withdrawal History</h2>
-<div class="table-wrap" style="margin-top:14px;">
+<div class="table-wrap reveal" style="margin-top:14px;">
   <table>
     <thead><tr><th>Amount</th><th>Phone</th><th>Status</th><th>Requested</th></tr></thead>
     <tbody>

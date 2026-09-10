@@ -72,12 +72,6 @@ $quotes = [
 ];
 $quote = $quotes[(int) date('z') % count($quotes)];
 
-// Overall-progress ring: average completion across every enrollment.
-$avgProgress = $enrollments ? (int) round(array_sum(array_column($enrollments, 'progress')) / count($enrollments)) : 0;
-$ringR = 38;
-$ringC = 2 * M_PI * $ringR;
-$ringOffset = $ringC * (1 - $avgProgress / 100);
-
 // "Almost there" nudge: whichever in-progress course the learner is
 // furthest through — a real, data-driven prompt to come back and finish it,
 // with lessons-remaining estimated from their lesson count and % progress.
@@ -90,38 +84,17 @@ $lessonsLeft = $nextUp ? max(0, (int) round((float) $nextUp['lesson_count'] * (1
 $pageTitle = 'My Learning — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="dash-hero-premium reveal">
-  <div class="dash-hero-text">
-    <h1>Welcome back, <?= e($firstName) ?> 👋</h1>
-    <p><?= e($quote) ?></p>
-    <div class="row gap-2" style="margin-top:18px; flex-wrap:wrap;">
-      <?php if ($nextUp): ?>
-        <a href="<?= e(base_url('learn.php?slug=' . $nextUp['slug'])) ?>" class="btn btn-gold">▶ Resume Learning</a>
-      <?php endif; ?>
-      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline-light">Browse Courses</a>
-    </div>
+<div class="row between wrap gap-3 reveal">
+  <div>
+    <h1 class="h2">Welcome back, <?= e($firstName) ?></h1>
+    <p class="dash-welcome-quote">"<?= e($quote) ?>"</p>
   </div>
-
-  <?php if ($enrollments): ?>
-    <div class="dash-hero-actions">
-      <?php if ($nextUp): ?>
-        <div class="momentum-callout">
-          <span class="flame">🔥</span>
-          <div>
-            <strong><?= e(mb_strimwidth($nextUp['title'], 0, 34, '…')) ?></strong>
-            <span><?= round((float) $nextUp['progress']) ?>% done &middot; ~<?= $lessonsLeft ?> lesson<?= $lessonsLeft === 1 ? '' : 's' ?> left</span>
-          </div>
-        </div>
-      <?php endif; ?>
-      <div class="progress-ring-wrap">
-        <svg viewBox="0 0 92 92">
-          <circle class="progress-ring-track" cx="46" cy="46" r="<?= $ringR ?>"></circle>
-          <circle class="progress-ring-fill" cx="46" cy="46" r="<?= $ringR ?>" stroke-dasharray="<?= round($ringC, 2) ?>" stroke-dashoffset="<?= round($ringC, 2) ?>" data-ring-offset="<?= round($ringOffset, 2) ?>"></circle>
-        </svg>
-        <div class="progress-ring-label"><strong><?= $avgProgress ?>%</strong><span>Overall</span></div>
-      </div>
-    </div>
-  <?php endif; ?>
+  <div class="row gap-2" style="flex-wrap:wrap;">
+    <?php if ($nextUp): ?>
+      <a href="<?= e(base_url('learn.php?slug=' . $nextUp['slug'])) ?>" class="btn btn-primary">▶ Resume Learning</a>
+    <?php endif; ?>
+    <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline">Browse Courses</a>
+  </div>
 </div>
 
 <div class="grid md:grid-2 lg:grid-4" style="margin-top:24px;">
@@ -297,7 +270,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </a>
 </div>
 
-<div class="dash-motivation">
+<div class="dash-quote-block">
   <p>"Success is built one lesson at a time. Keep learning. Keep growing."</p>
 </div>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

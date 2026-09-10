@@ -29,6 +29,11 @@ CREATE TABLE users (
   -- of "a new course just went live" broadcasts independently of inactivity
   -- nudges. See includes/course_notify.php.
   new_course_emails_opt_out TINYINT(1) NOT NULL DEFAULT 0,
+  -- NULL means "use this role's default" (see dashboard_theme_default() in
+  -- functions.php) rather than baking a literal default in here — so
+  -- changing a role's default later doesn't require touching existing rows.
+  -- One of: purple, gold, red, green, blue, slate.
+  dashboard_theme_color VARCHAR(20) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

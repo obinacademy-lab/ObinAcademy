@@ -18,26 +18,26 @@ $topCourses = get_top_shared_courses(30, 8, (int) $user['id']);
 $pageTitle = 'Course Shares — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<h1 class="h2">Course Shares</h1>
+<h1 class="h2 reveal">Course Shares</h1>
 <p class="muted" style="margin-top:6px;">How your students and visitors are sharing your course links, and how far each one is actually reaching — last 30 days.</p>
 
 <div class="grid md:grid-3" style="margin-top:20px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#2563eb;">
+  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#2563eb;">
     <div class="icon"><?php dash_icon('share'); ?></div>
-    <div class="value"><?= number_format($summary['shares']) ?></div><div class="label">Shares</div>
+    <div class="value" data-count-up data-count-value="<?= (int) $summary['shares'] ?>" data-count-suffix="">0</div><div class="label">Shares</div>
   </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#10b981;">
+  <div class="stat-card reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#10b981;">
     <div class="icon"><?php dash_icon('eye'); ?></div>
-    <div class="value"><?= number_format($summary['visits']) ?></div><div class="label">Visits Via Shared Links</div>
+    <div class="value" data-count-up data-count-value="<?= (int) $summary['visits'] ?>" data-count-suffix="">0</div><div class="label">Visits Via Shared Links</div>
   </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#8b5cf6;">
+  <div class="stat-card reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#8b5cf6;">
     <div class="icon"><?php dash_icon('users'); ?></div>
-    <div class="value"><?= number_format($summary['reach']) ?></div><div class="label">People Reached</div>
+    <div class="value" data-count-up data-count-value="<?= (int) $summary['reach'] ?>" data-count-suffix="">0</div><div class="label">People Reached</div>
   </div>
 </div>
 
 <div class="growth-layout" style="margin-top:24px;">
-  <div class="chart-card">
+  <div class="chart-card reveal">
     <h2 class="h3">Your Most-Shared Courses</h2>
     <p class="muted small" style="margin-top:4px;">Ranked by visits their links generated, not just how many times they were shared — a course with more visits than shares is a sign its link is circulating beyond the person it was first sent to.</p>
     <?php if ($topCourses): ?>

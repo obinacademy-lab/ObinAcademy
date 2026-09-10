@@ -24,7 +24,7 @@ $hasSocialLinks = $user['facebook_url'] || $user['instagram_url'] || $user['yout
 $pageTitle = 'My Courses — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="row between wrap gap-3">
+<div class="row between wrap gap-3 reveal">
   <div>
     <h1 class="h2">My Courses</h1>
     <p class="muted" style="margin-top:6px;">Manage your courses and track performance.</p>
@@ -33,7 +33,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <?php if (!$hasSocialLinks): ?>
-  <div class="card card-pad row between wrap gap-3" style="margin-top:20px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--dash-panel)), var(--dash-panel)); border-color: var(--dash-border);">
+  <div class="card card-pad row between wrap gap-3 reveal" style="margin-top:20px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--dash-panel)), var(--dash-panel)); border-color: var(--dash-border);">
     <div class="row gap-2" style="align-items:center;">
       <span class="icon-badge" style="--tint:#2563eb;"><?php dash_icon('share'); ?></span>
       <div>
@@ -46,18 +46,18 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php endif; ?>
 
 <div class="grid md:grid-3" style="margin-top:24px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earnings</div></div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#60a5fa;"><div class="icon"><?php dash_icon('book-open'); ?></div><div class="value"><?= $publishedCount ?></div><div class="label">Published Courses</div></div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('graduation-cap'); ?></div><div class="value"><?= $totalEnrollments ?></div><div class="label">Total Enrollments</div></div>
+  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earnings</div></div>
+  <div class="stat-card reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#60a5fa;"><div class="icon"><?php dash_icon('book-open'); ?></div><div class="value" data-count-up data-count-value="<?= $publishedCount ?>" data-count-suffix="">0</div><div class="label">Published Courses</div></div>
+  <div class="stat-card reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('graduation-cap'); ?></div><div class="value" data-count-up data-count-value="<?= $totalEnrollments ?>" data-count-suffix="">0</div><div class="label">Total Enrollments</div></div>
 </div>
 
 <?php if (!$courses): ?>
-  <div class="card card-pad" style="margin-top:24px; text-align:center; border-style:dashed;">
+  <div class="card card-pad reveal" style="margin-top:24px; text-align:center; border-style:dashed;">
     <p class="muted">You haven't created any courses yet.</p>
     <a href="<?= e(base_url('dashboard/creator/course-new.php')) ?>" class="btn btn-primary" style="margin-top:14px;">Create Your First Course</a>
   </div>
 <?php else: ?>
-  <div class="table-wrap" style="margin-top:24px;">
+  <div class="table-wrap reveal" style="margin-top:24px;">
     <table>
       <thead><tr><th>Course</th><th>Price</th><th>Students</th><th>Status</th><th></th></tr></thead>
       <tbody>

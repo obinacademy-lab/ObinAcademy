@@ -6,6 +6,16 @@ $user = require_login();
 $errors = [];
 $isCreator = in_array($user['role'], ['CREATOR', 'ADMIN'], true);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('formName') === 'theme') {
+    csrf_verify();
+    $theme = post('dashboardThemeColor');
+    if (isset(DASHBOARD_THEMES[$theme])) {
+        db_run('UPDATE users SET dashboard_theme_color=? WHERE id=?', [$theme, $user['id']]);
+        flash_set('success', 'Dashboard theme updated.');
+    }
+    redirect('/dashboard/settings.php');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $name = post('name');
@@ -53,6 +63,44 @@ require __DIR__ . '/../includes/dashboard_header.php';
 <?php if ($errors): ?>
   <div class="alert alert-error" style="margin-top:16px;"><?= e(implode(' ', $errors)) ?></div>
 <?php endif; ?>
+
+<div class="card card-pad" style="margin-top:20px; max-width:560px;">
+  <label style="display:block;">Dashboard Theme</label>
+  <p class="help" style="margin-bottom:14px;">Pick the color that shows up across your dashboard's sidebar, buttons, and charts.</p>
+  <form method="post" id="theme-form">
+    <?= csrf_field() ?>
+    <input type="hidden" name="formName" value="theme">
+    <input type="hidden" name="dashboardThemeColor" id="theme-input" value="<?= e(dashboard_theme_for_user($user)) ?>">
+    <div class="theme-swatch-row">
+      <?php foreach (DASHBOARD_THEMES as $key => $theme): ?>
+        <button type="button" class="theme-swatch <?= dashboard_theme_for_user($user) === $key ? 'is-active' : '' ?>" data-theme-key="<?= e($key) ?>" style="--swatch: <?= e($theme['swatch']) ?>;" aria-label="<?= e($theme['label']) ?>" title="<?= e($theme['label']) ?>">
+          <span class="theme-swatch-dot"></span>
+          <span class="theme-swatch-label"><?= e($theme['label']) ?></span>
+        </button>
+      <?php endforeach; ?>
+    </div>
+  </form>
+</div>
+<script>
+(function () {
+  var form = document.getElementById('theme-form');
+  var input = document.getElementById('theme-input');
+  var shell = document.querySelector('.dash');
+  if (!form) return;
+  form.querySelectorAll('.theme-swatch').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var key = btn.getAttribute('data-theme-key');
+      input.value = key;
+      form.querySelectorAll('.theme-swatch').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      if (shell) {
+        shell.className = shell.className.replace(/\btheme-\S+/g, '').trim() + ' theme-' + key;
+      }
+      form.submit();
+    });
+  });
+})();
+</script>
 
 <form method="post" enctype="multipart/form-data" class="card card-pad" style="margin-top:20px; max-width:560px;">
   <?= csrf_field() ?>

@@ -385,141 +385,120 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .btn-icon { width: 14px; height: 14px; flex-shrink: 0; }
 
 /* =====================================================================
-   DASHBOARD DARK THEMES — .dash-admin (role ADMIN) and .dash-creator
-   (role CREATOR), both added by dashboard_header.php, so the shared
-   shell above stays light for the learner dashboard only. Each defines
-   its own --dash-bg/--dash-panel/etc — admin uses a neutral gray-black,
-   creator uses the site's own brand navy (--brand-950 family) so it
-   reads as "Obin Academy" rather than generic dark-SaaS chrome — while
-   every structural fix below (form controls, cards, tables, dropdown
-   text pinning) applies identically to both, since both flip --ink/
-   --muted to light-on-dark and need the same light-mode-only literals
-   corrected.
+   PREMIUM DASHBOARD SHELL — .dash-premium is the color-agnostic dark
+   shell now shared by all three roles (dashboard_header.php adds it
+   unconditionally), with a separate .theme-<key> class supplying just
+   the color tokens for whichever theme the learner/creator/admin picked
+   in Settings (see DASHBOARD_THEMES in functions.php — the picker there
+   is the only source of truth for which theme keys exist; this file just
+   has to define a matching .theme-<key> for each one). Splitting color
+   from structure this way means adding a 7th theme color later never
+   needs touching a single one of the structural rules below.
    ===================================================================== */
-.dash.dash-admin {
-  --dash-bg: #0a0c12;
-  --dash-panel: #12141d;
-  --dash-panel-2: #171a26;
-  --dash-border: rgba(255,255,255,0.08);
-  --dash-border-soft: rgba(255,255,255,0.05);
-  --dash-tint: rgba(59,130,246,0.14);
+.dash.dash-premium {
   --dash-good: #34d399; --dash-good-bg: rgba(52,211,153,0.12);
   --dash-warn: #fbbf24; --dash-warn-bg: rgba(251,191,36,0.12);
   --dash-bad: #f87171; --dash-bad-bg: rgba(248,113,113,0.12);
-  --dash-shadow: none;
+  color: var(--ink);
+}
+
+/* Slate intentionally leaves --accent/--accent-dark undefined here, so they
+   keep resolving to the site's own global blue (style.css :root --accent)
+   instead of a theme color — this is the original admin look, preserved
+   byte-for-byte so an admin who's never touched the picker sees zero change. */
+.dash-premium.theme-slate {
+  --dash-bg: #0a0c12; --dash-panel: #12141d; --dash-panel-2: #171a26;
+  --dash-border: rgba(255,255,255,0.08); --dash-border-soft: rgba(255,255,255,0.05);
+  --dash-tint: rgba(59,130,246,0.14); --dash-shadow: none;
   --dash-accent-text: #93c5fd;
-
-  --ink: #f2f4fa;
-  --muted: #8b93a8;
-  color: var(--ink);
+  --ink: #f2f4fa; --muted: #8b93a8;
+}
+.dash-premium.theme-purple {
+  --dash-bg: #130b28; --dash-panel: #1c1240; --dash-panel-2: #251854;
+  --dash-border: rgba(196,163,255,0.15); --dash-border-soft: rgba(196,163,255,0.07);
+  --dash-tint: rgba(139,92,246,0.18); --dash-shadow: 0 1px 2px rgba(10,4,24,0.4), 0 16px 40px -20px rgba(10,4,24,0.7);
+  --accent: #8b5cf6; --accent-dark: #7c3aed; --dash-accent-text: #c4b5fd;
+  --ink: #f5f3ff; --muted: #9c90c2;
+}
+.dash-premium.theme-gold {
+  --dash-bg: #15110a; --dash-panel: #221b0f; --dash-panel-2: #2b2213;
+  --dash-border: rgba(245,179,1,0.16); --dash-border-soft: rgba(245,179,1,0.08);
+  --dash-tint: rgba(245,179,1,0.14); --dash-shadow: 0 1px 2px rgba(16,12,4,0.4), 0 16px 40px -20px rgba(16,12,4,0.7);
+  --accent: #f5b301; --accent-dark: #c98e00; --dash-accent-text: #ffd873;
+  --ink: #f8f3e8; --muted: #a99a7c;
+}
+.dash-premium.theme-red {
+  --dash-bg: #150a0b; --dash-panel: #221012; --dash-panel-2: #2b1416;
+  --dash-border: rgba(224,60,78,0.18); --dash-border-soft: rgba(224,60,78,0.09);
+  --dash-tint: rgba(224,60,78,0.16); --dash-shadow: 0 1px 2px rgba(16,4,6,0.4), 0 16px 40px -20px rgba(16,4,6,0.7);
+  --accent: #e03c4e; --accent-dark: #a8232f; --dash-accent-text: #ff9494;
+  --ink: #f8ecec; --muted: #ab8a8c;
+}
+.dash-premium.theme-green {
+  --dash-bg: #0a130f; --dash-panel: #112119; --dash-panel-2: #162b20;
+  --dash-border: rgba(61,143,95,0.18); --dash-border-soft: rgba(61,143,95,0.09);
+  --dash-tint: rgba(61,143,95,0.16); --dash-shadow: 0 1px 2px rgba(4,16,10,0.4), 0 16px 40px -20px rgba(4,16,10,0.7);
+  --accent: #3d8f5f; --accent-dark: #276b45; --dash-accent-text: #8fe0b3;
+  --ink: #edf5f0; --muted: #8aab97;
+}
+.dash-premium.theme-blue {
+  --dash-bg: #0a0f1a; --dash-panel: #121b2f; --dash-panel-2: #18243d;
+  --dash-border: rgba(96,165,250,0.16); --dash-border-soft: rgba(96,165,250,0.08);
+  --dash-tint: rgba(59,130,246,0.16); --dash-shadow: 0 1px 2px rgba(4,8,16,0.4), 0 16px 40px -20px rgba(4,8,16,0.7);
+  --accent: #3b82f6; --accent-dark: #2563eb; --dash-accent-text: #93c5fd;
+  --ink: #eef4fd; --muted: #8798b8;
 }
 
-.dash.dash-creator {
-  --dash-bg: #130b28;
-  --dash-panel: #1c1240;
-  --dash-panel-2: #251854;
-  --dash-border: rgba(196,163,255,0.15);
-  --dash-border-soft: rgba(196,163,255,0.07);
-  --dash-tint: rgba(139,92,246,0.18);
-  --dash-good: #34d399; --dash-good-bg: rgba(52,211,153,0.12);
-  --dash-warn: #fbbf24; --dash-warn-bg: rgba(251,191,36,0.12);
-  --dash-bad: #f87171; --dash-bad-bg: rgba(248,113,113,0.12);
-  --dash-shadow: 0 1px 2px rgba(10,4,24,0.4), 0 16px 40px -20px rgba(10,4,24,0.7);
-  --dash-accent-text: #c4b5fd;
+.dash-premium .dash-widget { background: var(--dash-panel-2); border: 1px solid var(--dash-border); box-shadow: none; }
+.dash-premium .dash-nav a.active { color: var(--dash-accent-text); }
 
-  /* Retints every var(--accent)-driven element inside the creator shell
-     (primary buttons, the sidebar logo mark, stat-card icons, focus rings,
-     table row hovers) to purple, without touching --accent site-wide —
-     custom properties cascade, so this scoped redefinition is enough. */
-  --accent: #8b5cf6;
-  --accent-dark: #7c3aed;
+.dash-premium .stat-card.highlight { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.06); }
+.dash-premium .stat-card.highlight .icon { color: var(--gold); }
+.dash-premium .stat-card[data-hoverable="true"]:hover .icon { background-color: color-mix(in srgb, var(--hover-color) 22%, transparent); }
 
-  --ink: #f5f3ff;
-  --muted: #9c90c2;
-  color: var(--ink);
-}
+.dash-premium .status-pill { border-color: transparent; }
+.dash-premium .all-caught-up { border-color: transparent; color: var(--dash-good); }
+.dash-premium .activity-dot.tone-success { color: var(--dash-good); }
+.dash-premium .activity-dot.tone-danger { color: var(--dash-bad); }
+.dash-premium .waiting-badge.urgent { color: var(--dash-bad); }
+.dash-premium .icon-btn-danger:hover { color: var(--dash-bad); border-color: var(--dash-bad); }
 
-.dash-admin .dash-widget,
-.dash-creator .dash-widget { background: var(--dash-panel-2); border: 1px solid var(--dash-border); box-shadow: none; }
-.dash-admin .dash-nav a.active,
-.dash-creator .dash-nav a.active { color: var(--dash-accent-text); }
+.dash-premium .row-avatar,
+.dash-premium .leaderboard-value { color: var(--dash-accent-text); }
+.dash-premium .role-pill,
+.dash-premium .qa-icon { background: color-mix(in srgb, var(--tint) 18%, transparent); }
 
-.dash-admin .stat-card.highlight,
-.dash-creator .stat-card.highlight { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.06); }
-.dash-admin .stat-card.highlight .icon,
-.dash-creator .stat-card.highlight .icon { color: var(--gold); }
-.dash-admin .stat-card[data-hoverable="true"]:hover .icon,
-.dash-creator .stat-card[data-hoverable="true"]:hover .icon { background-color: color-mix(in srgb, var(--hover-color) 22%, transparent); }
+.dash-premium .chart-tooltip { background: var(--dash-panel-2); color: var(--ink); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.5); }
+.dash-premium .chart-tooltip::after { border-top-color: var(--dash-panel-2); }
 
-.dash-admin .status-pill,
-.dash-creator .status-pill { border-color: transparent; }
-.dash-admin .all-caught-up,
-.dash-creator .all-caught-up { border-color: transparent; color: var(--dash-good); }
-.dash-admin .activity-dot.tone-success,
-.dash-creator .activity-dot.tone-success { color: var(--dash-good); }
-.dash-admin .activity-dot.tone-danger,
-.dash-creator .activity-dot.tone-danger { color: var(--dash-bad); }
-.dash-admin .waiting-badge.urgent,
-.dash-creator .waiting-badge.urgent { color: var(--dash-bad); }
-.dash-admin .icon-btn-danger:hover,
-.dash-creator .icon-btn-danger:hover { color: var(--dash-bad); border-color: var(--dash-bad); }
-
-.dash-admin .row-avatar,
-.dash-admin .leaderboard-value,
-.dash-creator .row-avatar,
-.dash-creator .leaderboard-value { color: var(--dash-accent-text); }
-.dash-admin .role-pill,
-.dash-admin .qa-icon,
-.dash-creator .role-pill,
-.dash-creator .qa-icon { background: color-mix(in srgb, var(--tint) 18%, transparent); }
-
-.dash-admin .chart-tooltip,
-.dash-creator .chart-tooltip { background: var(--dash-panel-2); color: var(--ink); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.5); }
-.dash-admin .chart-tooltip::after,
-.dash-creator .chart-tooltip::after { border-top-color: var(--dash-panel-2); }
-
-.dash-admin .table-wrap,
-.dash-creator .table-wrap { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: var(--dash-shadow); }
-.dash-admin table th,
-.dash-creator table th { background: var(--dash-panel-2); color: var(--muted); border-color: var(--dash-border); }
-.dash-admin table td,
-.dash-creator table td { border-color: var(--dash-border-soft); }
-.dash-admin table tbody tr:hover td,
-.dash-creator table tbody tr:hover td { background: var(--dash-border-soft); }
+.dash-premium .table-wrap { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: var(--dash-shadow); }
+.dash-premium table th { background: var(--dash-panel-2); color: var(--muted); border-color: var(--dash-border); }
+.dash-premium table td { border-color: var(--dash-border-soft); }
+.dash-premium table tbody tr:hover td { background: var(--dash-border-soft); }
 
 /* The account/notification dropdowns stay a light popover on purpose (a
    common pattern even inside dark UIs) — but --ink resolves near-white in
-   both dark themes, so their text needs pinning to real dark values
-   regardless of the page theme, or it goes invisible on the dropdown's
-   white background. */
-.dash-admin .account-dropdown-head .name,
-.dash-admin .account-dropdown a,
-.dash-creator .account-dropdown-head .name,
-.dash-creator .account-dropdown a { color: #14181b; }
-.dash-admin .account-dropdown-head .email,
-.dash-admin .account-dropdown a svg,
-.dash-creator .account-dropdown-head .email,
-.dash-creator .account-dropdown a svg { color: #5b6670; }
+   every dark theme, so their text needs pinning to real dark values
+   regardless of which one's active, or it goes invisible on the
+   dropdown's white background. */
+.dash-premium .account-dropdown-head .name,
+.dash-premium .account-dropdown a { color: #14181b; }
+.dash-premium .account-dropdown-head .email,
+.dash-premium .account-dropdown a svg { color: #5b6670; }
 
 /* Same fix, same reason, for the "Share Course" popover (.share-menu is a
    deliberately-light floating popover, like the account dropdown above) —
-   .share-row/.share-menu-head inherit --ink, which is near-white in both
-   dark themes and invisible on the popover's white background. The toggle
+   .share-row/.share-menu-head inherit --ink, which is near-white in every
+   dark theme and invisible on the popover's white background. The toggle
    button itself (.btn-share-light) gets a different fix: rather than pin
    its text color against a light bg that no longer matches a dark page,
    it's re-themed to sit on --dash-panel like every other outline button. */
-.dash-admin .share-menu-head,
-.dash-creator .share-menu-head { color: #5b6670; }
-.dash-admin .share-row,
-.dash-creator .share-row { color: #14181b; }
-.dash-admin .share-row:hover,
-.dash-creator .share-row:hover { background: #f4f5f8; }
-.dash-admin .btn-share-light,
-.dash-creator .btn-share-light { background: var(--dash-panel); border-color: var(--dash-border); color: var(--ink); }
-.dash-admin .btn-share-light:hover,
-.dash-admin .btn-share-light[aria-expanded="true"],
-.dash-creator .btn-share-light:hover,
-.dash-creator .btn-share-light[aria-expanded="true"] { background: var(--dash-border-soft); border-color: var(--ink); }
+.dash-premium .share-menu-head { color: #5b6670; }
+.dash-premium .share-row { color: #14181b; }
+.dash-premium .share-row:hover { background: #f4f5f8; }
+.dash-premium .btn-share-light { background: var(--dash-panel); border-color: var(--dash-border); color: var(--ink); }
+.dash-premium .btn-share-light:hover,
+.dash-premium .btn-share-light[aria-expanded="true"] { background: var(--dash-border-soft); border-color: var(--ink); }
 
 /* ---------- notification bell + dropdown (admin only) ---------- */
 .notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: #f87171; box-shadow: 0 0 0 2px var(--dash-panel); }
@@ -532,38 +511,29 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-notif-row.unread { background: #eaf1ff; }
 .dash-notif-row.unread p { font-weight: 600; }
 
-/* Every plain <input>/<select>/<textarea> across the admin/creator panels
-   (search boxes, filter dropdowns, note textareas) was inheriting a
-   hardcoded white background paired with --ink text — invisible/near-
-   invisible once --ink flips to near-white for a dark theme. This is the
-   fix, applied once here rather than per-page. */
-.dash-admin input,
-.dash-admin select,
-.dash-admin textarea,
-.dash-creator input,
-.dash-creator select,
-.dash-creator textarea {
+/* Every plain <input>/<select>/<textarea> across the dashboard (search
+   boxes, filter dropdowns, note textareas) was inheriting a hardcoded
+   white background paired with --ink text — invisible/near-invisible
+   once --ink flips to near-white for a dark theme. This is the fix,
+   applied once here rather than per-page. */
+.dash-premium input,
+.dash-premium select,
+.dash-premium textarea {
   background: var(--dash-panel);
   color: var(--ink);
   border-color: var(--dash-border);
 }
-.dash-admin input::placeholder,
-.dash-admin textarea::placeholder,
-.dash-creator input::placeholder,
-.dash-creator textarea::placeholder { color: var(--muted); }
-.dash-admin input:focus,
-.dash-admin select:focus,
-.dash-admin textarea:focus,
-.dash-creator input:focus,
-.dash-creator select:focus,
-.dash-creator textarea:focus {
+.dash-premium input::placeholder,
+.dash-premium textarea::placeholder { color: var(--muted); }
+.dash-premium input:focus,
+.dash-premium select:focus,
+.dash-premium textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 /* <option> inherits the <select>'s color but browsers render the dropdown
    list itself with system chrome — force it legible regardless of theme. */
-.dash-admin select option,
-.dash-creator select option { background: var(--dash-panel); color: var(--ink); }
+.dash-premium select option { background: var(--dash-panel); color: var(--ink); }
 
 .leads-filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .leads-filter-bar select { width: auto; min-width: 0; }
@@ -573,57 +543,29 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
    secondary buttons, ghost-button hover, plain cards (used as empty-states),
    and the search-pill used on Users. Same fix, same reason — these
    components are correct as-is on the public site's light theme, so the
-   override stays scoped to these dark themes rather than changing the
-   shared rule itself. */
-.dash-admin .btn-outline,
-.dash-creator .btn-outline { background: var(--dash-panel); color: var(--ink); border-color: var(--dash-border); }
-.dash-admin .btn-outline:hover,
-.dash-creator .btn-outline:hover { border-color: var(--ink); }
-.dash-admin .btn-ghost:hover,
-.dash-creator .btn-ghost:hover { background: var(--dash-border-soft); }
-.dash-admin .card,
-.dash-creator .card { background: var(--dash-panel); border-color: var(--dash-border); }
-.dash-admin .search-pill,
-.dash-creator .search-pill { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: none; }
+   override stays scoped to the dark shell rather than changing the shared
+   rule itself. */
+.dash-premium .btn-outline { background: var(--dash-panel); color: var(--ink); border-color: var(--dash-border); }
+.dash-premium .btn-outline:hover { border-color: var(--ink); }
+.dash-premium .btn-ghost:hover { background: var(--dash-border-soft); }
+.dash-premium .card { background: var(--dash-panel); border-color: var(--dash-border); }
+.dash-premium .search-pill { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: none; }
 
-/* ---------- learner dashboard: premium gradient welcome hero ---------- */
-.dash-hero-premium {
-  position: relative; overflow: hidden;
-  background: linear-gradient(135deg, var(--brand-900) 0%, #142a6b 55%, #0a1840 100%);
-  border-radius: var(--radius-lg);
-  padding: 30px 32px;
-  display: flex; flex-wrap: wrap; align-items: center; gap: 24px; justify-content: space-between;
+/* ---------- dashboard: theme-color picker (Settings) ---------- */
+.theme-swatch-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.theme-swatch {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: var(--dash-panel); border: 1.5px solid var(--dash-border); border-radius: var(--radius);
+  padding: 12px 14px; cursor: pointer; font-family: inherit;
+  transition: border-color 0.2s ease, transform 0.2s ease;
 }
-.dash-hero-premium::before {
-  content: ""; position: absolute; inset: 0; opacity: 0.6; pointer-events: none;
-  background-image: radial-gradient(circle at 12% 18%, rgba(255,255,255,0.09) 0, transparent 45%),
-    radial-gradient(circle at 88% 88%, rgba(245,179,1,0.14) 0, transparent 50%);
-}
-.dash-hero-text { position: relative; z-index: 1; min-width: 240px; }
-.dash-hero-text h1 { color: #fff; font-size: 25px; }
-.dash-hero-text p { color: rgba(255,255,255,0.68); margin-top: 6px; font-size: 14px; }
-.dash-hero-actions { position: relative; z-index: 1; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.theme-swatch:hover { transform: translateY(-2px); }
+.theme-swatch.is-active { border-color: var(--swatch); box-shadow: 0 0 0 3px color-mix(in srgb, var(--swatch) 25%, transparent); }
+.theme-swatch-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+.theme-swatch-label { font-size: 11.5px; font-weight: 700; color: var(--ink); }
 
-.momentum-callout {
-  display: flex; align-items: center; gap: 12px;
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius);
-  padding: 12px 16px; backdrop-filter: blur(6px); max-width: 300px;
-}
-.momentum-callout .flame { font-size: 20px; flex-shrink: 0; }
-.momentum-callout strong { color: #fff; font-size: 13px; font-weight: 700; display: block; }
-.momentum-callout span { color: rgba(255,255,255,0.6); font-size: 11.5px; }
-
-.progress-ring-wrap { position: relative; width: 88px; height: 88px; flex-shrink: 0; }
-.progress-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.progress-ring-track { fill: none; stroke: rgba(255,255,255,0.14); stroke-width: 8; }
-.progress-ring-fill {
-  fill: none; stroke: var(--gold); stroke-width: 8; stroke-linecap: round;
-  transition: stroke-dashoffset 1.3s cubic-bezier(0.16,1,0.3,1);
-}
-.progress-ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.progress-ring-label strong { color: #fff; font-size: 17px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-.progress-ring-label span { color: rgba(255,255,255,0.55); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 3px; }
-@media (prefers-reduced-motion: reduce) { .progress-ring-fill { transition: none; } }
+/* ---------- dashboard: plain welcome header (learner) ---------- */
+.dash-welcome-quote { margin: 8px 0 0; color: var(--muted); font-size: 14.5px; font-style: italic; max-width: 46ch; }
 
 /* ---------- learner dashboard: continue-learning slider ---------- */
 .continue-track {
@@ -638,7 +580,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   transition: transform 0.25s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.25s cubic-bezier(0.2,0.8,0.2,1);
 }
 .continue-card:hover { transform: translateY(-3px); box-shadow: 0 24px 48px -24px rgba(16,24,40,0.2), 0 2px 8px -2px rgba(16,24,40,0.06); }
-.continue-thumb { width: 42%; flex-shrink: 0; background: var(--brand-900); position: relative; }
+.continue-thumb { width: 42%; flex-shrink: 0; background: linear-gradient(135deg, var(--dash-panel-2), var(--dash-bg)); position: relative; }
 .continue-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .continue-thumb .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-weight: 700; font-size: 13px; }
 .continue-body { flex: 1; min-width: 0; padding: 18px 20px; display: flex; flex-direction: column; }
@@ -657,7 +599,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 }
 .enrolled-course-card:hover { transform: translateY(-3px); box-shadow: 0 24px 48px -24px rgba(16,24,40,0.2), 0 2px 8px -2px rgba(16,24,40,0.06); }
 .enrolled-course-card.is-hidden { display: none; }
-.ecc-thumb { position: relative; aspect-ratio: 16/9; background: var(--brand-900); }
+.ecc-thumb { position: relative; aspect-ratio: 16/9; background: linear-gradient(135deg, var(--dash-panel-2), var(--dash-bg)); }
 .ecc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ecc-thumb .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-weight: 700; font-size: 13px; }
 .ecc-done-badge {
@@ -674,16 +616,13 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .cert-gallery-card { background: var(--dash-panel); border: 1px solid var(--dash-border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--dash-shadow); }
 .cert-gallery-preview {
   aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, var(--brand-900), #0f2360);
-  color: var(--gold);
+  background: linear-gradient(135deg, var(--dash-panel-2), var(--dash-bg));
+  color: var(--accent);
 }
 .cert-gallery-preview svg { width: 44px; height: 44px; }
 .cert-gallery-body { padding: 16px 18px 18px; }
 .cert-gallery-body h3 { font-size: 14.5px; font-weight: 700; line-height: 1.35; }
 
-/* ---------- learner dashboard: footer motivation banner ---------- */
-.dash-motivation {
-  margin-top: 44px; padding: 30px 24px; text-align: center; border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--brand-900), #0f2360);
-}
-.dash-motivation p { color: #fff; font-size: 16px; font-weight: 700; font-style: italic; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+/* ---------- dashboard: footer quote (learner) ---------- */
+.dash-quote-block { margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--dash-border); text-align: center; }
+.dash-quote-block p { font-size: 15px; font-style: italic; color: var(--muted); max-width: 44ch; margin: 0 auto; }

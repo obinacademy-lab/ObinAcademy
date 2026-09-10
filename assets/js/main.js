@@ -85,18 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Learner dashboard: animate the overall-progress ring's stroke-dashoffset
-  // from full (empty ring) to its real value on load, so it visibly fills in
-  // instead of appearing instantly at rest. Double rAF forces the browser to
-  // paint the starting state first, or the CSS transition gets skipped.
-  document.querySelectorAll("[data-ring-offset]").forEach((ring) => {
-    const target = ring.getAttribute("data-ring-offset");
-    if (prefersReducedMotion) { ring.style.strokeDashoffset = target; return; }
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => { ring.style.strokeDashoffset = target; });
-    });
-  });
-
   // Testimonials slider: a horizontal scroll-snap track (swipeable natively
   // on touch) with arrow buttons, dot indicators, and autoplay that pauses
   // on hover/touch. Dots stay in sync even when the visitor swipes manually

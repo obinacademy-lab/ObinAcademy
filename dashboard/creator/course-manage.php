@@ -170,7 +170,7 @@ $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLI
 $pageTitle = $course['title'] . ' — Manage — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="row between wrap gap-3">
+<div class="row between wrap gap-3 reveal">
   <div>
     <h1 class="h2"><?= e($course['title']) ?></h1>
     <p class="muted" style="margin-top:6px;"><?= e(format_money((float) $course['price'])) ?> &middot; <?= $studentCount ?> students</p>
@@ -225,7 +225,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <div class="alert alert-error" style="margin-top:16px;"><?= e(implode(' ', $errors)) ?></div>
 <?php endif; ?>
 
-<details class="card" style="margin-top:24px;">
+<details class="card reveal" style="margin-top:24px;">
   <summary class="card-pad" style="cursor:pointer; font-weight:700; list-style:none;">✎ Edit Course Details</summary>
   <form method="post" enctype="multipart/form-data" class="card-pad" style="border-top:1px solid var(--dash-border);">
     <?= csrf_field() ?>
@@ -270,7 +270,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
 <div class="stack gap-3" style="margin-top:16px;">
   <?php foreach ($modules as $mi => $module): ?>
-    <div class="card">
+    <div class="card reveal reveal-delay-<?= min($mi + 1, 5) ?>">
       <div class="row between" style="background:var(--dash-panel-2); padding:12px 20px; border-radius: var(--radius) var(--radius) 0 0;">
         <span style="font-weight:700; font-size:14px;">Module <?= $mi + 1 ?>: <?= e($module['title']) ?></span>
         <form method="post" data-confirm="Delete this module and all its lessons?"><?= csrf_field() ?><input type="hidden" name="_action" value="delete_module"><input type="hidden" name="moduleId" value="<?= (int) $module['id'] ?>"><button style="background:none;border:none;color:var(--danger);cursor:pointer;">🗑</button></form>

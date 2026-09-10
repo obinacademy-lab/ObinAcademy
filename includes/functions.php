@@ -14,6 +14,40 @@ const MAX_DAILY_WITHDRAWAL_UGX = 3000000;
 // PUBLISHED), not created_at (which could be from long before it was ready).
 const NEW_COURSE_BADGE_DAYS = 14;
 
+/**
+ * Every dashboard theme color available to a user (Settings → Dashboard
+ * Theme), each a fully-designed "dark shell + one accent" pairing — never a
+ * raw color picker, so no combination a learner/creator/admin can choose
+ * ever ends up low-contrast or off-brand. `swatch` is just for rendering
+ * the picker UI; the real values live in the matching .theme-<key> CSS
+ * class in dashboard.css (kept in sync by hand — there's no other source
+ * of truth to generate this from).
+ */
+const DASHBOARD_THEMES = [
+    'purple' => ['label' => 'Purple', 'swatch' => '#8b5cf6'],
+    'gold'   => ['label' => 'Gold',   'swatch' => '#f5b301'],
+    'red'    => ['label' => 'Red',    'swatch' => '#e03c4e'],
+    'green'  => ['label' => 'Green',  'swatch' => '#3d8f5f'],
+    'blue'   => ['label' => 'Blue',   'swatch' => '#3b82f6'],
+    'slate'  => ['label' => 'Slate',  'swatch' => '#94a3b8'],
+];
+
+/** The theme a role opens with before the learner/creator/admin ever picks one for themselves. */
+function dashboard_theme_default(string $role): string {
+    return match ($role) {
+        'ADMIN' => 'slate',
+        'CREATOR' => 'purple',
+        default => 'gold',
+    };
+}
+
+/** @return string a valid DASHBOARD_THEMES key — never trusts a stored value blindly, in case it predates a theme being renamed/removed. */
+function dashboard_theme_for_user(array $user): string {
+    $stored = $user['dashboard_theme_color'] ?? null;
+    if ($stored && isset(DASHBOARD_THEMES[$stored])) return $stored;
+    return dashboard_theme_default($user['role']);
+}
+
 const ACCESS_DURATION_OPTIONS = [
     ['label' => '30 days', 'days' => 30],
     ['label' => '90 days', 'days' => 90],
