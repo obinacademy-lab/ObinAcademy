@@ -46,6 +46,7 @@ $navByRole = [
             ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
         ],
         'System' => [
+            ['/dashboard/admin/content-health.php', 'Content Health', 'clipboard-check'],
             ['/dashboard/admin/audit-log.php', 'Audit Log', 'scroll-text'],
             ['/dashboard/settings.php', 'Settings', 'settings'],
         ],
