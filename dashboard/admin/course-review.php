@@ -1,10 +1,11 @@
 <?php
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/audit.php';
+require __DIR__ . '/../../includes/course_notify.php';
 $user = require_role(['ADMIN']);
 
 $courseId = (int) query_param('id');
-$course = db_one('SELECT c.*, u.name AS creator_name FROM courses c JOIN users u ON u.id=c.creator_id WHERE c.id=?', [$courseId]);
+$course = db_one('SELECT c.*, u.name AS creator_name, u.email AS creator_email FROM courses c JOIN users u ON u.id=c.creator_id WHERE c.id=?', [$courseId]);
 if (!$course) { http_response_code(404); exit('Course not found'); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -13,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'approve') {
         db_run("UPDATE courses SET status='PUBLISHED', reviewed_at=NOW(), rejection_reason=NULL WHERE id=?", [$courseId]);
         log_admin_action((int) $user['id'], $user['name'], 'course.approved', 'Course', $course['title']);
+        notify_new_course_published($course);
         flash_set('success', 'Course approved and published.');
     } elseif ($action === 'reject') {
         $reason = post('rejectionReason');

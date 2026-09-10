@@ -8,6 +8,11 @@ const PLATFORM_FEE_RATE = 0.10;
 const AFFILIATE_COMMISSION_RATE = 0.02;
 const MIN_WITHDRAWAL_UGX = 75000;
 const MAX_DAILY_WITHDRAWAL_UGX = 3000000;
+// Sorting the course grid by popularity (see POPULARITY_ORDER) would bury a
+// brand-new course under zero purchases/views — this badge window is what
+// keeps it visible anyway. Measured from reviewed_at (when it actually went
+// PUBLISHED), not created_at (which could be from long before it was ready).
+const NEW_COURSE_BADGE_DAYS = 14;
 
 const ACCESS_DURATION_OPTIONS = [
     ['label' => '30 days', 'days' => 30],

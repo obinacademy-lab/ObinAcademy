@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/data.php';
-require __DIR__ . '/includes/course_card.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/data.php';
+require __DIR__ . '/../includes/course_card.php';
 
 $stats = get_platform_stats();
 
@@ -12,7 +12,7 @@ const HOME_COURSES_PER_PAGE = 9;
 $totalCourseCount = (int) $stats['course_count'];
 $totalPages = max(1, (int) ceil($totalCourseCount / HOME_COURSES_PER_PAGE));
 $page = max(1, min($totalPages, (int) query_param('page', '1')));
-$courses = get_course_cards('', [], 'c.created_at DESC', HOME_COURSES_PER_PAGE, ($page - 1) * HOME_COURSES_PER_PAGE);
+$courses = get_course_cards('', [], POPULARITY_ORDER, HOME_COURSES_PER_PAGE, ($page - 1) * HOME_COURSES_PER_PAGE);
 
 // A curated highlight, not the full list — keeps the homepage from feeling
 // crowded. The complete set lives on skills.php. Slugs point at real
@@ -46,7 +46,7 @@ $structuredData = [
         ],
     ],
 ];
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <section class="home-hero-v3">
@@ -129,4 +129,4 @@ require __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

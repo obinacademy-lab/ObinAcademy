@@ -7,6 +7,9 @@ function render_course_card(array $c): void {
     ?>
     <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="course-card">
       <div class="thumb">
+        <?php if (!empty($c['reviewed_at']) && strtotime($c['reviewed_at']) >= strtotime('-' . NEW_COURSE_BADGE_DAYS . ' days')): ?>
+          <span class="badge-pill badge-new">New</span>
+        <?php endif; ?>
         <?php if (!empty($c['thumbnail_url'])): ?>
           <img src="<?= e(asset_src($c['thumbnail_url'])) ?>" alt="" loading="lazy">
         <?php else: ?>

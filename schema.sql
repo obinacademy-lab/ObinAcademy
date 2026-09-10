@@ -25,6 +25,10 @@ CREATE TABLE users (
   -- separate from leads.unsubscribed, which governs a different audience
   -- (pre-signup marketing emails) via a different token/table entirely.
   retention_emails_opt_out TINYINT(1) NOT NULL DEFAULT 0,
+  -- Separate from retention_emails_opt_out — a learner/creator can opt out
+  -- of "a new course just went live" broadcasts independently of inactivity
+  -- nudges. See includes/course_notify.php.
+  new_course_emails_opt_out TINYINT(1) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

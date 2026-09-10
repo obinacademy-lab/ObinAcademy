@@ -447,3 +447,50 @@ function send_creator_application_approved_email(string $to, string $name): void
         </div>
         HTML);
 }
+
+/** Sent to a creator's own course the moment an admin approves it — see includes/course_notify.php. */
+function send_course_live_email_to_creator(string $to, string $name, string $courseTitle, string $courseUrl): void {
+    resend_send($to, "Your Course \"{$courseTitle}\" Is Now Live!", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
+          <div style="font-size: 34px;">🎉</div>
+          <h2 style="color: #1e3a8a; margin-top: 8px;">You're live, {$name}!</h2>
+          <p style="color: #14181b; font-size: 15px; line-height: 1.6;">
+            <strong>{$courseTitle}</strong> has been approved and is now published on Obin Academy —
+            learners can find it and enroll right now.
+          </p>
+          <p style="margin-top: 22px;">
+            <a href="{$courseUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              View Your Course
+            </a>
+          </p>
+        </div>
+        HTML);
+}
+
+/**
+ * Sent to every other learner/creator on the platform (not the course's own
+ * creator, who gets send_course_live_email_to_creator() instead) — see
+ * includes/course_notify.php for who's actually on this list.
+ */
+function send_new_course_announcement_email(string $to, string $name, string $courseTitle, string $courseSummary, string $creatorName, string $courseUrl, string $unsubscribeUrl): void {
+    $firstName = trim(explode(' ', $name)[0] ?? '') ?: 'there';
+    resend_send($to, "New on Obin Academy: \"{$courseTitle}\"", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <div style="text-align: center; font-size: 30px;">🆕</div>
+          <h2 style="color: #1e3a8a; text-align: center; margin-top: 8px;">A new course just went live</h2>
+          <p style="color: #14181b; font-size: 15px; line-height: 1.6;">
+            Hey {$firstName} — <strong>{$courseTitle}</strong> by {$creatorName} just published on Obin Academy.
+          </p>
+          <p style="color: #5b6670; font-size: 14px; line-height: 1.6;">{$courseSummary}</p>
+          <p style="text-align: center; margin-top: 22px;">
+            <a href="{$courseUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              Check It Out
+            </a>
+          </p>
+          <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            You're getting this because you have an account on Obin Academy.
+            <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from new course announcements</a>.
+          </p>
+        </div>
+        HTML);
+}

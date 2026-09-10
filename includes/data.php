@@ -28,16 +28,22 @@ function get_featured_courses(int $take = 6): array {
     return get_course_cards('', [], 'c.created_at DESC', $take);
 }
 
+// A purchase (an enrollment) signals real commitment, a view just curiosity —
+// weighting student_count 10x keeps a handful of paying students ranking
+// above a course that's only racked up page views, while still letting raw
+// view volume matter for courses too new to have many sales yet.
+const POPULARITY_ORDER = '(student_count * 10 + c.view_count) DESC, c.created_at DESC';
+
 const COURSE_SORT_OPTIONS = [
     'newest' => ['label' => 'Newest', 'order' => 'c.created_at DESC'],
-    'popular' => ['label' => 'Most Popular', 'order' => 'student_count DESC, c.created_at DESC'],
+    'popular' => ['label' => 'Most Popular', 'order' => POPULARITY_ORDER],
     'rating' => ['label' => 'Highest Rated', 'order' => 'avg_rating DESC, review_count DESC'],
     'price_low' => ['label' => 'Price: Low to High', 'order' => 'c.price ASC'],
     'price_high' => ['label' => 'Price: High to Low', 'order' => 'c.price DESC'],
 ];
 
 /** @param string $price '' (any), 'free', or 'paid' — anything else is ignored. */
-function search_courses(string $query = '', string $categorySlug = '', string $sort = 'newest', string $price = ''): array {
+function search_courses(string $query = '', string $categorySlug = '', string $sort = 'popular', string $price = ''): array {
     $where = [];
     $params = [];
     if ($categorySlug) {
@@ -54,7 +60,7 @@ function search_courses(string $query = '', string $categorySlug = '', string $s
     } elseif ($price === 'paid') {
         $where[] = 'c.price > 0';
     }
-    $orderBy = COURSE_SORT_OPTIONS[$sort]['order'] ?? COURSE_SORT_OPTIONS['newest']['order'];
+    $orderBy = COURSE_SORT_OPTIONS[$sort]['order'] ?? COURSE_SORT_OPTIONS['popular']['order'];
     return get_course_cards(implode(' AND ', $where), $params, $orderBy);
 }
 
