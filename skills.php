@@ -23,11 +23,11 @@ $pageTitle = 'Browse All Skills — Obin Academy';
 $pageDescription = 'Every skill category on Obin Academy — from Finance and AI to Agriculture and Design. Find the right courses for where you want to go.';
 require __DIR__ . '/includes/header.php';
 ?>
-<section class="course-hero">
-  <div class="container" style="max-width:680px; text-align:center;">
+<section class="course-hero course-hero-centered">
+  <div class="container">
     <span class="pill">26 Industries</span>
     <h1 style="margin-top:14px;">Skills Across Every Industry</h1>
-    <p class="summary" style="margin:14px auto 0;">Whatever field you're in, there's a path to grow it here — browse by industry to find courses built for your world.</p>
+    <p class="summary" style="margin-top:14px;">Whatever field you're in, there's a path to grow it here — browse by industry to find courses built for your world.</p>
   </div>
 </section>
 
