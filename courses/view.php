@@ -179,9 +179,9 @@ require __DIR__ . '/../includes/header.php';
 
 <section class="section">
   <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
-    <div style="grid-column: span 2;" class="reveal reveal-delay-1">
+    <div style="grid-column: span 2;" class="reveal reveal-delay-1 course-content">
       <h2 class="h3">About This Course</h2>
-      <p class="muted" style="margin-top:14px; line-height:1.75; white-space:pre-line;"><?= e($course['description']) ?></p>
+      <p class="muted course-description" style="margin-top:14px; line-height:1.75; white-space:pre-line;"><?= e($course['description']) ?></p>
 
       <h2 class="h3" style="margin-top:48px;">Curriculum</h2>
       <div class="curriculum-list" style="margin-top:16px;">
