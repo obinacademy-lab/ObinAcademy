@@ -90,7 +90,24 @@ if (preg_match('#^https?://#', $lesson['file_url'])) {
 }
 
 $filePath = resolve_private_path($lesson['file_url']);
+// A stale PHP stat cache (e.g. the file was written by a different process
+// moments ago) can make is_file()/filesize() below report on an outdated
+// view of the file — clear it explicitly rather than risk serving a wrong
+// Content-Length for a file that actually exists and is the right size.
+clearstatcache(true, $filePath);
 if (!is_file($filePath)) { http_response_code(404); exit('File missing'); }
+if (!is_readable($filePath)) {
+    // Previously this fell through to fopen(), which returns false on an
+    // unreadable file — every call after that (fseek/fread/feof on `false`)
+    // is a fatal TypeError in PHP 8, but only *after* the headers below had
+    // already gone out with a real Content-Length. The browser then saw a
+    // valid-looking response with an empty body — a PDF viewer showing
+    // "blank, no error" is exactly what that looks like. Failing here,
+    // before any header is sent, turns that into a real, visible error.
+    error_log("[stream] file exists but is not readable: $filePath");
+    http_response_code(500);
+    exit('File could not be read. Please contact support.');
+}
 
 $size = filesize($filePath);
 $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
@@ -136,6 +153,14 @@ while (ob_get_level() > 0) ob_end_flush();
 header('X-Accel-Buffering: no');
 
 $fp = fopen($filePath, 'rb');
+if ($fp === false) {
+    // Headers are already sent at this point, so the response is unavoidably
+    // a "200 OK" with no body from the client's perspective — but at least
+    // this stops a fatal TypeError from fseek()/fread() on a false $fp, and
+    // leaves a clear trace of what happened instead of nothing at all.
+    error_log("[stream] fopen() failed despite is_readable() passing: $filePath");
+    exit;
+}
 fseek($fp, $start);
 $bufferSize = 65536;
 $bytesLeft = $length;
