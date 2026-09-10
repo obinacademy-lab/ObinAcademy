@@ -922,20 +922,21 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   color: var(--ink); text-wrap: balance;
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both;
 }
-/* Homepage h1 only ("Discover Courses") — a gold gradient with a bright
-   highlight streak continuously sweeping through the text, reusing the
-   same shine technique/keyframe as the footer's mission line. Scoped to
-   this one span rather than .home-hero-v3 h1 itself, since that class is
-   shared with courses/index.php, about.php, and stories.php's headlines. */
-.hero-shine-gold {
-  background: linear-gradient(100deg, var(--gold-dark) 35%, #fff3c4 50%, var(--gold-dark) 65%);
+/* Homepage h1 only ("Discover Courses") — a blue gradient (the site's other
+   brand accent) with a bright highlight streak continuously sweeping
+   through the text, reusing the same shine technique/keyframe as the
+   footer's mission line. Scoped to this one span rather than
+   .home-hero-v3 h1 itself, since that class is shared with
+   courses/index.php, about.php, and stories.php's headlines. */
+.hero-shine {
+  background: linear-gradient(100deg, var(--accent-dark) 35%, #bfdbfe 50%, var(--accent-dark) 65%);
   background-size: 220% auto;
   -webkit-background-clip: text; background-clip: text;
   color: transparent; -webkit-text-fill-color: transparent;
   animation: mission-shine 5s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-shine-gold { animation: none; background: none; color: var(--gold-dark); -webkit-text-fill-color: var(--gold-dark); }
+  .hero-shine { animation: none; background: none; color: var(--accent-dark); -webkit-text-fill-color: var(--accent-dark); }
 }
 .hero-subline {
   margin-top: 14px; font-size: 28px; font-weight: 500; color: var(--muted);
