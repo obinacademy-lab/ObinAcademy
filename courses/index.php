@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/../../includes/bootstrap.php';
-require __DIR__ . '/../../includes/data.php';
-require __DIR__ . '/../../includes/course_card.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/data.php';
+require __DIR__ . '/../includes/course_card.php';
 
 $q = query_param('q');
 $categorySlug = query_param('category');
@@ -47,7 +47,7 @@ if ($activeCategoryName) {
     $pageDescription = 'Browse practical courses in Finance, Tech, Business, Marketing, and more — taught by real creators and paid for instantly with MTN or Airtel Mobile Money.';
 }
 $noindex = $q !== ''; // search-result pages: let the base browse/category pages get indexed, not every query variation
-require __DIR__ . '/../../includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 <section class="home-hero-v3">
   <div class="container" style="text-align:center;">
@@ -135,4 +135,4 @@ require __DIR__ . '/../../includes/header.php';
     </div>
   <?php endif; ?>
 </div>
-<?php require __DIR__ . '/../../includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
