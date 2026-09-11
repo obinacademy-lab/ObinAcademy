@@ -9,7 +9,7 @@ function render_course_card(array $c): void {
     $eventPassed = $isEvent && event_has_passed($c);
     ?>
     <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="course-card">
-      <div class="thumb">
+      <div class="thumb <?= $isEvent ? 'thumb-portrait' : '' ?>">
         <?php if ($isEvent && $eventSoldOut): ?>
           <span class="badge-pill badge-sale">Sold Out</span>
         <?php elseif ($isEvent && !$eventPassed): ?>

@@ -23,7 +23,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $ticketUrl = base_url('ticket.php?slug=' . $course['slug']);
     ?>
     <div class="enroll-panel reveal reveal-delay-2">
-      <div class="thumb">
+      <div class="thumb <?= $isEvent ? 'thumb-portrait' : '' ?>">
         <?php if (!empty($course['thumbnail_url'])): ?>
           <img src="<?= e(asset_src($course['thumbnail_url'])) ?>" alt="">
         <?php else: ?>

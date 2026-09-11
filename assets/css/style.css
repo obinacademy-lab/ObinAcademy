@@ -1025,6 +1025,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-pop); }
 .course-card .thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; background: var(--brand-900); }
 .course-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+/* Event flyers are uploaded portrait, not landscape like course thumbnails —
+   a taller box so the full flyer shows instead of a 16:9 crop. */
+.course-card .thumb.thumb-portrait { aspect-ratio: 4/5; }
 .course-card .thumb .placeholder { display: flex; align-items: center; justify-content: center; width:100%; height:100%; background: linear-gradient(135deg, var(--brand-800), var(--brand-950)); color: rgba(255,255,255,0.6); font-weight: 600; font-size: 13px; }
 
 /* No longer used on the course-card grid itself, but .badge-pill/.badge-sale
@@ -1138,6 +1141,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 .enroll-panel .thumb { aspect-ratio: 16/10; background: var(--brand-900); position: relative; }
 .enroll-panel .thumb img { width:100%; height:100%; object-fit:cover; }
+.enroll-panel .thumb.thumb-portrait { aspect-ratio: 4/5; }
 .enroll-panel .thumb::after { content:""; position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.35), transparent 45%); pointer-events:none; }
 .enroll-panel .thumb .placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; height:100%; color:rgba(255,255,255,0.75); font-weight:700; background: linear-gradient(135deg, var(--brand-800), var(--brand-950)); }
 .enroll-panel .thumb .placeholder svg { width:32px; height:32px; opacity:0.8; }

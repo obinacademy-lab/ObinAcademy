@@ -128,8 +128,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 
   <div class="field">
-    <label for="thumbnail">Thumbnail Image (optional)</label>
+    <label for="thumbnail">Event Flyer (optional)</label>
     <input id="thumbnail" name="thumbnail" type="file" accept="image/*">
+    <p class="help">Portrait format works best — e.g. 1080×1350px. This is what learners see on the event card and detail page.</p>
   </div>
 
   <button type="submit" class="btn btn-primary btn-block btn-lg">Create Event & Continue</button>

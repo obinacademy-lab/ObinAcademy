@@ -362,7 +362,15 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <div class="field"><label>Premium Download Price (UGX, optional)</label><input name="premiumPrice" type="number" min="0" step="1" value="<?= e($course['premium_price'] !== null ? (string) $course['premium_price'] : '') ?>" placeholder="Leave blank to disable downloads"></div>
       </div>
     <?php endif; ?>
-    <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
+    <?php if ($isEvent): ?>
+      <div class="field">
+        <label>Replace Event Flyer (optional)</label>
+        <input name="thumbnail" type="file" accept="image/*">
+        <p class="help">Portrait format works best — e.g. 1080×1350px.</p>
+      </div>
+    <?php else: ?>
+      <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
+    <?php endif; ?>
     <button type="submit" class="btn btn-primary">Save Changes</button>
   </form>
 </details>
