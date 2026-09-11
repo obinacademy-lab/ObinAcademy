@@ -21,6 +21,8 @@ if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
     exit;
 }
 
+$isEvent = $course['type'] === 'EVENT';
+
 // A plain, publicly-shown view counter — not deduped per visitor, and
 // excludes the course's own creator/admin so their own checks don't
 // inflate the number learners see.
@@ -85,17 +87,30 @@ $noindex = $course['status'] !== 'PUBLISHED';
 
 $structuredData = [
     '@context' => 'https://schema.org',
-    '@type' => 'Course',
+    '@type' => $isEvent ? 'Event' : 'Course',
     'name' => $course['title'],
     'description' => $pageDescription,
-    'provider' => [
+    'url' => base_url('courses/view.php?slug=' . $course['slug']),
+];
+if (!$isEvent) {
+    $structuredData['provider'] = [
         '@type' => 'Organization',
         'name' => 'Obin Academy',
         'sameAs' => base_url('index.php'),
-    ],
-    'url' => base_url('courses/view.php?slug=' . $course['slug']),
-];
+    ];
+}
 if (!empty($course['thumbnail_url'])) $structuredData['image'] = asset_src($course['thumbnail_url']);
+if ($isEvent) {
+    if (!empty($course['event_starts_at'])) $structuredData['startDate'] = date('c', strtotime($course['event_starts_at']));
+    if (!empty($course['event_ends_at'])) $structuredData['endDate'] = date('c', strtotime($course['event_ends_at']));
+    $structuredData['eventAttendanceMode'] = $course['event_online_url']
+        ? 'https://schema.org/OnlineEventAttendanceMode'
+        : 'https://schema.org/OfflineEventAttendanceMode';
+    $structuredData['location'] = $course['event_online_url']
+        ? ['@type' => 'VirtualLocation', 'url' => $course['event_online_url']]
+        : ['@type' => 'Place', 'name' => $course['event_location'] ?: 'TBA'];
+    $structuredData['organizer'] = ['@type' => 'Person', 'name' => $course['creator_name']];
+}
 if ((float) $course['price'] > 0) {
     $structuredData['offers'] = [
         '@type' => 'Offer',
@@ -105,14 +120,14 @@ if ((float) $course['price'] > 0) {
         'availability' => 'https://schema.org/InStock',
     ];
 }
-if ($reviewCount > 0) {
+if (!$isEvent && $reviewCount > 0) {
     $structuredData['aggregateRating'] = [
         '@type' => 'AggregateRating',
         'ratingValue' => number_format($avgRating, 1),
         'reviewCount' => $reviewCount,
     ];
 }
-if (!empty($course['creator_name'])) {
+if (!$isEvent && !empty($course['creator_name'])) {
     $structuredData['hasCourseInstance'] = [
         '@type' => 'CourseInstance',
         'courseMode' => 'online',
@@ -135,9 +150,13 @@ require __DIR__ . '/../includes/header.php';
     <nav class="breadcrumb reveal">
       <a href="<?= e(base_url('/')) ?>">Home</a>
       <?php dash_icon('chevron-right'); ?>
-      <a href="<?= e(base_url('courses/index.php')) ?>">Courses</a>
-      <?php dash_icon('chevron-right'); ?>
-      <a href="<?= e(base_url('courses/index.php?category=' . $course['category_slug'])) ?>"><?= e($course['category_name']) ?></a>
+      <?php if ($isEvent): ?>
+        <a href="<?= e(base_url('events.php')) ?>">Events</a>
+      <?php else: ?>
+        <a href="<?= e(base_url('courses/index.php')) ?>">Courses</a>
+        <?php dash_icon('chevron-right'); ?>
+        <a href="<?= e(base_url('courses/index.php?category=' . $course['category_slug'])) ?>"><?= e($course['category_name']) ?></a>
+      <?php endif; ?>
     </nav>
 
     <div class="reveal reveal-delay-1">
@@ -154,9 +173,15 @@ require __DIR__ . '/../includes/header.php';
             No reviews yet
           <?php endif; ?>
         </span>
-        <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> students</span>
-        <span class="meta-chip"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
-        <span class="meta-chip"><?php dash_icon('play'); ?><?= $totalLessons ?> lessons</span>
+        <?php if ($isEvent): ?>
+          <span class="meta-chip"><?php dash_icon('calendar'); ?><?= $course['event_starts_at'] ? e(date('M j, Y \a\t g:i A', strtotime($course['event_starts_at']))) : 'Date TBA' ?></span>
+          <span class="meta-chip"><?php dash_icon($course['event_online_url'] ? 'globe' : 'map-pin'); ?><?= $course['event_online_url'] ? 'Online' : e($course['event_location'] ?: 'Location TBA') ?></span>
+          <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> ticket<?= (int) $course['student_count'] === 1 ? '' : 's' ?> sold</span>
+        <?php else: ?>
+          <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> students</span>
+          <span class="meta-chip"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
+          <span class="meta-chip"><?php dash_icon('play'); ?><?= $totalLessons ?> lessons</span>
+        <?php endif; ?>
       </div>
 
       <div class="row gap-2 wrap" style="align-items:center; margin-top:26px;">
@@ -180,42 +205,82 @@ require __DIR__ . '/../includes/header.php';
 <section class="section">
   <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
     <div style="grid-column: span 2;" class="reveal reveal-delay-1 course-content">
-      <h2 class="h3">About This Course</h2>
+      <h2 class="h3"><?= $isEvent ? 'About This Event' : 'About This Course' ?></h2>
       <p class="muted course-description" style="margin-top:14px; line-height:1.75; white-space:pre-line;"><?= e($course['description']) ?></p>
 
-      <div class="row between wrap gap-2" style="margin-top:48px; align-items:baseline;">
-        <h2 class="h3">Curriculum</h2>
-        <div class="curriculum-stat"><strong><?= count($course['modules']) ?></strong> module<?= count($course['modules']) === 1 ? '' : 's' ?> &middot; <strong><?= $totalLessons ?></strong> lesson<?= $totalLessons === 1 ? '' : 's' ?></div>
-      </div>
-      <div class="timeline">
-        <?php foreach ($course['modules'] as $mi => $module): ?>
-          <div class="tmod reveal reveal-delay-<?= min($mi + 1, 5) ?>">
-            <div class="tmod-num"><?= $mi + 1 ?></div>
-            <details class="tmod-card" <?= $mi === 0 ? 'open' : '' ?>>
-              <summary class="tmod-summary">
-                <span class="tmod-title"><?= e($module['title']) ?></span>
-                <span class="tmod-count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
-                <?php dash_icon('chevron-down', 'tmod-chevron'); ?>
-              </summary>
-              <div class="tmod-body-outer"><div class="tmod-body-inner">
-                <?php foreach ($module['lessons'] as $lesson): ?>
-                  <div class="tlesson">
-                    <span class="tlesson-icon"><?php dash_icon($lesson['type'] === 'VIDEO' ? 'play' : 'file-text'); ?></span>
-                    <span><?= e($lesson['title']) ?></span>
-                    <span class="tlesson-dur">
-                      <?php if (!empty($lesson['duration'])): $d = (int) $lesson['duration']; ?>
-                        <?= sprintf('%d:%02d', intdiv($d, 60), $d % 60) ?>
-                      <?php else: ?>
-                        <?= $lesson['type'] === 'VIDEO' ? 'Video' : 'PDF' ?>
-                      <?php endif; ?>
-                    </span>
-                  </div>
-                <?php endforeach; ?>
-              </div></div>
-            </details>
+      <?php if ($isEvent): ?>
+        <h2 class="h3" style="margin-top:48px;">Event Details</h2>
+        <div class="event-detail-block reveal" style="margin-top:16px;">
+          <div class="event-detail-row">
+            <span class="event-detail-icon"><?php dash_icon('calendar'); ?></span>
+            <div>
+              <div class="event-detail-label">When</div>
+              <div class="event-detail-value">
+                <?= $course['event_starts_at'] ? e(format_date($course['event_starts_at'])) . ' at ' . e(date('g:i A', strtotime($course['event_starts_at']))) : 'Date to be announced' ?>
+                <?php if ($course['event_ends_at']): ?> &ndash; <?= e(date('g:i A', strtotime($course['event_ends_at']))) ?><?php endif; ?>
+              </div>
+            </div>
           </div>
-        <?php endforeach; ?>
-      </div>
+          <div class="event-detail-row">
+            <span class="event-detail-icon"><?php dash_icon($course['event_online_url'] ? 'globe' : 'map-pin'); ?></span>
+            <div>
+              <div class="event-detail-label"><?= $course['event_online_url'] ? 'Online' : 'Location' ?></div>
+              <div class="event-detail-value">
+                <?php if ($course['event_online_url'] && ($isEnrolled || $isOwner)): ?>
+                  <a href="<?= e($course['event_online_url']) ?>" target="_blank" rel="noopener noreferrer">Join the event &rarr;</a>
+                <?php elseif ($course['event_online_url']): ?>
+                  The link is emailed to ticket holders before the event.
+                <?php else: ?>
+                  <?= e($course['event_location'] ?: 'To be announced') ?>
+                <?php endif; ?>
+              </div>
+            </div>
+          </div>
+          <div class="event-detail-row">
+            <span class="event-detail-icon"><?php dash_icon('users'); ?></span>
+            <div>
+              <div class="event-detail-label">Capacity</div>
+              <div class="event-detail-value">
+                <?= $course['ticket_capacity'] !== null ? (int) $course['student_count'] . ' of ' . (int) $course['ticket_capacity'] . ' tickets sold' : (int) $course['student_count'] . ' attending so far' ?>
+              </div>
+            </div>
+          </div>
+        </div>
+      <?php else: ?>
+        <div class="row between wrap gap-2" style="margin-top:48px; align-items:baseline;">
+          <h2 class="h3">Curriculum</h2>
+          <div class="curriculum-stat"><strong><?= count($course['modules']) ?></strong> module<?= count($course['modules']) === 1 ? '' : 's' ?> &middot; <strong><?= $totalLessons ?></strong> lesson<?= $totalLessons === 1 ? '' : 's' ?></div>
+        </div>
+        <div class="timeline">
+          <?php foreach ($course['modules'] as $mi => $module): ?>
+            <div class="tmod reveal reveal-delay-<?= min($mi + 1, 5) ?>">
+              <div class="tmod-num"><?= $mi + 1 ?></div>
+              <details class="tmod-card" <?= $mi === 0 ? 'open' : '' ?>>
+                <summary class="tmod-summary">
+                  <span class="tmod-title"><?= e($module['title']) ?></span>
+                  <span class="tmod-count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
+                  <?php dash_icon('chevron-down', 'tmod-chevron'); ?>
+                </summary>
+                <div class="tmod-body-outer"><div class="tmod-body-inner">
+                  <?php foreach ($module['lessons'] as $lesson): ?>
+                    <div class="tlesson">
+                      <span class="tlesson-icon"><?php dash_icon($lesson['type'] === 'VIDEO' ? 'play' : 'file-text'); ?></span>
+                      <span><?= e($lesson['title']) ?></span>
+                      <span class="tlesson-dur">
+                        <?php if (!empty($lesson['duration'])): $d = (int) $lesson['duration']; ?>
+                          <?= sprintf('%d:%02d', intdiv($d, 60), $d % 60) ?>
+                        <?php else: ?>
+                          <?= $lesson['type'] === 'VIDEO' ? 'Video' : 'PDF' ?>
+                        <?php endif; ?>
+                      </span>
+                    </div>
+                  <?php endforeach; ?>
+                </div></div>
+              </details>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
 
       <h2 class="h3" style="margin-top:48px;">Reviews<?= $reviewCount > 0 ? " ($reviewCount)" : '' ?></h2>
 

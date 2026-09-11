@@ -10,8 +10,17 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $displayPrice = $hasSale ? (float) $course['sale_price'] : $price;
     $saleDaysLeft = $hasSale ? course_sale_days_left($course) : null;
     $isPublished = $course['status'] === 'PUBLISHED';
-    $showPaidFlow = $user && !$isEnrolled && !$isOwner && $isPublished && $price > 0;
+    $isEvent = $course['type'] === 'EVENT';
+    $ticketsSold = $isEvent ? (int) $course['student_count'] : 0;
+    $hasPassed = $isEvent && event_has_passed($course);
+    $soldOut = $isEvent && event_is_sold_out($course, $ticketsSold);
+    $showPaidFlow = $user && !$isEnrolled && !$isOwner && $isPublished && $price > 0 && !$hasPassed && !$soldOut;
     $loginUrl = base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']));
+    // Events require an account to pay (see api/initiate-payment.php), so
+    // the buyer is always logged in the moment checkout succeeds — the
+    // session-authenticated ticket.php?slug=... link works immediately,
+    // no token needs to travel through the payment-success response.
+    $ticketUrl = base_url('ticket.php?slug=' . $course['slug']);
     ?>
     <div class="enroll-panel reveal reveal-delay-2">
       <div class="thumb">
@@ -37,16 +46,25 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           </div>
         <?php endif; ?>
         <div class="access-note">
-          <?php dash_icon('clock'); ?>
-          <?= $course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access after purchase' : 'Lifetime access' ?>
+          <?php if ($isEvent): ?>
+            <?php dash_icon('calendar'); ?>
+            <?= $course['event_starts_at'] ? e(format_date($course['event_starts_at'])) . ' at ' . e(date('g:i A', strtotime($course['event_starts_at']))) : 'Date to be announced' ?>
+          <?php else: ?>
+            <?php dash_icon('clock'); ?>
+            <?= $course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access after purchase' : 'Lifetime access' ?>
+          <?php endif; ?>
         </div>
 
         <?php if ($isOwner): ?>
-          <a href="<?= e(base_url('dashboard/creator/course-manage.php?id=' . $course['id'])) ?>" class="btn btn-dark btn-block btn-lg" style="margin-top:20px;">Manage Course</a>
+          <a href="<?= e(base_url('dashboard/creator/course-manage.php?id=' . $course['id'])) ?>" class="btn btn-dark btn-block btn-lg" style="margin-top:20px;">Manage <?= $isEvent ? 'Event' : 'Course' ?></a>
         <?php elseif ($isEnrolled): ?>
-          <a href="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>" class="btn btn-primary btn-block btn-lg" style="margin-top:20px;">▶ Continue Learning</a>
+          <a href="<?= e($isEvent ? $ticketUrl : base_url('learn.php?slug=' . $course['slug'])) ?>" class="btn btn-primary btn-block btn-lg" style="margin-top:20px;"><?= $isEvent ? '🎟 View My Ticket' : '▶ Continue Learning' ?></a>
         <?php elseif (!$isPublished): ?>
           <button class="btn btn-outline btn-block btn-lg" disabled style="margin-top:20px;">Not Yet Available</button>
+        <?php elseif ($hasPassed): ?>
+          <button class="btn btn-outline btn-block btn-lg" disabled style="margin-top:20px;">Event Has Ended</button>
+        <?php elseif ($soldOut): ?>
+          <button class="btn btn-outline btn-block btn-lg" disabled style="margin-top:20px;">Sold Out</button>
         <?php elseif (!$user && $price <= 0): ?>
           <form method="post" action="<?= e(base_url('api/enroll-guest.php')) ?>" class="guest-form" style="margin-top:20px;">
             <input type="hidden" name="courseId" value="<?= (int) $course['id'] ?>">
@@ -69,7 +87,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           <div style="margin-top:20px;" data-payment-widget
                data-course-id="<?= (int) $course['id'] ?>"
                data-initiate-url="<?= e(base_url('api/initiate-payment.php')) ?>"
-               data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
+               data-success-redirect="<?= e($isEvent ? $ticketUrl : base_url('learn.php?slug=' . $course['slug'])) ?>">
             <div data-state="idle">
               <button class="btn btn-primary btn-block btn-lg" data-action="start">📱 Pay with Mobile Money</button>
             </div>
@@ -104,10 +122,16 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php endif; ?>
 
         <ul class="perks">
-          <li><?php dash_icon('check-circle'); ?><?= $course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access' : 'Lifetime access' ?></li>
-          <li><?php dash_icon('check-circle'); ?>Stream video lessons and PDFs anytime</li>
-          <li><?php dash_icon('check-circle'); ?><?= !empty($course['premium_price']) ? 'Downloads available with Premium (' . e(format_money((float) $course['premium_price'])) . ')' : 'Certificate of completion' ?></li>
-          <li><?php dash_icon('check-circle'); ?>Learn on any device</li>
+          <?php if ($isEvent): ?>
+            <li><?php dash_icon('check-circle'); ?>Instant e-ticket, emailed to you</li>
+            <li><?php dash_icon('check-circle'); ?><?= $course['event_online_url'] ? 'Join from anywhere — online event' : e($course['event_location'] ?: 'In-person event') ?></li>
+            <li><?php dash_icon('check-circle'); ?><?= $course['ticket_capacity'] !== null ? (int) $course['ticket_capacity'] . ' tickets total' : 'Open capacity' ?></li>
+          <?php else: ?>
+            <li><?php dash_icon('check-circle'); ?><?= $course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access' : 'Lifetime access' ?></li>
+            <li><?php dash_icon('check-circle'); ?>Stream video lessons and PDFs anytime</li>
+            <li><?php dash_icon('check-circle'); ?><?= !empty($course['premium_price']) ? 'Downloads available with Premium (' . e(format_money((float) $course['premium_price'])) . ')' : 'Certificate of completion' ?></li>
+            <li><?php dash_icon('check-circle'); ?>Learn on any device</li>
+          <?php endif; ?>
         </ul>
 
         <div class="enroll-trust">

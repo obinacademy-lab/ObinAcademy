@@ -94,8 +94,11 @@ function send_guest_access_email(string $to, string $name, string $courseTitle, 
  * premium upgrade), to both guest and logged-in learners — a receipt is
  * proof of payment independent of whatever access flow the learner uses.
  * $itemLabel distinguishes a full course purchase from a premium upgrade.
+ * $ticketUrl, when passed (an event purchase), swaps the "View Your
+ * Course" button for a direct "View Your Ticket" link — a token-based
+ * ticket.php URL that works without needing to be logged in again.
  */
-function send_payment_receipt_email(array $payment, bool $isGuestPayment, string $itemLabel): void {
+function send_payment_receipt_email(array $payment, bool $isGuestPayment, string $itemLabel, ?string $ticketUrl = null): void {
     $to = $isGuestPayment ? $payment['guest_email'] : $payment['learner_email'];
     if (!$to) return;
 
@@ -104,7 +107,8 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
     $courseTitle = $payment['course_title'];
     $receiptNo = 'OA-' . str_pad((string) $payment['id'], 6, '0', STR_PAD_LEFT);
     $date = date('F j, Y \a\t g:i A');
-    $courseUrl = base_url('courses/view.php?slug=' . $payment['course_slug']);
+    $courseUrl = $ticketUrl ?? base_url('courses/view.php?slug=' . $payment['course_slug']);
+    $ctaLabel = $ticketUrl ? 'View Your Ticket' : 'View Your Course';
 
     $discountRow = '';
     if (!empty($payment['original_amount'])) {
@@ -139,7 +143,7 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
 
           <p style="text-align: center; margin-top: 28px;">
             <a href="{$courseUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
-              View Your Course
+              {$ctaLabel}
             </a>
           </p>
 

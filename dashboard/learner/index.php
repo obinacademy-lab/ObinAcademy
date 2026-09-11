@@ -37,7 +37,7 @@ if ($enrolledCategoryIds) {
     $catPlaceholders = implode(',', array_fill(0, count($enrolledCategoryIds), '?'));
     $exclPlaceholders = implode(',', array_fill(0, count($enrolledCourseIds), '?'));
     $recommended = get_course_cards(
-        "c.category_id IN ($catPlaceholders) AND c.id NOT IN ($exclPlaceholders)",
+        "c.type = 'COURSE' AND c.category_id IN ($catPlaceholders) AND c.id NOT IN ($exclPlaceholders)",
         array_merge($enrolledCategoryIds, $enrolledCourseIds),
         'student_count DESC, c.created_at DESC',
         3

@@ -16,12 +16,30 @@ function enroll_in_course(int $userId, int $courseId): void {
         return;
     }
 
+    $isEvent = $course['type'] === 'EVENT';
+    if ($isEvent) {
+        if (event_has_passed($course)) throw new RuntimeException('This event has already happened.');
+        $ticketsSold = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
+        if (event_is_sold_out($course, $ticketsSold)) throw new RuntimeException('This event is sold out.');
+    }
+
     $split = split_sale((float) $course['price']);
     $expiresAt = compute_expires_at($course['access_duration_days'] !== null ? (int) $course['access_duration_days'] : null);
+    // Same reasoning as the paid path in payments.php: a ticket token for
+    // every event enrollment, not just guest ones, so it works as a
+    // standalone link independent of staying logged in.
+    $tokenHash = null;
+    if ($isEvent) {
+        [, $tokenHash] = make_access_token();
+    }
 
     db()->beginTransaction();
     try {
-        db_insert('INSERT INTO enrollments (user_id, course_id, expires_at) VALUES (?, ?, ?)', [$userId, $courseId, $expiresAt]);
+        if ($tokenHash !== null) {
+            db_insert('INSERT INTO enrollments (user_id, course_id, expires_at, access_token_hash) VALUES (?, ?, ?, ?)', [$userId, $courseId, $expiresAt, $tokenHash]);
+        } else {
+            db_insert('INSERT INTO enrollments (user_id, course_id, expires_at) VALUES (?, ?, ?)', [$userId, $courseId, $expiresAt]);
+        }
         db_insert(
             'INSERT INTO earnings (creator_id, course_id, amount, gross_amount, platform_fee) VALUES (?, ?, ?, ?, ?)',
             [$course['creator_id'], $courseId, $split['net'], $split['gross'], $split['fee']]

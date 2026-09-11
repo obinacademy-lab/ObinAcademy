@@ -9,6 +9,7 @@ function validate_phone(string $phone): bool {
 function fetch_payment_with_course(int $paymentId): ?array {
     return db_one(
         'SELECT p.*, c.price AS course_price, c.slug AS course_slug, c.title AS course_title, c.creator_id AS course_creator_id, c.access_duration_days,
+                c.type AS course_type,
                 u.name AS learner_name, u.email AS learner_email
          FROM payments p
          JOIN courses c ON c.id = p.course_id
@@ -84,6 +85,15 @@ function resolve_payment_with_iotec(array $payment): array {
             // changed while this payment was pending (course_price would not).
             $split = split_sale((float) $payment['amount'], $payment['affiliate_id'] !== null);
             $expiresAt = compute_expires_at($payment['access_duration_days'] !== null ? (int) $payment['access_duration_days'] : null);
+            // A logged-in event purchase gets a ticket token too (guests
+            // already always get one) — so the receipt email can carry a
+            // working ticket.php link without needing the recipient to be
+            // logged in again when they open it, possibly on another device.
+            $isEvent = $payment['course_type'] === 'EVENT';
+            $ticketToken = null;
+            if (!$isGuestPayment && $isEvent) {
+                [$ticketToken, $ticketTokenHash] = make_access_token();
+            }
             db()->beginTransaction();
             try {
                 db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
@@ -91,6 +101,11 @@ function resolve_payment_with_iotec(array $payment): array {
                     db_insert(
                         'INSERT INTO enrollments (user_id, guest_name, guest_email, access_token_hash, course_id, expires_at) VALUES (NULL, ?, ?, ?, ?, ?)',
                         [$payment['guest_name'], $payment['guest_email'], $payment['access_token_hash'], $payment['course_id'], $expiresAt]
+                    );
+                } elseif ($ticketToken !== null) {
+                    db_insert(
+                        'INSERT INTO enrollments (user_id, course_id, expires_at, access_token_hash) VALUES (?, ?, ?, ?)',
+                        [$payment['user_id'], $payment['course_id'], $expiresAt, $ticketTokenHash]
                     );
                 } else {
                     db_insert('INSERT INTO enrollments (user_id, course_id, expires_at) VALUES (?, ?, ?)', [$payment['user_id'], $payment['course_id'], $expiresAt]);
@@ -110,7 +125,8 @@ function resolve_payment_with_iotec(array $payment): array {
                 db()->rollBack();
                 throw $e;
             }
-            send_payment_receipt_email($payment, $isGuestPayment, 'Course Enrollment');
+            $ticketUrl = $ticketToken !== null ? base_url('ticket.php?token=' . $ticketToken) : null;
+            send_payment_receipt_email($payment, $isGuestPayment, $isEvent ? 'Event Ticket' : 'Course Enrollment', $ticketUrl);
         } else {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
         }
@@ -150,6 +166,13 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if (!$course || $course['status'] !== 'PUBLISHED') return ['error' => 'Course not found.'];
     if (!$isGuest && (int) $course['creator_id'] === $userId) return ['error' => 'Creators cannot enroll in their own course.'];
     if ((float) $course['price'] <= 0) return ['error' => 'This course is free — use the enroll button instead.'];
+    // Server-side guards, not just hidden buttons — a sold-out or past event
+    // must not be payable even if someone posts directly to this endpoint.
+    if ($course['type'] === 'EVENT') {
+        if (event_has_passed($course)) return ['error' => 'This event has already happened.'];
+        $ticketsSold = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
+        if (event_is_sold_out($course, $ticketsSold)) return ['error' => 'This event is sold out.'];
+    }
 
     // A sale price only takes effect if it's actually a discount and, when
     // the creator gave it an end date, that date hasn't passed — a stale

@@ -23,7 +23,11 @@ try {
     $result = enroll_guest_in_course($name, $email, $courseId);
     send_guest_access_email($email, $name, $result['course_title'], base_url('access.php?token=' . $result['token']));
     $_SESSION['guest_course_tokens'][$courseId] = $result['token'];
-    redirect('/learn.php?slug=' . $result['course_slug']);
+    // access.php is the one place that decides where a token actually leads
+    // (learn.php for a course, ticket.php for an event) — redirecting through
+    // it here instead of picking a destination ourselves keeps that decision
+    // in one place.
+    redirect('/access.php?token=' . $result['token']);
 } catch (Throwable $e) {
     flash_set('error', $e->getMessage());
     redirect($fallback);

@@ -63,6 +63,12 @@ CREATE TABLE courses (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(191) NOT NULL,
   slug VARCHAR(191) NOT NULL UNIQUE,
+  -- EVENT rows are one-off ticketed events (workshops, webinars, meetups)
+  -- sold through the exact same courses/payments/enrollments pipeline as a
+  -- COURSE — see the event_* columns below and course_has_active_sale()'s
+  -- sibling event_has_passed()/event_is_sold_out() in functions.php. Default
+  -- keeps every pre-existing row a course with no backfill needed.
+  type ENUM('COURSE','EVENT') NOT NULL DEFAULT 'COURSE',
   summary VARCHAR(500) NOT NULL,
   description TEXT NOT NULL,
   thumbnail_url VARCHAR(500) NULL,
@@ -75,6 +81,17 @@ CREATE TABLE courses (
   sale_ends_at DATETIME NULL,
   access_duration_days INT NULL,
   premium_price DECIMAL(12,2) NULL,
+  -- Event-only fields — always NULL for type='COURSE'. Whether an event is
+  -- in-person, online, or hybrid is inferred from which of
+  -- event_location/event_online_url is set, rather than a separate flag.
+  -- ticket_capacity NULL = unlimited; "tickets sold" is a live
+  -- COUNT(enrollments), the same pattern student_count already uses, so
+  -- there's no separate counter column that could drift.
+  event_starts_at DATETIME NULL,
+  event_ends_at DATETIME NULL,
+  event_location VARCHAR(255) NULL,
+  event_online_url VARCHAR(500) NULL,
+  ticket_capacity INT NULL,
   view_count INT NOT NULL DEFAULT 0,
   status ENUM('DRAFT','PENDING_REVIEW','PUBLISHED','REJECTED','REMOVED') NOT NULL DEFAULT 'DRAFT',
   rejection_reason TEXT NULL,
@@ -87,7 +104,8 @@ CREATE TABLE courses (
   FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (category_id) REFERENCES categories(id),
   INDEX idx_courses_status (status),
-  INDEX idx_courses_creator (creator_id)
+  INDEX idx_courses_creator (creator_id),
+  INDEX idx_courses_type_starts (type, event_starts_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

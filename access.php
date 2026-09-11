@@ -12,7 +12,7 @@ if ($token === '') {
 }
 
 $enrollment = db_one(
-    'SELECT e.course_id, c.slug FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE e.access_token_hash = ? AND e.user_id IS NULL',
+    'SELECT e.course_id, c.slug, c.type FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE e.access_token_hash = ? AND e.user_id IS NULL',
     [hash('sha256', $token)]
 );
 
@@ -35,4 +35,4 @@ if (!$enrollment) {
 }
 
 $_SESSION['guest_course_tokens'][(int) $enrollment['course_id']] = $token;
-redirect('/learn.php?slug=' . $enrollment['slug']);
+redirect($enrollment['type'] === 'EVENT' ? '/ticket.php?token=' . $token : '/learn.php?slug=' . $enrollment['slug']);

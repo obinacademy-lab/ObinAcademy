@@ -87,6 +87,28 @@ function course_sale_days_left(array $course): ?int {
     return $secondsLeft > 0 ? (int) ceil($secondsLeft / 86400) : null;
 }
 
+/**
+ * Same live-timestamp-check philosophy as course_has_active_sale() above —
+ * no cron job flips an event to "past", this is just checked at read time
+ * everywhere it matters. Falls back to event_starts_at when no end time
+ * was given (a same-day event with no explicit end).
+ */
+function event_has_passed(array $course): bool {
+    $endsAt = $course['event_ends_at'] ?? $course['event_starts_at'] ?? null;
+    if (empty($endsAt)) return false;
+    return strtotime($endsAt) <= time();
+}
+
+/** Readability helper for call sites that want to phrase the check positively. */
+function event_is_upcoming(array $course): bool {
+    return !event_has_passed($course);
+}
+
+/** @param int $ticketsSold a live COUNT(enrollments WHERE course_id=?) — see get_course_cards()'s identical student_count pattern. */
+function event_is_sold_out(array $course, int $ticketsSold): bool {
+    return $course['ticket_capacity'] !== null && $ticketsSold >= (int) $course['ticket_capacity'];
+}
+
 /** Escape for safe HTML output. */
 function e(?string $value): string {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
@@ -265,6 +287,8 @@ function dash_icon(string $name, string $class = ''): void {
         'globe' => '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10Z"/>',
         'eye' => '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
         'share' => '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+        'calendar' => '<path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/>',
+        'map-pin' => '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
     ];
     if (!isset($paths[$name])) return;
     echo '<svg class="' . e($class) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' . $paths[$name] . '</svg>';
