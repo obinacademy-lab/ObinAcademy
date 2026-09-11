@@ -55,6 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $eventLocation = null;
         $eventOnlineUrl = null;
         $ticketCapacity = null;
+        $vipPrice = null;
+        $vipCapacity = null;
 
         if ($isEvent) {
             $eventStartsAtRaw = post('eventStartsAt');
@@ -63,6 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $eventOnlineUrl = post('eventOnlineUrl') ?: null;
             $ticketCapacityRaw = post('ticketCapacity');
             $ticketCapacity = $ticketCapacityRaw === '' ? null : (int) $ticketCapacityRaw;
+            $vipPriceRaw = post('vipPrice');
+            $vipPrice = $vipPriceRaw === '' ? null : (float) $vipPriceRaw;
+            $vipCapacityRaw = post('vipCapacity');
+            $vipCapacity = $vipCapacityRaw === '' ? null : (int) $vipCapacityRaw;
 
             if ($eventStartsAtRaw === '') {
                 $errors[] = 'Set the event start date and time.';
@@ -77,6 +83,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (!$eventLocation && !$eventOnlineUrl) {
                 $errors[] = 'Add a location or an online link for the event.';
+            }
+            if ($vipPrice !== null && $vipPrice <= 0) {
+                $errors[] = 'VIP price must be greater than 0 — leave it blank if you don\'t want a VIP tier.';
+            }
+            if ($vipPrice !== null && $price <= 0) {
+                $errors[] = 'Set an Ordinary ticket price above 0 before adding VIP pricing.';
             }
         } else {
             $accessDurationRaw = post('accessDurationDays', 'lifetime');
@@ -106,9 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?,
-                event_starts_at=?, event_ends_at=?, event_location=?, event_online_url=?, ticket_capacity=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
+                event_starts_at=?, event_ends_at=?, event_location=?, event_online_url=?, ticket_capacity=?, vip_price=?, vip_capacity=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
             $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice,
-                $eventStartsAt, $eventEndsAt, $eventLocation, $eventOnlineUrl, $ticketCapacity];
+                $eventStartsAt, $eventEndsAt, $eventLocation, $eventOnlineUrl, $ticketCapacity, $vipPrice, $vipCapacity];
             if ($thumbnailUrl) $params[] = $thumbnailUrl;
             $params[] = $courseId;
             db_run($sql, $params);
@@ -228,6 +240,9 @@ foreach ($modules as &$m) {
 }
 unset($m);
 $studentCount = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
+$hasVip = $isEvent && event_has_vip($course);
+$ordinarySold = $isEvent ? (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$courseId])['n'] : 0;
+$vipSold = $hasVip ? (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'VIP'", [$courseId])['n'] : 0;
 
 $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
 $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
@@ -305,7 +320,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="field"><label>Price (UGX)</label><input name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" required></div>
+      <div class="field"><label><?= $isEvent ? 'Ordinary Ticket Price (UGX)' : 'Price (UGX)' ?></label><input name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" required></div>
     </div>
     <div class="field">
       <label>Sale Price (UGX, optional)</label>
@@ -345,9 +360,24 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <div class="field"><label>Location (optional if online)</label><input name="eventLocation" type="text" placeholder="e.g. Kampala Serena Hotel, Conference Room B" value="<?= e($course['event_location'] ?? '') ?>"></div>
       <div class="field"><label>Online Link (optional if in-person)</label><input name="eventOnlineUrl" type="url" placeholder="Zoom / Google Meet link — shown to ticket holders only" value="<?= e($course['event_online_url'] ?? '') ?>"></div>
       <div class="field">
-        <label>Ticket Capacity (optional)</label>
+        <label>Ordinary Ticket Capacity (optional)</label>
         <input name="ticketCapacity" type="number" min="1" step="1" placeholder="Leave blank for unlimited" value="<?= e($course['ticket_capacity'] !== null ? (string) $course['ticket_capacity'] : '') ?>">
-        <p class="help"><?= $studentCount ?> ticket<?= $studentCount === 1 ? '' : 's' ?> sold so far.</p>
+        <p class="help"><?= $ordinarySold ?> ordinary ticket<?= $ordinarySold === 1 ? '' : 's' ?> sold so far.</p>
+      </div>
+      <div class="card card-pad" style="margin:6px 0 4px; background:var(--dash-panel); border-style:dashed;">
+        <h3 style="font-size:14.5px; font-weight:800;">🎟 VIP Tier (optional)</h3>
+        <p class="help" style="margin-top:2px;">Leave both blank to not offer a VIP tier.</p>
+        <div class="grid sm:grid-2" style="margin-top:14px;">
+          <div class="field">
+            <label>VIP Ticket Price (UGX)</label>
+            <input name="vipPrice" type="number" min="0" step="1" placeholder="Leave blank for no VIP tier" value="<?= e($course['vip_price'] !== null ? (string) $course['vip_price'] : '') ?>">
+          </div>
+          <div class="field">
+            <label>VIP Ticket Capacity (optional)</label>
+            <input name="vipCapacity" type="number" min="1" step="1" placeholder="Leave blank for unlimited" value="<?= e($course['vip_capacity'] !== null ? (string) $course['vip_capacity'] : '') ?>">
+          </div>
+        </div>
+        <?php if ($hasVip): ?><p class="help" style="margin-top:10px;"><?= $vipSold ?> VIP ticket<?= $vipSold === 1 ? '' : 's' ?> sold so far.</p><?php endif; ?>
       </div>
     <?php else: ?>
       <div class="grid sm:grid-2">
@@ -397,13 +427,27 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         </div>
       </div>
       <div>
-        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Capacity</div>
+        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Ordinary Capacity</div>
         <div style="margin-top:4px;"><?= $course['ticket_capacity'] !== null ? (int) $course['ticket_capacity'] . ' tickets' : 'Unlimited' ?></div>
       </div>
       <div>
-        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Sold</div>
-        <div style="margin-top:4px;"><?= $studentCount ?> ticket<?= $studentCount === 1 ? '' : 's' ?></div>
+        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Ordinary Sold</div>
+        <div style="margin-top:4px;"><?= $ordinarySold ?> ticket<?= $ordinarySold === 1 ? '' : 's' ?></div>
       </div>
+      <?php if ($hasVip): ?>
+        <div>
+          <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">🎟 VIP Price</div>
+          <div style="margin-top:4px;"><?= e(format_money((float) $course['vip_price'])) ?></div>
+        </div>
+        <div>
+          <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">VIP Capacity</div>
+          <div style="margin-top:4px;"><?= $course['vip_capacity'] !== null ? (int) $course['vip_capacity'] . ' tickets' : 'Unlimited' ?></div>
+        </div>
+        <div>
+          <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">VIP Sold</div>
+          <div style="margin-top:4px;"><?= $vipSold ?> ticket<?= $vipSold === 1 ? '' : 's' ?></div>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
 <?php else: ?>

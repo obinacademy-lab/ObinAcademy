@@ -67,9 +67,15 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         </p>
       </div>
       <div>
-        <h3 class="small" style="font-weight:700; text-transform:uppercase; color:var(--muted);">Capacity</h3>
-        <p style="margin-top:6px;"><?= $course['ticket_capacity'] !== null ? (int) $course['ticket_capacity'] . ' tickets' : 'Unlimited' ?></p>
+        <h3 class="small" style="font-weight:700; text-transform:uppercase; color:var(--muted);">Ordinary Ticket</h3>
+        <p style="margin-top:6px;"><?= e(format_money((float) $course['price'])) ?> &middot; <?= $course['ticket_capacity'] !== null ? (int) $course['ticket_capacity'] . ' tickets' : 'Unlimited' ?></p>
       </div>
+      <?php if (event_has_vip($course)): ?>
+        <div>
+          <h3 class="small" style="font-weight:700; text-transform:uppercase; color:var(--muted);">🎟 VIP Ticket</h3>
+          <p style="margin-top:6px;"><?= e(format_money((float) $course['vip_price'])) ?> &middot; <?= $course['vip_capacity'] !== null ? (int) $course['vip_capacity'] . ' tickets' : 'Unlimited' ?></p>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
 <?php else: ?>

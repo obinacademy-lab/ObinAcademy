@@ -23,6 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $eventOnlineUrl = $eventOnlineUrl !== '' ? $eventOnlineUrl : null;
     $ticketCapacityRaw = post('ticketCapacity');
     $ticketCapacity = $ticketCapacityRaw === '' ? null : (int) $ticketCapacityRaw;
+    $vipPriceRaw = post('vipPrice');
+    $vipPrice = $vipPriceRaw === '' ? null : (float) $vipPriceRaw;
+    $vipCapacityRaw = post('vipCapacity');
+    $vipCapacity = $vipCapacityRaw === '' ? null : (int) $vipCapacityRaw;
 
     if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
     if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
@@ -31,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$categoryId) $errors[] = 'Select a category.';
     if (!$eventStartsAt) $errors[] = 'Set an event start date & time.';
     if (!$eventLocation && !$eventOnlineUrl) $errors[] = 'Add a location or an online link.';
+    if ($vipPrice !== null && $vipPrice <= 0) $errors[] = 'VIP price must be greater than 0 — leave it blank if you don\'t want a VIP tier.';
+    if ($vipPrice !== null && $price <= 0) $errors[] = 'Set an Ordinary ticket price above 0 before adding VIP pricing.';
 
     $thumbnailUrl = null;
     if (!empty($_FILES['thumbnail']['name'])) {
@@ -50,9 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $id = db_insert(
-            "INSERT INTO courses (title, slug, summary, description, price, category_id, creator_id, thumbnail_url, status, type, event_starts_at, event_ends_at, event_location, event_online_url, ticket_capacity)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'DRAFT', 'EVENT', ?, ?, ?, ?, ?)",
-            [$title, $slug, $summary, $description, $price, $categoryId, $user['id'], $thumbnailUrl, $eventStartsAt, $eventEndsAt, $eventLocation, $eventOnlineUrl, $ticketCapacity]
+            "INSERT INTO courses (title, slug, summary, description, price, category_id, creator_id, thumbnail_url, status, type, event_starts_at, event_ends_at, event_location, event_online_url, ticket_capacity, vip_price, vip_capacity)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'DRAFT', 'EVENT', ?, ?, ?, ?, ?, ?, ?)",
+            [$title, $slug, $summary, $description, $price, $categoryId, $user['id'], $thumbnailUrl, $eventStartsAt, $eventEndsAt, $eventLocation, $eventOnlineUrl, $ticketCapacity, $vipPrice, $vipCapacity]
         );
         redirect('/dashboard/creator/course-manage.php?id=' . $id);
     }
@@ -85,7 +91,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       </select>
     </div>
     <div class="field">
-      <label for="price">Ticket Price (UGX)</label>
+      <label for="price">Ordinary Ticket Price (UGX)</label>
       <input id="price" name="price" type="number" min="0" step="1" value="0" required>
     </div>
   </div>
@@ -123,8 +129,23 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 
   <div class="field">
-    <label for="ticketCapacity">Ticket Capacity (optional)</label>
+    <label for="ticketCapacity">Ordinary Ticket Capacity (optional)</label>
     <input id="ticketCapacity" name="ticketCapacity" type="number" min="1" step="1" placeholder="Leave blank for unlimited">
+  </div>
+
+  <div class="card card-pad" style="margin:6px 0 4px; background:var(--surface); border-style:dashed;">
+    <h3 style="font-size:14.5px; font-weight:800;">🎟 VIP Tier (optional)</h3>
+    <p class="help" style="margin-top:2px;">Sell a second, pricier ticket tier alongside Ordinary — e.g. front-row seating or a meet-and-greet. Leave both blank to skip VIP entirely.</p>
+    <div class="grid sm:grid-2" style="margin-top:14px;">
+      <div class="field">
+        <label for="vipPrice">VIP Ticket Price (UGX)</label>
+        <input id="vipPrice" name="vipPrice" type="number" min="0" step="1" placeholder="Leave blank for no VIP tier">
+      </div>
+      <div class="field">
+        <label for="vipCapacity">VIP Ticket Capacity (optional)</label>
+        <input id="vipCapacity" name="vipCapacity" type="number" min="1" step="1" placeholder="Leave blank for unlimited">
+      </div>
+    </div>
   </div>
 
   <div class="field">

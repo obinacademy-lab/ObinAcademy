@@ -137,6 +137,10 @@ function get_course_by_slug(string $slug): ?array {
     ', [$course['id']]);
 
     $course['student_count'] = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$course['id']])['n'];
+    if ($course['type'] === 'EVENT') {
+        $course['ordinary_sold'] = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$course['id']])['n'];
+        $course['vip_sold'] = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'VIP'", [$course['id']])['n'];
+    }
 
     return $course;
 }

@@ -31,14 +31,27 @@
     const phoneInput = root.querySelector('[data-phone-input]');
     const nameInput = root.querySelector('[data-name-input]');
     const emailInput = root.querySelector('[data-email-input]');
+    const tierWrap = root.querySelector('[data-tier-wrap]');
+    const tierInputs = root.querySelectorAll('input[name="ticketTier"]');
+    const payAmountEl = root.querySelector('[data-pay-amount]');
 
     let pollCount = 0;
     let pollTimer = null;
     let pollToken = null;
 
+    function syncTierSelection() {
+      tierInputs.forEach((input) => {
+        input.closest(".tier-option")?.classList.toggle("selected", input.checked);
+        if (input.checked && payAmountEl) payAmountEl.textContent = input.dataset.tierAmount;
+      });
+    }
+    tierInputs.forEach((input) => input.addEventListener("change", syncTierSelection));
+    syncTierSelection();
+
     function show(state) {
       Object.values(states).forEach((el) => el && el.classList.add("hidden"));
       if (states[state]) states[state].classList.remove("hidden");
+      if (tierWrap) tierWrap.classList.toggle("hidden", state !== "idle" && state !== "phone");
     }
 
     function setError(msg) {
@@ -69,6 +82,8 @@
         try {
           const body = { courseId, phone, csrf_token: csrfToken() };
           if (isGuest) { body.name = name; body.email = email; }
+          const checkedTier = root.querySelector('input[name="ticketTier"]:checked');
+          if (checkedTier) body.ticketTier = checkedTier.value;
           const res = await fetch(initiateUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

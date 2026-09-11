@@ -19,6 +19,20 @@ function fetch_payment_with_course(int $paymentId): ?array {
     );
 }
 
+/** @param array $course a courses row (needs vip_price/vip_capacity/ticket_capacity) */
+function validate_ticket_tier(array $course, string $ticketTier, int $courseId): ?string {
+    if (!in_array($ticketTier, ['ORDINARY', 'VIP'], true)) return 'Invalid ticket tier.';
+    if ($ticketTier === 'VIP') {
+        if (!event_has_vip($course)) return 'This event does not offer a VIP tier.';
+        $vipSold = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'VIP'", [$courseId])['n'];
+        if (event_tier_sold_out($course, 'VIP', $vipSold)) return 'VIP tickets are sold out.';
+    } else {
+        $ordinarySold = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$courseId])['n'];
+        if (event_tier_sold_out($course, 'ORDINARY', $ordinarySold)) return 'Ordinary tickets are sold out.';
+    }
+    return null;
+}
+
 /**
  * Checks a PENDING payment's real status with iotec and applies the same
  * enrollment/earnings side effects a normal poll would on success or failure.
@@ -90,6 +104,7 @@ function resolve_payment_with_iotec(array $payment): array {
             // working ticket.php link without needing the recipient to be
             // logged in again when they open it, possibly on another device.
             $isEvent = $payment['course_type'] === 'EVENT';
+            $ticketTier = $payment['ticket_tier'] ?? 'ORDINARY';
             $ticketToken = null;
             if (!$isGuestPayment && $isEvent) {
                 [$ticketToken, $ticketTokenHash] = make_access_token();
@@ -99,16 +114,16 @@ function resolve_payment_with_iotec(array $payment): array {
                 db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
                 if ($isGuestPayment) {
                     db_insert(
-                        'INSERT INTO enrollments (user_id, guest_name, guest_email, access_token_hash, course_id, expires_at) VALUES (NULL, ?, ?, ?, ?, ?)',
-                        [$payment['guest_name'], $payment['guest_email'], $payment['access_token_hash'], $payment['course_id'], $expiresAt]
+                        'INSERT INTO enrollments (user_id, guest_name, guest_email, access_token_hash, course_id, expires_at, ticket_tier) VALUES (NULL, ?, ?, ?, ?, ?, ?)',
+                        [$payment['guest_name'], $payment['guest_email'], $payment['access_token_hash'], $payment['course_id'], $expiresAt, $ticketTier]
                     );
                 } elseif ($ticketToken !== null) {
                     db_insert(
-                        'INSERT INTO enrollments (user_id, course_id, expires_at, access_token_hash) VALUES (?, ?, ?, ?)',
-                        [$payment['user_id'], $payment['course_id'], $expiresAt, $ticketTokenHash]
+                        'INSERT INTO enrollments (user_id, course_id, expires_at, access_token_hash, ticket_tier) VALUES (?, ?, ?, ?, ?)',
+                        [$payment['user_id'], $payment['course_id'], $expiresAt, $ticketTokenHash, $ticketTier]
                     );
                 } else {
-                    db_insert('INSERT INTO enrollments (user_id, course_id, expires_at) VALUES (?, ?, ?)', [$payment['user_id'], $payment['course_id'], $expiresAt]);
+                    db_insert('INSERT INTO enrollments (user_id, course_id, expires_at, ticket_tier) VALUES (?, ?, ?, ?)', [$payment['user_id'], $payment['course_id'], $expiresAt, $ticketTier]);
                 }
                 db_insert(
                     'INSERT INTO earnings (creator_id, course_id, amount, gross_amount, platform_fee) VALUES (?, ?, ?, ?, ?)',
@@ -126,7 +141,8 @@ function resolve_payment_with_iotec(array $payment): array {
                 throw $e;
             }
             $ticketUrl = $ticketToken !== null ? base_url('ticket.php?token=' . $ticketToken) : null;
-            send_payment_receipt_email($payment, $isGuestPayment, $isEvent ? 'Event Ticket' : 'Course Enrollment', $ticketUrl);
+            $itemLabel = $isEvent ? ($ticketTier === 'VIP' ? 'VIP Ticket' : 'Ordinary Ticket') : 'Course Enrollment';
+            send_payment_receipt_email($payment, $isGuestPayment, $itemLabel, $ticketUrl);
         } else {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
         }
@@ -151,7 +167,7 @@ function resolve_payment_with_iotec(array $payment): array {
  * poll_payment_status() without a session identity.
  * @return array{paymentId?: int, pollToken?: string, error?: string}
  */
-function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null): array {
+function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null, string $ticketTier = 'ORDINARY'): array {
     if (!validate_phone($phone)) return ['error' => 'Enter a valid phone number.'];
 
     $isGuest = $userId === null;
@@ -166,12 +182,17 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if (!$course || $course['status'] !== 'PUBLISHED') return ['error' => 'Course not found.'];
     if (!$isGuest && (int) $course['creator_id'] === $userId) return ['error' => 'Creators cannot enroll in their own course.'];
     if ((float) $course['price'] <= 0) return ['error' => 'This course is free — use the enroll button instead.'];
-    // Server-side guards, not just hidden buttons — a sold-out or past event
-    // must not be payable even if someone posts directly to this endpoint.
-    if ($course['type'] === 'EVENT') {
+    $isEventCourse = $course['type'] === 'EVENT';
+    // A ticket tier only means something for an event — normalize away any
+    // stray value a course purchase (or a forged request) might send.
+    $ticketTier = ($isEventCourse && $ticketTier === 'VIP') ? 'VIP' : 'ORDINARY';
+    // Server-side guards, not just hidden buttons — a sold-out or past event,
+    // or a specific tier that's sold out, must not be payable even if
+    // someone posts directly to this endpoint.
+    if ($isEventCourse) {
         if (event_has_passed($course)) return ['error' => 'This event has already happened.'];
-        $ticketsSold = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
-        if (event_is_sold_out($course, $ticketsSold)) return ['error' => 'This event is sold out.'];
+        $tierError = validate_ticket_tier($course, $ticketTier, $courseId);
+        if ($tierError) return ['error' => $tierError];
     }
 
     // A sale price only takes effect if it's actually a discount and, when
@@ -179,10 +200,12 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     // sale_price left >= the current price (e.g. after the creator lowered
     // price directly), or one whose time window has simply run out, is
     // silently ignored rather than overcharging or no-oping strangely.
-    $finalPrice = (float) $course['price'];
+    // VIP tickets have no separate sale mechanism, so this discount path
+    // only ever applies to the ORDINARY tier.
+    $finalPrice = $isEventCourse ? event_tier_price($course, $ticketTier) : (float) $course['price'];
     $originalAmount = null;
-    if (course_has_active_sale($course)) {
-        $originalAmount = $finalPrice;
+    if ($ticketTier === 'ORDINARY' && course_has_active_sale($course)) {
+        $originalAmount = (float) $course['price'];
         $finalPrice = (float) $course['sale_price'];
     }
 
@@ -221,17 +244,21 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
 
     $affiliateId = resolve_affiliate_id_from_cookie($userId);
 
+    // Stored NULL for a course purchase (tiers only apply to events), so it
+    // never shows up misleadingly on a plain course receipt/earnings row.
+    $storedTicketTier = $isEventCourse ? $ticketTier : null;
+
     $pollToken = null;
     if ($isGuest) {
         [$pollToken, $pollTokenHash] = make_access_token();
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, affiliate_id, amount, original_amount, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$guestName, $guestEmail, $pollTokenHash, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone]
+            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, affiliate_id, amount, original_amount, phone, type, status, ticket_tier) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING', ?)",
+            [$guestName, $guestEmail, $pollTokenHash, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone, $storedTicketTier]
         );
     } else {
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, course_id, affiliate_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$userId, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone]
+            "INSERT INTO payments (user_id, course_id, affiliate_id, amount, original_amount, phone, type, status, ticket_tier) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING', ?)",
+            [$userId, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone, $storedTicketTier]
         );
     }
 

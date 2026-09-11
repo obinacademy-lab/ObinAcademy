@@ -10,7 +10,7 @@ $token = query_param('token');
 $slug = query_param('slug');
 $user = current_user();
 
-$sql = "SELECT e.id AS enrollment_id, e.enrolled_at, e.user_id, e.guest_name, e.guest_email,
+$sql = "SELECT e.id AS enrollment_id, e.enrolled_at, e.user_id, e.guest_name, e.guest_email, e.ticket_tier,
           c.id AS course_id, c.title, c.slug, c.event_starts_at, c.event_ends_at, c.event_location, c.event_online_url,
           u.name AS attendee_account_name, creator.name AS creator_name
         FROM enrollments e
@@ -40,6 +40,7 @@ if (!$ticket) {
 }
 
 $attendeeName = $ticket['attendee_account_name'] ?? $ticket['guest_name'] ?? 'Guest';
+$isVip = $ticket['ticket_tier'] === 'VIP';
 $reference = 'OA-EVT-' . str_pad((string) $ticket['enrollment_id'], 6, '0', STR_PAD_LEFT);
 $eventUrl = base_url('courses/view.php?slug=' . $ticket['slug']);
 $hasStarted = !empty($ticket['event_starts_at']) && strtotime($ticket['event_starts_at']) <= time();
@@ -69,6 +70,7 @@ $pageTitle = $ticket['title'] . ' — Ticket — Obin Academy';
     .ticket-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
     .ticket-title { margin-top: 8px; font-size: clamp(20px, 3vw, 26px); font-weight: 800; line-height: 1.25; }
     .ticket-organizer { margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.7); }
+    .ticket-vip-badge { flex-shrink: 0; background: var(--gold); color: #1e1400; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; padding: 5px 11px; border-radius: var(--radius-full); }
     .ticket-stub-divider { position: relative; height: 0; border-top: 2px dashed var(--border); }
     .ticket-stub-divider::before, .ticket-stub-divider::after {
       content: ""; position: absolute; top: -12px; width: 24px; height: 24px; border-radius: 50%; background: var(--surface);
@@ -108,7 +110,10 @@ $pageTitle = $ticket['title'] . ' — Ticket — Obin Academy';
   <div class="ticket-wrap">
     <div class="ticket-doc">
       <div class="ticket-head">
-        <div class="ticket-eyebrow"><?= $hasStarted ? 'Your Ticket' : 'You\'re Going!' ?></div>
+        <div class="row between" style="align-items:center;">
+          <div class="ticket-eyebrow"><?= $hasStarted ? 'Your Ticket' : 'You\'re Going!' ?></div>
+          <?php if ($isVip): ?><span class="ticket-vip-badge">🎟 VIP</span><?php endif; ?>
+        </div>
         <div class="ticket-title"><?= e($ticket['title']) ?></div>
         <div class="ticket-organizer">Hosted by <?= e($ticket['creator_name']) ?></div>
       </div>
@@ -139,7 +144,7 @@ $pageTitle = $ticket['title'] . ' — Ticket — Obin Academy';
         </div>
 
         <div class="ticket-attendee">
-          <div class="ticket-attendee-label">Attendee</div>
+          <div class="ticket-attendee-label">Attendee<?= $isVip ? ' · VIP Ticket' : ' · Ordinary Ticket' ?></div>
           <div class="ticket-attendee-name"><?= e($attendeeName) ?></div>
         </div>
         <div class="ticket-ref">Ticket Reference: <?= e($reference) ?></div>

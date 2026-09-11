@@ -14,6 +14,11 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $ticketsSold = $isEvent ? (int) $course['student_count'] : 0;
     $hasPassed = $isEvent && event_has_passed($course);
     $soldOut = $isEvent && event_is_sold_out($course, $ticketsSold);
+    $hasVip = $isEvent && event_has_vip($course);
+    $ordinarySold = $isEvent ? (int) ($course['ordinary_sold'] ?? 0) : 0;
+    $vipSold = $hasVip ? (int) ($course['vip_sold'] ?? 0) : 0;
+    $ordinarySoldOut = $isEvent && event_tier_sold_out($course, 'ORDINARY', $ordinarySold);
+    $vipSoldOut = $hasVip && event_tier_sold_out($course, 'VIP', $vipSold);
     $showPaidFlow = $user && !$isEnrolled && !$isOwner && $isPublished && $price > 0 && !$hasPassed && !$soldOut;
     $loginUrl = base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']));
     // Events require an account to pay (see api/initiate-payment.php), so
@@ -35,6 +40,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <div class="price-row">
           <div class="price">
             <?php if ($hasSale): ?><span class="price-strike"><?= e(format_money($price)) ?></span><?php endif; ?>
+            <?php if ($hasVip): ?><span class="price-from">From</span> <?php endif; ?>
             <?= $price > 0 ? e(format_money($displayPrice)) : 'Free' ?>
           </div>
           <?php if ($price > 0): ?><span class="price-note">one-time payment</span><?php endif; ?>
@@ -88,6 +94,22 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                data-course-id="<?= (int) $course['id'] ?>"
                data-initiate-url="<?= e(base_url('api/initiate-payment.php')) ?>"
                data-success-redirect="<?= e($isEvent ? $ticketUrl : base_url('learn.php?slug=' . $course['slug'])) ?>">
+            <?php if ($hasVip): ?>
+              <div class="ticket-tier-select" data-tier-wrap>
+                <label class="tier-option <?= $ordinarySoldOut ? 'disabled' : '' ?>">
+                  <input type="radio" name="ticketTier" value="ORDINARY" data-tier-amount="<?= e(format_money($displayPrice)) ?>" <?= $ordinarySoldOut ? 'disabled' : 'checked' ?>>
+                  <span class="tier-name">Ordinary</span>
+                  <span class="tier-price"><?= e(format_money($displayPrice)) ?></span>
+                  <?php if ($ordinarySoldOut): ?><span class="tier-soldout">Sold Out</span><?php endif; ?>
+                </label>
+                <label class="tier-option <?= $vipSoldOut ? 'disabled' : '' ?>">
+                  <input type="radio" name="ticketTier" value="VIP" data-tier-amount="<?= e(format_money((float) $course['vip_price'])) ?>" <?= $vipSoldOut ? 'disabled' : ($ordinarySoldOut ? 'checked' : '') ?>>
+                  <span class="tier-name">🎟 VIP</span>
+                  <span class="tier-price"><?= e(format_money((float) $course['vip_price'])) ?></span>
+                  <?php if ($vipSoldOut): ?><span class="tier-soldout">Sold Out</span><?php endif; ?>
+                </label>
+              </div>
+            <?php endif; ?>
             <div data-state="idle">
               <button class="btn btn-primary btn-block btn-lg" data-action="start">📱 Pay with Mobile Money</button>
             </div>
@@ -96,7 +118,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                 <?php dash_icon('wallet'); ?>
                 <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
               </div>
-              <button class="btn btn-primary btn-block" data-action="pay">Pay <?= e(format_money($displayPrice)) ?></button>
+              <button class="btn btn-primary btn-block" data-action="pay">Pay <span data-pay-amount><?= e(format_money($ordinarySoldOut && $hasVip ? (float) $course['vip_price'] : $displayPrice)) ?></span></button>
             </div>
             <div data-state="waiting" class="hidden pay-waiting">
               <div class="spinner"></div>
@@ -126,6 +148,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
             <li><?php dash_icon('check-circle'); ?>Instant e-ticket, emailed to you</li>
             <li><?php dash_icon('check-circle'); ?><?= $course['event_online_url'] ? 'Join from anywhere — online event' : e($course['event_location'] ?: 'In-person event') ?></li>
             <li><?php dash_icon('check-circle'); ?><?= $course['ticket_capacity'] !== null ? (int) $course['ticket_capacity'] . ' tickets total' : 'Open capacity' ?></li>
+            <?php if ($hasVip): ?><li><?php dash_icon('check-circle'); ?>🎟 VIP tier available at checkout</li><?php endif; ?>
           <?php else: ?>
             <li><?php dash_icon('check-circle'); ?><?= $course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access' : 'Lifetime access' ?></li>
             <li><?php dash_icon('check-circle'); ?>Stream video lessons and PDFs anytime</li>

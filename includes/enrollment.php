@@ -19,8 +19,11 @@ function enroll_in_course(int $userId, int $courseId): void {
     $isEvent = $course['type'] === 'EVENT';
     if ($isEvent) {
         if (event_has_passed($course)) throw new RuntimeException('This event has already happened.');
-        $ticketsSold = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
-        if (event_is_sold_out($course, $ticketsSold)) throw new RuntimeException('This event is sold out.');
+        // Free enrollment is always the ORDINARY tier (VIP always costs
+        // money — see events/new.php's creation validation), so gate on
+        // Ordinary-tier capacity specifically, not the combined total.
+        $ordinarySold = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$courseId])['n'];
+        if (event_tier_sold_out($course, 'ORDINARY', $ordinarySold)) throw new RuntimeException('This event is sold out.');
     }
 
     $split = split_sale((float) $course['price']);

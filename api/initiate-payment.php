@@ -23,6 +23,7 @@ if (!$user) {
 
 $courseId = (int) ($body['courseId'] ?? 0);
 $phone = trim((string) ($body['phone'] ?? ''));
+$ticketTier = (string) ($body['ticketTier'] ?? 'ORDINARY');
 
-$result = initiate_payment((int) $user['id'], $courseId, $phone);
+$result = initiate_payment((int) $user['id'], $courseId, $phone, null, null, $ticketTier);
 json_response($result, isset($result['error']) ? 400 : 200);
