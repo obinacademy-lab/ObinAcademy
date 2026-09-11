@@ -289,8 +289,8 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 .mobile-menu a.mm-cta-gold:hover { background: #ffc93d; }
 .mobile-menu a.mm-cta-dark { background: var(--brand-950); color: #fff !important; }
 .mobile-menu a.mm-cta-dark:hover { background: var(--brand-900); }
-.mobile-menu a.mm-cta-outline { background: var(--white); color: var(--ink) !important; font-weight: 700; box-shadow: inset 0 0 0 2px var(--border-strong); }
-.mobile-menu a.mm-cta-outline:hover { box-shadow: inset 0 0 0 2px var(--ink); background: var(--surface); }
+.mobile-menu a.mm-cta-ink { background: var(--ink); color: #fff !important; }
+.mobile-menu a.mm-cta-ink:hover { background: #000; }
 @media (min-width: 900px) { .mobile-menu { display: none !important; } }
 
 /* ---------- buttons ---------- */
@@ -323,6 +323,11 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 .btn-dark:hover { background: var(--brand-900); border-color: var(--brand-900); box-shadow: 0 8px 0 0 color-mix(in srgb, var(--brand-950) 45%, black 20%); }
 .btn-outline { background: var(--white); color: var(--ink); border-color: var(--border-strong); }
 .btn-outline:hover { border-color: var(--ink); box-shadow: var(--shadow-pop-ink); }
+/* A solid near-black CTA — same weight/pop as the brand-colored buttons
+   next to it, but its own quiet color so a lower-stakes action (Log In)
+   doesn't compete with the gold/blue/navy "go do something new" CTAs. */
+.btn-ink { background: var(--ink); color: var(--white); border-color: var(--ink); }
+.btn-ink:hover { background: #000; border-color: #000; box-shadow: 0 8px 0 0 color-mix(in srgb, var(--ink) 55%, black 20%); }
 /* For outline buttons on dark/photo backgrounds (e.g. the hero) — frosted-glass
    fill + a solid white border so the label stays legible over any part of the
    photo, instead of a bare transparent outline that photo contrast can wash out. */

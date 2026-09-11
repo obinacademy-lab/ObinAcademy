@@ -90,7 +90,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
             </div>
           </div>
         <?php else: ?>
-          <a href="<?= e(base_url('login.php')) ?>" class="btn btn-outline btn-sm shine">Log In</a>
+          <a href="<?= e(base_url('login.php')) ?>" class="btn btn-ink btn-sm shine">Log In</a>
           <a href="<?= e(base_url('become-affiliate.php')) ?>" class="btn btn-gold btn-sm shine">Become an Affiliate</a>
           <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-primary btn-sm shine">Become a Creator <span class="btn-arrow">→</span></a>
         <?php endif; ?>
@@ -121,7 +121,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <a href="<?= e(base_url('dashboard/settings.php')) ?>"><span class="mm-icon">⚙️</span>Settings</a>
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>
       <?php else: ?>
-        <a href="<?= e(base_url('login.php')) ?>" class="mm-cta mm-cta-outline">Log In</a>
+        <a href="<?= e(base_url('login.php')) ?>" class="mm-cta mm-cta-ink">Log In</a>
         <a href="<?= e(base_url('become-affiliate.php')) ?>" class="mm-cta mm-cta-gold">Become an Affiliate</a>
         <a href="<?= e(base_url('become-creator.php')) ?>" class="mm-cta">Become a Creator →</a>
       <?php endif; ?>
