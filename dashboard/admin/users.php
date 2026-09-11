@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $q = query_param('q');
 $sql = 'SELECT * FROM users';
 $params = [];
-if ($q) { $sql .= ' WHERE name LIKE ? OR email LIKE ?'; $params = ["%$q%", "%$q%"]; }
+if ($q) { $sql .= ' WHERE name LIKE ? OR email LIKE ? OR phone LIKE ?'; $params = ["%$q%", "%$q%", "%$q%"]; }
 $sql .= ' ORDER BY created_at DESC';
 $users = db_all($sql, $params);
 
@@ -57,14 +57,14 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="row between wrap gap-3" style="margin-top:26px; align-items:center;">
   <form method="get" class="search-pill" style="max-width:340px; margin:0;">
     <?php dash_icon('search'); ?>
-    <input type="text" name="q" placeholder="Search by name or email" value="<?= e($q) ?>">
+    <input type="text" name="q" placeholder="Search by name, email, or phone" value="<?= e($q) ?>">
   </form>
   <p class="small muted"><?= count($users) ?> user<?= count($users) === 1 ? '' : 's' ?><?= $q ? ' matching "' . e($q) . '"' : '' ?></p>
 </div>
 
 <div class="table-wrap" style="margin-top:18px;">
   <table>
-    <thead><tr><th>User</th><th>Role</th><th>Joined</th><th></th></tr></thead>
+    <thead><tr><th>User</th><th>Contact</th><th>Role</th><th>Joined</th><th></th></tr></thead>
     <tbody>
       <?php foreach ($users as $u): $isSelf = (int) $u['id'] === (int) $user['id']; ?>
         <tr>
@@ -76,9 +76,19 @@ require __DIR__ . '/../../includes/dashboard_header.php';
                   <?= e($u['name']) ?>
                   <?php if ($isSelf): ?><span class="you-badge">You</span><?php endif; ?>
                 </div>
-                <div class="small muted"><?= e($u['email']) ?></div>
               </div>
             </div>
+          </td>
+          <td class="cell-nowrap-reset">
+            <div class="small"><a href="mailto:<?= e($u['email']) ?>" style="color:var(--ink); font-weight:600;"><?= e($u['email']) ?></a></div>
+            <?php if (!empty($u['phone'])): $waPhone = preg_replace('/\D/', '', $u['phone']); $waPhone = str_starts_with($waPhone, '256') ? $waPhone : ('256' . ltrim($waPhone, '0')); ?>
+              <div class="small muted" style="margin-top:2px;">
+                <?= e($u['phone']) ?> &middot;
+                <a href="https://wa.me/<?= e($waPhone) ?>" target="_blank" rel="noopener noreferrer" style="color:var(--dash-good);">WhatsApp</a>
+              </div>
+            <?php else: ?>
+              <div class="small muted" style="margin-top:2px;">—</div>
+            <?php endif; ?>
           </td>
           <td>
             <form method="post" class="role-select-wrap">
@@ -106,7 +116,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         </tr>
       <?php endforeach; ?>
       <?php if (!$users): ?>
-        <tr><td colspan="4" class="muted" style="text-align:center; padding:32px 0;">No users match "<?= e($q) ?>".</td></tr>
+        <tr><td colspan="5" class="muted" style="text-align:center; padding:32px 0;">No users match "<?= e($q) ?>".</td></tr>
       <?php endif; ?>
     </tbody>
   </table>
