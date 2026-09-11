@@ -59,6 +59,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
       <?php render_logo(true); ?>
 
       <div class="nav-actions">
+        <a href="<?= e(base_url('dashboard/events/new.php')) ?>" class="btn btn-outline btn-sm shine">🎟 Create Event</a>
         <?php if ($user): ?>
           <div class="account-menu">
             <button class="account-trigger" aria-haspopup="true">
@@ -114,6 +115,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         </div>
       <?php endif; ?>
+      <a href="<?= e(base_url('dashboard/events/new.php')) ?>" class="mm-cta">🎟 Create Event</a>
       <?php if ($user): ?>
         <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>"><span class="mm-icon">👤</span>My Profile</a>
         <a href="<?= e(base_url('dashboard.php')) ?>"><span class="mm-icon">📊</span>Dashboard</a>
