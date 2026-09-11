@@ -5,7 +5,7 @@ $user = require_role(['CREATOR', 'ADMIN']);
 $courses = db_all('
     SELECT c.*, cat.name AS category_name, (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id) AS student_count
     FROM courses c JOIN categories cat ON cat.id = c.category_id
-    WHERE c.creator_id = ? ORDER BY c.created_at DESC
+    WHERE c.creator_id = ? AND c.type = \'COURSE\' ORDER BY c.created_at DESC
 ', [$user['id']]);
 
 $totalEarnings = (float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM earnings WHERE creator_id = ?', [$user['id']])['n'] ?? 0);

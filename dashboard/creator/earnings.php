@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/data.php';
-$user = require_role(['CREATOR', 'ADMIN']);
+$user = require_login();
 
 $totalEarnings = (float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM earnings WHERE creator_id = ?', [$user['id']])['n'] ?? 0);
 $pendingWithdrawals = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE creator_id = ? AND status = 'PENDING'", [$user['id']])['n'] ?? 0);
@@ -143,7 +143,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <h2 class="h3" style="margin-top:36px;">Recent Earnings</h2>
 <div class="table-wrap reveal" style="margin-top:14px;">
   <table>
-    <thead><tr><th>Course</th><th>Gross</th><th>Platform Fee</th><th>Net</th><th>Date</th></tr></thead>
+    <thead><tr><th>Item</th><th>Gross</th><th>Platform Fee</th><th>Net</th><th>Date</th></tr></thead>
     <tbody>
       <?php foreach ($recentEarnings as $e): ?>
         <tr>

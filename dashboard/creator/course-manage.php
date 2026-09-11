@@ -3,7 +3,7 @@ require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/storage.php';
 require __DIR__ . '/../../includes/data.php';
 require __DIR__ . '/../../includes/audit.php';
-$user = require_role(['CREATOR', 'ADMIN']);
+$user = require_login();
 
 $courseId = (int) query_param('id');
 $course = db_one('SELECT * FROM courses WHERE id = ?', [$courseId]);

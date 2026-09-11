@@ -12,6 +12,11 @@ $navByRole = [
         'Learning' => [
             ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
         ],
+        'Events' => [
+            ['/dashboard/events/index.php', 'My Events', 'calendar'],
+            ['/dashboard/events/new.php', 'Create Event', 'plus-circle'],
+            ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
+        ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],
         ],
@@ -22,6 +27,10 @@ $navByRole = [
             ['/dashboard/creator/course-new.php', 'Create Course', 'plus-circle'],
             ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
             ['/dashboard/creator/shares.php', 'Course Shares', 'share'],
+        ],
+        'Events' => [
+            ['/dashboard/events/index.php', 'My Events', 'calendar'],
+            ['/dashboard/events/new.php', 'Create Event', 'plus-circle'],
         ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],
@@ -44,6 +53,10 @@ $navByRole = [
             ['/dashboard/admin/categories.php', 'Categories', 'tag'],
             ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
             ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
+        ],
+        'Events' => [
+            ['/dashboard/events/index.php', 'My Events', 'calendar'],
+            ['/dashboard/events/new.php', 'Create Event', 'plus-circle'],
         ],
         'System' => [
             ['/dashboard/admin/content-health.php', 'Content Health', 'clipboard-check'],
