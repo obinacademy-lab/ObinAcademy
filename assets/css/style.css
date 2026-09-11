@@ -287,6 +287,8 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 .mobile-menu a.mm-cta:hover { background: var(--accent-dark); }
 .mobile-menu a.mm-cta-gold { background: var(--gold); color: #1e1400 !important; }
 .mobile-menu a.mm-cta-gold:hover { background: #ffc93d; }
+.mobile-menu a.mm-cta-dark { background: var(--brand-950); color: #fff !important; }
+.mobile-menu a.mm-cta-dark:hover { background: var(--brand-900); }
 @media (min-width: 900px) { .mobile-menu { display: none !important; } }
 
 /* ---------- buttons ---------- */
@@ -1615,6 +1617,25 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (prefers-reduced-motion: reduce) {
   .tmod-card, .tmod-chevron, .tmod-body-outer, .tlesson { transition: none; }
 }
+
+/* ---------- event detail page: date/location/capacity block ----------
+   New class names, deliberately not reusing .timeline/.tmod-* — those were
+   just built for the course curriculum and must stay untouched here. */
+.event-detail-block {
+  display: flex; flex-direction: column; gap: 4px;
+  border: 1px solid var(--border); border-radius: var(--radius-lg); background: #fff; box-shadow: var(--shadow); overflow: hidden;
+}
+.event-detail-row { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-top: 1px solid var(--border); }
+.event-detail-row:first-child { border-top: none; }
+.event-detail-icon {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent) 10%, white); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+}
+.event-detail-icon svg { width: 17px; height: 17px; }
+.event-detail-label { font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.event-detail-value { margin-top: 3px; font-size: 14.5px; font-weight: 600; }
+.event-detail-value a { color: var(--accent); }
 
 /* ---------- course detail page: premium reviews ----------
    Same reasoning as above: new class names, .rating-summary/.review-card

@@ -59,7 +59,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
       <?php render_logo(true); ?>
 
       <div class="nav-actions">
-        <a href="<?= e(base_url('dashboard/events/new.php')) ?>" class="btn btn-outline btn-sm shine">🎟 Create Event</a>
         <?php if ($user): ?>
           <div class="account-menu">
             <button class="account-trigger" aria-haspopup="true">
@@ -95,6 +94,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           <a href="<?= e(base_url('become-affiliate.php')) ?>" class="btn btn-gold btn-sm shine">Become an Affiliate</a>
           <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-primary btn-sm shine">Become a Creator <span class="btn-arrow">→</span></a>
         <?php endif; ?>
+        <a href="<?= e(base_url('dashboard/events/new.php')) ?>" class="btn btn-dark btn-sm shine">🎟 Create Event <span class="btn-arrow">→</span></a>
       </div>
 
       <button class="nav-toggle" data-nav-toggle aria-label="Toggle menu" aria-expanded="false">
@@ -115,7 +115,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         </div>
       <?php endif; ?>
-      <a href="<?= e(base_url('dashboard/events/new.php')) ?>" class="mm-cta">🎟 Create Event</a>
       <?php if ($user): ?>
         <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>"><span class="mm-icon">👤</span>My Profile</a>
         <a href="<?= e(base_url('dashboard.php')) ?>"><span class="mm-icon">📊</span>Dashboard</a>
@@ -126,6 +125,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <a href="<?= e(base_url('become-affiliate.php')) ?>" class="mm-cta mm-cta-gold">Become an Affiliate</a>
         <a href="<?= e(base_url('become-creator.php')) ?>" class="mm-cta">Become a Creator →</a>
       <?php endif; ?>
+      <a href="<?= e(base_url('dashboard/events/new.php')) ?>" class="mm-cta mm-cta-dark">🎟 Create Event →</a>
     </div>
   </div>
 
