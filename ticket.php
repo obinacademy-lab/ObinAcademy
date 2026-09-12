@@ -103,6 +103,7 @@ $pageTitle = $ticket['title'] . ' — Ticket — Obin Academy';
     <?php render_logo(); ?>
     <div class="row gap-2">
       <a href="<?= e($eventUrl) ?>" class="btn btn-outline btn-sm">← Back to Event</a>
+      <?php render_share_button($eventUrl, $ticket['title'], 'Share', 'light', (int) $ticket['course_id'], "I'm going to this event"); ?>
       <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨 Print / Save</button>
     </div>
   </div>
@@ -151,5 +152,7 @@ $pageTitle = $ticket['title'] . ' — Ticket — Obin Academy';
       </div>
     </div>
   </div>
+  <script>window.OBIN_BASE_URL = <?= json_encode(rtrim(base_url(''), '/')) ?>;</script>
+  <script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 </body>
 </html>
