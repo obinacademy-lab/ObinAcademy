@@ -109,21 +109,32 @@ function resolve_payment_with_iotec(array $payment): array {
             if (!$isGuestPayment && $isEvent) {
                 [$ticketToken, $ticketTokenHash] = make_access_token();
             }
+            // ticket_tier only ever means something for an event — leaving it
+            // out of the INSERT entirely for a plain course purchase (by far
+            // the most common transaction) means this code has no dependency
+            // on the vip-tier migration having run yet for course payments,
+            // only for event ones.
+            $tierCol = $isEvent ? ', ticket_tier' : '';
+            $tierPlaceholder = $isEvent ? ', ?' : '';
+            $tierParam = $isEvent ? [$ticketTier] : [];
             db()->beginTransaction();
             try {
                 db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
                 if ($isGuestPayment) {
                     db_insert(
-                        'INSERT INTO enrollments (user_id, guest_name, guest_email, access_token_hash, course_id, expires_at, ticket_tier) VALUES (NULL, ?, ?, ?, ?, ?, ?)',
-                        [$payment['guest_name'], $payment['guest_email'], $payment['access_token_hash'], $payment['course_id'], $expiresAt, $ticketTier]
+                        "INSERT INTO enrollments (user_id, guest_name, guest_email, access_token_hash, course_id, expires_at{$tierCol}) VALUES (NULL, ?, ?, ?, ?, ?{$tierPlaceholder})",
+                        array_merge([$payment['guest_name'], $payment['guest_email'], $payment['access_token_hash'], $payment['course_id'], $expiresAt], $tierParam)
                     );
                 } elseif ($ticketToken !== null) {
                     db_insert(
-                        'INSERT INTO enrollments (user_id, course_id, expires_at, access_token_hash, ticket_tier) VALUES (?, ?, ?, ?, ?)',
-                        [$payment['user_id'], $payment['course_id'], $expiresAt, $ticketTokenHash, $ticketTier]
+                        "INSERT INTO enrollments (user_id, course_id, expires_at, access_token_hash{$tierCol}) VALUES (?, ?, ?, ?{$tierPlaceholder})",
+                        array_merge([$payment['user_id'], $payment['course_id'], $expiresAt, $ticketTokenHash], $tierParam)
                     );
                 } else {
-                    db_insert('INSERT INTO enrollments (user_id, course_id, expires_at, ticket_tier) VALUES (?, ?, ?, ?)', [$payment['user_id'], $payment['course_id'], $expiresAt, $ticketTier]);
+                    db_insert(
+                        "INSERT INTO enrollments (user_id, course_id, expires_at{$tierCol}) VALUES (?, ?, ?{$tierPlaceholder})",
+                        array_merge([$payment['user_id'], $payment['course_id'], $expiresAt], $tierParam)
+                    );
                 }
                 db_insert(
                     'INSERT INTO earnings (creator_id, course_id, amount, gross_amount, platform_fee) VALUES (?, ?, ?, ?, ?)',
@@ -244,21 +255,24 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
 
     $affiliateId = resolve_affiliate_id_from_cookie($userId);
 
-    // Stored NULL for a course purchase (tiers only apply to events), so it
-    // never shows up misleadingly on a plain course receipt/earnings row.
-    $storedTicketTier = $isEventCourse ? $ticketTier : null;
+    // Column left out of the INSERT entirely for a plain course purchase
+    // (by far the most common transaction) — same reasoning as
+    // resolve_payment_with_iotec()'s enrollment INSERTs below.
+    $tierCol = $isEventCourse ? ', ticket_tier' : '';
+    $tierPlaceholder = $isEventCourse ? ', ?' : '';
+    $tierParam = $isEventCourse ? [$ticketTier] : [];
 
     $pollToken = null;
     if ($isGuest) {
         [$pollToken, $pollTokenHash] = make_access_token();
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, affiliate_id, amount, original_amount, phone, type, status, ticket_tier) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING', ?)",
-            [$guestName, $guestEmail, $pollTokenHash, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone, $storedTicketTier]
+            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, affiliate_id, amount, original_amount, phone, type, status{$tierCol}) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING'{$tierPlaceholder})",
+            array_merge([$guestName, $guestEmail, $pollTokenHash, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone], $tierParam)
         );
     } else {
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, course_id, affiliate_id, amount, original_amount, phone, type, status, ticket_tier) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING', ?)",
-            [$userId, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone, $storedTicketTier]
+            "INSERT INTO payments (user_id, course_id, affiliate_id, amount, original_amount, phone, type, status{$tierCol}) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING'{$tierPlaceholder})",
+            array_merge([$userId, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone], $tierParam)
         );
     }
 
