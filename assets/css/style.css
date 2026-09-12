@@ -186,8 +186,6 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 .nav-actions { display: none; align-items: center; gap: 16px; font-size: 14.5px; }
 .nav-actions a.link { color: var(--ink); text-decoration: none; font-weight: 600; transition: color 0.15s ease; }
 .nav-actions a.link:hover { color: var(--accent); }
-.nav-actions .btn-outline { background: transparent; color: var(--ink); border-color: var(--border-strong); }
-.nav-actions .btn-outline:hover { background: var(--surface); color: var(--ink); }
 
 /* Account dropdown — CSS-only hover/focus reveal, no JS needed */
 .account-menu { position: relative; }
@@ -291,8 +289,8 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 .mobile-menu a.mm-cta-dark:hover { background: var(--brand-900); }
 .mobile-menu a.mm-cta-ink { background: var(--ink); color: #fff !important; }
 .mobile-menu a.mm-cta-ink:hover { background: #000; }
-.mobile-menu a.mm-cta-outline { background: var(--white); color: var(--ink) !important; box-shadow: inset 0 0 0 2px var(--border-strong); }
-.mobile-menu a.mm-cta-outline:hover { box-shadow: inset 0 0 0 2px var(--ink); background: var(--surface); }
+.mobile-menu a.mm-cta-green { background: var(--success); color: #fff !important; }
+.mobile-menu a.mm-cta-green:hover { background: color-mix(in srgb, var(--success) 85%, black); }
 @media (min-width: 900px) { .mobile-menu { display: none !important; } }
 
 /* ---------- buttons ---------- */
@@ -330,6 +328,8 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
    doesn't compete with the gold/blue/navy "go do something new" CTAs. */
 .btn-ink { background: var(--ink); color: var(--white); border-color: var(--ink); }
 .btn-ink:hover { background: #000; border-color: #000; box-shadow: 0 8px 0 0 color-mix(in srgb, var(--ink) 55%, black 20%); }
+.btn-green { background: var(--success); color: var(--white); border-color: var(--success); }
+.btn-green:hover { background: color-mix(in srgb, var(--success) 85%, black); border-color: color-mix(in srgb, var(--success) 85%, black); box-shadow: 0 8px 0 0 color-mix(in srgb, var(--success) 45%, black 15%); }
 /* For outline buttons on dark/photo backgrounds (e.g. the hero) — frosted-glass
    fill + a solid white border so the label stays legible over any part of the
    photo, instead of a bare transparent outline that photo contrast can wash out. */

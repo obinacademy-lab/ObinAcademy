@@ -59,7 +59,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
       <?php render_logo(true); ?>
 
       <div class="nav-actions">
-        <a href="<?= e(base_url('events.php')) ?>" class="btn btn-outline btn-sm shine">📅 Events</a>
         <?php if ($user): ?>
           <div class="account-menu">
             <button class="account-trigger" aria-haspopup="true">
@@ -90,8 +89,10 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
               </a>
             </div>
           </div>
+          <a href="<?= e(base_url('events.php')) ?>" class="btn btn-green btn-sm shine">📅 Events</a>
         <?php else: ?>
           <a href="<?= e(base_url('login.php')) ?>" class="btn btn-ink btn-sm shine">Log In</a>
+          <a href="<?= e(base_url('events.php')) ?>" class="btn btn-green btn-sm shine">📅 Events</a>
           <a href="<?= e(base_url('become-affiliate.php')) ?>" class="btn btn-gold btn-sm shine">Become an Affiliate</a>
           <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-primary btn-sm shine">Become a Creator <span class="btn-arrow">→</span></a>
         <?php endif; ?>
@@ -116,14 +117,15 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         </div>
       <?php endif; ?>
-      <a href="<?= e(base_url('events.php')) ?>" class="mm-cta mm-cta-outline">📅 Events</a>
       <?php if ($user): ?>
         <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>"><span class="mm-icon">👤</span>My Profile</a>
         <a href="<?= e(base_url('dashboard.php')) ?>"><span class="mm-icon">📊</span>Dashboard</a>
         <a href="<?= e(base_url('dashboard/settings.php')) ?>"><span class="mm-icon">⚙️</span>Settings</a>
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>
+        <a href="<?= e(base_url('events.php')) ?>" class="mm-cta mm-cta-green">📅 Events</a>
       <?php else: ?>
         <a href="<?= e(base_url('login.php')) ?>" class="mm-cta mm-cta-ink">Log In</a>
+        <a href="<?= e(base_url('events.php')) ?>" class="mm-cta mm-cta-green">📅 Events</a>
         <a href="<?= e(base_url('become-affiliate.php')) ?>" class="mm-cta mm-cta-gold">Become an Affiliate</a>
         <a href="<?= e(base_url('become-creator.php')) ?>" class="mm-cta">Become a Creator →</a>
       <?php endif; ?>
