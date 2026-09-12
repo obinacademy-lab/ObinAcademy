@@ -435,9 +435,17 @@ CREATE TABLE comments (
   -- add_comment() in includes/comments.php, so parent_id here never points
   -- at a row that itself has a parent_id.
   parent_id INT NULL,
+  -- The exact comment this one is a direct reply to — may be a reply
+  -- itself, unlike parent_id (always the top-level ancestor). Lets the UI
+  -- show "Replying to X" even when a reply is really addressed to another
+  -- reply, without needing more than two visual nesting levels.
+  -- ON DELETE SET NULL: removing the specific comment replied to shouldn't
+  -- cascade-delete this one, just drop the "replying to" attribution.
+  reply_to_comment_id INT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE,
+  FOREIGN KEY (reply_to_comment_id) REFERENCES comments(id) ON DELETE SET NULL,
   INDEX idx_comments_course_status (course_id, status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

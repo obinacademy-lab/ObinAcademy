@@ -7,12 +7,15 @@ require_once __DIR__ . '/moderation.php';
  * gate here). A comment containing blocked language is stored HIDDEN rather
  * than rejected outright, so the poster doesn't see it and an admin can
  * still review/restore a false positive later.
- * @param ?int $parentId set to reply to another comment. Threads are capped
- *   at two levels — replying to a reply re-parents onto that reply's own
- *   parent instead of nesting further.
+ * @param ?int $replyToId the exact comment being replied to — any comment
+ *   or reply, so "reply to anyone" isn't limited to top-level comments.
+ *   Stored as-is in reply_to_comment_id for the "Replying to X" label;
+ *   separately, the *structural* parent_id always resolves up to that
+ *   comment's top-level ancestor, since visual nesting is capped at two
+ *   levels regardless of how deep the conversation actually goes.
  * @return array{ok?: bool, hidden?: bool, id?: int, error?: string}
  */
-function add_comment(int $userId, int $courseId, string $body, ?int $parentId = null): array {
+function add_comment(int $userId, int $courseId, string $body, ?int $replyToId = null): array {
     $body = trim($body);
     if ($body === '') return ['error' => 'Write a comment before posting.'];
     if (mb_strlen($body) < 2) return ['error' => 'Comment is too short.'];
@@ -21,10 +24,13 @@ function add_comment(int $userId, int $courseId, string $body, ?int $parentId = 
     $course = db_one('SELECT id FROM courses WHERE id = ?', [$courseId]);
     if (!$course) return ['error' => 'Course not found.'];
 
-    if ($parentId !== null) {
-        $parent = db_one("SELECT id, parent_id FROM comments WHERE id = ? AND course_id = ? AND status = 'VISIBLE'", [$parentId, $courseId]);
-        if (!$parent) return ['error' => 'The comment you\'re replying to no longer exists.'];
-        $parentId = $parent['parent_id'] !== null ? (int) $parent['parent_id'] : (int) $parent['id'];
+    $parentId = null;
+    $replyToCommentId = null;
+    if ($replyToId !== null) {
+        $target = db_one("SELECT id, parent_id FROM comments WHERE id = ? AND course_id = ? AND status = 'VISIBLE'", [$replyToId, $courseId]);
+        if (!$target) return ['error' => 'The comment you\'re replying to no longer exists.'];
+        $replyToCommentId = (int) $target['id'];
+        $parentId = $target['parent_id'] !== null ? (int) $target['parent_id'] : (int) $target['id'];
     }
 
     $blockedWord = comment_contains_blocked_language($body);
@@ -33,8 +39,8 @@ function add_comment(int $userId, int $courseId, string $body, ?int $parentId = 
 
     try {
         $id = db_insert(
-            'INSERT INTO comments (body, status, hidden_reason, user_id, course_id, parent_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [$body, $status, $hiddenReason, $userId, $courseId, $parentId]
+            'INSERT INTO comments (body, status, hidden_reason, user_id, course_id, parent_id, reply_to_comment_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [$body, $status, $hiddenReason, $userId, $courseId, $parentId, $replyToCommentId]
         );
     } catch (Throwable $e) {
         return ['error' => 'Comments aren\'t available right now — please try again shortly.'];
@@ -46,10 +52,12 @@ function add_comment(int $userId, int $courseId, string $body, ?int $parentId = 
 /**
  * Publicly visible comments for one course/event's detail page, as a tree —
  * each top-level comment (newest first) carries its replies (oldest first)
- * in a 'replies' key. Defensive: this runs on every single course/event
- * page view, so a missing `comments`/`parent_id` column (deploy landed
- * before its migration ran) must not 500 the entire site's course/event
- * pages — just show no comments until it exists.
+ * in a 'replies' key, and every row carries 'reply_to_author_name' (who it
+ * was directly addressed to, which for a reply-to-a-reply is someone other
+ * than the top-level comment's author). Defensive: this runs on every
+ * single course/event page view, so a missing `comments` table/column
+ * (deploy landed before its migration ran) must not 500 the entire site's
+ * course/event pages — just show no comments until it exists.
  */
 function get_visible_comments(int $courseId): array {
     try {
@@ -70,9 +78,13 @@ function get_visible_comments(int $courseId): array {
         $byId[(int) $row['id']] = $row;
     }
     foreach ($byId as $id => $row) {
+        $replyToId = $row['reply_to_comment_id'] !== null ? (int) $row['reply_to_comment_id'] : null;
+        $byId[$id]['reply_to_author_name'] = ($replyToId !== null && isset($byId[$replyToId])) ? $byId[$replyToId]['author_name'] : null;
+    }
+    foreach ($byId as $id => $row) {
         $parentId = $row['parent_id'] !== null ? (int) $row['parent_id'] : null;
         if ($parentId !== null && isset($byId[$parentId])) {
-            $byId[$parentId]['replies'][] = $row;
+            $byId[$parentId]['replies'][] = $byId[$id];
         }
     }
 

@@ -361,16 +361,27 @@ require __DIR__ . '/../includes/header.php';
         </div>
       </div>
 
-      <h2 class="h3" style="margin-top:48px;">Comments<?= $commentCount > 0 ? " ($commentCount)" : '' ?></h2>
+      <div class="comments-heading">
+        <span class="comments-heading-icon"><?php dash_icon('message-square'); ?></span>
+        <h2 class="h3">Comments<?= $commentCount > 0 ? " ($commentCount)" : '' ?></h2>
+      </div>
       <p class="muted small" style="margin-top:4px;">Open to any Obin Academy member — <?= $isEvent ? 'you don\'t need a ticket' : 'you don\'t need to be enrolled' ?> to join the discussion.</p>
 
-      <div data-comments-root data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-comment.php')) ?>" data-delete-url="<?= e(base_url('api/delete-comment.php')) ?>" style="margin-top:16px; max-width:640px;">
+      <div data-comments-root data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-comment.php')) ?>" data-delete-url="<?= e(base_url('api/delete-comment.php')) ?>" style="margin-top:18px; max-width:660px;">
         <?php if ($user): ?>
-          <form data-comment-submit class="rform reveal">
-            <label for="commentBody" style="display:block; font-weight:700; font-size:13.5px;">Add a Comment</label>
-            <textarea id="commentBody" name="body" rows="3" style="margin-top:8px;" placeholder="<?= $isEvent ? 'Ask a question or share your thoughts about this event…' : 'Ask a question or share your thoughts about this course…' ?>" required></textarea>
-            <p class="error-text hidden" data-comment-error></p>
-            <button type="submit" class="btn btn-primary">Post Comment</button>
+          <form data-comment-submit class="comment-form reveal">
+            <div class="avatar comment-form-avatar">
+              <?php if (!empty($user['avatar_url'])): ?><img src="<?= e(asset_src($user['avatar_url'])) ?>" alt="">
+              <?php else: ?><?= e(mb_substr($user['name'], 0, 1)) ?><?php endif; ?>
+            </div>
+            <div class="comment-form-body">
+              <textarea id="commentBody" name="body" rows="2" maxlength="2000" placeholder="<?= $isEvent ? 'Ask a question or share your thoughts about this event…' : 'Ask a question or share your thoughts about this course…' ?>" required></textarea>
+              <div class="comment-form-footer">
+                <p class="error-text hidden" data-comment-error></p>
+                <span class="comment-char-count" data-char-count>2000</span>
+                <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+              </div>
+            </div>
           </form>
         <?php else: ?>
           <p class="card card-pad muted small reveal" style="border-style:dashed;">
@@ -379,11 +390,14 @@ require __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <?php if (!$comments): ?>
-          <p class="small muted" style="margin-top:16px;">No comments yet. Be the first to start the discussion.</p>
+          <div class="comment-empty">
+            <?php dash_icon('message-square'); ?>
+            <p class="small muted">No comments yet. Be the first to start the discussion.</p>
+          </div>
         <?php else: ?>
-          <div class="rlist" data-comment-list>
+          <div class="clist" data-comment-list>
             <?php foreach ($comments as $ci => $cm): ?>
-              <div class="rcard rcard-comment reveal reveal-delay-<?= min($ci + 1, 5) ?>" data-comment-id="<?= (int) $cm['id'] ?>">
+              <div class="ccard reveal reveal-delay-<?= min($ci + 1, 5) ?>" data-comment-id="<?= (int) $cm['id'] ?>">
                 <div class="head">
                   <div class="avatar">
                     <?php if (!empty($cm['author_avatar_url'])): ?><img src="<?= e(asset_src($cm['author_avatar_url'])) ?>" alt="">
@@ -391,21 +405,16 @@ require __DIR__ . '/../includes/header.php';
                   </div>
                   <div>
                     <div class="name"><?= e($cm['author_name']) ?></div>
-                    <div class="small muted"><?= e(format_date($cm['created_at'])) ?></div>
+                    <div class="small muted"><?= e(time_ago($cm['created_at'])) ?></div>
                   </div>
                   <?php if ($user && ($canModerateComments || (int) $cm['user_id'] === (int) $user['id'])): ?>
-                    <button type="button" class="ccard-delete" data-comment-delete title="Delete comment">✕</button>
+                    <button type="button" class="ccard-delete" data-comment-delete title="Delete comment"><?php dash_icon('trash'); ?></button>
                   <?php endif; ?>
                 </div>
                 <p class="comment"><?= nl2br(e($cm['body'])) ?></p>
 
                 <?php if ($user): ?>
-                  <button type="button" class="comment-reply-toggle" data-reply-toggle>↩ Reply</button>
-                  <form data-comment-submit data-parent-id="<?= (int) $cm['id'] ?>" class="comment-reply-form hidden">
-                    <textarea name="body" rows="2" placeholder="Write a reply…" required></textarea>
-                    <p class="error-text hidden" data-comment-error></p>
-                    <button type="submit" class="btn btn-outline btn-sm">Post Reply</button>
-                  </form>
+                  <button type="button" class="comment-reply-toggle" data-reply-toggle data-reply-to-id="<?= (int) $cm['id'] ?>" data-reply-to-name="<?= e($cm['author_name']) ?>">↩ Reply</button>
                 <?php endif; ?>
 
                 <?php if ($cm['replies']): ?>
@@ -419,16 +428,37 @@ require __DIR__ . '/../includes/header.php';
                           </div>
                           <div>
                             <div class="name"><?= e($rp['author_name']) ?></div>
-                            <div class="small muted"><?= e(format_date($rp['created_at'])) ?></div>
+                            <div class="small muted"><?= e(time_ago($rp['created_at'])) ?></div>
                           </div>
                           <?php if ($user && ($canModerateComments || (int) $rp['user_id'] === (int) $user['id'])): ?>
-                            <button type="button" class="ccard-delete" data-comment-delete title="Delete reply">✕</button>
+                            <button type="button" class="ccard-delete" data-comment-delete title="Delete reply"><?php dash_icon('trash'); ?></button>
                           <?php endif; ?>
                         </div>
+                        <?php if ($rp['reply_to_author_name'] && $rp['reply_to_author_name'] !== $cm['author_name']): ?>
+                          <div class="comment-reply-to">↪ Replying to <strong><?= e($rp['reply_to_author_name']) ?></strong></div>
+                        <?php endif; ?>
                         <p class="comment"><?= nl2br(e($rp['body'])) ?></p>
+                        <?php if ($user): ?>
+                          <button type="button" class="comment-reply-toggle" data-reply-toggle data-reply-to-id="<?= (int) $rp['id'] ?>" data-reply-to-name="<?= e($rp['author_name']) ?>">↩ Reply</button>
+                        <?php endif; ?>
                       </div>
                     <?php endforeach; ?>
                   </div>
+                <?php endif; ?>
+
+                <?php if ($user): ?>
+                  <form data-comment-submit data-thread-id="<?= (int) $cm['id'] ?>" class="comment-reply-form">
+                    <div class="comment-reply-to-chip hidden" data-reply-chip>
+                      <span>Replying to <strong data-reply-chip-name></strong></span>
+                      <button type="button" data-reply-cancel aria-label="Cancel reply target">✕</button>
+                    </div>
+                    <textarea name="body" rows="2" maxlength="2000" placeholder="Write a reply…" required></textarea>
+                    <div class="comment-form-footer">
+                      <p class="error-text hidden" data-comment-error></p>
+                      <span class="comment-char-count" data-char-count>2000</span>
+                      <button type="submit" class="btn btn-outline btn-sm">Post Reply</button>
+                    </div>
+                  </form>
                 <?php endif; ?>
               </div>
             <?php endforeach; ?>
