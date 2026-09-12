@@ -1,5 +1,35 @@
 <?php
 /**
+ * Quantity picker + up to 4 optional attendee-name fields, shared by both
+ * the paid payment widget and the free "Enroll Now" form — same field
+ * names/data-hooks in both, since one is read manually by payment.js (the
+ * widget is a plain div, not a real <form>) and the other native-submits
+ * as a real POST. Capacity/quantity limits are enforced server-side on
+ * submit rather than dynamically capped here, so this stays a flat 1-5.
+ */
+function render_ticket_quantity_picker(): void {
+    ?>
+    <div data-quantity-wrap>
+      <div class="field" style="margin-bottom:14px;">
+        <label class="small muted" style="font-weight:700;">Number of Tickets</label>
+        <select name="quantity" data-quantity-select>
+          <?php for ($n = 1; $n <= 5; $n++): ?>
+            <option value="<?= $n ?>"><?= $n ?> ticket<?= $n === 1 ? '' : 's' ?></option>
+          <?php endfor; ?>
+        </select>
+      </div>
+      <div data-attendee-rows>
+        <?php for ($n = 2; $n <= 5; $n++): ?>
+          <div class="field" data-attendee-row="<?= $n ?>" hidden style="margin-bottom:10px;">
+            <input name="attendeeNames[]" placeholder="Attendee <?= $n ?> name (optional)" data-attendee-input>
+          </div>
+        <?php endfor; ?>
+      </div>
+    </div>
+    <?php
+}
+
+/**
  * Renders the enroll / continue-learning / pay panel for a course detail page.
  * Expects $course (get_course_by_slug result), $user (current_user() or null),
  * $isOwner, $isEnrolled in scope.
@@ -97,19 +127,20 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
             <?php if ($hasVip): ?>
               <div class="ticket-tier-select" data-tier-wrap>
                 <label class="tier-option <?= $ordinarySoldOut ? 'disabled' : '' ?>">
-                  <input type="radio" name="ticketTier" value="ORDINARY" data-tier-amount="<?= e(format_money($displayPrice)) ?>" <?= $ordinarySoldOut ? 'disabled' : 'checked' ?>>
+                  <input type="radio" name="ticketTier" value="ORDINARY" data-tier-amount="<?= e(format_money($displayPrice)) ?>" data-tier-unit-price="<?= (int) $displayPrice ?>" <?= $ordinarySoldOut ? 'disabled' : 'checked' ?>>
                   <span class="tier-name">Ordinary</span>
                   <span class="tier-price"><?= e(format_money($displayPrice)) ?></span>
                   <?php if ($ordinarySoldOut): ?><span class="tier-soldout">Sold Out</span><?php endif; ?>
                 </label>
                 <label class="tier-option <?= $vipSoldOut ? 'disabled' : '' ?>">
-                  <input type="radio" name="ticketTier" value="VIP" data-tier-amount="<?= e(format_money((float) $course['vip_price'])) ?>" <?= $vipSoldOut ? 'disabled' : ($ordinarySoldOut ? 'checked' : '') ?>>
+                  <input type="radio" name="ticketTier" value="VIP" data-tier-amount="<?= e(format_money((float) $course['vip_price'])) ?>" data-tier-unit-price="<?= (int) $course['vip_price'] ?>" <?= $vipSoldOut ? 'disabled' : ($ordinarySoldOut ? 'checked' : '') ?>>
                   <span class="tier-name">🎟 VIP</span>
                   <span class="tier-price"><?= e(format_money((float) $course['vip_price'])) ?></span>
                   <?php if ($vipSoldOut): ?><span class="tier-soldout">Sold Out</span><?php endif; ?>
                 </label>
               </div>
             <?php endif; ?>
+            <?php render_ticket_quantity_picker(); ?>
             <div data-state="idle">
               <button class="btn btn-primary btn-block btn-lg" data-action="start">📱 Pay with Mobile Money</button>
             </div>
@@ -118,7 +149,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                 <?php dash_icon('wallet'); ?>
                 <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
               </div>
-              <button class="btn btn-primary btn-block" data-action="pay">Pay <span data-pay-amount><?= e(format_money($ordinarySoldOut && $hasVip ? (float) $course['vip_price'] : $displayPrice)) ?></span></button>
+              <button class="btn btn-primary btn-block" data-action="pay">Pay <span data-pay-amount data-unit-price="<?= (int) ($ordinarySoldOut && $hasVip ? (float) $course['vip_price'] : $displayPrice) ?>"><?= e(format_money($ordinarySoldOut && $hasVip ? (float) $course['vip_price'] : $displayPrice)) ?></span></button>
             </div>
             <div data-state="waiting" class="hidden pay-waiting">
               <div class="spinner"></div>
@@ -139,6 +170,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           <form method="post" action="<?= e(base_url('api/enroll-redirect.php')) ?>" style="margin-top:20px;">
             <input type="hidden" name="courseId" value="<?= (int) $course['id'] ?>">
             <?= csrf_field() ?>
+            <?php if ($isEvent): ?><?php render_ticket_quantity_picker(); ?><?php endif; ?>
             <button type="submit" class="btn btn-primary btn-block btn-lg">Enroll Now</button>
           </form>
         <?php endif; ?>

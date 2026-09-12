@@ -210,6 +210,12 @@ CREATE TABLE payments (
   -- copied onto the resulting enrollment on success; NULL for course
   -- purchases and premium upgrades, where tiers don't apply.
   ticket_tier ENUM('ORDINARY','VIP') NULL,
+  -- How many tickets this one purchase covers (always 1 for a course) — the
+  -- buyer's own enrollment plus quantity-1 extra standalone guest-style
+  -- tickets created on success, one per name in extra_attendees (a JSON
+  -- array, blank names defaulting to "Guest N" at creation time).
+  quantity INT NOT NULL DEFAULT 1,
+  extra_attendees TEXT NULL,
   -- Captured at initiate_payment() time from the oa_aff attribution cookie
   -- (see includes/affiliates.php), not re-resolved later — so a payment
   -- keeps the affiliate who was actually credited at checkout even if that

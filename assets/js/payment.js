@@ -33,25 +33,40 @@
     const emailInput = root.querySelector('[data-email-input]');
     const tierWrap = root.querySelector('[data-tier-wrap]');
     const tierInputs = root.querySelectorAll('input[name="ticketTier"]');
+    const quantityWrap = root.querySelector('[data-quantity-wrap]');
+    const quantitySelect = root.querySelector('[data-quantity-select]');
+    const attendeeInputs = root.querySelectorAll('[data-attendee-input]');
     const payAmountEl = root.querySelector('[data-pay-amount]');
 
     let pollCount = 0;
     let pollTimer = null;
     let pollToken = null;
 
-    function syncTierSelection() {
-      tierInputs.forEach((input) => {
-        input.closest(".tier-option")?.classList.toggle("selected", input.checked);
-        if (input.checked && payAmountEl) payAmountEl.textContent = input.dataset.tierAmount;
-      });
+    function formatMoney(amount) {
+      return "UGX " + Math.round(amount).toLocaleString("en-US");
     }
-    tierInputs.forEach((input) => input.addEventListener("change", syncTierSelection));
-    syncTierSelection();
+
+    function currentQuantity() {
+      return quantitySelect ? parseInt(quantitySelect.value, 10) || 1 : 1;
+    }
+
+    function syncPriceDisplay() {
+      tierInputs.forEach((input) => input.closest(".tier-option")?.classList.toggle("selected", input.checked));
+      if (!payAmountEl) return;
+      const checkedTier = root.querySelector('input[name="ticketTier"]:checked');
+      const unitPrice = parseFloat((checkedTier || payAmountEl).dataset.tierUnitPrice ?? payAmountEl.dataset.unitPrice ?? "0");
+      payAmountEl.textContent = formatMoney(unitPrice * currentQuantity());
+    }
+    tierInputs.forEach((input) => input.addEventListener("change", syncPriceDisplay));
+    if (quantitySelect) quantitySelect.addEventListener("change", syncPriceDisplay);
+    syncPriceDisplay();
 
     function show(state) {
       Object.values(states).forEach((el) => el && el.classList.add("hidden"));
       if (states[state]) states[state].classList.remove("hidden");
-      if (tierWrap) tierWrap.classList.toggle("hidden", state !== "idle" && state !== "phone");
+      const showPreCheckoutFields = state === "idle" || state === "phone";
+      if (tierWrap) tierWrap.classList.toggle("hidden", !showPreCheckoutFields);
+      if (quantityWrap) quantityWrap.classList.toggle("hidden", !showPreCheckoutFields);
     }
 
     function setError(msg) {
@@ -84,6 +99,11 @@
           if (isGuest) { body.name = name; body.email = email; }
           const checkedTier = root.querySelector('input[name="ticketTier"]:checked');
           if (checkedTier) body.ticketTier = checkedTier.value;
+          if (quantitySelect) {
+            const qty = currentQuantity();
+            body.quantity = qty;
+            body.attendeeNames = Array.from(attendeeInputs).slice(0, qty - 1).map((el) => el.value.trim());
+          }
           const res = await fetch(initiateUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

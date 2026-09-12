@@ -27,6 +27,23 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => el.remove(), 6000);
   });
 
+  // Event ticket quantity picker: reveals exactly as many "Attendee N name"
+  // fields as tickets selected beyond the first (the buyer's own). Shared
+  // by the free "Enroll Now" form and the paid payment widget — the widget
+  // additionally recomputes its displayed price on quantity change, handled
+  // separately in payment.js.
+  document.querySelectorAll("[data-quantity-select]").forEach((select) => {
+    const wrap = select.closest("[data-quantity-wrap]") || document;
+    function syncAttendeeRows() {
+      const qty = parseInt(select.value, 10) || 1;
+      wrap.querySelectorAll("[data-attendee-row]").forEach((row) => {
+        row.hidden = parseInt(row.dataset.attendeeRow, 10) > qty;
+      });
+    }
+    select.addEventListener("change", syncAttendeeRows);
+    syncAttendeeRows();
+  });
+
   // Hero background slideshow — crossfades to the next image on an interval.
   const heroSlides = document.querySelector("[data-hero-slides]");
   if (heroSlides) {

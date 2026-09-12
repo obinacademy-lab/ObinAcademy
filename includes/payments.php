@@ -19,16 +19,22 @@ function fetch_payment_with_course(int $paymentId): ?array {
     );
 }
 
-/** @param array $course a courses row (needs vip_price/vip_capacity/ticket_capacity) */
-function validate_ticket_tier(array $course, string $ticketTier, int $courseId): ?string {
+/**
+ * @param array $course a courses row (needs vip_price/vip_capacity/ticket_capacity)
+ * @param int $quantity how many tickets of this tier are being requested in one purchase —
+ *   checked against the tier's *remaining* capacity, not just whether it's already full.
+ */
+function validate_ticket_tier(array $course, string $ticketTier, int $courseId, int $quantity = 1): ?string {
     if (!in_array($ticketTier, ['ORDINARY', 'VIP'], true)) return 'Invalid ticket tier.';
-    if ($ticketTier === 'VIP') {
-        if (!event_has_vip($course)) return 'This event does not offer a VIP tier.';
-        $vipSold = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'VIP'", [$courseId])['n'];
-        if (event_tier_sold_out($course, 'VIP', $vipSold)) return 'VIP tickets are sold out.';
-    } else {
-        $ordinarySold = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$courseId])['n'];
-        if (event_tier_sold_out($course, 'ORDINARY', $ordinarySold)) return 'Ordinary tickets are sold out.';
+    $capacityCol = $ticketTier === 'VIP' ? 'vip_capacity' : 'ticket_capacity';
+    if ($ticketTier === 'VIP' && !event_has_vip($course)) return 'This event does not offer a VIP tier.';
+    $tierSold = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = ?", [$courseId, $ticketTier])['n'];
+    $capacity = $course[$capacityCol];
+    if ($capacity !== null && $tierSold + $quantity > (int) $capacity) {
+        $remaining = max(0, (int) $capacity - $tierSold);
+        return $remaining === 0
+            ? ($ticketTier === 'VIP' ? 'VIP tickets are sold out.' : 'Ordinary tickets are sold out.')
+            : "Only {$remaining} " . ($ticketTier === 'VIP' ? 'VIP' : 'Ordinary') . " ticket" . ($remaining === 1 ? '' : 's') . ' left.';
     }
     return null;
 }
@@ -105,6 +111,11 @@ function resolve_payment_with_iotec(array $payment): array {
             // logged in again when they open it, possibly on another device.
             $isEvent = $payment['course_type'] === 'EVENT';
             $ticketTier = $payment['ticket_tier'] ?? 'ORDINARY';
+            // Extra tickets bought in the same purchase (for other people) —
+            // always empty for a course, where quantity/extra_attendees are
+            // never set in the first place.
+            $quantity = $isEvent ? max(1, (int) ($payment['quantity'] ?? 1)) : 1;
+            $extraAttendees = $isEvent ? (json_decode((string) ($payment['extra_attendees'] ?? '[]'), true) ?: []) : [];
             $ticketToken = null;
             if (!$isGuestPayment && $isEvent) {
                 [$ticketToken, $ticketTokenHash] = make_access_token();
@@ -136,6 +147,25 @@ function resolve_payment_with_iotec(array $payment): array {
                         array_merge([$payment['user_id'], $payment['course_id'], $expiresAt], $tierParam)
                     );
                 }
+                // One standalone ticket per extra attendee name — each gets
+                // its own token, same as a guest ticket, so it works as an
+                // independent link the buyer can forward instead of only
+                // being usable from the buyer's own account. The plaintext
+                // token only ever exists here, in this request — never
+                // recoverable again once hashed — so the buyer's receipt
+                // email (below) is the one and only place these links get
+                // handed over, same as every other token-based access link
+                // on this site.
+                $extraTicketLinks = [];
+                foreach ($extraAttendees as $i => $attendeeName) {
+                    $attendeeName = trim((string) $attendeeName) !== '' ? trim((string) $attendeeName) : 'Guest ' . ($i + 2);
+                    [$extraToken, $extraTokenHash] = make_access_token();
+                    db_insert(
+                        'INSERT INTO enrollments (user_id, guest_name, access_token_hash, course_id, expires_at, ticket_tier) VALUES (NULL, ?, ?, ?, ?, ?)',
+                        [$attendeeName, $extraTokenHash, $payment['course_id'], $expiresAt, $ticketTier]
+                    );
+                    $extraTicketLinks[] = ['name' => $attendeeName, 'url' => base_url('ticket.php?token=' . $extraToken)];
+                }
                 db_insert(
                     'INSERT INTO earnings (creator_id, course_id, amount, gross_amount, platform_fee) VALUES (?, ?, ?, ?, ?)',
                     [$payment['course_creator_id'], $payment['course_id'], $split['net'], $split['gross'], $split['fee']]
@@ -152,8 +182,9 @@ function resolve_payment_with_iotec(array $payment): array {
                 throw $e;
             }
             $ticketUrl = $ticketToken !== null ? base_url('ticket.php?token=' . $ticketToken) : null;
-            $itemLabel = $isEvent ? ($ticketTier === 'VIP' ? 'VIP Ticket' : 'Ordinary Ticket') : 'Course Enrollment';
-            send_payment_receipt_email($payment, $isGuestPayment, $itemLabel, $ticketUrl);
+            $tierLabel = $ticketTier === 'VIP' ? 'VIP Ticket' : 'Ordinary Ticket';
+            $itemLabel = $isEvent ? ($quantity > 1 ? "{$tierLabel} × {$quantity}" : $tierLabel) : 'Course Enrollment';
+            send_payment_receipt_email($payment, $isGuestPayment, $itemLabel, $ticketUrl, $extraTicketLinks ?? []);
         } else {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
         }
@@ -176,9 +207,15 @@ function resolve_payment_with_iotec(array $payment): array {
  * (no account). A guest payment gets a one-time poll token (plaintext
  * returned here, only its hash stored) so the browser can keep polling
  * poll_payment_status() without a session identity.
+ * @param int $quantity how many tickets to buy in this one purchase — always
+ *   forced to 1 for a course. The buyer gets tier-priced ticket #1 on their
+ *   own account; tickets 2..$quantity are extra standalone tickets for other
+ *   people, named via $extraAttendeeNames (any blank/missing name defaults
+ *   to "Guest N" when the tickets are actually created on payment success).
+ * @param string[] $extraAttendeeNames
  * @return array{paymentId?: int, pollToken?: string, error?: string}
  */
-function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null, string $ticketTier = 'ORDINARY'): array {
+function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null, string $ticketTier = 'ORDINARY', int $quantity = 1, array $extraAttendeeNames = []): array {
     if (!validate_phone($phone)) return ['error' => 'Enter a valid phone number.'];
 
     $isGuest = $userId === null;
@@ -194,15 +231,19 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if (!$isGuest && (int) $course['creator_id'] === $userId) return ['error' => 'Creators cannot enroll in their own course.'];
     if ((float) $course['price'] <= 0) return ['error' => 'This course is free — use the enroll button instead.'];
     $isEventCourse = $course['type'] === 'EVENT';
-    // A ticket tier only means something for an event — normalize away any
-    // stray value a course purchase (or a forged request) might send.
+    // A ticket tier — and buying more than one ticket — only means something
+    // for an event; normalize away any stray value a course purchase (or a
+    // forged request) might send.
     $ticketTier = ($isEventCourse && $ticketTier === 'VIP') ? 'VIP' : 'ORDINARY';
+    $quantity = $isEventCourse ? max(1, min(5, $quantity)) : 1;
+    $extraAttendeeNames = $isEventCourse ? array_slice(array_map('trim', $extraAttendeeNames), 0, $quantity - 1) : [];
     // Server-side guards, not just hidden buttons — a sold-out or past event,
-    // or a specific tier that's sold out, must not be payable even if
-    // someone posts directly to this endpoint.
+    // or a specific tier without enough remaining capacity for the full
+    // quantity requested, must not be payable even if someone posts
+    // directly to this endpoint.
     if ($isEventCourse) {
         if (event_has_passed($course)) return ['error' => 'This event has already happened.'];
-        $tierError = validate_ticket_tier($course, $ticketTier, $courseId);
+        $tierError = validate_ticket_tier($course, $ticketTier, $courseId, $quantity);
         if ($tierError) return ['error' => $tierError];
     }
 
@@ -213,12 +254,13 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     // silently ignored rather than overcharging or no-oping strangely.
     // VIP tickets have no separate sale mechanism, so this discount path
     // only ever applies to the ORDINARY tier.
-    $finalPrice = $isEventCourse ? event_tier_price($course, $ticketTier) : (float) $course['price'];
+    $unitPrice = $isEventCourse ? event_tier_price($course, $ticketTier) : (float) $course['price'];
     $originalAmount = null;
     if ($ticketTier === 'ORDINARY' && course_has_active_sale($course)) {
-        $originalAmount = (float) $course['price'];
-        $finalPrice = (float) $course['sale_price'];
+        $originalAmount = (float) $course['price'] * $quantity;
+        $unitPrice = (float) $course['sale_price'];
     }
+    $finalPrice = $unitPrice * $quantity;
 
     $existingEnrollment = $isGuest
         ? db_one('SELECT id FROM enrollments WHERE course_id = ? AND guest_email = ? AND user_id IS NULL', [$courseId, $guestEmail])
@@ -255,12 +297,12 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
 
     $affiliateId = resolve_affiliate_id_from_cookie($userId);
 
-    // Column left out of the INSERT entirely for a plain course purchase
+    // Columns left out of the INSERT entirely for a plain course purchase
     // (by far the most common transaction) — same reasoning as
     // resolve_payment_with_iotec()'s enrollment INSERTs below.
-    $tierCol = $isEventCourse ? ', ticket_tier' : '';
-    $tierPlaceholder = $isEventCourse ? ', ?' : '';
-    $tierParam = $isEventCourse ? [$ticketTier] : [];
+    $tierCol = $isEventCourse ? ', ticket_tier, quantity, extra_attendees' : '';
+    $tierPlaceholder = $isEventCourse ? ', ?, ?, ?' : '';
+    $tierParam = $isEventCourse ? [$ticketTier, $quantity, json_encode(array_values($extraAttendeeNames))] : [];
 
     $pollToken = null;
     if ($isGuest) {
@@ -277,7 +319,8 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     }
 
     try {
-        $result = iotec_initiate_collection($finalPrice, $phone, (string) $paymentId, substr("Obin Academy - {$course['title']}", 0, 100));
+        $note = $quantity > 1 ? "Obin Academy - {$course['title']} x{$quantity}" : "Obin Academy - {$course['title']}";
+        $result = iotec_initiate_collection($finalPrice, $phone, (string) $paymentId, substr($note, 0, 100));
         db_run('UPDATE payments SET iotec_transaction_id = ? WHERE id = ?', [$result['transactionId'], $paymentId]);
     } catch (Throwable $e) {
         error_log('[iotec] initiateCollection failed for payment ' . $paymentId . ': ' . $e->getMessage());

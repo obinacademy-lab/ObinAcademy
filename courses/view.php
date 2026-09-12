@@ -196,7 +196,7 @@ require __DIR__ . '/../includes/header.php';
             <div class="headline"><?= e($course['creator_headline'] ?: 'Instructor') ?></div>
           </div>
         </a>
-        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'dark', (int) $course['id']); ?>
+        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], $isEvent ? 'Share Event' : 'Share Course', 'dark', (int) $course['id'], $isEvent ? "I'm going to this event" : 'Share this course'); ?>
       </div>
     </div>
   </div>
