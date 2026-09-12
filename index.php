@@ -62,14 +62,6 @@ require __DIR__ . '/includes/header.php';
       <input type="text" name="q" placeholder="Search for anything">
       <button type="submit">Search</button>
     </form>
-
-    <div class="hero-stats-v3">
-      <span><strong data-count-up data-count-value="<?= (int) $stats['course_count'] ?>">0+</strong> courses</span>
-      <span class="dot">&middot;</span>
-      <span><strong data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>">0+</strong> learners</span>
-      <span class="dot">&middot;</span>
-      <span><strong data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>">0+</strong> creators</span>
-    </div>
   </div>
 </section>
 
