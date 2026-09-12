@@ -76,6 +76,10 @@ require __DIR__ . '/includes/header.php';
       <div class="label">Learners</div>
     </div>
     <div class="stat-strip-item">
+      <div class="value" data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>" data-count-suffix="+">0+</div>
+      <div class="label">Creators</div>
+    </div>
+    <div class="stat-strip-item">
       <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_creators']) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
       <div class="label">Paid to Creators</div>
     </div>
