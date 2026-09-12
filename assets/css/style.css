@@ -1307,10 +1307,16 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 /* ---------- live stat strip (about page) ---------- */
 .stat-strip { background: #fff; border-bottom: 1px solid var(--border); padding: 22px 0; }
-.stat-strip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; text-align: center; }
+.stat-strip-grid { display: grid; grid-template-columns: 1fr; gap: 18px; text-align: center; }
+@media (min-width: 420px) { .stat-strip-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 640px) { .stat-strip-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 900px) { .stat-strip-grid { grid-template-columns: repeat(5, 1fr); } }
-.stat-strip-item { display: flex; flex-direction: column; gap: 4px; }
+/* With exactly 5 items, a 2-column row leaves the 5th on its own —
+   give it the full row instead of a lopsided half-empty last line. */
+@media (min-width: 420px) and (max-width: 639px) {
+  .stat-strip-item:nth-child(5):last-child { grid-column: 1 / -1; }
+}
+.stat-strip-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .stat-strip-item .value { font-size: clamp(24px, 4vw, 32px); font-weight: 800; color: var(--brand-900); }
 .stat-strip-item .value .unit { font-size: 0.55em; color: var(--gold); margin-left: 2px; }
 .stat-strip-item .label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
