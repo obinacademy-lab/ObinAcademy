@@ -243,6 +243,7 @@ $studentCount = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course
 $hasVip = $isEvent && event_has_vip($course);
 $ordinarySold = $isEvent ? (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$courseId])['n'] : 0;
 $vipSold = $hasVip ? (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'VIP'", [$courseId])['n'] : 0;
+$shareCount = $isEvent ? (int) db_one('SELECT COUNT(*) AS n FROM course_shares WHERE course_id = ?', [$courseId])['n'] : 0;
 
 $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
 $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
@@ -433,6 +434,14 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <div>
         <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Ordinary Sold</div>
         <div style="margin-top:4px;"><?= $ordinarySold ?> ticket<?= $ordinarySold === 1 ? '' : 's' ?></div>
+      </div>
+      <div>
+        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Views</div>
+        <div style="margin-top:4px;"><?= number_format((int) $course['view_count']) ?></div>
+      </div>
+      <div>
+        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Shares</div>
+        <div style="margin-top:4px;"><?= number_format($shareCount) ?> <a href="<?= e(base_url('dashboard/creator/shares.php?q=' . urlencode($course['title']))) ?>" class="small" style="font-weight:600;">View details →</a></div>
       </div>
       <?php if ($hasVip): ?>
         <div>

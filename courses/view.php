@@ -177,6 +177,7 @@ require __DIR__ . '/../includes/header.php';
           <span class="meta-chip"><?php dash_icon('calendar'); ?><?= $course['event_starts_at'] ? e(date('M j, Y \a\t g:i A', strtotime($course['event_starts_at']))) : 'Date TBA' ?></span>
           <span class="meta-chip"><?php dash_icon($course['event_online_url'] ? 'globe' : 'map-pin'); ?><?= $course['event_online_url'] ? 'Online' : e($course['event_location'] ?: 'Location TBA') ?></span>
           <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> ticket<?= (int) $course['student_count'] === 1 ? '' : 's' ?> sold</span>
+          <span class="meta-chip"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
         <?php else: ?>
           <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> students</span>
           <span class="meta-chip"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
