@@ -66,15 +66,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function runCountUp(el) {
     const target = parseInt(el.getAttribute("data-count-value"), 10) || 0;
+    const prefix = el.getAttribute("data-count-prefix") || "";
+    const grouped = el.hasAttribute("data-count-grouped");
     const suffix = el.hasAttribute("data-count-suffix")
       ? el.getAttribute("data-count-suffix")
-      : (el.textContent.replace(/^[0-9]+/, "") || "+");
-    if (prefersReducedMotion) { el.textContent = target + suffix; return; }
+      : (el.textContent.replace(/^[0-9,]+/, "") || "+");
+    const render = (value) => prefix + (grouped ? value.toLocaleString("en-US") : value) + suffix;
+    if (prefersReducedMotion) { el.textContent = render(target); return; }
     const duration = 2800;
     const start = performance.now();
     function tick(now) {
       const progress = Math.min((now - start) / duration, 1);
-      el.textContent = Math.round(easeOutCubic(progress) * target) + suffix;
+      el.textContent = render(Math.round(easeOutCubic(progress) * target));
       if (progress < 1) requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);

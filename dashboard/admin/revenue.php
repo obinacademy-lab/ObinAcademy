@@ -11,6 +11,12 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate) || $selectedDate > $toda
 
 $daySummary = get_day_collection_summary($selectedDate);
 
+// "Paid" means actually approved/sent, not just accrued in earnings but
+// never withdrawn — see dashboard/admin/withdrawals.php, the only place
+// status flips to APPROVED.
+$totalPaidCreators = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='CREATOR'")['n'] ?? 0);
+$totalPaidAffiliates = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='AFFILIATE'")['n'] ?? 0);
+
 // ---------------------------------------------------------------------
 // Daily collections chart — blue-branded, plots each day's actual amount
 // collected (not a cumulative run) so every point on the curve answers
@@ -46,6 +52,22 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <h1 class="h2">Revenue</h1>
 <p class="muted" style="margin-top:6px;">Look up what the platform collected on a specific day, and track the daily trend.</p>
+
+<h3 class="dash-section-label" style="margin-top:24px;">Total Payouts</h3>
+<div class="grid md:grid-2" style="margin-top:14px;">
+  <div class="stat-card payout-stat-card" data-hoverable="true" style="--hover-color:#10b981;">
+    <div class="icon"><?php dash_icon('banknote'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= (int) round($totalPaidCreators) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+    <div class="label">Paid to Creators</div>
+    <div class="sub">all-time, approved withdrawals</div>
+  </div>
+  <div class="stat-card payout-stat-card" data-hoverable="true" style="--hover-color:#f5b301;">
+    <div class="icon"><?php dash_icon('tag'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= (int) round($totalPaidAffiliates) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+    <div class="label">Paid to Affiliates</div>
+    <div class="sub">all-time, approved withdrawals</div>
+  </div>
+</div>
 
 <div class="card card-pad" style="margin-top:24px;">
   <form method="get" class="day-lookup-form">

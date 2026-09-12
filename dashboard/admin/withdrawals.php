@@ -38,6 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pending = db_all("SELECT " . WITHDRAWAL_PAYEE_SELECT . " WHERE w.status='PENDING' ORDER BY w.requested_at ASC");
 $resolved = db_all("SELECT " . WITHDRAWAL_PAYEE_SELECT . " WHERE w.status!='PENDING' ORDER BY w.resolved_at DESC LIMIT 30");
 
+$totalPaidCreators = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='CREATOR'")['n'] ?? 0);
+$totalPaidAffiliates = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='AFFILIATE'")['n'] ?? 0);
+
 $badgeClass = ['PENDING' => 'badge-pending', 'APPROVED' => 'badge-published', 'REJECTED' => 'badge-rejected'];
 $typeBadgeClass = ['CREATOR' => 'badge-draft', 'AFFILIATE' => 'badge-pending'];
 
@@ -46,7 +49,22 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <h1 class="h2">Withdrawals</h1>
 
-<h2 class="h3" style="margin-top:24px;">Pending (<?= count($pending) ?>)</h2>
+<div class="grid md:grid-2" style="margin-top:20px;">
+  <div class="stat-card payout-stat-card" data-hoverable="true" style="--hover-color:#10b981;">
+    <div class="icon"><?php dash_icon('banknote'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= (int) round($totalPaidCreators) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+    <div class="label">Paid to Creators</div>
+    <div class="sub">all-time, approved withdrawals</div>
+  </div>
+  <div class="stat-card payout-stat-card" data-hoverable="true" style="--hover-color:#f5b301;">
+    <div class="icon"><?php dash_icon('tag'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= (int) round($totalPaidAffiliates) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+    <div class="label">Paid to Affiliates</div>
+    <div class="sub">all-time, approved withdrawals</div>
+  </div>
+</div>
+
+<h2 class="h3" style="margin-top:32px;">Pending (<?= count($pending) ?>)</h2>
 <div class="table-wrap" style="margin-top:14px;">
   <table>
     <thead><tr><th>Payee</th><th>Type</th><th>Amount</th><th>Phone</th><th>Requested</th><th></th></tr></thead>
