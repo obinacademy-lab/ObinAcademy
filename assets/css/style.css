@@ -291,6 +291,8 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 .mobile-menu a.mm-cta-dark:hover { background: var(--brand-900); }
 .mobile-menu a.mm-cta-ink { background: var(--ink); color: #fff !important; }
 .mobile-menu a.mm-cta-ink:hover { background: #000; }
+.mobile-menu a.mm-cta-outline { background: var(--white); color: var(--ink) !important; box-shadow: inset 0 0 0 2px var(--border-strong); }
+.mobile-menu a.mm-cta-outline:hover { box-shadow: inset 0 0 0 2px var(--ink); background: var(--surface); }
 @media (min-width: 900px) { .mobile-menu { display: none !important; } }
 
 /* ---------- buttons ---------- */
