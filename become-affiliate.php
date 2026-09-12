@@ -32,6 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $myAffiliate = $user ? get_affiliate_by_user_id((int) $user['id']) : null;
 $myApplication = $user ? db_one('SELECT * FROM affiliate_applications WHERE user_id = ?', [$user['id']]) : null;
 
+// Real social proof, not a marketing round number — same "actually paid
+// out" definition used on the admin financial pages (approved withdrawals,
+// not gross accrued earnings).
+$paidToAffiliates = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='AFFILIATE'")['n'] ?? 0);
+
 $pageTitle = 'Become an Affiliate Partner — Obin Academy';
 $pageDescription = 'Earn 2% commission on every course purchase you refer through your own affiliate link, on any course from any creator on Obin Academy.';
 require __DIR__ . '/includes/header.php';
@@ -41,6 +46,13 @@ require __DIR__ . '/includes/header.php';
     <span class="pill">Earn by Sharing Obin Academy</span>
     <h1 style="margin-top:14px;">Turn Your Network Into Income</h1>
     <p class="summary" style="margin:14px auto 0;">Apply to become an affiliate partner. Once approved, you get your own link to share — earn 2% commission whenever someone buys any course, from any creator, through your link.</p>
+
+    <?php if ($paidToAffiliates > 0): ?>
+      <div class="hero-trust-stat">
+        <?php dash_icon('banknote'); ?>
+        <span data-count-up data-count-value="<?= (int) round($paidToAffiliates) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</span> already paid out to affiliates
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 

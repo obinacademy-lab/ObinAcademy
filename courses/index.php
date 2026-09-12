@@ -75,6 +75,27 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
+<section class="stat-strip">
+  <div class="container stat-strip-grid">
+    <div class="stat-strip-item">
+      <div class="value" data-count-up data-count-value="<?= (int) $stats['course_count'] ?>" data-count-suffix="+">0+</div>
+      <div class="label">Courses Live</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="value" data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>" data-count-suffix="+">0+</div>
+      <div class="label">Learners</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_creators']) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+      <div class="label">Paid to Creators</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_affiliates']) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+      <div class="label">Paid to Affiliates</div>
+    </div>
+  </div>
+</section>
+
 <div class="container" style="padding-top:32px; padding-bottom:72px;">
   <div class="chip-row chip-row-scroll">
     <a href="<?= e(browse_url($q, '', 'popular', '')) ?>" class="chip <?= (!$categorySlug && !$price && $sort === 'popular') ? 'active' : '' ?>">✨ All</a>

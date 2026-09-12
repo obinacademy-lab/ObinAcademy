@@ -32,6 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $myApplication = $user ? db_one('SELECT * FROM creator_applications WHERE user_id = ?', [$user['id']]) : null;
 
+// Real social proof, not a marketing round number — same "actually paid
+// out" definition used on the admin financial pages (approved withdrawals,
+// not gross accrued earnings).
+$paidToCreators = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='CREATOR'")['n'] ?? 0);
+
 $pageTitle = 'Become a Creator — Obin Academy';
 $pageDescription = 'Turn your knowledge into income. Apply to become a creator on Obin Academy — publish courses, set your own price, and keep 90% of every sale, paid instantly to mobile money.';
 require __DIR__ . '/includes/header.php';
@@ -41,6 +46,13 @@ require __DIR__ . '/includes/header.php';
     <span class="pill">Teach on Obin Academy</span>
     <h1 style="margin-top:14px;">Turn What You Know Into Income</h1>
     <p class="summary" style="margin:14px auto 0;">Share your expertise with thousands of learners across East Africa. Upload video or PDF courses, get paid instantly via mobile money, and keep 90% of every sale.</p>
+
+    <?php if ($paidToCreators > 0): ?>
+      <div class="hero-trust-stat">
+        <?php dash_icon('banknote'); ?>
+        <span data-count-up data-count-value="<?= (int) round($paidToCreators) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</span> already paid out to creators
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 

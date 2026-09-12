@@ -156,6 +156,11 @@ function get_platform_stats(): array {
         'course_count' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status = 'PUBLISHED' AND type = 'COURSE'")['n'],
         'learner_count' => (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role = 'LEARNER'")['n'],
         'creator_count' => (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role = 'CREATOR'")['n'],
+        // "Paid" means actually approved/sent (see dashboard/admin/withdrawals.php,
+        // the only place status flips to APPROVED) — not gross earnings sitting
+        // unwithdrawn, which hasn't actually reached anyone yet.
+        'paid_creators' => (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='CREATOR'")['n'] ?? 0),
+        'paid_affiliates' => (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='AFFILIATE'")['n'] ?? 0),
     ];
 }
 
