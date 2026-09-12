@@ -37,6 +37,12 @@
     const quantitySelect = root.querySelector('[data-quantity-select]');
     const attendeeInputs = root.querySelectorAll('[data-attendee-input]');
     const payAmountEl = root.querySelector('[data-pay-amount]');
+    // The top price display lives in .enroll-panel, a sibling of this
+    // widget root (not a descendant) — reach it via the shared panel.
+    const panel = root.closest('.enroll-panel');
+    const topPriceEl = panel?.querySelector('[data-top-price-amount]');
+    const priceFromLabel = panel?.querySelector('[data-price-from-label]');
+    const priceNoteEl = panel?.querySelector('[data-price-note]');
 
     let pollCount = 0;
     let pollTimer = null;
@@ -52,10 +58,21 @@
 
     function syncPriceDisplay() {
       tierInputs.forEach((input) => input.closest(".tier-option")?.classList.toggle("selected", input.checked));
-      if (!payAmountEl) return;
       const checkedTier = root.querySelector('input[name="ticketTier"]:checked');
-      const unitPrice = parseFloat((checkedTier || payAmountEl).dataset.tierUnitPrice ?? payAmountEl.dataset.unitPrice ?? "0");
-      payAmountEl.textContent = formatMoney(unitPrice * currentQuantity());
+      const fallbackUnitPrice = topPriceEl?.dataset.unitPrice ?? payAmountEl?.dataset.unitPrice ?? "0";
+      const unitPrice = parseFloat(checkedTier?.dataset.tierUnitPrice ?? fallbackUnitPrice);
+      const qty = currentQuantity();
+      const total = formatMoney(unitPrice * qty);
+
+      if (payAmountEl) payAmountEl.textContent = total;
+
+      // The resting "From UGX X" state (default tier, one ticket) stays
+      // ambiguous on purpose — everywhere else, once the buyer has actually
+      // picked a tier or more than one ticket, show the real total instead.
+      const isRestingState = qty === 1 && (!checkedTier || checkedTier.value === "ORDINARY");
+      if (topPriceEl) topPriceEl.textContent = total;
+      if (priceFromLabel) priceFromLabel.hidden = !isRestingState;
+      if (priceNoteEl) priceNoteEl.textContent = qty > 1 ? `one-time payment · ${qty} tickets` : "one-time payment";
     }
     tierInputs.forEach((input) => input.addEventListener("change", syncPriceDisplay));
     if (quantitySelect) quantitySelect.addEventListener("change", syncPriceDisplay);

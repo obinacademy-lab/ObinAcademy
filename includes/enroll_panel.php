@@ -70,10 +70,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <div class="price-row">
           <div class="price">
             <?php if ($hasSale): ?><span class="price-strike"><?= e(format_money($price)) ?></span><?php endif; ?>
-            <?php if ($hasVip): ?><span class="price-from">From</span> <?php endif; ?>
-            <?= $price > 0 ? e(format_money($displayPrice)) : 'Free' ?>
+            <?php if ($hasVip): ?><span class="price-from" data-price-from-label>From</span> <?php endif; ?>
+            <span data-top-price-amount data-unit-price="<?= (int) $displayPrice ?>"><?= $price > 0 ? e(format_money($displayPrice)) : 'Free' ?></span>
           </div>
-          <?php if ($price > 0): ?><span class="price-note">one-time payment</span><?php endif; ?>
+          <?php if ($price > 0): ?><span class="price-note" data-price-note>one-time payment</span><?php endif; ?>
         </div>
         <?php if ($hasSale && $saleDaysLeft !== null): ?>
           <div class="sale-countdown">
