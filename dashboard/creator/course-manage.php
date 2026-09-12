@@ -13,7 +13,6 @@ $isAdmin = $user['role'] === 'ADMIN';
 $isOwner = (int) $course['creator_id'] === (int) $user['id'];
 if (!$isOwner && !$isAdmin) { http_response_code(404); exit('Course not found'); }
 $actingAsAdmin = $isAdmin && !$isOwner;
-$isEvent = $course['type'] === 'EVENT';
 
 function note_admin_edit(bool $actingAsAdmin, array $user, string $action, string $targetLabel, ?string $detail = null): void {
     if (!$actingAsAdmin) return;
@@ -48,54 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $categoryId = (int) post('categoryId');
 
-        $accessDurationDays = null;
-        $premiumPrice = null;
-        $eventStartsAt = null;
-        $eventEndsAt = null;
-        $eventLocation = null;
-        $eventOnlineUrl = null;
-        $ticketCapacity = null;
-        $vipPrice = null;
-        $vipCapacity = null;
-
-        if ($isEvent) {
-            $eventStartsAtRaw = post('eventStartsAt');
-            $eventEndsAtRaw = post('eventEndsAt');
-            $eventLocation = post('eventLocation') ?: null;
-            $eventOnlineUrl = post('eventOnlineUrl') ?: null;
-            $ticketCapacityRaw = post('ticketCapacity');
-            $ticketCapacity = $ticketCapacityRaw === '' ? null : (int) $ticketCapacityRaw;
-            $vipPriceRaw = post('vipPrice');
-            $vipPrice = $vipPriceRaw === '' ? null : (float) $vipPriceRaw;
-            $vipCapacityRaw = post('vipCapacity');
-            $vipCapacity = $vipCapacityRaw === '' ? null : (int) $vipCapacityRaw;
-
-            if ($eventStartsAtRaw === '') {
-                $errors[] = 'Set the event start date and time.';
-            } else {
-                $eventStartsAt = date('Y-m-d H:i:s', strtotime($eventStartsAtRaw));
-            }
-            if ($eventEndsAtRaw !== '') {
-                $eventEndsAt = date('Y-m-d H:i:s', strtotime($eventEndsAtRaw));
-                if ($eventStartsAt && strtotime($eventEndsAt) < strtotime($eventStartsAt)) {
-                    $errors[] = 'Event end time must be after the start time.';
-                }
-            }
-            if (!$eventLocation && !$eventOnlineUrl) {
-                $errors[] = 'Add a location or an online link for the event.';
-            }
-            if ($vipPrice !== null && $vipPrice <= 0) {
-                $errors[] = 'VIP price must be greater than 0 — leave it blank if you don\'t want a VIP tier.';
-            }
-            if ($vipPrice !== null && $price <= 0) {
-                $errors[] = 'Set an Ordinary ticket price above 0 before adding VIP pricing.';
-            }
-        } else {
-            $accessDurationRaw = post('accessDurationDays', 'lifetime');
-            $accessDurationDays = $accessDurationRaw === 'lifetime' ? null : (int) $accessDurationRaw;
-            $premiumPriceRaw = post('premiumPrice');
-            $premiumPrice = $premiumPriceRaw === '' ? null : (float) $premiumPriceRaw;
-        }
+        $accessDurationRaw = post('accessDurationDays', 'lifetime');
+        $accessDurationDays = $accessDurationRaw === 'lifetime' ? null : (int) $accessDurationRaw;
+        $premiumPriceRaw = post('premiumPrice');
+        $premiumPrice = $premiumPriceRaw === '' ? null : (float) $premiumPriceRaw;
 
         if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
         if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
@@ -117,28 +72,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?,
-                event_starts_at=?, event_ends_at=?, event_location=?, event_online_url=?, ticket_capacity=?, vip_price=?, vip_capacity=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
-            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice,
-                $eventStartsAt, $eventEndsAt, $eventLocation, $eventOnlineUrl, $ticketCapacity, $vipPrice, $vipCapacity];
+            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
+            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice];
             if ($thumbnailUrl) $params[] = $thumbnailUrl;
             $params[] = $courseId;
             db_run($sql, $params);
             note_admin_edit($actingAsAdmin, $user, 'course.edited', $course['title'], 'details updated');
-            flash_set('success', ($isEvent ? 'Event' : 'Course') . ' details updated.');
+            flash_set('success', 'Course details updated.');
             redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
         }
-    } elseif ($action === 'add_module' && !$isEvent) {
+    } elseif ($action === 'add_module') {
         $title = post('moduleTitle');
         if ($title !== '') {
             $count = (int) db_one('SELECT COUNT(*) AS n FROM modules WHERE course_id = ?', [$courseId])['n'];
             db_insert('INSERT INTO modules (title, sort_order, course_id) VALUES (?, ?, ?)', [$title, $count, $courseId]);
         }
         redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
-    } elseif ($action === 'delete_module' && !$isEvent) {
+    } elseif ($action === 'delete_module') {
         db_run('DELETE FROM modules WHERE id = ? AND course_id = ?', [(int) post('moduleId'), $courseId]);
         redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
-    } elseif ($action === 'add_lesson' && !$isEvent) {
+    } elseif ($action === 'add_lesson') {
         $moduleId = (int) post('moduleId');
         $title = post('lessonTitle');
         $type = post('lessonType') === 'PDF' ? 'PDF' : 'VIDEO';
@@ -160,24 +113,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = $e->getMessage();
             }
         }
-    } elseif ($action === 'delete_lesson' && !$isEvent) {
+    } elseif ($action === 'delete_lesson') {
         db_run('DELETE FROM lessons WHERE id = ?', [(int) post('lessonId')]);
         redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
     } elseif ($action === 'submit_for_review') {
         if (in_array($course['status'], ['DRAFT', 'REJECTED'], true)) {
             $eligible = true;
-            if ($isEvent) {
-                if (empty($course['event_starts_at'])) {
-                    $eligible = false;
-                    flash_set('error', 'Set the event start date before submitting for review.');
-                }
-            } else {
-                $moduleCount = (int) db_one('SELECT COUNT(*) AS n FROM modules WHERE course_id = ?', [$courseId])['n'];
-                $lessonCount = (int) db_one('SELECT COUNT(*) AS n FROM lessons l JOIN modules m ON m.id = l.module_id WHERE m.course_id = ?', [$courseId])['n'];
-                if ($moduleCount === 0 || $lessonCount === 0) {
-                    $eligible = false;
-                    flash_set('error', 'Add at least one module with a lesson before submitting for review.');
-                }
+            $moduleCount = (int) db_one('SELECT COUNT(*) AS n FROM modules WHERE course_id = ?', [$courseId])['n'];
+            $lessonCount = (int) db_one('SELECT COUNT(*) AS n FROM lessons l JOIN modules m ON m.id = l.module_id WHERE m.course_id = ?', [$courseId])['n'];
+            if ($moduleCount === 0 || $lessonCount === 0) {
+                $eligible = false;
+                flash_set('error', 'Add at least one module with a lesson before submitting for review.');
             }
             if ($eligible) {
                 db_run("UPDATE courses SET status='PENDING_REVIEW', submitted_at=NOW(), rejection_reason=NULL WHERE id=?", [$courseId]);
@@ -240,10 +186,6 @@ foreach ($modules as &$m) {
 }
 unset($m);
 $studentCount = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
-$hasVip = $isEvent && event_has_vip($course);
-$ordinarySold = $isEvent ? (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$courseId])['n'] : 0;
-$vipSold = $hasVip ? (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'VIP'", [$courseId])['n'] : 0;
-$shareCount = $isEvent ? (int) db_one('SELECT COUNT(*) AS n FROM course_shares WHERE course_id = ?', [$courseId])['n'] : 0;
 
 $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
 $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
@@ -254,12 +196,12 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="row between wrap gap-3 reveal">
   <div>
     <h1 class="h2"><?= e($course['title']) ?></h1>
-    <p class="muted" style="margin-top:6px;"><?= e(format_money((float) $course['price'])) ?> &middot; <?= $studentCount ?> <?= $isEvent ? 'tickets sold' : 'students' ?></p>
+    <p class="muted" style="margin-top:6px;"><?= e(format_money((float) $course['price'])) ?> &middot; <?= $studentCount ?> students</p>
     <span class="badge <?= $badgeClass[$course['status']] ?>" style="margin-top:10px; display:inline-flex;"><?= $statusLabel[$course['status']] ?></span>
   </div>
   <div class="row gap-2 wrap">
     <?php if ($course['status'] === 'PUBLISHED'): ?>
-      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], $isEvent ? 'Share Event' : 'Share Course', 'light', (int) $course['id']); ?>
+      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light', (int) $course['id']); ?>
     <?php endif; ?>
     <?php if (in_array($course['status'], ['DRAFT', 'REJECTED'], true)): ?>
       <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="submit_for_review"><button class="btn btn-primary btn-sm">Submit for Review</button></form>
@@ -291,7 +233,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <button class="btn btn-outline btn-sm" style="color:var(--danger); border-color: var(--danger);">Delete Course</button>
       </form>
     <?php else: ?>
-      <button type="button" class="btn btn-outline btn-sm" style="opacity:0.5; cursor:not-allowed;" title="<?= (int) $studentCount ?> <?= $isEvent ? 'ticket' . ($studentCount === 1 ? '' : 's') . ' already sold' : 'student' . ($studentCount === 1 ? '' : 's') . ' already enrolled' ?> — deleting would erase their paid access. <?= $isAdmin ? 'Use Remove From Platform instead.' : '' ?>" disabled>Delete Course</button>
+      <button type="button" class="btn btn-outline btn-sm" style="opacity:0.5; cursor:not-allowed;" title="<?= (int) $studentCount ?> student<?= $studentCount === 1 ? '' : 's' ?> already enrolled — deleting would erase their paid access. <?= $isAdmin ? 'Use Remove From Platform instead.' : '' ?>" disabled>Delete Course</button>
     <?php endif; ?>
   </div>
 </div>
@@ -321,7 +263,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="field"><label><?= $isEvent ? 'Ordinary Ticket Price (UGX)' : 'Price (UGX)' ?></label><input name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" required></div>
+      <div class="field"><label>Price (UGX)</label><input name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" required></div>
     </div>
     <div class="field">
       <label>Sale Price (UGX, optional)</label>
@@ -347,119 +289,22 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     </div>
     <div class="field"><label>Short Summary</label><input name="summary" required value="<?= e($course['summary']) ?>"></div>
     <div class="field"><label>Full Description</label><textarea name="description" rows="5" required><?= e($course['description']) ?></textarea></div>
-    <?php if ($isEvent): ?>
-      <div class="grid sm:grid-2">
-        <div class="field">
-          <label>Event Starts</label>
-          <input name="eventStartsAt" type="datetime-local" required value="<?= e($course['event_starts_at'] ? date('Y-m-d\TH:i', strtotime($course['event_starts_at'])) : '') ?>">
-        </div>
-        <div class="field">
-          <label>Event Ends (optional)</label>
-          <input name="eventEndsAt" type="datetime-local" value="<?= e($course['event_ends_at'] ? date('Y-m-d\TH:i', strtotime($course['event_ends_at'])) : '') ?>">
-        </div>
-      </div>
-      <div class="field"><label>Location (optional if online)</label><input name="eventLocation" type="text" placeholder="e.g. Kampala Serena Hotel, Conference Room B" value="<?= e($course['event_location'] ?? '') ?>"></div>
-      <div class="field"><label>Online Link (optional if in-person)</label><input name="eventOnlineUrl" type="url" placeholder="Zoom / Google Meet link — shown to ticket holders only" value="<?= e($course['event_online_url'] ?? '') ?>"></div>
+    <div class="grid sm:grid-2">
       <div class="field">
-        <label>Ordinary Ticket Capacity (optional)</label>
-        <input name="ticketCapacity" type="number" min="1" step="1" placeholder="Leave blank for unlimited" value="<?= e($course['ticket_capacity'] !== null ? (string) $course['ticket_capacity'] : '') ?>">
-        <p class="help"><?= $ordinarySold ?> ordinary ticket<?= $ordinarySold === 1 ? '' : 's' ?> sold so far.</p>
+        <label>Course Access Duration</label>
+        <select name="accessDurationDays">
+          <?php foreach (ACCESS_DURATION_OPTIONS as $o): ?>
+            <option value="<?= $o['days'] ?? 'lifetime' ?>" <?= ($course['access_duration_days'] === null ? 'lifetime' : (string) $course['access_duration_days']) === (string) ($o['days'] ?? 'lifetime') ? 'selected' : '' ?>><?= e($o['label']) ?></option>
+          <?php endforeach; ?>
+        </select>
       </div>
-      <div class="card card-pad" style="margin:6px 0 4px; background:var(--dash-panel); border-style:dashed;">
-        <h3 style="font-size:14.5px; font-weight:800;">🎟 VIP Tier (optional)</h3>
-        <p class="help" style="margin-top:2px;">Leave both blank to not offer a VIP tier.</p>
-        <div class="grid sm:grid-2" style="margin-top:14px;">
-          <div class="field">
-            <label>VIP Ticket Price (UGX)</label>
-            <input name="vipPrice" type="number" min="0" step="1" placeholder="Leave blank for no VIP tier" value="<?= e($course['vip_price'] !== null ? (string) $course['vip_price'] : '') ?>">
-          </div>
-          <div class="field">
-            <label>VIP Ticket Capacity (optional)</label>
-            <input name="vipCapacity" type="number" min="1" step="1" placeholder="Leave blank for unlimited" value="<?= e($course['vip_capacity'] !== null ? (string) $course['vip_capacity'] : '') ?>">
-          </div>
-        </div>
-        <?php if ($hasVip): ?><p class="help" style="margin-top:10px;"><?= $vipSold ?> VIP ticket<?= $vipSold === 1 ? '' : 's' ?> sold so far.</p><?php endif; ?>
-      </div>
-    <?php else: ?>
-      <div class="grid sm:grid-2">
-        <div class="field">
-          <label>Course Access Duration</label>
-          <select name="accessDurationDays">
-            <?php foreach (ACCESS_DURATION_OPTIONS as $o): ?>
-              <option value="<?= $o['days'] ?? 'lifetime' ?>" <?= ($course['access_duration_days'] === null ? 'lifetime' : (string) $course['access_duration_days']) === (string) ($o['days'] ?? 'lifetime') ? 'selected' : '' ?>><?= e($o['label']) ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="field"><label>Premium Download Price (UGX, optional)</label><input name="premiumPrice" type="number" min="0" step="1" value="<?= e($course['premium_price'] !== null ? (string) $course['premium_price'] : '') ?>" placeholder="Leave blank to disable downloads"></div>
-      </div>
-    <?php endif; ?>
-    <?php if ($isEvent): ?>
-      <div class="field">
-        <label>Replace Event Flyer (optional)</label>
-        <input name="thumbnail" type="file" accept="image/*">
-        <p class="help">Portrait format works best — e.g. 1080×1350px.</p>
-      </div>
-    <?php else: ?>
-      <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
-    <?php endif; ?>
+      <div class="field"><label>Premium Download Price (UGX, optional)</label><input name="premiumPrice" type="number" min="0" step="1" value="<?= e($course['premium_price'] !== null ? (string) $course['premium_price'] : '') ?>" placeholder="Leave blank to disable downloads"></div>
+    </div>
+    <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
     <button type="submit" class="btn btn-primary">Save Changes</button>
   </form>
 </details>
 
-<?php if ($isEvent): ?>
-  <div class="card card-pad reveal" style="margin-top:24px;">
-    <h2 class="h3">Event Details</h2>
-    <p class="muted small" style="margin-top:6px;">Events don't have a curriculum — manage the date, location, and capacity above under "Edit Course Details".</p>
-    <div class="grid sm:grid-2" style="margin-top:16px; gap:14px;">
-      <div>
-        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">When</div>
-        <div style="margin-top:4px;">
-          <?= $course['event_starts_at'] ? e(format_date($course['event_starts_at'])) . ' ' . e(date('g:i A', strtotime($course['event_starts_at']))) : 'Not set' ?>
-          <?php if ($course['event_ends_at']): ?> &ndash; <?= e(date('g:i A', strtotime($course['event_ends_at']))) ?><?php endif; ?>
-        </div>
-      </div>
-      <div>
-        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Where</div>
-        <div style="margin-top:4px;">
-          <?php if ($course['event_location']): ?><?= e($course['event_location']) ?><?php endif; ?>
-          <?php if ($course['event_location'] && $course['event_online_url']): ?> &middot; <?php endif; ?>
-          <?php if ($course['event_online_url']): ?>Online<?php endif; ?>
-          <?php if (!$course['event_location'] && !$course['event_online_url']): ?>Not set<?php endif; ?>
-        </div>
-      </div>
-      <div>
-        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Ordinary Capacity</div>
-        <div style="margin-top:4px;"><?= $course['ticket_capacity'] !== null ? (int) $course['ticket_capacity'] . ' tickets' : 'Unlimited' ?></div>
-      </div>
-      <div>
-        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Ordinary Sold</div>
-        <div style="margin-top:4px;"><?= $ordinarySold ?> ticket<?= $ordinarySold === 1 ? '' : 's' ?></div>
-      </div>
-      <div>
-        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Views</div>
-        <div style="margin-top:4px;"><?= number_format((int) $course['view_count']) ?></div>
-      </div>
-      <div>
-        <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">Shares</div>
-        <div style="margin-top:4px;"><?= number_format($shareCount) ?> <a href="<?= e(base_url('dashboard/creator/shares.php?q=' . urlencode($course['title']))) ?>" class="small" style="font-weight:600;">View details →</a></div>
-      </div>
-      <?php if ($hasVip): ?>
-        <div>
-          <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">🎟 VIP Price</div>
-          <div style="margin-top:4px;"><?= e(format_money((float) $course['vip_price'])) ?></div>
-        </div>
-        <div>
-          <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">VIP Capacity</div>
-          <div style="margin-top:4px;"><?= $course['vip_capacity'] !== null ? (int) $course['vip_capacity'] . ' tickets' : 'Unlimited' ?></div>
-        </div>
-        <div>
-          <div class="small muted" style="text-transform:uppercase; letter-spacing:0.04em; font-weight:700;">VIP Sold</div>
-          <div style="margin-top:4px;"><?= $vipSold ?> ticket<?= $vipSold === 1 ? '' : 's' ?></div>
-        </div>
-      <?php endif; ?>
-    </div>
-  </div>
-<?php else: ?>
 <h2 class="h3" style="margin-top:36px;">Curriculum</h2>
 <p class="muted small" style="margin-top:6px;">Organize your course into modules, then add video or PDF lessons to each.</p>
 
@@ -505,7 +350,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <button type="submit" class="btn btn-primary">+ Add Module</button>
   </form>
 </div>
-<?php endif; ?>
 
 <script>
 document.querySelectorAll('form[data-confirm]').forEach((f) => {

@@ -47,7 +47,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <tbody>
             <?php foreach ($topCourses as $c): ?>
               <tr>
-                <td><a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" target="_blank" rel="noopener" style="font-weight:600;"><?= e($c['title']) ?></a> <?php if ($c['type'] === 'EVENT'): ?><span class="badge badge-new">🎟 Event</span><?php endif; ?></td>
+                <td><a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" target="_blank" rel="noopener" style="font-weight:600;"><?= e($c['title']) ?></a></td>
                 <td style="font-variant-numeric:tabular-nums;"><?= (int) $c['share_count'] ?></td>
                 <td style="font-variant-numeric:tabular-nums;"><?= (int) $c['visit_count'] ?></td>
                 <td style="font-variant-numeric:tabular-nums;"><?= (int) $c['reach'] ?></td>
@@ -95,7 +95,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <tbody>
         <?php foreach ($shares as $s): ?>
           <tr>
-            <td><a href="<?= e(base_url('courses/view.php?slug=' . $s['course_slug'])) ?>" target="_blank" rel="noopener" style="font-weight:600;"><?= e($s['course_title']) ?></a> <?php if ($s['course_type'] === 'EVENT'): ?><span class="badge badge-new">🎟 Event</span><?php endif; ?></td>
+            <td><a href="<?= e(base_url('courses/view.php?slug=' . $s['course_slug'])) ?>" target="_blank" rel="noopener" style="font-weight:600;"><?= e($s['course_title']) ?></a></td>
             <td><span class="badge badge-draft"><?= e($channelLabels[$s['channel']] ?? $s['channel']) ?></span></td>
             <td class="small"><?= $s['sharer_name'] ? e($s['sharer_name']) : '<span class="muted">Guest</span>' ?></td>
             <td class="small muted"><?= e(format_date($s['created_at'])) ?></td>

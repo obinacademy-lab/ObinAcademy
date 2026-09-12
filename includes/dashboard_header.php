@@ -12,11 +12,6 @@ $navByRole = [
         'Learning' => [
             ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
         ],
-        'Events' => [
-            ['/dashboard/events/index.php', 'My Events', 'calendar'],
-            ['/dashboard/events/new.php', 'Create Event', 'plus-circle'],
-            ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
-        ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],
         ],
@@ -27,10 +22,6 @@ $navByRole = [
             ['/dashboard/creator/course-new.php', 'Create Course', 'plus-circle'],
             ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
             ['/dashboard/creator/shares.php', 'Course Shares', 'share'],
-        ],
-        'Events' => [
-            ['/dashboard/events/index.php', 'My Events', 'calendar'],
-            ['/dashboard/events/new.php', 'Create Event', 'plus-circle'],
         ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],
@@ -54,11 +45,6 @@ $navByRole = [
             ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
             ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
             ['/dashboard/admin/comments.php', 'Comments', 'message-square'],
-        ],
-        'Events' => [
-            ['/dashboard/admin/event-applications.php', 'Event Applications', 'calendar'],
-            ['/dashboard/events/index.php', 'My Events', 'calendar'],
-            ['/dashboard/events/new.php', 'Create Event', 'plus-circle'],
         ],
         'System' => [
             ['/dashboard/admin/content-health.php', 'Content Health', 'clipboard-check'],
@@ -95,8 +81,7 @@ if ($user['role'] === 'ADMIN') {
         '/dashboard/admin/creator-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'],
         '/dashboard/admin/affiliate-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM affiliate_applications WHERE status='PENDING'")['n'],
         '/dashboard/admin/withdrawals.php' => (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'],
-        '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW' AND type='COURSE'")['n'],
-        '/dashboard/admin/event-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW' AND type='EVENT'")['n'],
+        '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW'")['n'],
         '/dashboard/admin/leads.php' => (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'],
     ];
     // Defensive: this file loads on every admin page, so a missing `comments`

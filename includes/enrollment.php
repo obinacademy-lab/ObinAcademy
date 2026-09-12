@@ -1,15 +1,8 @@
 <?php
 require_once __DIR__ . '/certificates.php';
 
-/**
- * @param int $quantity how many free tickets to reserve in one go (event
- *   only, always 1 for a course) — the caller gets ticket #1 on their own
- *   account, tickets 2..$quantity are extra standalone tickets for other
- *   people, named via $extraAttendeeNames (blank/missing defaults to "Guest N").
- * @param string[] $extraAttendeeNames
- * @throws RuntimeException
- */
-function enroll_in_course(int $userId, int $courseId, int $quantity = 1, array $extraAttendeeNames = []): void {
+/** @throws RuntimeException */
+function enroll_in_course(int $userId, int $courseId): void {
     $course = db_one('SELECT * FROM courses WHERE id = ?', [$courseId]);
     if (!$course || $course['status'] !== 'PUBLISHED') {
         throw new RuntimeException('Course not found.');
@@ -23,50 +16,12 @@ function enroll_in_course(int $userId, int $courseId, int $quantity = 1, array $
         return;
     }
 
-    $isEvent = $course['type'] === 'EVENT';
-    $quantity = $isEvent ? max(1, min(5, $quantity)) : 1;
-    $extraAttendeeNames = $isEvent ? array_slice(array_map('trim', $extraAttendeeNames), 0, $quantity - 1) : [];
-    if ($isEvent) {
-        if (event_has_passed($course)) throw new RuntimeException('This event has already happened.');
-        // Free enrollment is always the ORDINARY tier (VIP always costs
-        // money — see events/new.php's creation validation), so gate on
-        // Ordinary-tier capacity specifically, not the combined total —
-        // and against the full quantity requested, not just one ticket.
-        $ordinarySold = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$courseId])['n'];
-        $capacity = $course['ticket_capacity'];
-        if ($capacity !== null && $ordinarySold + $quantity > (int) $capacity) {
-            $remaining = max(0, (int) $capacity - $ordinarySold);
-            throw new RuntimeException($remaining === 0 ? 'This event is sold out.' : "Only {$remaining} ticket" . ($remaining === 1 ? '' : 's') . ' left.');
-        }
-    }
-
     $split = split_sale((float) $course['price']);
     $expiresAt = compute_expires_at($course['access_duration_days'] !== null ? (int) $course['access_duration_days'] : null);
-    // Same reasoning as the paid path in payments.php: a ticket token for
-    // every event enrollment, not just guest ones, so it works as a
-    // standalone link independent of staying logged in.
-    $tokenHash = null;
-    if ($isEvent) {
-        [, $tokenHash] = make_access_token();
-    }
 
-    $extraTicketLinks = [];
     db()->beginTransaction();
     try {
-        if ($tokenHash !== null) {
-            db_insert('INSERT INTO enrollments (user_id, course_id, expires_at, access_token_hash) VALUES (?, ?, ?, ?)', [$userId, $courseId, $expiresAt, $tokenHash]);
-        } else {
-            db_insert('INSERT INTO enrollments (user_id, course_id, expires_at) VALUES (?, ?, ?)', [$userId, $courseId, $expiresAt]);
-        }
-        foreach ($extraAttendeeNames as $i => $attendeeName) {
-            $attendeeName = $attendeeName !== '' ? $attendeeName : 'Guest ' . ($i + 2);
-            [$extraToken, $extraTokenHash] = make_access_token();
-            db_insert(
-                "INSERT INTO enrollments (user_id, guest_name, access_token_hash, course_id, expires_at, ticket_tier) VALUES (NULL, ?, ?, ?, ?, 'ORDINARY')",
-                [$attendeeName, $extraTokenHash, $courseId, $expiresAt]
-            );
-            $extraTicketLinks[] = ['name' => $attendeeName, 'url' => base_url('ticket.php?token=' . $extraToken)];
-        }
+        db_insert('INSERT INTO enrollments (user_id, course_id, expires_at) VALUES (?, ?, ?)', [$userId, $courseId, $expiresAt]);
         db_insert(
             'INSERT INTO earnings (creator_id, course_id, amount, gross_amount, platform_fee) VALUES (?, ?, ?, ?, ?)',
             [$course['creator_id'], $courseId, $split['net'], $split['gross'], $split['fee']]
@@ -75,13 +30,6 @@ function enroll_in_course(int $userId, int $courseId, int $quantity = 1, array $
     } catch (Throwable $e) {
         db()->rollBack();
         throw $e;
-    }
-
-    if ($extraTicketLinks) {
-        $user = db_one('SELECT name, email FROM users WHERE id = ?', [$userId]);
-        if ($user && $user['email']) {
-            send_free_event_tickets_email($user['email'], $user['name'], $course['title'], $extraTicketLinks);
-        }
     }
 }
 

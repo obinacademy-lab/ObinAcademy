@@ -1027,9 +1027,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-pop); }
 .course-card .thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; background: var(--brand-900); }
 .course-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
-/* Event flyers are uploaded portrait, not landscape like course thumbnails —
-   a taller box so the full flyer shows instead of a 16:9 crop. */
-.course-card .thumb.thumb-portrait { aspect-ratio: 4/5; }
 .course-card .thumb .placeholder { display: flex; align-items: center; justify-content: center; width:100%; height:100%; background: linear-gradient(135deg, var(--brand-800), var(--brand-950)); color: rgba(255,255,255,0.6); font-weight: 600; font-size: 13px; }
 
 /* No longer used on the course-card grid itself, but .badge-pill/.badge-sale
@@ -1143,7 +1140,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 .enroll-panel .thumb { aspect-ratio: 16/10; background: var(--brand-900); position: relative; }
 .enroll-panel .thumb img { width:100%; height:100%; object-fit:cover; }
-.enroll-panel .thumb.thumb-portrait { aspect-ratio: 4/5; }
 .enroll-panel .thumb::after { content:""; position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.35), transparent 45%); pointer-events:none; }
 .enroll-panel .thumb .placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; height:100%; color:rgba(255,255,255,0.75); font-weight:700; background: linear-gradient(135deg, var(--brand-800), var(--brand-950)); }
 .enroll-panel .thumb .placeholder svg { width:32px; height:32px; opacity:0.8; }
@@ -1156,7 +1152,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
 }
 .enroll-panel .price-note { font-size:12px; color: var(--muted); font-weight:600; }
-.enroll-panel .price-from { font-size: 14px; font-weight: 700; color: var(--muted); -webkit-text-fill-color: var(--muted); }
 .enroll-panel .access-note { margin-top: 8px; display:flex; align-items:center; gap:6px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .enroll-panel .access-note svg { width:14px; height:14px; flex-shrink:0; }
 
@@ -1185,21 +1180,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .field-icon input { padding-left:38px; }
 .price-strike { text-decoration: line-through; opacity: 0.55; font-weight: 400; margin-right: 6px; font-size: 0.85em; }
 .guest-note { margin-top:12px; text-align:center; font-size:12.5px; color: var(--muted); line-height:1.6; }
-
-/* ---------- ticket tier selector (VIP / Ordinary) on the event enroll panel ---------- */
-.ticket-tier-select { display: flex; gap: 10px; margin-bottom: 14px; }
-.tier-option {
-  position: relative; flex: 1; display: flex; flex-direction: column; gap: 2px;
-  padding: 12px 14px; border: 2px solid var(--border-strong); border-radius: var(--radius-lg);
-  cursor: pointer; transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-.tier-option input { position: absolute; opacity: 0; pointer-events: none; }
-.tier-option .tier-name { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
-.tier-option .tier-price { font-size: 16px; font-weight: 800; color: var(--ink); }
-.tier-option.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, white); }
-.tier-option.selected .tier-name { color: var(--accent); }
-.tier-option.disabled { opacity: 0.5; cursor: not-allowed; }
-.tier-option .tier-soldout { font-size: 10.5px; font-weight: 800; color: var(--danger); text-transform: uppercase; letter-spacing: 0.03em; }
 .guest-note a { color:var(--accent); font-weight:600; }
 
 .pay-waiting { display:flex; flex-direction:column; align-items:center; gap:10px; background: var(--surface); border-radius: 12px; padding: 22px; text-align:center; }
@@ -1665,25 +1645,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (prefers-reduced-motion: reduce) {
   .tmod-card, .tmod-chevron, .tmod-body-outer, .tlesson { transition: none; }
 }
-
-/* ---------- event detail page: date/location/capacity block ----------
-   New class names, deliberately not reusing .timeline/.tmod-* — those were
-   just built for the course curriculum and must stay untouched here. */
-.event-detail-block {
-  display: flex; flex-direction: column; gap: 4px;
-  border: 1px solid var(--border); border-radius: var(--radius-lg); background: #fff; box-shadow: var(--shadow); overflow: hidden;
-}
-.event-detail-row { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-top: 1px solid var(--border); }
-.event-detail-row:first-child { border-top: none; }
-.event-detail-icon {
-  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
-  background: color-mix(in srgb, var(--accent) 10%, white); color: var(--accent);
-  display: flex; align-items: center; justify-content: center;
-}
-.event-detail-icon svg { width: 17px; height: 17px; }
-.event-detail-label { font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
-.event-detail-value { margin-top: 3px; font-size: 14.5px; font-weight: 600; }
-.event-detail-value a { color: var(--accent); }
 
 /* ---------- course detail page: premium reviews ----------
    Same reasoning as above: new class names, .rating-summary/.review-card

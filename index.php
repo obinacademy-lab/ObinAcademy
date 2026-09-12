@@ -12,7 +12,7 @@ const HOME_COURSES_PER_PAGE = 9;
 $totalCourseCount = (int) $stats['course_count'];
 $totalPages = max(1, (int) ceil($totalCourseCount / HOME_COURSES_PER_PAGE));
 $page = max(1, min($totalPages, (int) query_param('page', '1')));
-$courses = get_course_cards("c.type = 'COURSE'", [], POPULARITY_ORDER, HOME_COURSES_PER_PAGE, ($page - 1) * HOME_COURSES_PER_PAGE);
+$courses = get_course_cards('', [], POPULARITY_ORDER, HOME_COURSES_PER_PAGE, ($page - 1) * HOME_COURSES_PER_PAGE);
 
 // A curated highlight, not the full list — keeps the homepage from feeling
 // crowded. The complete set lives on skills.php. Slugs point at real

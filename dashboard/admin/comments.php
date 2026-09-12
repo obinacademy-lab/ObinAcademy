@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $hiddenComments = db_all(
-    "SELECT c.*, u.name AS author_name, u.email AS author_email, co.title AS course_title, co.slug AS course_slug, co.type AS course_type
+    "SELECT c.*, u.name AS author_name, u.email AS author_email, co.title AS course_title, co.slug AS course_slug
      FROM comments c
      JOIN users u ON u.id = c.user_id
      JOIN courses co ON co.id = c.course_id
@@ -42,7 +42,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <tr>
             <td style="max-width:320px;"><?= e(mb_strimwidth($c['body'], 0, 160, '…')) ?></td>
             <td class="small"><?= e($c['author_name']) ?><br><span class="muted"><?= e($c['author_email']) ?></span></td>
-            <td class="small"><a href="<?= e(base_url('courses/view.php?slug=' . $c['course_slug'])) ?>" target="_blank" rel="noopener"><?= e($c['course_title']) ?></a> <?php if ($c['course_type'] === 'EVENT'): ?><span class="badge badge-new">🎟 Event</span><?php endif; ?></td>
+            <td class="small"><a href="<?= e(base_url('courses/view.php?slug=' . $c['course_slug'])) ?>" target="_blank" rel="noopener"><?= e($c['course_title']) ?></a></td>
             <td class="small muted"><?= e($c['hidden_reason']) ?></td>
             <td class="small muted"><?= e(format_date($c['created_at'])) ?></td>
             <td>

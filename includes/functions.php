@@ -87,57 +87,6 @@ function course_sale_days_left(array $course): ?int {
     return $secondsLeft > 0 ? (int) ceil($secondsLeft / 86400) : null;
 }
 
-/**
- * Same live-timestamp-check philosophy as course_has_active_sale() above —
- * no cron job flips an event to "past", this is just checked at read time
- * everywhere it matters. Falls back to event_starts_at when no end time
- * was given (a same-day event with no explicit end).
- */
-function event_has_passed(array $course): bool {
-    $endsAt = $course['event_ends_at'] ?? $course['event_starts_at'] ?? null;
-    if (empty($endsAt)) return false;
-    return strtotime($endsAt) <= time();
-}
-
-/** Readability helper for call sites that want to phrase the check positively. */
-function event_is_upcoming(array $course): bool {
-    return !event_has_passed($course);
-}
-
-/**
- * @param int $ticketsSold a live COUNT(enrollments WHERE course_id=?) across
- * every tier — see get_course_cards()'s identical student_count pattern.
- * Used for the simple card badge / all-tiers-full gate; a VIP-enabled event
- * reads as sold out only once both its Ordinary and VIP capacities are full
- * (either capacity left unlimited/NULL makes the whole event unlimited here).
- */
-function event_is_sold_out(array $course, int $ticketsSold): bool {
-    if ($course['ticket_capacity'] === null) return false;
-    $capacity = (int) $course['ticket_capacity'];
-    if (event_has_vip($course)) {
-        if ($course['vip_capacity'] === null) return false;
-        $capacity += (int) $course['vip_capacity'];
-    }
-    return $ticketsSold >= $capacity;
-}
-
-/** Whether this event offers a separate paid VIP ticket tier. */
-function event_has_vip(array $course): bool {
-    return $course['vip_price'] !== null;
-}
-
-/** @param int $tierSold a live COUNT(enrollments WHERE course_id=? AND ticket_tier=?) for just this tier. */
-function event_tier_sold_out(array $course, string $tier, int $tierSold): bool {
-    $capacity = $tier === 'VIP' ? $course['vip_capacity'] : $course['ticket_capacity'];
-    return $capacity !== null && $tierSold >= (int) $capacity;
-}
-
-/** Ticket price for one tier — VIP has no separate sale mechanism; ORDINARY reuses the existing sale-price discount. */
-function event_tier_price(array $course, string $tier): float {
-    if ($tier === 'VIP') return (float) $course['vip_price'];
-    return course_has_active_sale($course) ? (float) $course['sale_price'] : (float) $course['price'];
-}
-
 /** Escape for safe HTML output. */
 function e(?string $value): string {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');

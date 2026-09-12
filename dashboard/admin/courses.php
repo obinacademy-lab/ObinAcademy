@@ -5,7 +5,7 @@ $user = require_role(['ADMIN']);
 $statusFilter = query_param('status');
 $sql = "SELECT c.*, cat.name AS category_name, u.name AS creator_name, (SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id) AS student_count
         FROM courses c JOIN categories cat ON cat.id=c.category_id JOIN users u ON u.id=c.creator_id
-        WHERE c.type = 'COURSE'";
+        WHERE 1=1";
 $params = [];
 if ($statusFilter) { $sql .= ' AND c.status = ?'; $params[] = $statusFilter; }
 $sql .= ' ORDER BY c.created_at DESC';

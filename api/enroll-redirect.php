@@ -10,12 +10,9 @@ csrf_verify();
 
 $courseId = (int) post('courseId');
 $course = db_one('SELECT slug FROM courses WHERE id = ?', [$courseId]);
-$quantity = (int) post('quantity', '1');
-$extraAttendeeNames = array_map('strval', (array) ($_POST['attendeeNames'] ?? []));
 
 try {
-    enroll_in_course((int) $user['id'], $courseId, $quantity, $extraAttendeeNames);
-    if ($quantity > 1) flash_set('success', "You're enrolled — extra ticket links were emailed to you.");
+    enroll_in_course((int) $user['id'], $courseId);
 } catch (Throwable $e) {
     flash_set('error', $e->getMessage());
 }

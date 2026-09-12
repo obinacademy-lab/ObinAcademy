@@ -7,7 +7,6 @@
     $footerNavLinks = [
         '/index.php' => 'Home',
         '/courses/index.php' => 'Explore Courses',
-        '/events.php' => 'Events',
         '/stories.php' => 'Stories',
         '/about.php' => 'About Us',
         '/contact.php' => 'Contact',

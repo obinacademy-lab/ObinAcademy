@@ -21,7 +21,7 @@ $pendingWithdrawalCount = (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_req
 $pendingApplicationCount = (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'];
 
 $recentUsers = db_all('SELECT * FROM users ORDER BY created_at DESC LIMIT 5');
-$recentCourses = db_all("SELECT c.*, cat.name AS category_name, u.name AS creator_name FROM courses c JOIN categories cat ON cat.id=c.category_id JOIN users u ON u.id=c.creator_id WHERE c.type='COURSE' ORDER BY c.created_at DESC LIMIT 5");
+$recentCourses = db_all("SELECT c.*, cat.name AS category_name, u.name AS creator_name FROM courses c JOIN categories cat ON cat.id=c.category_id JOIN users u ON u.id=c.creator_id ORDER BY c.created_at DESC LIMIT 5");
 $pendingCourses = db_all("SELECT c.*, u.name AS creator_name FROM courses c JOIN users u ON u.id=c.creator_id WHERE c.status='PENDING_REVIEW' ORDER BY c.submitted_at ASC");
 
 $recentActivity = db_all('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 8');

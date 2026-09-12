@@ -89,14 +89,11 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
               </a>
             </div>
           </div>
-          <a href="<?= e(base_url('events.php')) ?>" class="btn btn-green btn-sm shine">📅 Events</a>
         <?php else: ?>
           <a href="<?= e(base_url('login.php')) ?>" class="btn btn-ink btn-sm shine">Log In</a>
-          <a href="<?= e(base_url('events.php')) ?>" class="btn btn-green btn-sm shine">📅 Events</a>
           <a href="<?= e(base_url('become-affiliate.php')) ?>" class="btn btn-gold btn-sm shine">Become an Affiliate</a>
           <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-primary btn-sm shine">Become a Creator <span class="btn-arrow">→</span></a>
         <?php endif; ?>
-        <a href="<?= e(base_url('dashboard/events/new.php')) ?>" class="btn btn-dark btn-sm shine">🎟 Create Event <span class="btn-arrow">→</span></a>
       </div>
 
       <button class="nav-toggle" data-nav-toggle aria-label="Toggle menu" aria-expanded="false">
@@ -122,14 +119,11 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <a href="<?= e(base_url('dashboard.php')) ?>"><span class="mm-icon">📊</span>Dashboard</a>
         <a href="<?= e(base_url('dashboard/settings.php')) ?>"><span class="mm-icon">⚙️</span>Settings</a>
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>
-        <a href="<?= e(base_url('events.php')) ?>" class="mm-cta mm-cta-green">📅 Events</a>
       <?php else: ?>
         <a href="<?= e(base_url('login.php')) ?>" class="mm-cta mm-cta-ink">Log In</a>
-        <a href="<?= e(base_url('events.php')) ?>" class="mm-cta mm-cta-green">📅 Events</a>
         <a href="<?= e(base_url('become-affiliate.php')) ?>" class="mm-cta mm-cta-gold">Become an Affiliate</a>
         <a href="<?= e(base_url('become-creator.php')) ?>" class="mm-cta">Become a Creator →</a>
       <?php endif; ?>
-      <a href="<?= e(base_url('dashboard/events/new.php')) ?>" class="mm-cta mm-cta-dark">🎟 Create Event →</a>
     </div>
   </div>
 

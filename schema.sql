@@ -63,12 +63,6 @@ CREATE TABLE courses (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(191) NOT NULL,
   slug VARCHAR(191) NOT NULL UNIQUE,
-  -- EVENT rows are one-off ticketed events (workshops, webinars, meetups)
-  -- sold through the exact same courses/payments/enrollments pipeline as a
-  -- COURSE — see the event_* columns below and course_has_active_sale()'s
-  -- sibling event_has_passed()/event_is_sold_out() in functions.php. Default
-  -- keeps every pre-existing row a course with no backfill needed.
-  type ENUM('COURSE','EVENT') NOT NULL DEFAULT 'COURSE',
   summary VARCHAR(500) NOT NULL,
   description TEXT NOT NULL,
   thumbnail_url VARCHAR(500) NULL,
@@ -81,23 +75,6 @@ CREATE TABLE courses (
   sale_ends_at DATETIME NULL,
   access_duration_days INT NULL,
   premium_price DECIMAL(12,2) NULL,
-  -- Event-only fields — always NULL for type='COURSE'. Whether an event is
-  -- in-person, online, or hybrid is inferred from which of
-  -- event_location/event_online_url is set, rather than a separate flag.
-  -- ticket_capacity NULL = unlimited; "tickets sold" is a live
-  -- COUNT(enrollments), the same pattern student_count already uses, so
-  -- there's no separate counter column that could drift.
-  event_starts_at DATETIME NULL,
-  event_ends_at DATETIME NULL,
-  event_location VARCHAR(255) NULL,
-  event_online_url VARCHAR(500) NULL,
-  ticket_capacity INT NULL,
-  -- Optional second ticket tier. NULL vip_price = no VIP tier offered (the
-  -- event only sells the plain "Ordinary" tier above). VIP has no separate
-  -- sale-price mechanism and, like ticket_capacity, NULL vip_capacity means
-  -- unlimited VIP tickets.
-  vip_price DECIMAL(12,2) NULL,
-  vip_capacity INT NULL,
   view_count INT NOT NULL DEFAULT 0,
   status ENUM('DRAFT','PENDING_REVIEW','PUBLISHED','REJECTED','REMOVED') NOT NULL DEFAULT 'DRAFT',
   rejection_reason TEXT NULL,
@@ -110,8 +87,7 @@ CREATE TABLE courses (
   FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (category_id) REFERENCES categories(id),
   INDEX idx_courses_status (status),
-  INDEX idx_courses_creator (creator_id),
-  INDEX idx_courses_type_starts (type, event_starts_at)
+  INDEX idx_courses_creator (creator_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
@@ -156,10 +132,6 @@ CREATE TABLE enrollments (
   guest_email VARCHAR(191) NULL,
   access_token_hash VARCHAR(64) NULL,
   course_id INT NOT NULL,
-  -- Which ticket tier this enrollment is for — always ORDINARY for a
-  -- COURSE row (the default), meaningful only for EVENT rows that offer a
-  -- VIP tier via courses.vip_price.
-  ticket_tier ENUM('ORDINARY','VIP') NOT NULL DEFAULT 'ORDINARY',
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_user_course (user_id, course_id),
@@ -206,16 +178,6 @@ CREATE TABLE payments (
   guest_email VARCHAR(191) NULL,
   access_token_hash VARCHAR(64) NULL,
   course_id INT NOT NULL,
-  -- Which ticket tier was paid for — set at initiate_payment() time and
-  -- copied onto the resulting enrollment on success; NULL for course
-  -- purchases and premium upgrades, where tiers don't apply.
-  ticket_tier ENUM('ORDINARY','VIP') NULL,
-  -- How many tickets this one purchase covers (always 1 for a course) — the
-  -- buyer's own enrollment plus quantity-1 extra standalone guest-style
-  -- tickets created on success, one per name in extra_attendees (a JSON
-  -- array, blank names defaulting to "Guest N" at creation time).
-  quantity INT NOT NULL DEFAULT 1,
-  extra_attendees TEXT NULL,
   -- Captured at initiate_payment() time from the oa_aff attribution cookie
   -- (see includes/affiliates.php), not re-resolved later — so a payment
   -- keeps the affiliate who was actually credited at checkout even if that

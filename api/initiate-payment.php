@@ -23,9 +23,6 @@ if (!$user) {
 
 $courseId = (int) ($body['courseId'] ?? 0);
 $phone = trim((string) ($body['phone'] ?? ''));
-$ticketTier = (string) ($body['ticketTier'] ?? 'ORDINARY');
-$quantity = (int) ($body['quantity'] ?? 1);
-$extraAttendeeNames = array_map('strval', (array) ($body['attendeeNames'] ?? []));
 
-$result = initiate_payment((int) $user['id'], $courseId, $phone, null, null, $ticketTier, $quantity, $extraAttendeeNames);
+$result = initiate_payment((int) $user['id'], $courseId, $phone);
 json_response($result, isset($result['error']) ? 400 : 200);

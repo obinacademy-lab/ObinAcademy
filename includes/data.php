@@ -25,7 +25,7 @@ function get_course_cards(string $whereSql = '', array $params = [], string $ord
 }
 
 function get_featured_courses(int $take = 6): array {
-    return get_course_cards("c.type = 'COURSE'", [], 'c.created_at DESC', $take);
+    return get_course_cards('', [], 'c.created_at DESC', $take);
 }
 
 // A purchase (an enrollment) signals real commitment, a view just curiosity —
@@ -44,7 +44,7 @@ const COURSE_SORT_OPTIONS = [
 
 /** @param string $price '' (any), 'free', or 'paid' — anything else is ignored. */
 function search_courses(string $query = '', string $categorySlug = '', string $sort = 'popular', string $price = ''): array {
-    $where = ["c.type = 'COURSE'"];
+    $where = [];
     $params = [];
     if ($categorySlug) {
         $where[] = 'cat.slug = ?';
@@ -67,38 +67,11 @@ function search_courses(string $query = '', string $categorySlug = '', string $s
 /** Top-rated published courses with at least one review — for a "Trending" spotlight row. */
 function get_trending_courses(int $take = 3): array {
     return get_course_cards(
-        "c.type = 'COURSE' AND (SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.id) > 0",
+        '(SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.id) > 0',
         [],
         'avg_rating DESC, review_count DESC, student_count DESC',
         $take
     );
-}
-
-/** Event rows for card rendering, soonest-upcoming-first by default — thin wrapper around get_course_cards(). */
-function get_event_cards(string $whereSql = '', array $params = [], string $orderBy = 'c.event_starts_at ASC', ?int $limit = null, ?int $offset = null): array {
-    $where = "c.type = 'EVENT'" . ($whereSql ? " AND $whereSql" : '');
-    return get_course_cards($where, $params, $orderBy, $limit, $offset);
-}
-
-/** @param string $price '' (any), 'free', or 'paid' — anything else is ignored. */
-function search_events(string $query = '', string $categorySlug = '', string $price = ''): array {
-    $where = [];
-    $params = [];
-    if ($categorySlug) {
-        $where[] = 'cat.slug = ?';
-        $params[] = $categorySlug;
-    }
-    if ($query) {
-        $where[] = '(c.title LIKE ? OR c.summary LIKE ?)';
-        $params[] = "%$query%";
-        $params[] = "%$query%";
-    }
-    if ($price === 'free') {
-        $where[] = 'c.price <= 0';
-    } elseif ($price === 'paid') {
-        $where[] = 'c.price > 0';
-    }
-    return get_event_cards(implode(' AND ', $where), $params);
 }
 
 function get_course_by_slug(string $slug): ?array {
@@ -137,10 +110,6 @@ function get_course_by_slug(string $slug): ?array {
     ', [$course['id']]);
 
     $course['student_count'] = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$course['id']])['n'];
-    if ($course['type'] === 'EVENT') {
-        $course['ordinary_sold'] = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'ORDINARY'", [$course['id']])['n'];
-        $course['vip_sold'] = (int) db_one("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ? AND ticket_tier = 'VIP'", [$course['id']])['n'];
-    }
 
     return $course;
 }
@@ -153,7 +122,7 @@ function get_platform_rating(): array {
 
 function get_platform_stats(): array {
     return [
-        'course_count' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status = 'PUBLISHED' AND type = 'COURSE'")['n'],
+        'course_count' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status = 'PUBLISHED'")['n'],
         'learner_count' => (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role = 'LEARNER'")['n'],
         'creator_count' => (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role = 'CREATOR'")['n'],
         // "Paid" means actually approved/sent (see dashboard/admin/withdrawals.php,

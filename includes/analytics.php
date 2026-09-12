@@ -477,13 +477,13 @@ function get_top_shared_courses(int $days = 30, int $limit = 10, ?int $creatorId
     $params = [$days - 1];
     if ($creatorId) $params[] = $creatorId;
     return db_all(
-        "SELECT c.id, c.title, c.slug, c.type, COUNT(DISTINCT s.id) AS share_count,
+        "SELECT c.id, c.title, c.slug, COUNT(DISTINCT s.id) AS share_count,
                 COUNT(v.id) AS visit_count, COUNT(DISTINCT v.visitor_id) AS reach
          FROM course_shares s
          JOIN courses c ON c.id = s.course_id
          LEFT JOIN course_share_visits v ON v.share_id = s.id
          WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter
-         GROUP BY c.id, c.title, c.slug, c.type
+         GROUP BY c.id, c.title, c.slug
          ORDER BY visit_count DESC, share_count DESC
          LIMIT $limit",
         $params
@@ -519,7 +519,7 @@ function get_course_shares(array $filters, int $page, int $perPage = 30, ?int $c
     $perPage = max(1, min(100, $perPage));
     $offset = (max(1, $page) - 1) * $perPage;
     $rows = db_all(
-        "SELECT s.*, c.title AS course_title, c.slug AS course_slug, c.type AS course_type, u.name AS sharer_name,
+        "SELECT s.*, c.title AS course_title, c.slug AS course_slug, u.name AS sharer_name,
                 (SELECT COUNT(*) FROM course_share_visits v WHERE v.share_id = s.id) AS visit_count,
                 (SELECT COUNT(DISTINCT visitor_id) FROM course_share_visits v WHERE v.share_id = s.id AND v.visitor_id IS NOT NULL) AS reach
          FROM course_shares s

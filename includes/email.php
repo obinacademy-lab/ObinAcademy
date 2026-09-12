@@ -90,45 +90,12 @@ function send_guest_access_email(string $to, string $name, string $courseTitle, 
 }
 
 /**
- * Emailed to a logged-in learner who free-enrolled in an event for more than
- * one person — same reasoning as the extra-tickets block on the paid
- * receipt email: the plaintext token behind each extra ticket link only
- * exists in memory at creation time (see enroll_in_course()), so this email
- * is the only place they're ever handed over.
- * @param array<int, array{name: string, url: string}> $extraTicketLinks
- */
-function send_free_event_tickets_email(string $to, string $name, string $courseTitle, array $extraTicketLinks): void {
-    if (!$extraTicketLinks) return;
-    $rows = '';
-    foreach ($extraTicketLinks as $t) {
-        $rows .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">' . e($t['name']) . '</td><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;"><a href="' . $t['url'] . '" style="color: #2563eb; font-weight: 600; text-decoration: none;">View Ticket →</a></td></tr>';
-    }
-    resend_send($to, "Your Extra Tickets for \"{$courseTitle}\" — Obin Academy", <<<HTML
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #1e3a8a;">You're all set, {$name}!</h2>
-          <p>You reserved a few extra free tickets to <strong>{$courseTitle}</strong> for other people — forward each link below to the right person. These links are only sent here, so save this email.</p>
-          <table role="presentation" style="width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 16px;">{$rows}</table>
-        </div>
-        HTML);
-}
-
-/**
  * Emailed right after a payment resolves to SUCCESS (course purchase or
  * premium upgrade), to both guest and logged-in learners — a receipt is
  * proof of payment independent of whatever access flow the learner uses.
  * $itemLabel distinguishes a full course purchase from a premium upgrade.
- * $ticketUrl, when passed (an event purchase), swaps the "View Your
- * Course" button for a direct "View Your Ticket" link — a token-based
- * ticket.php URL that works without needing to be logged in again.
- * $extraTicketLinks (event purchases of more than one ticket) is a list of
- * ['name' => ..., 'url' => ...] pairs — one standalone ticket link per extra
- * attendee, listed below the main receipt. This email is the only place
- * these links are ever handed over: the plaintext token behind each one
- * only exists in memory at the moment it's generated (see
- * resolve_payment_with_iotec()), never recoverable again once hashed.
- * @param array<int, array{name: string, url: string}> $extraTicketLinks
  */
-function send_payment_receipt_email(array $payment, bool $isGuestPayment, string $itemLabel, ?string $ticketUrl = null, array $extraTicketLinks = []): void {
+function send_payment_receipt_email(array $payment, bool $isGuestPayment, string $itemLabel): void {
     $to = $isGuestPayment ? $payment['guest_email'] : $payment['learner_email'];
     if (!$to) return;
 
@@ -137,26 +104,13 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
     $courseTitle = $payment['course_title'];
     $receiptNo = 'OA-' . str_pad((string) $payment['id'], 6, '0', STR_PAD_LEFT);
     $date = date('F j, Y \a\t g:i A');
-    $courseUrl = $ticketUrl ?? base_url('courses/view.php?slug=' . $payment['course_slug']);
-    $ctaLabel = $ticketUrl ? 'View Your Ticket' : 'View Your Course';
+    $courseUrl = base_url('courses/view.php?slug=' . $payment['course_slug']);
+    $ctaLabel = 'View Your Course';
 
     $discountRow = '';
     if (!empty($payment['original_amount'])) {
         $savings = format_money((float) $payment['original_amount'] - (float) $payment['amount']);
         $discountRow = '<tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #16a34a;">Discount Applied</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #16a34a;">-' . $savings . '</td></tr>';
-    }
-
-    $extraTicketsBlock = '';
-    if ($extraTicketLinks) {
-        $rows = '';
-        foreach ($extraTicketLinks as $t) {
-            $rows .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">' . e($t['name']) . '</td><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;"><a href="' . $t['url'] . '" style="color: #2563eb; font-weight: 600; text-decoration: none;">View Ticket →</a></td></tr>';
-        }
-        $extraTicketsBlock = <<<HTML
-            <p style="color: #14181b; font-weight: 700; margin-top: 28px; margin-bottom: 6px;">Your Other Tickets</p>
-            <p style="color: #5b6670; font-size: 12.5px; margin-top: 0;">You bought extra tickets for other people — forward each link below to the right person. These links are only sent here, so save this email.</p>
-            <table role="presentation" style="width: 100%; border-collapse: collapse; font-size: 14px;">{$rows}</table>
-            HTML;
     }
 
     resend_send($to, "Receipt for \"{$courseTitle}\" — Obin Academy", <<<HTML
@@ -189,8 +143,6 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
               {$ctaLabel}
             </a>
           </p>
-
-          {$extraTicketsBlock}
 
           <p style="color: #5b6670; font-size: 12.5px; text-align: center; margin-top: 28px;">
             Keep this receipt for your records. Questions about this payment? Reply to this email or reach us at support@obinacademy.com.
