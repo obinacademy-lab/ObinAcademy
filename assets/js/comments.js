@@ -1,5 +1,7 @@
-// Comment form (AJAX submit) + delete buttons for the course/event discussion
-// section. Works for any number of [data-comments-root] widgets on a page.
+// Comment/reply forms (AJAX submit) + delete buttons for the course/event
+// discussion section. Works for any number of [data-comments-root] widgets
+// on a page, each of which can contain multiple [data-comment-submit] forms
+// — one top-level "Add a Comment" form plus one per-comment reply form.
 document.addEventListener("DOMContentLoaded", () => {
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
 
@@ -7,12 +9,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const courseId = root.dataset.courseId;
     const submitUrl = root.dataset.submitUrl;
     const deleteUrl = root.dataset.deleteUrl;
-    const form = root.querySelector("[data-comment-submit]");
     const list = root.querySelector("[data-comment-list]");
 
-    if (form) {
+    root.querySelectorAll("[data-comment-submit]").forEach((form) => {
       const errorBox = form.querySelector("[data-comment-error]");
       const textarea = form.querySelector('textarea[name="body"]');
+      const parentId = form.dataset.parentId || null;
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -24,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const res = await fetch(submitUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ courseId, body, csrf_token: csrfToken }),
+            body: JSON.stringify({ courseId, body, parentId, csrf_token: csrfToken }),
           });
           const data = await res.json();
           if (data.error) {
@@ -33,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
           if (data.hidden) {
-            errorBox.textContent = "Your comment couldn't be posted — it contains language that isn't allowed here.";
+            errorBox.textContent = (parentId ? "Your reply" : "Your comment") + " couldn't be posted — it contains language that isn't allowed here.";
             errorBox.classList.remove("hidden");
             return;
           }
@@ -43,7 +45,19 @@ document.addEventListener("DOMContentLoaded", () => {
           errorBox.classList.remove("hidden");
         }
       });
-    }
+    });
+
+    // Reply toggle: one button per top-level comment, revealing/hiding the
+    // reply form that immediately follows it (and focusing its textarea).
+    root.querySelectorAll("[data-reply-toggle]").forEach((btn) => {
+      const form = btn.nextElementSibling;
+      if (!form || !form.matches("[data-comment-submit]")) return;
+      btn.addEventListener("click", () => {
+        const willOpen = form.classList.contains("hidden");
+        form.classList.toggle("hidden", !willOpen);
+        if (willOpen) form.querySelector("textarea")?.focus();
+      });
+    });
 
     list?.querySelectorAll("[data-comment-delete]").forEach((btn) => {
       btn.addEventListener("click", async () => {

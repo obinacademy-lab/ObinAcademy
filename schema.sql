@@ -430,8 +430,14 @@ CREATE TABLE comments (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   user_id INT NOT NULL,
   course_id INT NOT NULL,
+  -- NULL = a top-level comment. Threads are capped at two levels — a reply
+  -- to a reply gets re-parented onto that reply's own parent by
+  -- add_comment() in includes/comments.php, so parent_id here never points
+  -- at a row that itself has a parent_id.
+  parent_id INT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE,
   INDEX idx_comments_course_status (course_id, status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

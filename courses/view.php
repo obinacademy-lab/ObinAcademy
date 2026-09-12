@@ -398,6 +398,38 @@ require __DIR__ . '/../includes/header.php';
                   <?php endif; ?>
                 </div>
                 <p class="comment"><?= nl2br(e($cm['body'])) ?></p>
+
+                <?php if ($user): ?>
+                  <button type="button" class="comment-reply-toggle" data-reply-toggle>↩ Reply</button>
+                  <form data-comment-submit data-parent-id="<?= (int) $cm['id'] ?>" class="comment-reply-form hidden">
+                    <textarea name="body" rows="2" placeholder="Write a reply…" required></textarea>
+                    <p class="error-text hidden" data-comment-error></p>
+                    <button type="submit" class="btn btn-outline btn-sm">Post Reply</button>
+                  </form>
+                <?php endif; ?>
+
+                <?php if ($cm['replies']): ?>
+                  <div class="comment-replies">
+                    <?php foreach ($cm['replies'] as $rp): ?>
+                      <div class="comment-reply" data-comment-id="<?= (int) $rp['id'] ?>">
+                        <div class="head">
+                          <div class="avatar">
+                            <?php if (!empty($rp['author_avatar_url'])): ?><img src="<?= e(asset_src($rp['author_avatar_url'])) ?>" alt="">
+                            <?php else: ?><?= e(mb_substr($rp['author_name'], 0, 1)) ?><?php endif; ?>
+                          </div>
+                          <div>
+                            <div class="name"><?= e($rp['author_name']) ?></div>
+                            <div class="small muted"><?= e(format_date($rp['created_at'])) ?></div>
+                          </div>
+                          <?php if ($user && ($canModerateComments || (int) $rp['user_id'] === (int) $user['id'])): ?>
+                            <button type="button" class="ccard-delete" data-comment-delete title="Delete reply">✕</button>
+                          <?php endif; ?>
+                        </div>
+                        <p class="comment"><?= nl2br(e($rp['body'])) ?></p>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                <?php endif; ?>
               </div>
             <?php endforeach; ?>
           </div>
