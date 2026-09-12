@@ -53,6 +53,7 @@ $navByRole = [
             ['/dashboard/admin/categories.php', 'Categories', 'tag'],
             ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
             ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
+            ['/dashboard/admin/comments.php', 'Comments', 'message-square'],
         ],
         'Events' => [
             ['/dashboard/admin/event-applications.php', 'Event Applications', 'calendar'],
@@ -98,6 +99,14 @@ if ($user['role'] === 'ADMIN') {
         '/dashboard/admin/event-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW' AND type='EVENT'")['n'],
         '/dashboard/admin/leads.php' => (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'],
     ];
+    // Defensive: this file loads on every admin page, so a missing `comments`
+    // table (deploy landed before its migration ran) must not break the
+    // entire admin nav — just show 0 on this one badge until it exists.
+    try {
+        $navBadges['/dashboard/admin/comments.php'] = (int) db_one("SELECT COUNT(*) AS n FROM comments WHERE status='HIDDEN'")['n'];
+    } catch (Throwable $e) {
+        $navBadges['/dashboard/admin/comments.php'] = 0;
+    }
     $sidebarWidget = [
         'title' => 'This Month',
         'icon' => 'trending-up',

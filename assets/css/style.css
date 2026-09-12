@@ -1725,6 +1725,17 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .rcard .name { font-weight: 700; font-size: 14.5px; }
 .rcard .stars { color: var(--gold); font-size: 13px; margin-top: 1px; }
 .rcard .comment { margin-top: 12px; font-size: 15.5px; line-height: 1.7; color: var(--ink); position: relative; z-index: 1; }
+/* Comments reuse the review card's layout (head/avatar/name/comment) but
+   aren't necessarily positive like a testimonial, so the accent bar drops
+   the gold-to-navy gradient for a plain neutral one, and there's no quote
+   mark or star rating. */
+.rcard.rcard-comment::before { background: var(--border-strong); }
+.ccard-delete {
+  margin-left: auto; background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 13px; line-height: 1; padding: 4px 7px; border-radius: 6px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.ccard-delete:hover { color: var(--danger); background: var(--danger-bg); }
 @media (prefers-reduced-motion: reduce) {
   .rbar-fill, .rform .star-input button, .rcard { transition: none; }
 }

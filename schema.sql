@@ -417,6 +417,25 @@ CREATE TABLE reviews (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
+-- Open discussion on a course or event — unlike reviews, posting needs an
+-- account but not enrollment/a ticket. status=HIDDEN is set automatically
+-- at submission time by comment_contains_blocked_language() in
+-- includes/moderation.php and never shown publicly; kept (not deleted)
+-- so an admin can review/restore a false positive at dashboard/admin/comments.php.
+CREATE TABLE comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  body TEXT NOT NULL,
+  status ENUM('VISIBLE','HIDDEN') NOT NULL DEFAULT 'VISIBLE',
+  hidden_reason VARCHAR(255) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  user_id INT NOT NULL,
+  course_id INT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  INDEX idx_comments_course_status (course_id, status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
 CREATE TABLE password_reset_tokens (
   id INT AUTO_INCREMENT PRIMARY KEY,
   token_hash VARCHAR(255) NOT NULL UNIQUE,

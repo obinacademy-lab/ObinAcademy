@@ -3,6 +3,7 @@ require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/enroll_panel.php';
 require __DIR__ . '/../includes/enrollment.php';
+require __DIR__ . '/../includes/comments.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -22,6 +23,9 @@ if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
 }
 
 $isEvent = $course['type'] === 'EVENT';
+$comments = get_visible_comments((int) $course['id']);
+$commentCount = count($comments);
+$canModerateComments = $isOwner || $isAdmin;
 
 // A plain, publicly-shown view counter — not deduped per visitor, and
 // excludes the course's own creator/admin so their own checks don't
@@ -356,6 +360,49 @@ require __DIR__ . '/../includes/header.php';
           <?php endif; ?>
         </div>
       </div>
+
+      <h2 class="h3" style="margin-top:48px;">Comments<?= $commentCount > 0 ? " ($commentCount)" : '' ?></h2>
+      <p class="muted small" style="margin-top:4px;">Open to any Obin Academy member — <?= $isEvent ? 'you don\'t need a ticket' : 'you don\'t need to be enrolled' ?> to join the discussion.</p>
+
+      <div data-comments-root data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-comment.php')) ?>" data-delete-url="<?= e(base_url('api/delete-comment.php')) ?>" style="margin-top:16px; max-width:640px;">
+        <?php if ($user): ?>
+          <form data-comment-submit class="rform reveal">
+            <label for="commentBody" style="display:block; font-weight:700; font-size:13.5px;">Add a Comment</label>
+            <textarea id="commentBody" name="body" rows="3" style="margin-top:8px;" placeholder="<?= $isEvent ? 'Ask a question or share your thoughts about this event…' : 'Ask a question or share your thoughts about this course…' ?>" required></textarea>
+            <p class="error-text hidden" data-comment-error></p>
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+          </form>
+        <?php else: ?>
+          <p class="card card-pad muted small reveal" style="border-style:dashed;">
+            <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to join the discussion — no <?= $isEvent ? 'ticket' : 'enrollment' ?> needed.
+          </p>
+        <?php endif; ?>
+
+        <?php if (!$comments): ?>
+          <p class="small muted" style="margin-top:16px;">No comments yet. Be the first to start the discussion.</p>
+        <?php else: ?>
+          <div class="rlist" data-comment-list>
+            <?php foreach ($comments as $ci => $cm): ?>
+              <div class="rcard rcard-comment reveal reveal-delay-<?= min($ci + 1, 5) ?>" data-comment-id="<?= (int) $cm['id'] ?>">
+                <div class="head">
+                  <div class="avatar">
+                    <?php if (!empty($cm['author_avatar_url'])): ?><img src="<?= e(asset_src($cm['author_avatar_url'])) ?>" alt="">
+                    <?php else: ?><?= e(mb_substr($cm['author_name'], 0, 1)) ?><?php endif; ?>
+                  </div>
+                  <div>
+                    <div class="name"><?= e($cm['author_name']) ?></div>
+                    <div class="small muted"><?= e(format_date($cm['created_at'])) ?></div>
+                  </div>
+                  <?php if ($user && ($canModerateComments || (int) $cm['user_id'] === (int) $user['id'])): ?>
+                    <button type="button" class="ccard-delete" data-comment-delete title="Delete comment">✕</button>
+                  <?php endif; ?>
+                </div>
+                <p class="comment"><?= nl2br(e($cm['body'])) ?></p>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
 
     <aside class="course-sidebar">
@@ -399,5 +446,6 @@ require __DIR__ . '/../includes/header.php';
 
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/review.js')) ?>"></script>
+<script src="<?= e(versioned_asset('assets/js/comments.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
