@@ -55,6 +55,7 @@ $navByRole = [
             ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
         ],
         'Events' => [
+            ['/dashboard/admin/event-applications.php', 'Event Applications', 'calendar'],
             ['/dashboard/events/index.php', 'My Events', 'calendar'],
             ['/dashboard/events/new.php', 'Create Event', 'plus-circle'],
         ],
@@ -93,7 +94,8 @@ if ($user['role'] === 'ADMIN') {
         '/dashboard/admin/creator-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'],
         '/dashboard/admin/affiliate-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM affiliate_applications WHERE status='PENDING'")['n'],
         '/dashboard/admin/withdrawals.php' => (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'],
-        '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW'")['n'],
+        '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW' AND type='COURSE'")['n'],
+        '/dashboard/admin/event-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW' AND type='EVENT'")['n'],
         '/dashboard/admin/leads.php' => (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'],
     ];
     $sidebarWidget = [
