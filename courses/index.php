@@ -92,7 +92,7 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<div class="container" style="padding-top:32px; padding-bottom:72px;">
+<div class="container" style="padding-top:20px; padding-bottom:72px;">
   <div class="chip-row chip-row-scroll">
     <a href="<?= e(browse_url($q, '', 'popular', '')) ?>" class="chip <?= (!$categorySlug && !$price && $sort === 'popular') ? 'active' : '' ?>">✨ All</a>
     <a href="<?= e(browse_url($q, $categorySlug, $sort === 'popular' ? 'newest' : 'popular', $price)) ?>" class="chip <?= $sort === 'popular' ? 'active' : '' ?>">🔥 Trending</a>

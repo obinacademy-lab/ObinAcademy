@@ -90,7 +90,7 @@ require __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<div class="container" style="padding-top:28px;">
+<div class="container" style="padding-top:18px;">
   <div class="chip-row chip-row-scroll">
     <a href="<?= e(base_url('courses/index.php')) ?>" class="chip">✨ All</a>
     <a href="<?= e(base_url('courses/index.php?sort=popular')) ?>" class="chip">🔥 Trending</a>
@@ -104,7 +104,7 @@ require __DIR__ . '/includes/header.php';
   </div>
 </div>
 
-<section class="section" style="padding-top:32px;">
+<section class="section" style="padding-top:22px;">
   <div class="container">
     <div class="row between wrap gap-3" style="align-items:flex-end; margin-bottom: 36px;">
       <div>

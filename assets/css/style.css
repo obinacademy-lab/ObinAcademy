@@ -926,7 +926,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 /* ---------- homepage hero: Skool-style, no photo — confident type,
    restrained color, a plain light ground doing all the "premium" work. ---------- */
-.home-hero-v3 { background: var(--surface); padding: 116px 0 84px; }
+.home-hero-v3 { background: var(--surface); padding: 68px 0 40px; }
 .home-hero-v3 .container { max-width: 900px; }
 .home-hero-v3 h1 {
   font-size: clamp(46px, 8vw, 80px); font-weight: 800; line-height: 1.04; letter-spacing: -0.025em;
@@ -956,11 +956,11 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .hero-accent-link { color: var(--accent); font-weight: 600; text-decoration: none; }
 .hero-accent-link:hover { text-decoration: underline; }
 .home-hero-v3 .summary {
-  margin: 26px auto 0; max-width: 600px; font-size: 18px; line-height: 1.65; color: var(--muted);
+  margin: 16px auto 0; max-width: 600px; font-size: 18px; line-height: 1.65; color: var(--muted);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.1s;
 }
 .hero-search-v3 {
-  display: flex; align-items: center; gap: 10px; margin: 38px auto 0; max-width: 620px;
+  display: flex; align-items: center; gap: 10px; margin: 24px auto 0; max-width: 620px;
   background: #fff; border-radius: 12px; padding: 6px 6px 6px 26px;
   box-shadow: 0 1px 2px rgba(32,33,36,0.13), 0 2px 6px rgba(32,33,36,0.06), 0 1px 10px rgba(0,0,0,0.05);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.15s;
@@ -980,7 +980,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   .home-hero-v3 h1, .hero-subline, .home-hero-v3 .summary, .hero-search-v3, .hero-stats-v3 { animation: none; }
 }
 @media (max-width: 640px) {
-  .home-hero-v3 { padding: 64px 0 48px; }
+  .home-hero-v3 { padding: 44px 0 32px; }
   .home-hero-v3 h1 { font-size: 40px; }
   .hero-subline { font-size: 21px; }
   .home-hero-v3 .summary { font-size: 16px; }
@@ -1306,7 +1306,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .page-hero-light .browse-hero-stats strong { color: var(--ink); }
 
 /* ---------- live stat strip (about page) ---------- */
-.stat-strip { background: #fff; border-bottom: 1px solid var(--border); padding: 32px 0; }
+.stat-strip { background: #fff; border-bottom: 1px solid var(--border); padding: 22px 0; }
 .stat-strip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; text-align: center; }
 @media (min-width: 640px) { .stat-strip-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 900px) { .stat-strip-grid { grid-template-columns: repeat(5, 1fr); } }
