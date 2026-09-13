@@ -422,44 +422,22 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 .site-footer {
   position: relative; overflow: hidden;
-  background: var(--brand-950); color: rgba(255,255,255,0.75); padding: 68px 0 0; margin-top: 64px;
+  background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 55%, var(--brand-800));
+  color: rgba(255,255,255,0.75); padding: 68px 0 0; margin-top: 64px;
 }
 /* A thin brand-color gradient seam across the very top edge — a small
    "signature" touch that a lot of flat, unadorned footers skip. */
 .site-footer::before {
   content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; z-index: 2;
   background: linear-gradient(to right, var(--brand-700), var(--accent), var(--gold), #ec4899, var(--brand-700));
-  background-size: 200% 100%;
-  animation: footer-seam-shift 8s linear infinite;
 }
-@keyframes footer-seam-shift { to { background-position: 200% 0; } }
-/* A starfield of individually-drifting, twinkling dots — replaces the old
-   static dot-grid so the footer background feels alive rather than printed. */
-.starfield {
-  position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
-  -webkit-mask-image: linear-gradient(to bottom, black, transparent 85%);
-  mask-image: linear-gradient(to bottom, black, transparent 85%);
-}
-.starfield .star {
-  position: absolute; border-radius: 50%; background: #fff;
-  top: var(--y); left: var(--x);
-  width: var(--size); height: var(--size);
-  opacity: var(--min-o);
-  animation: star-twinkle var(--twinkle-dur) ease-in-out infinite, star-drift var(--drift-dur) ease-in-out infinite alternate;
-  animation-delay: var(--delay), var(--delay);
-}
-@keyframes star-twinkle { 0%, 100% { opacity: var(--min-o); } 50% { opacity: var(--max-o); } }
-@keyframes star-drift { from { transform: translate(0, 0); } to { transform: translate(var(--dx), var(--dy)); } }
-@media (prefers-reduced-motion: reduce) {
-  .starfield .star { animation: none; opacity: var(--max-o); }
-}
-/* Two large, softly-breathing color orbs for ambient depth — the same
-   language as the testimonials section, carried into the footer. */
-.footer-glow { position: absolute; z-index: 0; border-radius: 50%; filter: blur(90px); pointer-events: none; animation: footer-glow-breathe 9s ease-in-out infinite; }
+/* Two large, static color orbs for ambient depth — the same language as
+   the testimonials section, carried into the footer. */
+.footer-glow { position: absolute; z-index: 0; border-radius: 50%; filter: blur(90px); pointer-events: none; }
 .footer-glow-a { width: 420px; height: 420px; top: -140px; left: -80px; background: var(--accent); opacity: 0.16; }
-.footer-glow-b { width: 380px; height: 380px; bottom: -160px; right: -60px; background: var(--gold); opacity: 0.14; animation-delay: -4.5s; }
+.footer-glow-b { width: 380px; height: 380px; bottom: -160px; right: -60px; background: var(--gold); opacity: 0.14; }
+/* Shared with .course-hero-glow, which still breathes. */
 @keyframes footer-glow-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
-@media (prefers-reduced-motion: reduce) { .footer-glow { animation: none; } }
 
 .site-footer > .container { position: relative; z-index: 1; }
 .site-footer a { color: rgba(255,255,255,0.75); text-decoration: none; transition: color 0.15s ease; }

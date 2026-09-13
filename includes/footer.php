@@ -13,7 +13,6 @@
     ];
   ?>
   <footer class="site-footer site-footer-compact">
-    <div class="starfield" aria-hidden="true"></div>
     <div class="footer-glow footer-glow-a" aria-hidden="true"></div>
     <div class="footer-glow footer-glow-b" aria-hidden="true"></div>
 
