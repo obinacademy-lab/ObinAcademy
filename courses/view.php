@@ -164,6 +164,9 @@ require __DIR__ . '/../includes/header.php';
         <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> students</span>
         <span class="meta-chip"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
         <span class="meta-chip"><?php dash_icon('play'); ?><?= $totalLessons ?> lessons</span>
+        <?php if (!empty($course['reviewed_at'])): ?>
+          <span class="meta-chip"><?php dash_icon('calendar'); ?>Published <?= e(format_date($course['reviewed_at'])) ?> at <?= e(date('g:i A', strtotime($course['reviewed_at']))) ?></span>
+        <?php endif; ?>
       </div>
 
       <div class="row gap-2 wrap" style="align-items:center; margin-top:26px;">
