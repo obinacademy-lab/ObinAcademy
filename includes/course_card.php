@@ -12,6 +12,9 @@ function render_course_card(array $c): void {
         <?php elseif (!empty($c['reviewed_at']) && strtotime($c['reviewed_at']) >= strtotime('-' . NEW_COURSE_BADGE_DAYS . ' days')): ?>
           <span class="badge-pill badge-new">New</span>
         <?php endif; ?>
+        <?php if (!empty($c['reviewed_at'])): ?>
+          <span class="thumb-date-badge"><?php dash_icon('calendar'); ?><?= e(format_date($c['reviewed_at'])) ?> &middot; <?= e(date('g:i A', strtotime($c['reviewed_at']))) ?></span>
+        <?php endif; ?>
         <?php if (!empty($c['thumbnail_url'])): ?>
           <img src="<?= e(asset_src($c['thumbnail_url'])) ?>" alt="" loading="lazy">
         <?php else: ?>
