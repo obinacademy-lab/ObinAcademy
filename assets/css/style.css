@@ -1332,6 +1332,23 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 .how-panel-tag { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, white); padding: 6px 14px; border-radius: var(--radius-full); }
 .how-panel-tag.tag-gold { color: #92660a; background: color-mix(in srgb, var(--gold) 18%, white); }
+.how-panel-desc { color: var(--muted); }
+
+/* A section wrapped in this reuses the same navy gradient as the header/
+   footer/stat-strip — scoped overrides for the shared .eyebrow/.lede/
+   .how-panel components so they read on a dark ground instead of needing
+   separate dark-mode variants of each. */
+.section-navy { background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 55%, var(--brand-800)); }
+.section-navy .eyebrow { color: var(--gold); background: rgba(245,179,1,0.14); }
+.section-navy h2 { color: #fff; }
+.section-navy .lede { color: rgba(255,255,255,0.72); }
+.section-navy .how-panel { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); }
+.section-navy .how-panel:hover { border-color: rgba(255,255,255,0.32); }
+.section-navy .how-panel-tag { color: #fff; background: rgba(255,255,255,0.14); }
+.section-navy .how-panel-tag.tag-gold { color: #1a1300; background: var(--gold); }
+.section-navy .how-panel-desc { color: rgba(255,255,255,0.72); }
+.section-navy .check-list .check-icon { background: rgba(255,255,255,0.16); color: #fff; }
+.section-navy .check-list .label-text { color: rgba(255,255,255,0.92); }
 
 .step-row { position: relative; z-index: 1; display: flex; gap: 16px; align-items: flex-start; }
 .step-num {

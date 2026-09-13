@@ -119,7 +119,7 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <!-- 3. What We Do -->
-<div class="section" style="background:var(--surface); padding-top:0;">
+<div class="section section-navy" style="padding-top:0;">
   <div class="container">
     <div class="text-center reveal" style="max-width:620px; margin:0 auto 40px;">
       <span class="eyebrow">What We Do</span>
@@ -140,7 +140,7 @@ require __DIR__ . '/includes/header.php';
       </div>
       <div class="how-panel panel-creators reveal reveal-delay-2">
         <span class="how-panel-tag tag-gold">💰 For Creators</span>
-        <p style="margin-top:22px; position:relative; z-index:1; font-size:15px; line-height:1.75; color:var(--muted);">
+        <p class="how-panel-desc" style="margin-top:22px; position:relative; z-index:1; font-size:15px; line-height:1.75;">
           At the same time, we empower educators, professionals, entrepreneurs, coaches, consultants, and industry experts to create, publish, and sell their own courses to a growing audience across Africa and beyond.
         </p>
         <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-gold" style="margin-top:24px; position:relative; z-index:1;">Become a Creator <span class="btn-arrow">→</span></a>
