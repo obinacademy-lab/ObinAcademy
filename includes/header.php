@@ -56,7 +56,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
 <body id="top">
   <header class="site-header" data-site-header>
     <div class="container">
-      <?php render_logo(true); ?>
+      <?php render_logo(); ?>
 
       <div class="nav-actions">
         <?php if ($user): ?>

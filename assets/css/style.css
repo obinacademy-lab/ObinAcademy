@@ -150,8 +150,8 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800));
+  border-bottom: 1px solid rgba(255,255,255,0.12);
   transition: box-shadow 0.3s ease;
 }
 /* A header that picks up a shadow once the page scrolls — a subtle but
@@ -242,6 +242,8 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 .nav-toggle:hover { background: var(--surface); }
+.site-header .nav-toggle { border-color: rgba(255,255,255,0.35); color: #fff; }
+.site-header .nav-toggle:hover { background: rgba(255,255,255,0.12); }
 .nav-toggle svg { width: 19px; height: 19px; }
 .nav-toggle .icon-close { display: none; }
 .nav-toggle[aria-expanded="true"] .icon-menu { display: none; }
