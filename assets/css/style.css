@@ -1286,7 +1286,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .page-hero-light .browse-hero-stats strong { color: var(--ink); }
 
 /* ---------- live stat strip (about page) ---------- */
-.stat-strip { background: #fff; border-bottom: 1px solid var(--border); padding: 22px 0; }
+.stat-strip { background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800)); padding: 22px 0; }
 .stat-strip-grid { display: grid; grid-template-columns: 1fr; gap: 18px; text-align: center; }
 @media (min-width: 420px) { .stat-strip-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 640px) { .stat-strip-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -1297,9 +1297,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   .stat-strip-item:nth-child(5):last-child { grid-column: 1 / -1; }
 }
 .stat-strip-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.stat-strip-item .value { font-size: clamp(24px, 4vw, 32px); font-weight: 800; color: var(--brand-900); }
+.stat-strip-item .value { font-size: clamp(24px, 4vw, 32px); font-weight: 800; color: #fff; }
 .stat-strip-item .value .unit { font-size: 0.55em; color: var(--gold); margin-left: 2px; }
-.stat-strip-item .label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.stat-strip-item .label { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.72); }
 
 /* ---------- value cards (about page) ---------- */
 .value-card {
