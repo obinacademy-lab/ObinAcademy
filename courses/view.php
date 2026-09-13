@@ -125,6 +125,8 @@ if (!empty($course['creator_name'])) {
     ];
 }
 
+$stats = get_platform_stats();
+
 require __DIR__ . '/../includes/header.php';
 ?>
 
@@ -181,6 +183,8 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </div>
 </section>
+
+<?php render_stat_strip($stats); ?>
 
 <section class="section">
   <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">

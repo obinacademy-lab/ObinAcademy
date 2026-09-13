@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $testimonials = get_published_testimonials();
+$stats = get_platform_stats();
 
 $pageTitle = 'Stories — Obin Academy';
 $pageDescription = 'Real stories from learners and creators building real skills — and real income — on Obin Academy.';
@@ -35,6 +36,8 @@ require __DIR__ . '/includes/header.php';
     <p class="summary" style="margin-left:auto; margin-right:auto;">Hear from learners and creators building real skills and real income on Obin Academy.</p>
   </div>
 </section>
+
+<?php render_stat_strip($stats); ?>
 
 <div class="section testimonials-decor">
   <div class="container">

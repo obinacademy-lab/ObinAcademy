@@ -333,6 +333,42 @@ function smooth_svg_path(array $points): string {
 }
 
 /**
+ * The site-wide blue platform-trust strip (Courses Live / Learners /
+ * Creators / Paid to Creators / Paid to Affiliates) — same get_platform_stats()
+ * row every caller already has in scope, animated count-up handled by
+ * data-count-up in main.js. Shared across every public-facing page so the
+ * numbers/animation/styling never drift between pages.
+ */
+function render_stat_strip(array $stats): void {
+    ?>
+    <section class="stat-strip">
+      <div class="container stat-strip-grid">
+        <div class="stat-strip-item">
+          <div class="value" data-count-up data-count-value="<?= (int) $stats['course_count'] ?>" data-count-suffix="+">0+</div>
+          <div class="label">Courses Live</div>
+        </div>
+        <div class="stat-strip-item">
+          <div class="value" data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>" data-count-suffix="+">0+</div>
+          <div class="label">Learners</div>
+        </div>
+        <div class="stat-strip-item">
+          <div class="value" data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>" data-count-suffix="+">0+</div>
+          <div class="label">Creators</div>
+        </div>
+        <div class="stat-strip-item">
+          <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_creators']) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+          <div class="label">Paid to Creators</div>
+        </div>
+        <div class="stat-strip-item">
+          <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_affiliates']) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+          <div class="label">Paid to Affiliates</div>
+        </div>
+      </div>
+    </section>
+    <?php
+}
+
+/**
  * Row of social icons (Facebook/Instagram/YouTube/TikTok/LinkedIn) — shared
  * by the course sidebar's instructor card and public profile pages. Always
  * renders all five, in the same fixed order, on every page — a platform the

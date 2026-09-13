@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
 
 $user = current_user();
 $errors = [];
@@ -36,6 +37,7 @@ $myApplication = $user ? db_one('SELECT * FROM creator_applications WHERE user_i
 // out" definition used on the admin financial pages (approved withdrawals,
 // not gross accrued earnings).
 $paidToCreators = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='CREATOR'")['n'] ?? 0);
+$stats = get_platform_stats();
 
 $pageTitle = 'Become a Creator — Obin Academy';
 $pageDescription = 'Turn your knowledge into income. Apply to become a creator on Obin Academy — publish courses, set your own price, and keep 90% of every sale, paid instantly to mobile money.';
@@ -55,6 +57,8 @@ require __DIR__ . '/includes/header.php';
     <?php endif; ?>
   </div>
 </section>
+
+<?php render_stat_strip($stats); ?>
 
 <div class="container" style="max-width:560px; padding:56px 20px;">
   <?php if ($user && in_array($user['role'], ['CREATOR', 'ADMIN'], true)): ?>

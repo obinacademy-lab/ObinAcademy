@@ -76,6 +76,8 @@ $industries = [
     ['Design', 'design-creative', '🎨'], ['Ecommerce', 'ecommerce', '🛒'], ['Education', 'education-teaching', '🎓'],
 ];
 
+$stats = get_platform_stats();
+
 $pageTitle = 'About Us — Obin Academy';
 $pageDescription = "Obin Academy is a modern online learning marketplace built to empower people with practical, income-generating skills — connecting learners with real creators across Africa and beyond.";
 require __DIR__ . '/includes/header.php';
@@ -91,6 +93,8 @@ require __DIR__ . '/includes/header.php';
     </div>
   </div>
 </section>
+
+<?php render_stat_strip($stats); ?>
 
 <!-- 2. About Obin Academy -->
 <div class="section">

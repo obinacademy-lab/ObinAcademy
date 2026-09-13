@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
 
 $user = current_user();
 $errors = [];
@@ -36,6 +37,7 @@ $myApplication = $user ? db_one('SELECT * FROM affiliate_applications WHERE user
 // out" definition used on the admin financial pages (approved withdrawals,
 // not gross accrued earnings).
 $paidToAffiliates = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='AFFILIATE'")['n'] ?? 0);
+$stats = get_platform_stats();
 
 $pageTitle = 'Become an Affiliate Partner — Obin Academy';
 $pageDescription = 'Earn 2% commission on every course purchase you refer through your own affiliate link, on any course from any creator on Obin Academy.';
@@ -55,6 +57,8 @@ require __DIR__ . '/includes/header.php';
     <?php endif; ?>
   </div>
 </section>
+
+<?php render_stat_strip($stats); ?>
 
 <div class="container" style="max-width:560px; padding:56px 20px;">
   <?php if ($myAffiliate && $myAffiliate['status'] === 'ACTIVE'): ?>

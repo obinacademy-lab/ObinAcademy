@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
 
 /** Inline stroke-icon set (Lucide-style: 24x24, stroke-width 2, round caps) — matches the icons already used in header.php/footer.php. */
 function ci(string $name, string $class = ''): string {
@@ -104,6 +105,8 @@ $faqs = [
     ['How long does support take to respond?', "Email and contact-form requests are answered within 24 hours. WhatsApp and Live Chat during business hours (Mon–Fri, 8:00 AM–6:00 PM EAT) are usually much faster."],
 ];
 
+$stats = get_platform_stats();
+
 $pageTitle = 'Contact & Support — Obin Academy';
 $pageDescription = "Get in touch with Obin Academy — support for learners, creators, and businesses. Real human support, replies within 24 hours.";
 require __DIR__ . '/includes/header.php';
@@ -126,6 +129,8 @@ require __DIR__ . '/includes/header.php';
     </div>
   </div>
 </section>
+
+<?php render_stat_strip($stats); ?>
 
 <!-- 2. Multiple Ways to Reach Us -->
 <div class="section">
