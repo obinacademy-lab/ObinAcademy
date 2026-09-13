@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Log In — Obin Academy';
+$authTab = 'login';
 require __DIR__ . '/includes/auth_header.php';
 ?>
   <h1>Welcome Back</h1>
@@ -37,14 +38,20 @@ require __DIR__ . '/includes/auth_header.php';
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="jane@example.com">
+      <div class="field-icon">
+        <?php dash_icon('mail'); ?>
+        <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="jane@example.com">
+      </div>
     </div>
     <div class="field">
       <div class="row between">
         <label for="password" style="margin-bottom:0;">Password</label>
         <a href="<?= e(base_url('forgot-password.php')) ?>" class="small" style="color: var(--accent); font-weight:600;">Forgot password?</a>
       </div>
-      <input id="password" name="password" type="password" required placeholder="Your password">
+      <div class="field-icon">
+        <?php dash_icon('lock'); ?>
+        <input id="password" name="password" type="password" required placeholder="Your password">
+      </div>
     </div>
     <button type="submit" class="btn btn-primary btn-block btn-lg">Log In</button>
   </form>

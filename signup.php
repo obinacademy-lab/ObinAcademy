@@ -37,6 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Sign Up — Obin Academy';
+$authTab = 'signup';
+$authBrandHeadline = 'Start your first lesson today.';
+$authBrandSub = 'Thousands of learners across East Africa are already building skills that earn. Your account takes less than a minute to create.';
 require __DIR__ . '/includes/auth_header.php';
 ?>
   <h1>Create Your Account</h1>
@@ -51,11 +54,17 @@ require __DIR__ . '/includes/auth_header.php';
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
       <label for="name">Full Name</label>
-      <input id="name" name="name" type="text" required value="<?= e($name) ?>">
+      <div class="field-icon">
+        <?php dash_icon('user-plus'); ?>
+        <input id="name" name="name" type="text" required value="<?= e($name) ?>">
+      </div>
     </div>
     <div class="field">
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="jane@example.com">
+      <div class="field-icon">
+        <?php dash_icon('mail'); ?>
+        <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="jane@example.com">
+      </div>
     </div>
     <div class="field">
       <label for="phone">Phone Number (optional)</label>
@@ -63,7 +72,10 @@ require __DIR__ . '/includes/auth_header.php';
     </div>
     <div class="field">
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" required minlength="8">
+      <div class="field-icon">
+        <?php dash_icon('lock'); ?>
+        <input id="password" name="password" type="password" required minlength="8">
+      </div>
       <p class="help">At least 8 characters.</p>
     </div>
     <button type="submit" class="btn btn-primary btn-block btn-lg">Create Account</button>
