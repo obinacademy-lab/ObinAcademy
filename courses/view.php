@@ -73,13 +73,6 @@ if ($user) {
     }
 }
 
-$creatorSocials = [
-    'facebook' => $course['creator_facebook_url'] ?? null,
-    'instagram' => $course['creator_instagram_url'] ?? null,
-    'youtube' => $course['creator_youtube_url'] ?? null,
-    'tiktok' => $course['creator_tiktok_url'] ?? null,
-    'linkedin' => $course['creator_linkedin_url'] ?? null,
-];
 
 $statusLabel = ['DRAFT' => 'a draft', 'PENDING_REVIEW' => 'pending admin review', 'REJECTED' => 'rejected and needs changes'];
 
@@ -171,7 +164,7 @@ require __DIR__ . '/../includes/header.php';
       </div>
 
       <div class="row gap-2 wrap" style="align-items:center; margin-top:26px;">
-        <a href="#instructor-card" class="instructor">
+        <a href="<?= e(base_url('profile.php?id=' . $course['creator_user_id'])) ?>" class="instructor">
           <div class="avatar">
             <?php if (!empty($course['creator_avatar_url'])): ?>
               <img src="<?= e(asset_src($course['creator_avatar_url'])) ?>" alt="">
@@ -412,39 +405,6 @@ require __DIR__ . '/../includes/header.php';
 
     <aside class="course-sidebar">
       <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled, $isInterested); ?>
-
-      <div class="instructor-card card card-pad reveal reveal-delay-3" id="instructor-card">
-        <h3 class="small" style="text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); font-weight:700;">About the Instructor</h3>
-        <div class="row gap-2" style="margin-top:14px;">
-          <div class="avatar-lg">
-            <?php if (!empty($course['creator_avatar_url'])): ?>
-              <img src="<?= e(asset_src($course['creator_avatar_url'])) ?>" alt="">
-            <?php else: ?><?= e(mb_substr($course['creator_name'], 0, 1)) ?><?php endif; ?>
-          </div>
-          <div>
-            <a href="<?= e(base_url('profile.php?id=' . $course['creator_user_id'])) ?>" style="font-weight:700; color:var(--ink);"><?= e($course['creator_name']) ?></a>
-            <div class="small muted"><?= e($course['creator_headline'] ?? '') ?></div>
-          </div>
-        </div>
-
-        <?php if (!empty($course['creator_bio'])): ?>
-          <p class="creator-bio"><?= e(mb_strimwidth($course['creator_bio'], 0, 180, '…')) ?></p>
-        <?php endif; ?>
-
-        <div class="instructor-stats">
-          <div class="stat">
-            <?php dash_icon('book-open'); ?>
-            <div><div class="stat-value"><?= (int) $course['creator_course_count'] ?></div><div class="stat-label">Course<?= (int) $course['creator_course_count'] === 1 ? '' : 's' ?></div></div>
-          </div>
-          <div class="stat">
-            <?php dash_icon('users'); ?>
-            <div><div class="stat-value"><?= (int) $course['creator_student_count'] ?></div><div class="stat-label">Student<?= (int) $course['creator_student_count'] === 1 ? '' : 's' ?></div></div>
-          </div>
-        </div>
-
-        <?php render_social_links($creatorSocials); ?>
-        <a href="<?= e(base_url('profile.php?id=' . $course['creator_user_id'])) ?>" class="btn btn-outline" style="width:100%; margin-top:14px; justify-content:center;">View Full Profile</a>
-      </div>
     </aside>
   </div>
 </section>
