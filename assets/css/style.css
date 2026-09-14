@@ -549,7 +549,10 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    the starfield/glow/gradient-seam ambiance above stays (all zero-height,
    purely decorative layers), but skips the taller mission/stats/link-grid
    sections for pages that just need a professional, unobtrusive footer. */
-.site-footer-compact { padding: 32px 0; margin-top: 48px; }
+/* No extra margin-top here — every page already ends inside a .section
+   with its own 56-88px bottom padding, so stacking this on top of that
+   was leaving a tall, contentless white gap before the footer started. */
+.site-footer-compact { padding: 32px 0; margin-top: 0; }
 .footer-bottom-compact { padding: 0; }
 
 @media (prefers-reduced-motion: reduce) {
