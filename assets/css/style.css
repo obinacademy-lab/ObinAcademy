@@ -119,6 +119,22 @@ p { margin: 0; }
 .section { padding: 56px 0; }
 @media (min-width: 768px) { .section { padding: 88px 0; } }
 
+/* Whatever block visually ends a page's <main> — a .section, a plain
+   container div, whatever the page happens to close with — drop its
+   bottom padding to 0. The footer right after it already has its own
+   top padding on a colored background, so keeping both stacked read as
+   a tall, unwanted white gap. Written with :has() instead of a plain
+   :last-child because several pages end </main> with trailing
+   <script> tags (before footer.php's </main>), which would otherwise
+   be what :last-child actually matches — this skips past those to the
+   last element that isn't a script/style tag. */
+main > *:not(script):not(style):not(:has(~ *:not(script):not(style))) {
+  /* !important: this selector's specificity is all type-selector-level
+     (main, script, style are tags, not classes), so it loses to .section's
+     single class on its own — needed to actually win the cascade here. */
+  padding-bottom: 0 !important;
+}
+
 /* ---------- type scale ---------- */
 /* Bare <h1> carries this directly (not just the .h1 utility) since most
    pages use plain h1 tags — pushed noticeably bigger than before, matching
