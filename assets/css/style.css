@@ -52,10 +52,15 @@
 }
 
 * { box-sizing: border-box; }
-/* Matches the footer's own background — without this, overscrolling past
-   the bottom (or the header, on trackpad/mobile momentum bounce) briefly
-   reveals html's default white instead of blending into the page. */
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--brand-950); }
+/* Matches the footer's own background as a fallback — but the real fix
+   for the blank space a phone's rubber-band bounce reveals past the very
+   end of the page is disabling that bounce outright below, since which
+   of html's/body's background color actually gets used to paint the
+   overscroll area is inconsistent across mobile browsers. */
+html {
+  scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--brand-950);
+  overscroll-behavior-y: none;
+}
 
 body {
   margin: 0;
@@ -64,6 +69,7 @@ body {
   background: var(--white);
   font-size: 16px;
   line-height: 1.6;
+  overscroll-behavior-y: none;
 }
 
 img, video, iframe { max-width: 100%; }
