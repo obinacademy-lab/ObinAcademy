@@ -402,11 +402,11 @@ function render_stat_strip(array $stats): void {
           <div class="label">Creators</div>
         </div>
         <div class="stat-strip-item">
-          <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_creators']) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+          <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_creators']) ?>" data-count-prefix="UGX " data-count-compact data-count-suffix="">UGX 0</div>
           <div class="label">Paid to Creators</div>
         </div>
         <div class="stat-strip-item">
-          <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_affiliates']) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
+          <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_affiliates']) ?>" data-count-prefix="UGX " data-count-compact data-count-suffix="">UGX 0</div>
           <div class="label">Paid to Affiliates</div>
         </div>
       </div>

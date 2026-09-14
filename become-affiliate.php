@@ -52,7 +52,7 @@ require __DIR__ . '/includes/header.php';
     <?php if ($paidToAffiliates > 0): ?>
       <div class="hero-trust-stat">
         <?php dash_icon('banknote'); ?>
-        <span data-count-up data-count-value="<?= (int) round($paidToAffiliates) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</span> already paid out to affiliates
+        <span data-count-up data-count-value="<?= (int) round($paidToAffiliates) ?>" data-count-prefix="UGX " data-count-compact data-count-suffix="">UGX 0</span> already paid out to affiliates
       </div>
     <?php endif; ?>
   </div>

@@ -73,6 +73,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Animated count-up stats (hero numbers, etc.)
   function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  // Short form for a big money/count stat: 165000 -> "165K", 1200000 -> "1.2M".
+  // Whole thousands/millions show no decimal; anything else shows one.
+  function formatCompact(value) {
+    const abs = Math.abs(value);
+    if (abs >= 1000000) {
+      const n = value / 1000000;
+      return (Number.isInteger(n) ? n : n.toFixed(1)) + "M";
+    }
+    if (abs >= 1000) {
+      const n = value / 1000;
+      return (Number.isInteger(n) ? n : n.toFixed(1)) + "K";
+    }
+    return String(value);
+  }
   const countEls = document.querySelectorAll("[data-count-up]");
   const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -80,10 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const target = parseInt(el.getAttribute("data-count-value"), 10) || 0;
     const prefix = el.getAttribute("data-count-prefix") || "";
     const grouped = el.hasAttribute("data-count-grouped");
+    const compact = el.hasAttribute("data-count-compact");
     const suffix = el.hasAttribute("data-count-suffix")
       ? el.getAttribute("data-count-suffix")
       : (el.textContent.replace(/^[0-9,]+/, "") || "+");
-    const render = (value) => prefix + (grouped ? value.toLocaleString("en-US") : value) + suffix;
+    const render = (value) => prefix + (compact ? formatCompact(value) : grouped ? value.toLocaleString("en-US") : value) + suffix;
     if (prefersReducedMotion) { el.textContent = render(target); return; }
     const duration = 2800;
     const start = performance.now();
