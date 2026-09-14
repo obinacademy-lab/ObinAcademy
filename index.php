@@ -71,6 +71,24 @@ require __DIR__ . '/includes/header.php';
 
 <?php render_stat_strip($stats); ?>
 
+<?php if ($catalogPreview): ?>
+<section class="section" style="background:var(--surface);">
+  <div class="container">
+    <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
+      <span class="eyebrow">The Catalog</span>
+      <h2 class="h2" style="margin-top:10px;">See What's Waiting Inside</h2>
+      <p class="lede" style="margin-top:10px; max-width:none;">A preview of real courses on Obin Academy — browse the full catalog free, then subscribe to start watching.</p>
+    </div>
+    <div class="grid sm:grid-2 lg:grid-3" style="margin-top:36px;">
+      <?php foreach ($catalogPreview as $c): render_course_card($c); endforeach; ?>
+    </div>
+    <div class="text-center" style="margin-top:40px;">
+      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Browse the Full Catalog <span class="btn-arrow">→</span></a>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
 <section class="section">
   <div class="container">
     <div class="text-center reveal" style="max-width:620px; margin:0 auto 12px;">
@@ -130,24 +148,6 @@ require __DIR__ . '/includes/header.php';
     </div>
   </div>
 </section>
-
-<?php if ($catalogPreview): ?>
-<section class="section">
-  <div class="container">
-    <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
-      <span class="eyebrow">The Catalog</span>
-      <h2 class="h2" style="margin-top:10px;">See What's Waiting Inside</h2>
-      <p class="lede" style="margin-top:10px; max-width:none;">A preview of real courses on Obin Academy — browse the full catalog free, then subscribe to start watching.</p>
-    </div>
-    <div class="grid sm:grid-2 lg:grid-3" style="margin-top:36px;">
-      <?php foreach ($catalogPreview as $c): render_course_card($c); endforeach; ?>
-    </div>
-    <div class="text-center" style="margin-top:40px;">
-      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Browse the Full Catalog <span class="btn-arrow">→</span></a>
-    </div>
-  </div>
-</section>
-<?php endif; ?>
 
 <section class="section" style="background:var(--surface);">
   <div class="container">
