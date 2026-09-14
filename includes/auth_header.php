@@ -68,7 +68,6 @@ $authRedirect = $redirectTo ?? '/dashboard.php';
 
   <main class="form-pane">
     <div class="form-topbar">
-      <?php render_logo(true); ?>
       <a href="<?= e(base_url('index.php')) ?>" class="back-home"><?php dash_icon('arrow-left'); ?> Back to Home</a>
     </div>
 

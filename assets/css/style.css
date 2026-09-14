@@ -1845,7 +1845,10 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 55%, var(--brand-800));
   color: #fff; padding: 48px 44px; display: flex; flex-direction: column;
 }
-@media (max-width: 900px) { .brand-pane { display: none; } }
+/* Stacks above the form on mobile rather than disappearing — the grid
+   already drops to one column there, so this panel just becomes a normal
+   flow item instead of a hidden sidebar. */
+@media (max-width: 900px) { .brand-pane { padding: 32px 24px 36px; } }
 .brand-pane .logo-text, .brand-pane .logo-text .accent { color: #fff; }
 .brand-pane .logo-mark { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.25); }
 
@@ -1861,6 +1864,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .brand-pane .glow-b { bottom: -160px; left: -100px; width: 320px; height: 320px; background: var(--gold); opacity: .16; }
 
 .brand-copy { margin-top: auto; padding-top: 60px; }
+@media (max-width: 900px) { .brand-copy { padding-top: 28px; } }
 .brand-eyebrow {
   display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700;
   letter-spacing: .04em; text-transform: uppercase; color: var(--gold);
@@ -1886,8 +1890,6 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (max-width: 420px) { .form-pane { padding: 30px 20px 26px; } }
 
 .form-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.form-topbar .logo { display: none; }
-@media (max-width: 900px) { .form-topbar .logo { display: flex; } }
 
 .back-home { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; transition: color .15s ease; }
 .back-home:hover { color: var(--ink); }
