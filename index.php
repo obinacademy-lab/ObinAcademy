@@ -208,28 +208,39 @@ require __DIR__ . '/includes/header.php';
         <span class="eyebrow">From Real Learners</span>
         <h2 class="h2" style="margin-top:10px;">What Obin Academy Members Say</h2>
       </div>
-      <div class="grid sm:grid-3" style="margin-top:36px; gap:20px;">
-        <?php foreach ($testimonials as $i => $t): ?>
-          <div class="testimonial-card reveal reveal-delay-<?= min($i + 1, 5) ?>">
-            <span class="quote-mark">&ldquo;</span>
-            <div class="rating-row">
-              <span class="stars"><?= str_repeat('★', (int) $t['rating']) . str_repeat('☆', 5 - (int) $t['rating']) ?></span>
-              <span class="rating-num"><?= number_format((float) $t['rating'], 1) ?></span>
-            </div>
-            <p class="quote"><?= e($t['quote']) ?></p>
-            <div class="author">
-              <div class="avatar"><?= e(mb_substr($t['author_name'], 0, 1)) ?></div>
-              <div>
-                <div class="name"><?= e($t['author_name']) ?></div>
-                <?php if (!empty($t['author_headline'])): ?><div class="role"><?= e($t['author_headline']) ?></div><?php endif; ?>
-                <div class="verified">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>
-                  Verified Learner
+      <div class="stories-slider reveal" style="margin-top:36px;" data-stories-slider>
+        <div class="stories-track" data-stories-track>
+          <?php foreach ($testimonials as $t): ?>
+            <div class="testimonial-card">
+              <span class="quote-mark">&ldquo;</span>
+              <div class="rating-row">
+                <span class="stars"><?= str_repeat('★', (int) $t['rating']) . str_repeat('☆', 5 - (int) $t['rating']) ?></span>
+                <span class="rating-num"><?= number_format((float) $t['rating'], 1) ?></span>
+              </div>
+              <p class="quote"><?= e($t['quote']) ?></p>
+              <div class="author">
+                <div class="avatar"><?= e(mb_substr($t['author_name'], 0, 1)) ?></div>
+                <div>
+                  <div class="name"><?= e($t['author_name']) ?></div>
+                  <?php if (!empty($t['author_headline'])): ?><div class="role"><?= e($t['author_headline']) ?></div><?php endif; ?>
+                  <div class="verified">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    Verified Learner
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        <?php endforeach; ?>
+          <?php endforeach; ?>
+        </div>
+        <?php if (count($testimonials) > 1): ?>
+          <button type="button" class="stories-nav prev" data-stories-prev aria-label="Previous story">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+          </button>
+          <button type="button" class="stories-nav next" data-stories-next aria-label="Next story">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+          </button>
+          <div class="stories-dots" data-stories-dots></div>
+        <?php endif; ?>
       </div>
     </div>
   </section>
