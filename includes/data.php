@@ -38,12 +38,9 @@ const COURSE_SORT_OPTIONS = [
     'newest' => ['label' => 'Newest', 'order' => 'c.created_at DESC'],
     'popular' => ['label' => 'Most Popular', 'order' => POPULARITY_ORDER],
     'rating' => ['label' => 'Highest Rated', 'order' => 'avg_rating DESC, review_count DESC'],
-    'price_low' => ['label' => 'Price: Low to High', 'order' => 'c.price ASC'],
-    'price_high' => ['label' => 'Price: High to Low', 'order' => 'c.price DESC'],
 ];
 
-/** @param string $price '' (any), 'free', or 'paid' — anything else is ignored. */
-function search_courses(string $query = '', string $categorySlug = '', string $sort = 'popular', string $price = ''): array {
+function search_courses(string $query = '', string $categorySlug = '', string $sort = 'popular'): array {
     $where = [];
     $params = [];
     if ($categorySlug) {
@@ -54,11 +51,6 @@ function search_courses(string $query = '', string $categorySlug = '', string $s
         $where[] = '(c.title LIKE ? OR c.summary LIKE ?)';
         $params[] = "%$query%";
         $params[] = "%$query%";
-    }
-    if ($price === 'free') {
-        $where[] = 'c.price <= 0';
-    } elseif ($price === 'paid') {
-        $where[] = 'c.price > 0';
     }
     $orderBy = COURSE_SORT_OPTIONS[$sort]['order'] ?? COURSE_SORT_OPTIONS['popular']['order'];
     return get_course_cards(implode(' AND ', $where), $params, $orderBy);

@@ -1,13 +1,15 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
+require __DIR__ . '/includes/course_card.php';
 
 $stats = get_platform_stats();
 $testimonials = array_slice(get_published_testimonials(), 0, 3);
+$catalogPreview = get_featured_courses(6);
 
 // A curated highlight, not the full list — keeps the homepage from feeling
 // crowded. The complete set lives on skills.php. Slugs point at real
-// categories so every tile here actually returns courses (once subscribed).
+// categories so every tile here actually returns courses.
 $industries = [
     ['Finance', 'finance', '💰', 'gold'], ['Business', 'business', '💼', 'blue'], ['Artificial Intelligence', 'artificial-intelligence', '🤖', 'purple'],
     ['Technology', 'technology-software-development', '💻', 'cyan'], ['Marketing', 'marketing-digital-marketing', '📣', 'pink'],
@@ -127,12 +129,30 @@ require __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<section class="section" style="background:var(--surface);">
+<?php if ($catalogPreview): ?>
+<section class="section">
   <div class="container">
     <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
       <span class="eyebrow">The Catalog</span>
+      <h2 class="h2" style="margin-top:10px;">See What's Waiting Inside</h2>
+      <p class="lede" style="margin-top:10px; max-width:none;">A preview of real courses on Obin Academy — browse the full catalog free, then subscribe to start watching.</p>
+    </div>
+    <div class="grid sm:grid-2 lg:grid-3" style="margin-top:36px;">
+      <?php foreach ($catalogPreview as $c): render_course_card($c); endforeach; ?>
+    </div>
+    <div class="text-center" style="margin-top:40px;">
+      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Browse the Full Catalog <span class="btn-arrow">→</span></a>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
+<section class="section" style="background:var(--surface);">
+  <div class="container">
+    <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
+      <span class="eyebrow">Every Category</span>
       <h2 class="h2" style="margin-top:10px;">Skills Across Every Category</h2>
-      <p class="lede" style="margin-top:10px; max-width:none;">Subscribe to unlock the full course list in each category below.</p>
+      <p class="lede" style="margin-top:10px; max-width:none;">Finance, tech, marketing, and more — find the course that fits what you're trying to build.</p>
     </div>
     <div class="industry-grid" style="margin-top:36px;">
       <?php foreach ($industries as [$name, $slug, $emoji, $glow]): ?>
@@ -143,7 +163,7 @@ require __DIR__ . '/includes/header.php';
       <?php endforeach; ?>
     </div>
     <div class="text-center" style="margin-top:40px;">
-      <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-primary btn-lg">Subscribe to Unlock the Full Catalog <span class="btn-arrow">→</span></a>
+      <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-primary btn-lg">Subscribe to Start Learning <span class="btn-arrow">→</span></a>
     </div>
   </div>
 </section>

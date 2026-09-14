@@ -25,16 +25,7 @@ if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
 $isEnrolled = $user
     ? (bool) db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : (bool) guest_enrollment_for_course((int) $course['id']);
-
-// Every course is locked to an active subscriber (or admin/owner) — the one
-// exception is a grandfathered one-time buyer, kept to just the specific
-// course they already own, not the whole catalog (courses/index.php has no
-// such exception). Checked before the view counter/share-attribution below
-// so a locked-out visitor's redirect doesn't inflate either — they never
-// actually saw the course.
-if (!$canPreview && !$isEnrolled && !($user && user_has_active_subscription((int) $user['id']))) {
-    redirect('/subscribe.php');
-}
+$isSubscriber = (bool) ($user && user_has_active_subscription((int) $user['id']));
 
 // A plain, publicly-shown view counter — not deduped per visitor, and
 // excludes the course's own creator/admin so their own checks don't
@@ -66,11 +57,22 @@ $pageTitle = $course['title'] . ' — Obin Academy';
 $pageDescription = mb_strimwidth(preg_replace('/\s+/', ' ', trim($course['summary'])), 0, 160, '…');
 if (!empty($course['thumbnail_url'])) $pageImage = asset_src($course['thumbnail_url']);
 $pageType = 'website';
-// Never crawlable content anymore — a non-subscriber never reaches this
-// point (redirected above), so this page has nothing to offer a search
-// engine's index. Also no structured data: it would only ever be seen by
-// an already-subscribed, logged-in visitor, never a crawler.
-$noindex = true;
+// Public and crawlable again — only a preview of an unpublished course
+// stays out of the index. No `offers`/price in the structured data since
+// courses are never sold individually anymore, just included in a
+// subscription.
+$noindex = $course['status'] !== 'PUBLISHED';
+$structuredData = [
+    '@context' => 'https://schema.org',
+    '@type' => 'Course',
+    'name' => $course['title'],
+    'description' => $pageDescription,
+    'provider' => [
+        '@type' => 'Organization',
+        'name' => 'Obin Academy',
+        'sameAs' => base_url('index.php'),
+    ],
+];
 
 $stats = get_platform_stats();
 
@@ -171,7 +173,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <aside class="course-sidebar">
-      <?php render_enroll_panel($course, $isOwner, $isEnrolled); ?>
+      <?php render_enroll_panel($course, $isOwner, $isEnrolled, $isSubscriber); ?>
     </aside>
   </div>
 </section>

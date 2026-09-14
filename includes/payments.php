@@ -154,13 +154,12 @@ function resolve_payment_with_iotec(array $payment): array {
 /**
  * initiate_payment() and initiate_premium_upgrade() — the one-time course
  * purchase and premium-download-upgrade entry points — were removed once
- * every course required a subscription (see require_course_access_or_redirect()
- * in includes/subscriptions.php). resolve_payment_with_iotec() above still
- * has to correctly resolve any COURSE_PURCHASE/PREMIUM_UPGRADE payment that
- * was already PENDING at the moment that shipped, so its branches for those
- * two types (and fetch_payment_with_course(), split_sale(),
- * AFFILIATE_COMMISSION_RATE) stay exactly as they are — legacy resolution
- * only, no code path creates a new one of these anymore.
+ * learning any course required a subscription. resolve_payment_with_iotec()
+ * above still has to correctly resolve any COURSE_PURCHASE/PREMIUM_UPGRADE
+ * payment that was already PENDING at the moment that shipped, so its
+ * branches for those two types (and fetch_payment_with_course(),
+ * split_sale(), AFFILIATE_COMMISSION_RATE) stay exactly as they are —
+ * legacy resolution only, no code path creates a new one of these anymore.
  */
 
 /**

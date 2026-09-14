@@ -27,6 +27,48 @@ require __DIR__ . '/includes/header.php';
 
 <section class="section">
   <div class="container">
+    <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
+      <span class="eyebrow">Why Subscribe</span>
+      <h2 class="h2" style="margin-top:10px;">One Plan Beats a Pile of Receipts</h2>
+      <p class="lede" style="margin-top:10px; max-width:none;">Here's what members get that a one-off course purchase never could.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal reveal-delay-1">
+        <div class="n">📚</div>
+        <h3>Every Course, Not Just One</h3>
+        <p>Stop paying per course. One subscription unlocks the entire catalog — today's courses and every one a creator adds next month.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-2">
+        <div class="n">📱</div>
+        <h3>Pay the Way You Already Do</h3>
+        <p>MTN or Airtel Mobile Money, approved on your phone in seconds — no card, no bank account, no foreign currency.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-3">
+        <div class="n">🏆</div>
+        <h3>Proof You Can Show</h3>
+        <p>Finish a course and get a certificate of completion — something to attach to a CV or share with an employer.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-1">
+        <div class="n">🔓</div>
+        <h3>No Long Contract</h3>
+        <p>Cancel from your dashboard whenever you want. No call to make, no form to fill, no penalty for stopping.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-2">
+        <div class="n">💬</div>
+        <h3>Ask, Don't Just Watch</h3>
+        <p>Comment on any lesson and get answers from the creator or other learners — you're never stuck alone on a hard topic.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-3">
+        <div class="n">🌍</div>
+        <h3>Built By People Who Get It</h3>
+        <p>Every course is taught by an East African creator solving problems they've actually faced — not a generic import.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background:var(--surface);">
+  <div class="container">
     <?php if (!$user): ?>
       <div class="card card-pad" style="max-width:480px; margin:0 auto; text-align:center;">
         <p class="muted">Log in or create a free account first to subscribe.</p>
@@ -79,6 +121,25 @@ require __DIR__ . '/includes/header.php';
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
+
+    <div class="faq">
+      <details class="faq-item" open>
+        <summary>How does billing work? <span class="chev">▾</span></summary>
+        <p>You're charged once by mobile money when you subscribe, then again every 30 days to keep your access active. If a renewal fails, you get a short grace window to fix it before access pauses.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Can I cancel anytime? <span class="chev">▾</span></summary>
+        <p>Yes — cancel from your Subscription dashboard whenever you want. You'll keep access until your current period ends, no cancellation fee.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What's the difference between Go and Pro? <span class="chev">▾</span></summary>
+        <p>Both plans unlock the exact same full catalog — Pro is simply a higher monthly amount for members who want to support creators more directly.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Do new courses cost extra? <span class="chev">▾</span></summary>
+        <p>No. Every course a creator publishes — now or in the future — is already included in your subscription.</p>
+      </details>
+    </div>
   </div>
 </section>
 

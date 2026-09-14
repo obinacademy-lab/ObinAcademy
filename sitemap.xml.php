@@ -7,13 +7,13 @@ header('Content-Type: application/xml; charset=utf-8');
 /** @var array<int, array{loc: string, lastmod?: string, changefreq?: string, priority?: string}> */
 $urls = [];
 
-// courses/index.php and courses/view.php are deliberately left out — every
-// course requires an active subscription now (see
-// require_course_access_or_redirect() in includes/subscriptions.php), so a
-// crawler hitting either just gets redirected to subscribe.php with nothing
-// to index. subscribe.php is the real crawlable entry point instead.
+// The catalog is public again — courses/index.php, its category filters,
+// and every published course's own detail page are real, crawlable
+// content. Only the actual lesson stream (learn.php/stream.php) stays out,
+// since that still requires an active subscription.
 $staticPages = [
     ['index.php', 'daily', '1.0'],
+    ['courses/index.php', 'daily', '0.9'],
     ['subscribe.php', 'daily', '0.9'],
     ['skills.php', 'weekly', '0.6'],
     ['stories.php', 'weekly', '0.5'],
@@ -25,6 +25,19 @@ $staticPages = [
 ];
 foreach ($staticPages as [$path, $changefreq, $priority]) {
     $urls[] = ['loc' => base_url($path), 'changefreq' => $changefreq, 'priority' => $priority];
+}
+
+foreach (get_categories() as $cat) {
+    $urls[] = ['loc' => base_url('courses/index.php?category=' . $cat['slug']), 'changefreq' => 'weekly', 'priority' => '0.6'];
+}
+
+foreach (get_course_cards() as $c) {
+    $urls[] = [
+        'loc' => base_url('courses/view.php?slug=' . $c['slug']),
+        'lastmod' => !empty($c['reviewed_at']) ? date('Y-m-d', strtotime($c['reviewed_at'])) : null,
+        'changefreq' => 'weekly',
+        'priority' => '0.7',
+    ];
 }
 
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

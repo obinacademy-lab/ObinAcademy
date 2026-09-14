@@ -1,14 +1,12 @@
 <?php
 /**
- * Renders the course-detail sidebar panel. Every course now requires an
- * active subscription (see require_course_access_or_redirect() in
- * includes/subscriptions.php) — courses/view.php has already redirected
- * away anyone who isn't the owner/admin, an active subscriber, or a
- * grandfathered one-time buyer before this ever renders, so there's no
- * "buy this course" state left to show here; just which of those three
- * reasons got them in.
+ * Renders the course-detail sidebar panel. The course page itself is
+ * public now — this panel is what actually gates learning. Four states:
+ * owner, a grandfathered one-time buyer, an active subscriber, or
+ * everyone else (guest or logged-in non-subscriber), who gets a
+ * Subscribe CTA instead of a watch button.
  */
-function render_enroll_panel(array $course, bool $isOwner, bool $isEnrolled): void {
+function render_enroll_panel(array $course, bool $isOwner, bool $isEnrolled, bool $isSubscriber): void {
     ?>
     <div class="enroll-panel reveal reveal-delay-2">
       <div class="thumb">
@@ -27,11 +25,17 @@ function render_enroll_panel(array $course, bool $isOwner, bool $isEnrolled): vo
             <?php dash_icon('clock'); ?>
             <?= $course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access after purchase' : 'Lifetime access' ?>
           </div>
-        <?php else: ?>
+        <?php elseif ($isSubscriber): ?>
           <a href="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>" class="btn btn-primary btn-block btn-lg">▶ Start Learning</a>
           <div class="access-note" style="margin-top:14px;">
             <?php dash_icon('crown'); ?>
             Included in your subscription
+          </div>
+        <?php else: ?>
+          <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-gold btn-block btn-lg">🔓 Subscribe to Start Learning</a>
+          <div class="access-note" style="margin-top:14px;">
+            <?php dash_icon('crown'); ?>
+            One plan unlocks every course, including this one
           </div>
         <?php endif; ?>
 
