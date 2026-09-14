@@ -38,18 +38,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'Sign Up — Obin Academy';
 $authTab = 'signup';
-$authBrandHeadline = 'Start your first lesson today.';
-$authBrandSub = 'Thousands of learners across East Africa are already building skills that earn. Your account takes less than a minute to create.';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1>Create Your Account</h1>
-  <p class="lede">Start learning, or apply to teach, in a couple of minutes.</p>
+  <h1 class="auth-headline">Create Your Account</h1>
+  <p class="auth-sub">Start learning, or apply to teach, in a couple of minutes.</p>
 
   <?php if ($errors): ?>
-    <div class="alert alert-error" style="margin-top:20px;"><?= e(implode(' ', $errors)) ?></div>
+    <div class="alert alert-error" style="margin-top:14px;"><?= e(implode(' ', $errors)) ?></div>
   <?php endif; ?>
 
-  <form method="post" style="margin-top: 24px;">
+  <form method="post">
     <?= csrf_field() ?>
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
@@ -78,10 +76,10 @@ require __DIR__ . '/includes/auth_header.php';
       </div>
       <p class="help">At least 8 characters.</p>
     </div>
-    <button type="submit" class="btn btn-primary btn-block btn-lg">Create Account</button>
+    <button type="submit" class="btn btn-primary">Create Account <span class="btn-arrow">→</span></button>
   </form>
 
-  <p class="small" style="margin-top: 24px; text-align:center;">
-    Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode($redirectTo))) ?>" style="color: var(--accent); font-weight:600;">Log In</a>
+  <p class="switch-line">
+    Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode($redirectTo))) ?>">Log In</a>
   </p>
 <?php require __DIR__ . '/includes/auth_footer.php'; ?>

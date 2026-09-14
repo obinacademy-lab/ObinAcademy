@@ -26,14 +26,14 @@ $pageTitle = 'Log In — Obin Academy';
 $authTab = 'login';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1>Welcome Back</h1>
-  <p class="lede">Log in to continue learning or managing your courses.</p>
+  <h1 class="auth-headline">Welcome Back</h1>
+  <p class="auth-sub">Log in to continue learning or managing your courses.</p>
 
   <?php if ($errors): ?>
-    <div class="alert alert-error" style="margin-top:20px;"><?= e(implode(' ', $errors)) ?></div>
+    <div class="alert alert-error" style="margin-top:14px;"><?= e(implode(' ', $errors)) ?></div>
   <?php endif; ?>
 
-  <form method="post" style="margin-top: 24px;">
+  <form method="post">
     <?= csrf_field() ?>
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
@@ -44,19 +44,19 @@ require __DIR__ . '/includes/auth_header.php';
       </div>
     </div>
     <div class="field">
-      <div class="row between">
-        <label for="password" style="margin-bottom:0;">Password</label>
-        <a href="<?= e(base_url('forgot-password.php')) ?>" class="small" style="color: var(--accent); font-weight:600;">Forgot password?</a>
+      <div class="field-row">
+        <label for="password">Password</label>
+        <a href="<?= e(base_url('forgot-password.php')) ?>" class="forgot-link">Forgot password?</a>
       </div>
       <div class="field-icon">
         <?php dash_icon('lock'); ?>
         <input id="password" name="password" type="password" required placeholder="Your password">
       </div>
     </div>
-    <button type="submit" class="btn btn-primary btn-block btn-lg">Log In</button>
+    <button type="submit" class="btn btn-primary">Log In <span class="btn-arrow">→</span></button>
   </form>
 
-  <p class="small" style="margin-top: 24px; text-align:center;">
-    Don't have an account? <a href="<?= e(base_url('signup.php?redirect=' . urlencode($redirectTo))) ?>" style="color: var(--accent); font-weight:600;">Sign Up</a>
+  <p class="switch-line">
+    Don't have an account? <a href="<?= e(base_url('signup.php?redirect=' . urlencode($redirectTo))) ?>">Sign Up</a>
   </p>
 <?php require __DIR__ . '/includes/auth_footer.php'; ?>

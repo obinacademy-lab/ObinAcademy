@@ -37,26 +37,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = 'Forgot Password — Obin Academy';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1>Reset Your Password</h1>
-  <p class="lede">Enter your email and we'll send you a reset link.</p>
+  <h1 class="auth-headline">Reset Your Password</h1>
+  <p class="auth-sub">Enter your email and we'll send you a reset link.</p>
 
   <?php if ($sent): ?>
-    <div class="alert alert-success" style="margin-top:20px;">If an account exists for that email, a reset link is on its way.</div>
+    <div class="alert alert-success" style="margin-top:14px;">If an account exists for that email, a reset link is on its way.</div>
   <?php else: ?>
     <?php if ($errors): ?>
-      <div class="alert alert-error" style="margin-top:20px;"><?= e(implode(' ', $errors)) ?></div>
+      <div class="alert alert-error" style="margin-top:14px;"><?= e(implode(' ', $errors)) ?></div>
     <?php endif; ?>
-    <form method="post" style="margin-top: 24px;">
+    <form method="post">
       <?= csrf_field() ?>
       <div class="field">
         <label for="email">Email</label>
-        <input id="email" name="email" type="email" required placeholder="jane@example.com">
+        <div class="field-icon">
+          <?php dash_icon('mail'); ?>
+          <input id="email" name="email" type="email" required placeholder="jane@example.com">
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg">Send Reset Link</button>
+      <button type="submit" class="btn btn-primary">Send Reset Link <span class="btn-arrow">→</span></button>
     </form>
   <?php endif; ?>
 
-  <p class="small" style="margin-top: 24px; text-align:center;">
-    <a href="<?= e(base_url('login.php')) ?>" style="color: var(--accent); font-weight:600;">Back to Log In</a>
+  <p class="switch-line">
+    <a href="<?= e(base_url('login.php')) ?>">Back to Log In</a>
   </p>
 <?php require __DIR__ . '/includes/auth_footer.php'; ?>
