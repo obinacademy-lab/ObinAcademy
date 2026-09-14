@@ -23,6 +23,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // "Keep me updated" opt-in toggle on the course enroll panel.
+  const interestBtn = document.querySelector("[data-interest-toggle]");
+  if (interestBtn) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
+    const label = interestBtn.querySelector("[data-interest-label]");
+    interestBtn.addEventListener("click", async () => {
+      interestBtn.disabled = true;
+      try {
+        const res = await fetch(interestBtn.dataset.toggleUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseId: interestBtn.dataset.courseId, csrf_token: csrfToken }),
+        });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        interestBtn.classList.toggle("is-interested", data.interested);
+        if (label) {
+          label.textContent = data.interested
+            ? "You're on the list — the creator can reach out"
+            : "Not ready to buy? Keep me updated";
+        }
+      } catch {
+        alert("Something went wrong. Please try again.");
+      } finally {
+        interestBtn.disabled = false;
+      }
+    });
+  }
+
   document.querySelectorAll("[data-flash]").forEach((el) => {
     setTimeout(() => el.remove(), 6000);
   });

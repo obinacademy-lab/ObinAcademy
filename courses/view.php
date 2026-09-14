@@ -50,6 +50,7 @@ if ($refToken && preg_match('/^[a-f0-9]{12}$/', $refToken)) {
 $isEnrolled = $user
     ? (bool) db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : (bool) guest_enrollment_for_course((int) $course['id']);
+$isInterested = $user ? is_interested_in_course((int) $user['id'], (int) $course['id']) : false;
 
 $totalLessons = 0;
 foreach ($course['modules'] as $m) $totalLessons += count($m['lessons']);
@@ -410,7 +411,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <aside class="course-sidebar">
-      <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled); ?>
+      <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled, $isInterested); ?>
 
       <div class="instructor-card card card-pad reveal reveal-delay-3" id="instructor-card">
         <h3 class="small" style="text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); font-weight:700;">About the Instructor</h3>
@@ -447,6 +448,38 @@ require __DIR__ . '/../includes/header.php';
     </aside>
   </div>
 </section>
+
+<?php if (!$user && $course['status'] === 'PUBLISHED'): ?>
+  <?php
+    $popupHasSale = course_has_active_sale($course);
+    $popupPrice = $popupHasSale ? (float) $course['sale_price'] : (float) $course['price'];
+  ?>
+  <div class="lead-overlay" data-guest-course-overlay>
+    <div class="lead-modal">
+      <button type="button" class="lead-modal-close" data-guest-course-close aria-label="Close">&times;</button>
+      <div class="lead-modal-icon">🔒</div>
+      <h2>Create a Free Account to Start Learning</h2>
+      <p class="lead-sub">Join Obin Academy to unlock &ldquo;<?= e($course['title']) ?>&rdquo; — <?= $popupPrice > 0 ? e(format_money($popupPrice)) . ', one-time payment' : 'free' ?>. Takes less than a minute.</p>
+      <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-primary btn-block btn-lg">Join Now <span class="btn-arrow">→</span></a>
+      <p class="small muted" style="margin-top:12px; text-align:center;">
+        Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a>
+        &nbsp;&middot;&nbsp;
+        <a href="#" data-guest-course-close style="color:var(--muted); font-weight:600;">Continue browsing</a>
+      </p>
+    </div>
+  </div>
+  <script>
+    (() => {
+      var overlay = document.querySelector('[data-guest-course-overlay]');
+      if (!overlay) return;
+      function open() { overlay.classList.add('open'); requestAnimationFrame(() => overlay.classList.add('visible')); }
+      function close() { overlay.classList.remove('visible'); setTimeout(() => overlay.classList.remove('open'), 250); }
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+      overlay.querySelectorAll('[data-guest-course-close]').forEach((btn) => btn.addEventListener('click', (e) => { e.preventDefault(); close(); }));
+      setTimeout(open, 900);
+    })();
+  </script>
+<?php endif; ?>
 
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/review.js')) ?>"></script>

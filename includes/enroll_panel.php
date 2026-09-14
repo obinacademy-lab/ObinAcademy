@@ -2,9 +2,11 @@
 /**
  * Renders the enroll / continue-learning / pay panel for a course detail page.
  * Expects $course (get_course_by_slug result), $user (current_user() or null),
- * $isOwner, $isEnrolled in scope.
+ * $isOwner, $isEnrolled in scope. $isInterested reflects an existing opt-in
+ * row in course_interest — only shown as a toggle to a logged-in, non-owner
+ * learner who hasn't bought the course yet.
  */
-function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $isEnrolled): void {
+function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $isEnrolled, bool $isInterested = false): void {
     $price = (float) $course['price'];
     $hasSale = course_has_active_sale($course);
     $displayPrice = $hasSale ? (float) $course['sale_price'] : $price;
@@ -101,6 +103,13 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
             <?= csrf_field() ?>
             <button type="submit" class="btn btn-primary btn-block btn-lg">Enroll Now</button>
           </form>
+        <?php endif; ?>
+
+        <?php if ($user && !$isOwner && !$isEnrolled && $isPublished): ?>
+          <button type="button" class="interest-toggle <?= $isInterested ? 'is-interested' : '' ?>" data-interest-toggle data-course-id="<?= (int) $course['id'] ?>" data-toggle-url="<?= e(base_url('api/toggle-course-interest.php')) ?>">
+            <?php dash_icon($isInterested ? 'check-circle' : 'sparkle'); ?>
+            <span data-interest-label><?= $isInterested ? "You're on the list — the creator can reach out" : 'Not ready to buy? Keep me updated' ?></span>
+          </button>
         <?php endif; ?>
 
         <ul class="perks">

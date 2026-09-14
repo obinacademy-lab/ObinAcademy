@@ -177,6 +177,16 @@ function format_date(string $datetime): string {
     return date('M j, Y', strtotime($datetime));
 }
 
+/** A UG-style local number ("0772 123 456") into the digits-only international form wa.me needs. Null if it doesn't look like a real number. */
+function whatsapp_number(?string $phone): ?string {
+    $digits = preg_replace('/\D/', '', (string) $phone);
+    if ($digits === '') return null;
+    if (strlen($digits) === 10 && $digits[0] === '0') return '256' . substr($digits, 1);
+    if (strlen($digits) === 12 && str_starts_with($digits, '256')) return $digits;
+    if (strlen($digits) === 9) return '256' . $digits;
+    return null;
+}
+
 /** Relative time ("3m ago", "2h ago"); falls back to a plain date past 7 days. */
 function time_ago(string $datetime): string {
     $diff = time() - strtotime($datetime);

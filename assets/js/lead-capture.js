@@ -50,8 +50,11 @@
   const t25s = setTimeout(showPopup, 25000);
   cleanups.push(() => clearTimeout(t25s));
 
-  const onCreatorOrCoursePage = /\/become-creator\.php/.test(location.pathname) || /\/courses\/view\.php/.test(location.pathname);
-  if (onCreatorOrCoursePage) {
+  // Course pages have their own dedicated guest popup (courses/view.php)
+  // nudging signup with that course's own price — this one stays scoped to
+  // become-creator.php so the two don't compete for the same visit.
+  const onCreatorPage = /\/become-creator\.php/.test(location.pathname);
+  if (onCreatorPage) {
     const tPage = setTimeout(showPopup, 8000);
     cleanups.push(() => clearTimeout(tPage));
   }

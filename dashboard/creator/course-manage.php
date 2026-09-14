@@ -186,6 +186,8 @@ foreach ($modules as &$m) {
 }
 unset($m);
 $studentCount = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
+$funnel = get_course_funnel($courseId);
+$interestedLearners = get_interested_learners($courseId);
 
 $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
 $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
@@ -304,6 +306,64 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <button type="submit" class="btn btn-primary">Save Changes</button>
   </form>
 </details>
+
+<h2 class="h3" style="margin-top:36px;">Views &amp; Interest</h2>
+<p class="muted small" style="margin-top:6px;">Aggregate numbers only — no visitor is ever identified from views alone. The list below is only learners who opted in themselves.</p>
+<div class="grid sm:grid-2 lg:grid-4" style="margin-top:16px; gap:14px;">
+  <div class="card card-pad">
+    <div class="small muted" style="font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Views</div>
+    <div style="margin-top:6px; font-size:26px; font-weight:800;"><?= number_format($funnel['views']) ?></div>
+  </div>
+  <div class="card card-pad">
+    <div class="small muted" style="font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Shares</div>
+    <div style="margin-top:6px; font-size:26px; font-weight:800;"><?= number_format($funnel['shares']) ?></div>
+  </div>
+  <div class="card card-pad">
+    <div class="small muted" style="font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Interested</div>
+    <div style="margin-top:6px; font-size:26px; font-weight:800;"><?= number_format($funnel['interested']) ?></div>
+  </div>
+  <div class="card card-pad">
+    <div class="small muted" style="font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">View → Enrollment</div>
+    <div style="margin-top:6px; font-size:26px; font-weight:800;"><?= $funnel['conversion_rate'] ?>%</div>
+  </div>
+</div>
+
+<?php if ($funnel['share_channels']): ?>
+  <div class="card card-pad" style="margin-top:14px;">
+    <div class="small muted" style="font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Shares by Channel</div>
+    <div class="row gap-3 wrap" style="margin-top:10px;">
+      <?php foreach ($funnel['share_channels'] as $sc): ?>
+        <span class="badge badge-draft"><?= e(ucfirst($sc['channel'])) ?> · <?= (int) $sc['n'] ?></span>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
+
+<?php if ($interestedLearners): ?>
+  <div class="table-wrap" style="margin-top:14px;">
+    <table>
+      <thead><tr><th>Learner</th><th>Email</th><th>WhatsApp</th><th>Opted In</th></tr></thead>
+      <tbody>
+        <?php foreach ($interestedLearners as $il): $waNumber = whatsapp_number($il['phone']); ?>
+          <tr>
+            <td style="font-weight:600;"><?= e($il['name']) ?></td>
+            <td class="small"><a href="mailto:<?= e($il['email']) ?>"><?= e($il['email']) ?></a></td>
+            <td class="small">
+              <?php if ($waNumber): ?>
+                <a href="<?= e('https://wa.me/' . $waNumber . '?text=' . urlencode("Hi {$il['name']}, thanks for your interest in \"{$course['title']}\" on Obin Academy!")) ?>" target="_blank" rel="noopener">Message on WhatsApp</a>
+              <?php else: ?>
+                <span class="muted">No phone on file</span>
+              <?php endif; ?>
+            </td>
+            <td class="small muted"><?= e(format_date($il['created_at'])) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+<?php else: ?>
+  <p class="muted small" style="margin-top:14px;">No one has opted in to be contacted about this course yet.</p>
+<?php endif; ?>
 
 <h2 class="h3" style="margin-top:36px;">Curriculum</h2>
 <p class="muted small" style="margin-top:6px;">Organize your course into modules, then add video or PDF lessons to each.</p>

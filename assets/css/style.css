@@ -1148,6 +1148,15 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 .enroll-panel .sale-countdown svg { width: 14px; height: 14px; flex-shrink: 0; color: #ea580c; }
 
+.interest-toggle {
+  width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: none; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-chunky);
+  padding: 10px 14px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted);
+  cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+.interest-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.interest-toggle svg { width: 15px; height: 15px; flex-shrink: 0; }
+.interest-toggle.is-interested { border-style: solid; border-color: var(--success); background: var(--success-bg); color: var(--success); }
 .enroll-panel ul.perks { margin-top: 24px; display:flex; flex-direction:column; gap: 12px; font-size: 14px; color: var(--ink); list-style:none; padding:0; padding-top:20px; border-top:1px solid var(--border); }
 .enroll-panel ul.perks li { display:flex; align-items:center; gap:10px; }
 .enroll-panel ul.perks li svg { width:17px; height:17px; color: var(--success); flex-shrink:0; }

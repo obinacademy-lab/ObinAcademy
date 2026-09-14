@@ -253,3 +253,53 @@ function get_published_testimonials(): array {
         WHERE t.status = 'PUBLISHED' ORDER BY t.reviewed_at DESC
     ");
 }
+
+/**
+ * Toggles a logged-in learner's opt-in interest in a course they haven't
+ * bought yet — this (never mere page views) is what lets the course's
+ * creator see that learner's contact details, and only for this course.
+ * @return bool the new state (true = now interested, false = removed)
+ */
+function toggle_course_interest(int $userId, int $courseId): bool {
+    $existing = db_one('SELECT id FROM course_interest WHERE user_id = ? AND course_id = ?', [$userId, $courseId]);
+    if ($existing) {
+        db_run('DELETE FROM course_interest WHERE id = ?', [$existing['id']]);
+        return false;
+    }
+    db_insert('INSERT INTO course_interest (user_id, course_id) VALUES (?, ?)', [$userId, $courseId]);
+    return true;
+}
+
+function is_interested_in_course(int $userId, int $courseId): bool {
+    return (bool) db_one('SELECT id FROM course_interest WHERE user_id = ? AND course_id = ?', [$userId, $courseId]);
+}
+
+/** Learners who opted in to be contacted about this specific course — name/email/phone, for the course's own creator only. */
+function get_interested_learners(int $courseId): array {
+    return db_all(
+        'SELECT ci.created_at, u.id, u.name, u.email, u.phone
+         FROM course_interest ci JOIN users u ON u.id = ci.user_id
+         WHERE ci.course_id = ? ORDER BY ci.created_at DESC',
+        [$courseId]
+    );
+}
+
+/** Views → shares → enrollments funnel for one course, for the creator's own analytics — aggregate counts only, no visitor identities. */
+function get_course_funnel(int $courseId): array {
+    $views = (int) (db_one('SELECT view_count AS n FROM courses WHERE id = ?', [$courseId])['n'] ?? 0);
+    $shares = (int) (db_one('SELECT COUNT(*) AS n FROM course_shares WHERE course_id = ?', [$courseId])['n'] ?? 0);
+    $enrollments = (int) (db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'] ?? 0);
+    $interested = (int) (db_one('SELECT COUNT(*) AS n FROM course_interest WHERE course_id = ?', [$courseId])['n'] ?? 0);
+    $shareChannels = db_all(
+        "SELECT channel, COUNT(*) AS n FROM course_shares WHERE course_id = ? GROUP BY channel ORDER BY n DESC",
+        [$courseId]
+    );
+    return [
+        'views' => $views,
+        'shares' => $shares,
+        'enrollments' => $enrollments,
+        'interested' => $interested,
+        'conversion_rate' => $views > 0 ? round($enrollments / $views * 100, 1) : 0.0,
+        'share_channels' => $shareChannels,
+    ];
+}
