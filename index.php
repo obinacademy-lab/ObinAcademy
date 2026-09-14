@@ -53,8 +53,10 @@ $structuredData = [
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="course-hero course-hero-centered">
+<section class="course-hero course-hero-centered home-hero">
+  <div class="home-hero-grid" aria-hidden="true"></div>
   <div class="course-hero-glow" aria-hidden="true"></div>
+  <div class="home-hero-glow-2" aria-hidden="true"></div>
   <div class="container">
     <span class="pill reveal"><?php dash_icon('sparkle'); ?>Skills That Pay You Back</span>
     <h1 class="reveal reveal-delay-1">Learn What Actually Grows Your Income.</h1>
@@ -156,7 +158,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <div class="industry-grid" style="margin-top:36px;">
       <?php foreach ($industries as [$name, $slug, $emoji, $glow]): ?>
-        <a href="<?= e(base_url('courses/index.php?category=' . $slug)) ?>" class="industry-item industry-glow industry-glow-<?= e($glow) ?>">
+        <a href="<?= e(base_url('courses/index.php?category=' . $slug)) ?>" class="industry-item industry-glow industry-glow-<?= e($glow) ?> reveal">
           <span class="icon-wrap"><?= $emoji ?></span>
           <span class="label"><?= e($name) ?></span>
         </a>

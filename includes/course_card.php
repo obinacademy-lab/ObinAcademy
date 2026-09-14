@@ -3,10 +3,14 @@
  * Renders a course card. Expects $c (a get_course_cards() row) in scope.
  * No price/sale display — every course is included in a subscription now,
  * never sold individually, so a per-course price would be misleading.
+ * Always carries .reveal (scroll fade-in) — every grid this renders into
+ * gets a wave-in for free, no per-call-site wiring needed (see the
+ * nth-child stagger and combined .course-card.reveal transition in
+ * style.css, right below the .course-card rules).
  */
 function render_course_card(array $c): void {
     ?>
-    <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="course-card">
+    <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="course-card reveal">
       <div class="thumb">
         <?php if (!empty($c['reviewed_at']) && strtotime($c['reviewed_at']) >= strtotime('-' . NEW_COURSE_BADGE_DAYS . ' days')): ?>
           <span class="badge-pill badge-new">New</span>
