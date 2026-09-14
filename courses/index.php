@@ -2,6 +2,9 @@
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/course_card.php';
+require __DIR__ . '/../includes/subscriptions.php';
+
+require_course_access_or_redirect(current_user());
 
 $q = query_param('q');
 $categorySlug = query_param('category');

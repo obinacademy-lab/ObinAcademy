@@ -1,18 +1,8 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
-require __DIR__ . '/includes/course_card.php';
 
 $stats = get_platform_stats();
-
-// Skool-style numbered pagination for the homepage course grid, instead of
-// a single curated batch — the "Explore Courses" page still exists for
-// search/category/sort; this is just a plain paged view of everything.
-const HOME_COURSES_PER_PAGE = 9;
-$totalCourseCount = (int) $stats['course_count'];
-$totalPages = max(1, (int) ceil($totalCourseCount / HOME_COURSES_PER_PAGE));
-$page = max(1, min($totalPages, (int) query_param('page', '1')));
-$courses = get_course_cards('', [], POPULARITY_ORDER, HOME_COURSES_PER_PAGE, ($page - 1) * HOME_COURSES_PER_PAGE);
 
 // A curated highlight, not the full list — keeps the homepage from feeling
 // crowded. The complete set lives on skills.php. Slugs point at real
@@ -82,44 +72,16 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <section class="section" style="padding-top:22px;">
-  <div class="container">
-    <div class="row between wrap gap-3" style="align-items:flex-end; margin-bottom: 36px;">
-      <div>
-        <div class="row gap-2 wrap" style="align-items:center;">
-          <span class="eyebrow">Fresh On The Marketplace</span>
-          <?php if ((int) $stats['course_count'] > 0): ?>
-            <span class="live-pill"><span class="live-dot"></span><?= (int) $stats['course_count'] ?> course<?= (int) $stats['course_count'] === 1 ? '' : 's' ?> live now</span>
-          <?php endif; ?>
-        </div>
-        <h2 class="h2" style="margin-top:10px;">Popular Courses</h2>
-      </div>
-      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary">Explore All Courses <span class="btn-arrow">→</span></a>
-    </div>
-
-    <?php if ($courses): ?>
-      <div class="grid sm:grid-2 lg:grid-3" id="courses">
-        <?php foreach ($courses as $c) render_course_card($c); ?>
-      </div>
-      <?php if ($totalPages > 1): ?>
-        <nav class="pagination" aria-label="Course pages">
-          <?php if ($page > 1): ?>
-            <a href="<?= e(base_url('index.php?page=' . ($page - 1) . '#courses')) ?>" class="page-link page-prev">Previous</a>
-          <?php endif; ?>
-          <?php foreach (paginate_window($page, $totalPages) as $p): ?>
-            <?php if ($p === null): ?>
-              <span class="page-ellipsis">…</span>
-            <?php else: ?>
-              <a href="<?= e(base_url('index.php?page=' . $p . '#courses')) ?>" class="page-link <?= $p === $page ? 'active' : '' ?>"><?= $p ?></a>
-            <?php endif; ?>
-          <?php endforeach; ?>
-          <?php if ($page < $totalPages): ?>
-            <a href="<?= e(base_url('index.php?page=' . ($page + 1) . '#courses')) ?>" class="page-link page-next">Next</a>
-          <?php endif; ?>
-        </nav>
+  <div class="container" style="text-align:center; max-width:640px;">
+    <div class="row gap-2 wrap" style="align-items:center; justify-content:center;">
+      <span class="eyebrow">One Subscription</span>
+      <?php if ((int) $stats['course_count'] > 0): ?>
+        <span class="live-pill"><span class="live-dot"></span><?= (int) $stats['course_count'] ?> course<?= (int) $stats['course_count'] === 1 ? '' : 's' ?> live now</span>
       <?php endif; ?>
-    <?php else: ?>
-      <div class="card" style="padding:48px; text-align:center; border-style:dashed; color:var(--muted);">No courses published yet. Check back soon.</div>
-    <?php endif; ?>
+    </div>
+    <h2 class="h2" style="margin-top:10px;">Every Course. One Membership.</h2>
+    <p class="summary" style="margin:14px auto 0;">Business, Finance, AI, Technology, Marketing, Design and more — every course on Obin Academy is included the moment you subscribe.</p>
+    <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-primary btn-lg" style="margin-top:24px;">Subscribe to Unlock the Full Catalog <span class="btn-arrow">→</span></a>
   </div>
 </section>
 

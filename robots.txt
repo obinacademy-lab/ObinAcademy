@@ -6,9 +6,9 @@ Disallow: /login.php
 Disallow: /signup.php
 Disallow: /forgot-password.php
 Disallow: /reset-password.php
-Disallow: /access.php
 Disallow: /logout.php
 Disallow: /certificate.php
 Disallow: /stream.php
+Disallow: /courses/
 
 Sitemap: https://obinacademy.site/sitemap.xml.php

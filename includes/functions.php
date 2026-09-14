@@ -48,22 +48,6 @@ function dashboard_theme_for_user(array $user): string {
     return dashboard_theme_default($user['role']);
 }
 
-const ACCESS_DURATION_OPTIONS = [
-    ['label' => '30 days', 'days' => 30],
-    ['label' => '90 days', 'days' => 90],
-    ['label' => '180 days', 'days' => 180],
-    ['label' => '365 days', 'days' => 365],
-    ['label' => 'Lifetime access', 'days' => null],
-];
-
-const SALE_DURATION_OPTIONS = [
-    ['label' => '3 days', 'days' => 3],
-    ['label' => '5 days', 'days' => 5],
-    ['label' => '7 days', 'days' => 7],
-    ['label' => '14 days', 'days' => 14],
-    ['label' => '30 days', 'days' => 30],
-];
-
 /**
  * True only for a sale that's a real discount right now — never a fabricated
  * "limited time" claim (see get_courses_on_sale()'s own comment on this same

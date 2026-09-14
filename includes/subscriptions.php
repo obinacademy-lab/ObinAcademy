@@ -2,22 +2,22 @@
 require_once __DIR__ . '/payments.php';
 
 /**
- * Platform-wide subscription model (Go/Plus/Pro) — coexists with the
- * existing one-time per-course purchase flow in payments.php rather than
- * replacing it. A subscription payment reuses the `payments` table and
- * resolve_payment_with_iotec() (see the SUBSCRIPTION branch added there),
- * since mobile money via iotec has no webhooks anywhere in this codebase —
- * renewals are fired and resolved by cron/subscriptions.php on the same
- * fire-then-reconcile-on-a-later-tick pattern initiate_payment() already
- * uses for a stale PENDING course purchase.
+ * Platform-wide subscription model (Go/Pro) — the only way to access any
+ * course now (see require_course_access_or_redirect() below); one-time
+ * per-course purchases have been retired. A subscription payment reuses the
+ * `payments` table and resolve_payment_with_iotec() (see the SUBSCRIPTION
+ * branch added there), since mobile money via iotec has no webhooks
+ * anywhere in this codebase — renewals are fired and resolved by
+ * cron/track-maintenance.php on the same fire-then-reconcile-on-a-later-tick
+ * pattern the (now-removed) one-time purchase flow used to reconcile a
+ * stale PENDING payment.
  */
 
 // Placeholder UGX prices — same access for every tier today (just price
 // points), so this only needs updating here before launch, nowhere else.
 const SUBSCRIPTION_TIERS = [
-    'GO'   => ['label' => 'Go',   'price' => 15000, 'tagline' => 'Full catalog access'],
-    'PLUS' => ['label' => 'Plus', 'price' => 30000, 'tagline' => 'Full catalog access'],
-    'PRO'  => ['label' => 'Pro',  'price' => 60000, 'tagline' => 'Full catalog access'],
+    'GO'  => ['label' => 'Go',  'price' => 15000, 'tagline' => 'Full catalog access'],
+    'PRO' => ['label' => 'Pro', 'price' => 60000, 'tagline' => 'Full catalog access'],
 ];
 
 // Distinct from the 2% AFFILIATE_COMMISSION_RATE course purchases pay
@@ -52,6 +52,20 @@ function resolve_tier_label(array $payment): string {
 /** ACTIVE or GRACE — GRACE still has access, it's mid charge-retry. */
 function user_has_active_subscription(int $userId): ?array {
     return db_one("SELECT * FROM subscriptions WHERE user_id = ? AND status IN ('ACTIVE','GRACE')", [$userId]);
+}
+
+/**
+ * The platform-wide course lock: every course is hidden from anyone who
+ * isn't an active subscriber (or an admin) — no title, no description, no
+ * browsing, nothing to see first. Call at the very top of any page that
+ * would otherwise show course-specific content, before loading course data.
+ * courses/view.php additionally allows a grandfathered one-time buyer
+ * through for the one course they already own — see its own call site.
+ */
+function require_course_access_or_redirect(?array $user): void {
+    if ($user && $user['role'] === 'ADMIN') return;
+    if ($user && user_has_active_subscription((int) $user['id'])) return;
+    redirect('/subscribe.php');
 }
 
 function get_subscription_for_user(int $userId): ?array {

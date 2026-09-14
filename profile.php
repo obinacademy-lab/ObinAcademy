@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/course_card.php';
+require __DIR__ . '/includes/subscriptions.php';
 
 $profileId = (int) query_param('id');
 $profile = $profileId ? get_profile($profileId) : null;
@@ -15,7 +16,11 @@ $stats = [
     'completed' => get_courses_completed_count($profileId),
     'teaching' => $isCreator ? count(get_courses_teaching($profileId, 50)) : 0,
 ];
-$teaching = $isCreator ? get_course_cards('c.creator_id = ?', [$profileId], 'c.created_at DESC', 6) : [];
+// Every course is locked to an active subscriber — this page shows the
+// count either way, but only fetches (and renders) the real course cards
+// for a viewer who could actually go look at one.
+$canSeeCourses = $isMe || ($user && ($user['role'] === 'ADMIN' || user_has_active_subscription((int) $user['id'])));
+$teaching = ($isCreator && $canSeeCourses) ? get_course_cards('c.creator_id = ?', [$profileId], 'c.created_at DESC', 6) : [];
 
 $socials = [
     'facebook' => $profile['facebook_url'],
@@ -64,15 +69,22 @@ require __DIR__ . '/includes/header.php';
     <?php endif; ?>
   </div>
 
-  <?php if ($teaching): ?>
+  <?php if ($isCreator && $stats['teaching'] > 0): ?>
     <div class="profile-section">
       <div class="profile-section-head">
         <h2>Teaching</h2>
         <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
       </div>
-      <div class="grid sm:grid-2 lg:grid-3">
-        <?php foreach ($teaching as $c) render_course_card($c); ?>
-      </div>
+      <?php if ($teaching): ?>
+        <div class="grid sm:grid-2 lg:grid-3">
+          <?php foreach ($teaching as $c) render_course_card($c); ?>
+        </div>
+      <?php else: ?>
+        <div class="card card-pad" style="text-align:center; border-style:dashed;">
+          <p class="muted">Subscribe to Obin Academy to see what <?= e($profile['name']) ?> teaches.</p>
+          <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-primary" style="margin-top:14px;">View Plans</a>
+        </div>
+      <?php endif; ?>
     </div>
   <?php endif; ?>
 </div>

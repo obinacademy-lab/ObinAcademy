@@ -43,12 +43,10 @@ if ($isExpired) {
     exit;
 }
 
+// Premium upgrade is retired (it was an upsell on top of a one-time course
+// purchase, which no longer exists) — is_premium/premium_price stay purely
+// to honor download rights a grandfathered buyer already paid for.
 $isPremium = $isOwner || ($enrollment && (bool) $enrollment['is_premium']);
-// Premium upgrade needs an account today (its payment API is login-gated), so
-// hide the upsell for guests rather than show a button that would 401. Also
-// needs a real enrollment row — a pure subscriber (no $enrollment) has
-// nothing for initiate_premium_upgrade() to attach a premium flag to.
-$canUpgrade = !$isOwner && !$isGuest && $enrollment !== null && !empty($course['premium_price']) && !$isPremium;
 // A free course the creator never set a premium download price on has no
 // paywall to protect — let downloads through without requiring a premium
 // upgrade that doesn't exist. Any course with a premium price stays gated
@@ -137,29 +135,6 @@ $pageTitle = $course['title'] . ' — Learn — Obin Academy';
           </div>
         </div>
 
-        <?php if ($canUpgrade): ?>
-          <div class="card card-pad row between wrap gap-3" style="margin-top:24px; border-color: color-mix(in srgb, var(--accent) 30%, var(--border));">
-            <div>
-              <h3 class="small" style="font-weight:700;">Want to download this course?</h3>
-              <p class="small muted" style="margin-top:4px;">Upgrade to premium for <?= e(format_money((float) $course['premium_price'])) ?> and download every video and PDF.</p>
-            </div>
-            <div data-payment-widget
-                 data-course-id="<?= (int) $course['id'] ?>"
-                 data-initiate-url="<?= e(base_url('api/initiate-premium-upgrade.php')) ?>">
-              <div data-state="idle"><button class="btn btn-primary" data-action="start">✨ Upgrade to Premium</button></div>
-              <div data-state="phone" class="hidden row gap-2">
-                <input type="tel" placeholder="e.g. 0772 123 456" data-phone-input style="width:190px;">
-                <button class="btn btn-primary btn-sm" data-action="pay">Pay</button>
-              </div>
-              <div data-state="waiting" class="hidden small muted row gap-2"><span class="spinner" style="width:16px;height:16px;"></span> <span data-status-text></span></div>
-              <div data-state="success" class="hidden small" style="color:var(--success); font-weight:700;">✓ Premium unlocked</div>
-              <div data-state="failed" class="hidden small" style="color:var(--danger);">
-                <span data-fail-text></span> <button data-action="retry" style="text-decoration:underline; background:none; border:none; color:var(--danger); font-weight:700;">Try Again</button>
-              </div>
-              <p class="error-text hidden" data-error></p>
-            </div>
-          </div>
-        <?php endif; ?>
       </div>
     </main>
   </div>
@@ -177,7 +152,6 @@ $pageTitle = $course['title'] . ' — Learn — Obin Academy';
   window.OBIN_CAN_DOWNLOAD = <?= $canDownloadFiles ? 'true' : 'false' ?>;
   window.OBIN_INITIAL_PROGRESS = <?= json_encode($progress) ?>;
 </script>
-<script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/learn.js')) ?>"></script>
 </body>
 </html>

@@ -36,7 +36,7 @@ require __DIR__ . '/includes/header.php';
         </div>
       </div>
     <?php else: ?>
-      <div class="grid md:grid-3" style="gap:24px; max-width:960px; margin:0 auto;">
+      <div class="grid md:grid-2" style="gap:24px; max-width:720px; margin:0 auto;">
         <?php foreach (SUBSCRIPTION_TIERS as $tierKey => $tierInfo): ?>
           <div class="card card-pad">
             <h2 class="h3"><?= e($tierInfo['label']) ?></h2>

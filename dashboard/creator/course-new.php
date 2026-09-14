@@ -12,17 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = post('title');
     $summary = post('summary');
     $description = post('description');
-    $price = (float) post('price', '0');
     $categoryId = (int) post('categoryId');
-    $accessDurationRaw = post('accessDurationDays', 'lifetime');
-    $accessDurationDays = $accessDurationRaw === 'lifetime' ? null : (int) $accessDurationRaw;
-    $premiumPriceRaw = post('premiumPrice');
-    $premiumPrice = $premiumPriceRaw === '' ? null : (float) $premiumPriceRaw;
 
     if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
     if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
     if (strlen($description) < 20) $errors[] = 'Description must be at least 20 characters.';
-    if ($price < 0) $errors[] = 'Price cannot be negative.';
     if (!$categoryId) $errors[] = 'Select a category.';
 
     $thumbnailUrl = null;
@@ -42,10 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $slug = "$baseSlug-" . $n++;
         }
 
+        // No price/access-duration/premium-price to set anymore — every
+        // course is included in every subscriber's access, not sold
+        // individually (see includes/subscriptions.php).
         $id = db_insert(
-            "INSERT INTO courses (title, slug, summary, description, price, category_id, access_duration_days, premium_price, creator_id, thumbnail_url, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'DRAFT')",
-            [$title, $slug, $summary, $description, $price, $categoryId, $accessDurationDays, $premiumPrice, $user['id'], $thumbnailUrl]
+            "INSERT INTO courses (title, slug, summary, description, category_id, creator_id, thumbnail_url, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'DRAFT')",
+            [$title, $slug, $summary, $description, $categoryId, $user['id'], $thumbnailUrl]
         );
         redirect('/dashboard/creator/course-manage.php?id=' . $id);
     }
@@ -67,20 +64,14 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <input id="title" name="title" type="text" required placeholder="e.g. Personal Finance Fundamentals" value="<?= e($_POST['title'] ?? '') ?>">
   </div>
 
-  <div class="grid sm:grid-2">
-    <div class="field">
-      <label for="categoryId">Category</label>
-      <select id="categoryId" name="categoryId" required>
-        <option value="">Select a category</option>
-        <?php foreach ($categories as $cat): ?>
-          <option value="<?= (int) $cat['id'] ?>"><?= e($cat['name']) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div class="field">
-      <label for="price">Price (UGX)</label>
-      <input id="price" name="price" type="number" min="0" step="1" value="0" required>
-    </div>
+  <div class="field">
+    <label for="categoryId">Category</label>
+    <select id="categoryId" name="categoryId" required>
+      <option value="">Select a category</option>
+      <?php foreach ($categories as $cat): ?>
+        <option value="<?= (int) $cat['id'] ?>"><?= e($cat['name']) ?></option>
+      <?php endforeach; ?>
+    </select>
   </div>
 
   <div class="field">
@@ -91,23 +82,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <div class="field">
     <label for="description">Full Description</label>
     <textarea id="description" name="description" rows="5" required placeholder="What will students learn? What's included?"></textarea>
-  </div>
-
-  <div class="grid sm:grid-2">
-    <div class="field">
-      <label for="accessDurationDays">Course Access Duration</label>
-      <select id="accessDurationDays" name="accessDurationDays">
-        <?php foreach (ACCESS_DURATION_OPTIONS as $o): ?>
-          <option value="<?= $o['days'] ?? 'lifetime' ?>" <?= $o['days'] === null ? 'selected' : '' ?>><?= e($o['label']) ?></option>
-        <?php endforeach; ?>
-      </select>
-      <p class="help">How long a learner keeps access after buying.</p>
-    </div>
-    <div class="field">
-      <label for="premiumPrice">Premium Download Price (UGX, optional)</label>
-      <input id="premiumPrice" name="premiumPrice" type="number" min="0" step="1" placeholder="Leave blank to disable downloads">
-      <p class="help">Learners pay this to unlock downloads for this course.</p>
-    </div>
   </div>
 
   <div class="field">

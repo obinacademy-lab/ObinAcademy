@@ -7,9 +7,14 @@ header('Content-Type: application/xml; charset=utf-8');
 /** @var array<int, array{loc: string, lastmod?: string, changefreq?: string, priority?: string}> */
 $urls = [];
 
+// courses/index.php and courses/view.php are deliberately left out — every
+// course requires an active subscription now (see
+// require_course_access_or_redirect() in includes/subscriptions.php), so a
+// crawler hitting either just gets redirected to subscribe.php with nothing
+// to index. subscribe.php is the real crawlable entry point instead.
 $staticPages = [
     ['index.php', 'daily', '1.0'],
-    ['courses/index.php', 'daily', '0.9'],
+    ['subscribe.php', 'daily', '0.9'],
     ['skills.php', 'weekly', '0.6'],
     ['stories.php', 'weekly', '0.5'],
     ['become-creator.php', 'monthly', '0.6'],
@@ -20,16 +25,6 @@ $staticPages = [
 ];
 foreach ($staticPages as [$path, $changefreq, $priority]) {
     $urls[] = ['loc' => base_url($path), 'changefreq' => $changefreq, 'priority' => $priority];
-}
-
-$courses = db_all("SELECT slug, updated_at FROM courses WHERE status = 'PUBLISHED'");
-foreach ($courses as $c) {
-    $urls[] = [
-        'loc' => base_url('courses/view.php?slug=' . $c['slug']),
-        'lastmod' => date('Y-m-d', strtotime($c['updated_at'])),
-        'changefreq' => 'weekly',
-        'priority' => '0.8',
-    ];
 }
 
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

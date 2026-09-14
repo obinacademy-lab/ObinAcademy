@@ -184,7 +184,7 @@ CREATE TABLE payments (
   -- apply_subscription_payment_success()) — NULL on every renewal payment,
   -- which already has subscription_id.
   subscription_id INT NULL,
-  subscription_tier ENUM('GO','PLUS','PRO') NULL,
+  subscription_tier ENUM('GO','PRO') NULL,
   -- Captured at initiate_payment() time from the oa_aff attribution cookie
   -- (see includes/affiliates.php), not re-resolved later — so a payment
   -- keeps the affiliate who was actually credited at checkout even if that
@@ -289,7 +289,7 @@ CREATE TABLE affiliate_earnings (
 -- attempts, access continues until current_period_ends_at).
 CREATE TABLE subscriptions (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  tier ENUM('GO','PLUS','PRO') NOT NULL,
+  tier ENUM('GO','PRO') NOT NULL,
   status ENUM('ACTIVE','GRACE','EXPIRED','CANCELED') NOT NULL DEFAULT 'ACTIVE',
   price DECIMAL(12,2) NOT NULL,
   phone VARCHAR(32) NOT NULL,
