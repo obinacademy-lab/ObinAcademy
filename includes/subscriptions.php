@@ -17,8 +17,8 @@ require_once __DIR__ . '/payments.php';
 // Placeholder UGX prices — same access for every tier today (just price
 // points), so this only needs updating here before launch, nowhere else.
 const SUBSCRIPTION_TIERS = [
-    'GO'  => ['label' => 'Go',  'price' => 15000, 'tagline' => 'Full catalog access'],
-    'PRO' => ['label' => 'Pro', 'price' => 60000, 'tagline' => 'Full catalog access'],
+    'GO'  => ['label' => 'Go',  'price' => 150000, 'tagline' => 'Full catalog access'],
+    'PRO' => ['label' => 'Pro', 'price' => 250000, 'tagline' => 'Full catalog access'],
 ];
 
 // Distinct from the 2% AFFILIATE_COMMISSION_RATE course purchases pay
