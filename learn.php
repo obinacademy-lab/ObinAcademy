@@ -1,9 +1,9 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/data.php';
-require __DIR__ . '/../includes/enroll_panel.php';
-require __DIR__ . '/../includes/enrollment.php';
-require __DIR__ . '/../includes/subscriptions.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
+require __DIR__ . '/includes/enroll_panel.php';
+require __DIR__ . '/includes/enrollment.php';
+require __DIR__ . '/includes/subscriptions.php';
 
 $user = current_user();
 $slug = query_param('slug');
@@ -27,7 +27,7 @@ $isExpired = !$isOwner && $enrollment && $enrollment['expires_at'] !== null && s
 
 if ($isExpired) {
     $pageTitle = 'Access Expired — Obin Academy';
-    require __DIR__ . '/../includes/header.php';
+    require __DIR__ . '/includes/header.php';
     ?>
     <div class="container" style="max-width:440px; padding: 90px 20px; text-align:center;">
       <div style="font-size:40px;">🔒</div>
@@ -39,7 +39,7 @@ if ($isExpired) {
       <a href="<?= e(base_url('courses/view.php?slug=' . $slug)) ?>" class="btn btn-primary" style="margin-top:20px;">View Course</a>
     </div>
     <?php
-    require __DIR__ . '/../includes/footer.php';
+    require __DIR__ . '/includes/footer.php';
     exit;
 }
 

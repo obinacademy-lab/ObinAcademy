@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/data.php';
-require __DIR__ . '/../includes/subscriptions.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
+require __DIR__ . '/includes/subscriptions.php';
 
 $user = current_user();
 $mySubscription = $user ? get_subscription_for_user((int) $user['id']) : null;
@@ -13,7 +13,7 @@ $stats = get_platform_stats();
 
 $pageTitle = 'Subscribe — Obin Academy';
 $pageDescription = 'One monthly payment, full access to every course on Obin Academy. Choose Go, Plus, or Pro.';
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero course-hero-centered">
   <div class="container">
@@ -83,4 +83,4 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>

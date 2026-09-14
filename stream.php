@@ -2,10 +2,10 @@
 // Serves lesson videos/PDFs from private-uploads/ only after checking auth +
 // enrollment (+ expiry, + premium for downloads). Never a directly-linkable
 // static file — lessonId is looked up server-side, never a client-supplied path.
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/storage.php';
-require __DIR__ . '/../includes/enrollment.php';
-require __DIR__ . '/../includes/subscriptions.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/storage.php';
+require __DIR__ . '/includes/enrollment.php';
+require __DIR__ . '/includes/subscriptions.php';
 
 $user = current_user();
 
