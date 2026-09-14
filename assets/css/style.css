@@ -1541,11 +1541,21 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .paths-grid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: stretch; margin-top: 44px; }
 @media (min-width: 800px) { .paths-grid { grid-template-columns: 1fr auto 1fr; gap: 24px; } }
 .path-card { border-radius: var(--radius-lg); padding: 36px 32px; }
-.path-old { background: var(--surface); border: 1.5px dashed var(--border-strong); }
-.path-old .path-tag { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.path-old .path-amount { margin-top: 10px; font-size: 30px; font-weight: 800; color: var(--gold-dark); }
-.path-old .path-amount span { font-size: 14px; font-weight: 700; color: var(--muted); }
-.path-old p.path-desc { margin-top: 14px; color: var(--muted); font-size: 14.5px; line-height: 1.65; }
+/* Branded gold, mirroring .path-new's branded blue below — same card
+   anatomy (gradient + glow blob in the other card's accent color + dark
+   text for contrast), just the inverse palette. */
+.path-old {
+  background: linear-gradient(165deg, var(--gold-dark), var(--gold) 60%, #ffd76a);
+  position: relative; overflow: hidden; border: none;
+}
+.path-old::before {
+  content: ""; position: absolute; top: -80px; left: -80px; width: 260px; height: 260px;
+  border-radius: 50%; background: var(--brand-900); opacity: 0.16; filter: blur(70px); pointer-events: none;
+}
+.path-old .path-tag { position: relative; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-950); }
+.path-old .path-amount { position: relative; margin-top: 10px; font-size: 30px; font-weight: 800; color: #1e1400; }
+.path-old .path-amount span { font-size: 14px; font-weight: 700; color: #4a2e00; }
+.path-old p.path-desc { position: relative; margin-top: 14px; color: #4a2e00; font-size: 14.5px; line-height: 1.65; }
 .path-vs { display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--muted); font-size: 13px; letter-spacing: 0.08em; }
 .path-new {
   background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 65%, var(--brand-800));
