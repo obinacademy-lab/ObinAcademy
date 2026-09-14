@@ -4,9 +4,12 @@
  * Expects $course (get_course_by_slug result), $user (current_user() or null),
  * $isOwner, $isEnrolled in scope. $isInterested reflects an existing opt-in
  * row in course_interest — only shown as a toggle to a logged-in, non-owner
- * learner who hasn't bought the course yet.
+ * learner who hasn't bought the course yet. $hasSubAccess means an active
+ * platform subscription covers this course already, without a purchase —
+ * the one-time price still shows underneath as an alternative, nothing
+ * about the existing buy flow is removed.
  */
-function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $isEnrolled, bool $isInterested = false): void {
+function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $isEnrolled, bool $isInterested = false, bool $hasSubAccess = false): void {
     $price = (float) $course['price'];
     $hasSale = course_has_active_sale($course);
     $displayPrice = $hasSale ? (float) $course['sale_price'] : $price;
@@ -67,6 +70,9 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php elseif (!$user): ?>
           <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-primary btn-block btn-lg" style="margin-top:20px;">Sign Up to Enroll</a>
           <p class="guest-note">Paid courses need a free account first — that's where your receipt, access, and certificate live. <a href="<?= e($loginUrl) ?>">Already have an account? Log in</a></p>
+        <?php elseif ($hasSubAccess): ?>
+          <a href="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>" class="btn btn-primary btn-block btn-lg" style="margin-top:20px;">▶ Start Learning — included in your plan</a>
+          <p class="guest-note">Or buy it outright for <?= e(format_money($displayPrice)) ?> — yours forever, even if you cancel your subscription.</p>
         <?php elseif ($showPaidFlow): ?>
           <div style="margin-top:20px;" data-payment-widget
                data-course-id="<?= (int) $course['id'] ?>"

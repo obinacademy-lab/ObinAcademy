@@ -131,12 +131,24 @@ function get_affiliate_summary(int $affiliateId): array {
     return ['earned' => (float) ($row['earned'] ?? 0), 'sales_count' => (int) ($row['n'] ?? 0)];
 }
 
+/**
+ * A commission row has course_id set for a course-purchase referral, or
+ * NULL for a subscription referral (see migration/add-subscriptions.sql) —
+ * course_title comes back null for the latter, and subscription_tier comes
+ * back set instead. Deliberately doesn't require subscriptions.php to turn
+ * that into a display label here (avoids a payments.php <-> affiliates.php
+ * <-> subscriptions.php require cycle pulling the whole payment stack into
+ * every page's bootstrap.php load) — the caller builds the label; see
+ * dashboard/affiliate.php.
+ */
 function get_affiliate_recent_earnings(int $affiliateId, int $limit = 20): array {
     $limit = max(1, min(100, $limit));
     return db_all(
-        "SELECT ae.*, c.title AS course_title
+        "SELECT ae.*, c.title AS course_title, s.tier AS subscription_tier
          FROM affiliate_earnings ae
-         JOIN courses c ON c.id = ae.course_id
+         LEFT JOIN courses c ON c.id = ae.course_id
+         LEFT JOIN payments p ON p.id = ae.payment_id
+         LEFT JOIN subscriptions s ON s.id = p.subscription_id
          WHERE ae.affiliate_id = ? ORDER BY ae.created_at DESC LIMIT $limit",
         [$affiliateId]
     );

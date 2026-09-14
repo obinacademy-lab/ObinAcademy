@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const lessons = window.OBIN_LESSONS || [];
   const streamBase = window.OBIN_STREAM_BASE || "/stream.php";
   const updateProgressUrl = window.OBIN_UPDATE_PROGRESS_URL || "/api/update-progress.php";
+  const trackWatchTimeUrl = window.OBIN_TRACK_WATCH_TIME_URL || "/api/track-watch-time.php";
+  const markLessonCompleteUrl = window.OBIN_MARK_LESSON_COMPLETE_URL || "/api/mark-lesson-complete.php";
   const certificateUrlBase = window.OBIN_CERTIFICATE_URL_BASE || "/certificate.php";
   const courseId = window.OBIN_COURSE_ID;
   const canDownload = !!window.OBIN_CAN_DOWNLOAD;
@@ -20,9 +22,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let activeIndex = 0;
 
+  // Video watch-time, reported in ~20s batches rather than on every
+  // timeupdate tick (which fires several times a second) — feeds the
+  // creator subscription payout pool (see includes/subscriptions.php).
+  // Each per-tick delta is clamped below so a seek/jump can't be reported
+  // as real watched time.
+  let watchState = { lessonId: null, lastTime: null, unreportedSeconds: 0 };
+
+  function reportWatchTime(lessonId, seconds, useBeacon) {
+    if (seconds <= 0) return;
+    const payload = JSON.stringify({ lessonId, seconds, csrf_token: csrfToken });
+    if (useBeacon && navigator.sendBeacon) {
+      navigator.sendBeacon(trackWatchTimeUrl, new Blob([payload], { type: "application/json" }));
+    } else {
+      fetch(trackWatchTimeUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(() => {});
+    }
+  }
+
+  // Called before switching lessons, and on tab-hide/unload, so up to ~19s
+  // of real watch-time isn't silently lost every time a learner moves on.
+  function flushWatchTime(useBeacon) {
+    if (watchState.lessonId !== null && watchState.unreportedSeconds > 0) {
+      reportWatchTime(watchState.lessonId, Math.round(watchState.unreportedSeconds), useBeacon);
+    }
+    watchState = { lessonId: null, lastTime: null, unreportedSeconds: 0 };
+  }
+
   function renderLesson(index) {
     const lesson = lessons[index];
     if (!lesson) return;
+    flushWatchTime();
     activeIndex = index;
 
     const src = `${streamBase}?lesson=${lesson.id}`;
@@ -34,6 +63,20 @@ document.addEventListener("DOMContentLoaded", () => {
       video.setAttribute("disablepictureinpicture", "");
       video.src = src;
       videoWrap.appendChild(video);
+
+      watchState = { lessonId: lesson.id, lastTime: null, unreportedSeconds: 0 };
+      video.addEventListener("timeupdate", () => {
+        if (watchState.lessonId !== lesson.id) return; // a stale listener from a lesson already switched away from
+        if (watchState.lastTime !== null) {
+          const delta = video.currentTime - watchState.lastTime;
+          if (delta > 0 && delta < 2) watchState.unreportedSeconds += delta;
+        }
+        watchState.lastTime = video.currentTime;
+        if (watchState.unreportedSeconds >= 20) {
+          reportWatchTime(lesson.id, Math.round(watchState.unreportedSeconds));
+          watchState.unreportedSeconds = 0;
+        }
+      });
     } else {
       // The browser's own native PDF plugin doesn't reliably support
       // touch-scroll when embedded in an iframe on mobile (it just shows
@@ -77,10 +120,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const certificateLink = document.querySelector("[data-certificate-link]");
 
   markBtn?.addEventListener("click", async () => {
+    const currentLesson = lessons[activeIndex];
     const newProgress = total > 0 ? Math.min(100, ((activeIndex + 1) / total) * 100) : 100;
     progress = newProgress;
     if (progressFill) progressFill.style.width = `${Math.round(progress)}%`;
     if (progressLabel) progressLabel.textContent = `${Math.round(progress)}% complete`;
+
+    // A PDF/text lesson has no playback clock to earn watch-time from, so
+    // its own "mark complete" click is what credits the creator payout pool
+    // instead — a video lesson's watch-time already comes from timeupdate
+    // heartbeats above, so it doesn't also fire this (that would double-count).
+    if (currentLesson && currentLesson.type !== "VIDEO") {
+      fetch(markLessonCompleteUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId: currentLesson.id, csrf_token: csrfToken }),
+      }).catch(() => {});
+    }
 
     try {
       const res = await fetch(updateProgressUrl, {
@@ -107,6 +163,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("[data-learn-close]").forEach((btn) =>
     btn.addEventListener("click", () => { sidebar?.classList.remove("open"); overlay?.classList.remove("open"); })
   );
+
+  // beforeunload is unreliable on mobile browsers — visibilitychange (tab
+  // backgrounded, app switched away from) is the one that actually fires
+  // reliably there, so flush on both.
+  document.addEventListener("visibilitychange", () => { if (document.hidden) flushWatchTime(true); });
+  window.addEventListener("beforeunload", () => flushWatchTime(true));
 
   if (lessons.length > 0) renderLesson(0);
 });

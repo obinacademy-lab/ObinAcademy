@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/subscriptions.php';
 $user = require_affiliate();
 $affiliate = $user['affiliate'];
 $affiliateId = (int) $affiliate['id'];
@@ -85,7 +86,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
     <tbody>
       <?php foreach ($recentEarnings as $e): ?>
         <tr>
-          <td><?= e($e['course_title']) ?></td>
+          <td><?= e($e['course_title'] ?? ('Subscription — ' . (SUBSCRIPTION_TIERS[$e['subscription_tier']]['label'] ?? 'Renewal'))) ?></td>
           <td style="font-weight:700;"><?= e(format_money((float) $e['amount'])) ?></td>
           <td><?= e(format_date($e['created_at'])) ?></td>
         </tr>

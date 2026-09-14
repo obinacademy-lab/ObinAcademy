@@ -3,6 +3,7 @@ require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/enroll_panel.php';
 require __DIR__ . '/../includes/enrollment.php';
+require __DIR__ . '/../includes/subscriptions.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -46,6 +47,8 @@ $isEnrolled = $user
     ? (bool) db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : (bool) guest_enrollment_for_course((int) $course['id']);
 $isInterested = $user ? is_interested_in_course((int) $user['id'], (int) $course['id']) : false;
+$hasSubAccess = $user && !$isEnrolled && !$isOwner && $course['status'] === 'PUBLISHED' && (float) $course['price'] > 0
+    && user_has_active_subscription((int) $user['id']);
 
 $totalLessons = 0;
 foreach ($course['modules'] as $m) $totalLessons += count($m['lessons']);
@@ -187,7 +190,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <aside class="course-sidebar">
-      <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled, $isInterested); ?>
+      <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled, $isInterested, $hasSubAccess); ?>
     </aside>
   </div>
 </section>

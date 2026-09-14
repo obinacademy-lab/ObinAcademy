@@ -2,9 +2,10 @@
 // Serves lesson videos/PDFs from private-uploads/ only after checking auth +
 // enrollment (+ expiry, + premium for downloads). Never a directly-linkable
 // static file — lessonId is looked up server-side, never a client-supplied path.
-require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/storage.php';
-require __DIR__ . '/includes/enrollment.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/storage.php';
+require __DIR__ . '/../includes/enrollment.php';
+require __DIR__ . '/../includes/subscriptions.php';
 
 $user = current_user();
 
@@ -26,12 +27,18 @@ if (!$isOwner && !$isAdmin) {
     $enrollment = $user
         ? db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $lesson['course_id']])
         : guest_enrollment_for_course((int) $lesson['course_id']);
-    if (!$enrollment) { http_response_code(403); exit('Forbidden'); }
-    if ($enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time()) {
+
+    // A subscriber gets streaming access to every course without ever
+    // buying it individually — but only streaming, not premium/download
+    // rights, which stay tied to a real per-course purchase.
+    $hasSubAccess = !$enrollment && $user && user_has_active_subscription((int) $user['id']);
+
+    if (!$enrollment && !$hasSubAccess) { http_response_code(403); exit('Forbidden'); }
+    if ($enrollment && $enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time()) {
         http_response_code(403);
         exit('Access expired');
     }
-    $isPremium = (bool) $enrollment['is_premium'];
+    $isPremium = $enrollment ? (bool) $enrollment['is_premium'] : false;
 }
 
 // A free course the creator never set a premium download price on has no

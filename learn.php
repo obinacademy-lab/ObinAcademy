@@ -1,8 +1,9 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/data.php';
-require __DIR__ . '/includes/enroll_panel.php';
-require __DIR__ . '/includes/enrollment.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/data.php';
+require __DIR__ . '/../includes/enroll_panel.php';
+require __DIR__ . '/../includes/enrollment.php';
+require __DIR__ . '/../includes/subscriptions.php';
 
 $user = current_user();
 $slug = query_param('slug');
@@ -14,14 +15,19 @@ $enrollment = $user
     ? db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : guest_enrollment_for_course((int) $course['id']);
 
-if (!$enrollment && !$isOwner) redirect('/courses/view.php?slug=' . $slug);
+// A subscriber can learn any course without ever buying it individually —
+// but has no `enrollments` row, so progress/certificates stay purchase-only
+// for now (see includes/subscriptions.php).
+$hasSubAccess = !$enrollment && $user && !$isOwner && user_has_active_subscription((int) $user['id']);
+
+if (!$enrollment && !$isOwner && !$hasSubAccess) redirect('/courses/view.php?slug=' . $slug);
 $isGuest = !$user && !$isOwner;
 
 $isExpired = !$isOwner && $enrollment && $enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time();
 
 if ($isExpired) {
     $pageTitle = 'Access Expired — Obin Academy';
-    require __DIR__ . '/includes/header.php';
+    require __DIR__ . '/../includes/header.php';
     ?>
     <div class="container" style="max-width:440px; padding: 90px 20px; text-align:center;">
       <div style="font-size:40px;">🔒</div>
@@ -33,14 +39,16 @@ if ($isExpired) {
       <a href="<?= e(base_url('courses/view.php?slug=' . $slug)) ?>" class="btn btn-primary" style="margin-top:20px;">View Course</a>
     </div>
     <?php
-    require __DIR__ . '/includes/footer.php';
+    require __DIR__ . '/../includes/footer.php';
     exit;
 }
 
 $isPremium = $isOwner || ($enrollment && (bool) $enrollment['is_premium']);
 // Premium upgrade needs an account today (its payment API is login-gated), so
-// hide the upsell for guests rather than show a button that would 401.
-$canUpgrade = !$isOwner && !$isGuest && !empty($course['premium_price']) && !$isPremium;
+// hide the upsell for guests rather than show a button that would 401. Also
+// needs a real enrollment row — a pure subscriber (no $enrollment) has
+// nothing for initiate_premium_upgrade() to attach a premium flag to.
+$canUpgrade = !$isOwner && !$isGuest && $enrollment !== null && !empty($course['premium_price']) && !$isPremium;
 // A free course the creator never set a premium download price on has no
 // paywall to protect — let downloads through without requiring a premium
 // upgrade that doesn't exist. Any course with a premium price stays gated
@@ -162,6 +170,8 @@ $pageTitle = $course['title'] . ' — Learn — Obin Academy';
   window.OBIN_STREAM_BASE = <?= json_encode(base_url('stream.php')) ?>;
   window.OBIN_PDFJS_VIEWER_URL = <?= json_encode(base_url('assets/pdfjs/web/viewer.html')) ?>;
   window.OBIN_UPDATE_PROGRESS_URL = <?= json_encode(base_url('api/update-progress.php')) ?>;
+  window.OBIN_TRACK_WATCH_TIME_URL = <?= json_encode(base_url('api/track-watch-time.php')) ?>;
+  window.OBIN_MARK_LESSON_COMPLETE_URL = <?= json_encode(base_url('api/mark-lesson-complete.php')) ?>;
   window.OBIN_CERTIFICATE_URL_BASE = <?= json_encode(base_url('certificate.php')) ?>;
   window.OBIN_COURSE_ID = <?= (int) $course['id'] ?>;
   window.OBIN_CAN_DOWNLOAD = <?= $canDownloadFiles ? 'true' : 'false' ?>;

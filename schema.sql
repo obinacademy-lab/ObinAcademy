@@ -168,7 +168,7 @@ CREATE TABLE payments (
   amount DECIMAL(12,2) NOT NULL,
   original_amount DECIMAL(12,2) NULL,
   phone VARCHAR(32) NOT NULL,
-  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE') NOT NULL DEFAULT 'COURSE_PURCHASE',
+  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION') NOT NULL DEFAULT 'COURSE_PURCHASE',
   status ENUM('PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'PENDING',
   status_message VARCHAR(500) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -177,14 +177,25 @@ CREATE TABLE payments (
   guest_name VARCHAR(191) NULL,
   guest_email VARCHAR(191) NULL,
   access_token_hash VARCHAR(64) NULL,
-  course_id INT NOT NULL,
+  -- NULL for a SUBSCRIPTION payment — it isn't tied to one course.
+  course_id INT NULL,
+  -- Set only on a first-ever subscription payment, before a subscriptions
+  -- row exists to hang subscription_id off of (see includes/subscriptions.php
+  -- apply_subscription_payment_success()) — NULL on every renewal payment,
+  -- which already has subscription_id.
+  subscription_id INT NULL,
+  subscription_tier ENUM('GO','PLUS','PRO') NULL,
   -- Captured at initiate_payment() time from the oa_aff attribution cookie
   -- (see includes/affiliates.php), not re-resolved later — so a payment
   -- keeps the affiliate who was actually credited at checkout even if that
-  -- affiliate's status changes afterward.
+  -- affiliate's status changes afterward. A subscription's FIRST payment is
+  -- captured the same way; every renewal after that reads the persistent
+  -- subscriptions.referred_by_affiliate_id instead, since a cron-fired
+  -- renewal has no browser/cookie to resolve from.
   affiliate_id INT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL,
   FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE SET NULL,
   INDEX idx_payments_user_course_status (user_id, course_id, status),
   UNIQUE KEY uniq_access_token_hash (access_token_hash)
@@ -260,12 +271,91 @@ CREATE TABLE affiliate_earnings (
   amount DECIMAL(12,2) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   affiliate_id INT NOT NULL,
-  course_id INT NOT NULL,
+  -- NULL for a subscription-payment commission, which isn't tied to a course.
+  course_id INT NULL,
   payment_id INT NOT NULL,
   FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_affiliate_payment (payment_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Subscription model: one row per user's CURRENT subscription state (a
+-- learner has at most one). Renewal is cron-driven (see
+-- cron/subscriptions.php) since mobile money has no webhooks in this
+-- codebase — status walks ACTIVE -> GRACE (a charge attempt is pending or
+-- being retried) -> EXPIRED, or ACTIVE/GRACE -> CANCELED (no further charge
+-- attempts, access continues until current_period_ends_at).
+CREATE TABLE subscriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tier ENUM('GO','PLUS','PRO') NOT NULL,
+  status ENUM('ACTIVE','GRACE','EXPIRED','CANCELED') NOT NULL DEFAULT 'ACTIVE',
+  price DECIMAL(12,2) NOT NULL,
+  phone VARCHAR(32) NOT NULL,
+  current_period_ends_at DATETIME NOT NULL,
+  grace_attempts_made TINYINT NOT NULL DEFAULT 0,
+  last_charge_attempt_at DATETIME NULL,
+  -- Set once, from the oa_aff cookie, at the FIRST successful payment only —
+  -- every renewal after that reads this column directly, since a cron-fired
+  -- renewal has no browser/cookie to re-resolve. Re-checked against the
+  -- affiliate's live status at every credit (not baked in), because unlike
+  -- a one-time payments-row snapshot this commission compounds indefinitely.
+  referred_by_affiliate_id INT NULL,
+  started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  canceled_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  user_id INT NOT NULL UNIQUE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (referred_by_affiliate_id) REFERENCES affiliates(id) ON DELETE SET NULL,
+  INDEX idx_subscriptions_status_period (status, current_period_ends_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Append-only. One row per ~20s of actual video playback the client
+-- reports — never mutated, never deduped, so the monthly payout job can
+-- just SUM(seconds_watched) WHERE created_at BETWEEN month bounds.
+CREATE TABLE lesson_watch_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  seconds_watched INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  user_id INT NOT NULL,
+  lesson_id INT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
+  INDEX idx_watch_events_lesson_time (lesson_id, created_at),
+  INDEX idx_watch_events_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Separate table on purpose: a PDF/text lesson's fixed watch-time credit is
+-- a one-time award per (user, lesson), enforced by a real UNIQUE key —
+-- unlike video heartbeats above, which must never be unique.
+CREATE TABLE lesson_text_completions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  credit_seconds INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  user_id INT NOT NULL,
+  lesson_id INT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_user_lesson (user_id, lesson_id),
+  INDEX idx_text_completions_lesson_time (lesson_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- One row per creator per settled month — the blended-pool watch-time payout
+-- (see cron/subscriptions.php Section E), distinct from `earnings` (which is
+-- strictly one row per course sale and has no concept of a shared pool).
+CREATE TABLE creator_subscription_payouts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  period_month DATE NOT NULL,
+  watch_seconds BIGINT NOT NULL DEFAULT 0,
+  platform_total_watch_seconds BIGINT NOT NULL DEFAULT 0,
+  pool_amount DECIMAL(12,2) NOT NULL,
+  payout_amount DECIMAL(12,2) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  creator_id INT NOT NULL,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_period_creator (period_month, creator_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

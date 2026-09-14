@@ -4,9 +4,17 @@ require __DIR__ . '/../../includes/data.php';
 $user = require_login();
 
 $totalEarnings = (float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM earnings WHERE creator_id = ?', [$user['id']])['n'] ?? 0);
+// Blended subscription payout pool, settled monthly by watch-time share
+// (cron/subscriptions.php) — a different grain from `earnings` (one row per
+// course sale), so it's summed separately and folded into the same
+// available-balance total below. withdrawal_requests itself is already
+// source-agnostic (payee_type='CREATOR' covers both).
+$totalSubscriptionPayouts = (float) (db_one('SELECT COALESCE(SUM(payout_amount),0) AS n FROM creator_subscription_payouts WHERE creator_id = ?', [$user['id']])['n'] ?? 0);
 $pendingWithdrawals = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE creator_id = ? AND status = 'PENDING'", [$user['id']])['n'] ?? 0);
 $approvedWithdrawals = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE creator_id = ? AND status = 'APPROVED'", [$user['id']])['n'] ?? 0);
-$available = $totalEarnings - $pendingWithdrawals - $approvedWithdrawals;
+$available = $totalEarnings + $totalSubscriptionPayouts - $pendingWithdrawals - $approvedWithdrawals;
+
+$subscriptionPayouts = db_all('SELECT * FROM creator_subscription_payouts WHERE creator_id = ? ORDER BY period_month DESC', [$user['id']]);
 
 // ---------------------------------------------------------------------
 // Daily revenue growth chart — this creator's own net earnings (after the
@@ -71,10 +79,11 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <h1 class="h2 reveal">Earnings</h1>
 
-<div class="grid md:grid-3" style="margin-top:24px;">
-  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earned (after 10% platform fee)</div></div>
-  <div class="stat-card reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('check-circle'); ?></div><div class="value"><?= e(format_money($available)) ?></div><div class="label">Available to Withdraw</div></div>
-  <div class="stat-card reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#fbbf24;"><div class="icon"><?php dash_icon('clock'); ?></div><div class="value"><?= e(format_money($pendingWithdrawals)) ?></div><div class="label">Pending Withdrawals</div></div>
+<div class="grid md:grid-2 lg:grid-4" style="margin-top:24px;">
+  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Course Sales (after 10% platform fee)</div></div>
+  <div class="stat-card reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#8b5cf6;"><div class="icon"><?php dash_icon('crown'); ?></div><div class="value"><?= e(format_money($totalSubscriptionPayouts)) ?></div><div class="label">Subscription Pool Payouts</div></div>
+  <div class="stat-card reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('check-circle'); ?></div><div class="value"><?= e(format_money($available)) ?></div><div class="label">Available to Withdraw</div></div>
+  <div class="stat-card reveal reveal-delay-3" data-hoverable="true" style="--hover-color:#fbbf24;"><div class="icon"><?php dash_icon('clock'); ?></div><div class="value"><?= e(format_money($pendingWithdrawals)) ?></div><div class="label">Pending Withdrawals</div></div>
 </div>
 
 <?php if ($errors): ?><div class="alert alert-error" style="margin-top:20px;"><?= e(implode(' ', $errors)) ?></div><?php endif; ?>
@@ -155,6 +164,25 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         </tr>
       <?php endforeach; ?>
       <?php if (!$recentEarnings): ?><tr><td colspan="5" class="muted">No earnings yet.</td></tr><?php endif; ?>
+    </tbody>
+  </table>
+</div>
+
+<h2 class="h3" style="margin-top:36px;">Subscription Pool Payouts</h2>
+<p class="muted small" style="margin-top:4px;">One payout per settled month, split across every creator by that month's watch-time share of the subscription pool.</p>
+<div class="table-wrap reveal" style="margin-top:14px;">
+  <table>
+    <thead><tr><th>Month</th><th>Your Watch-Time Share</th><th>Pool</th><th>Your Payout</th></tr></thead>
+    <tbody>
+      <?php foreach ($subscriptionPayouts as $p): ?>
+        <tr>
+          <td><?= e(date('F Y', strtotime($p['period_month']))) ?></td>
+          <td><?= $p['platform_total_watch_seconds'] > 0 ? round((int) $p['watch_seconds'] / (int) $p['platform_total_watch_seconds'] * 100, 1) : 0 ?>%</td>
+          <td><?= e(format_money((float) $p['pool_amount'])) ?></td>
+          <td style="font-weight:700;"><?= e(format_money((float) $p['payout_amount'])) ?></td>
+        </tr>
+      <?php endforeach; ?>
+      <?php if (!$subscriptionPayouts): ?><tr><td colspan="4" class="muted">No subscription payouts settled yet.</td></tr><?php endif; ?>
     </tbody>
   </table>
 </div>

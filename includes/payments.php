@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/iotec.php';
 require_once __DIR__ . '/email.php';
+require_once __DIR__ . '/subscriptions.php';
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -16,6 +17,20 @@ function fetch_payment_with_course(int $paymentId): ?array {
          WHERE p.id = ?',
         [$paymentId]
     );
+}
+
+/**
+ * Dispatches to the right fetch function by payments.type — course
+ * purchases/premium upgrades always have a course_id (fetch_payment_with_course
+ * inner-joins on it), a subscription payment never does, so it can't reuse
+ * that query as-is. Used anywhere a payment id alone is given and the type
+ * isn't already known (poll_payment_status(), called for every payment kind
+ * through the one shared api/poll-payment.php endpoint).
+ */
+function fetch_payment_by_id(int $paymentId): ?array {
+    $type = db_one('SELECT type FROM payments WHERE id = ?', [$paymentId]);
+    if (!$type) return null;
+    return $type['type'] === 'SUBSCRIPTION' ? fetch_payment_with_subscription($paymentId) : fetch_payment_with_course($paymentId);
 }
 
 /**
@@ -50,6 +65,12 @@ function resolve_payment_with_iotec(array $payment): array {
     $isGuestPayment = $payment['user_id'] === null;
 
     if ($result['status'] === 'Success') {
+        if ($payment['type'] === 'SUBSCRIPTION') {
+            apply_subscription_payment_success($payment, $result['statusMessage'] ?? null);
+            send_subscription_receipt_email($payment);
+            return ['status' => 'SUCCESS'];
+        }
+
         if ($payment['type'] === 'PREMIUM_UPGRADE') {
             $enrollment = db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$payment['user_id'], $payment['course_id']]);
             if ($enrollment && (int) $enrollment['is_premium'] === 0) {
@@ -277,7 +298,7 @@ function initiate_premium_upgrade(int $userId, int $courseId, string $phone): ar
  * @return array{status: string, statusMessage?: string, accessUrl?: string}
  */
 function poll_payment_status(?int $userId, int $paymentId, ?string $pollToken = null): array {
-    $payment = fetch_payment_with_course($paymentId);
+    $payment = fetch_payment_by_id($paymentId);
     if (!$payment) throw new RuntimeException('Payment not found.');
 
     $isGuestPayment = $payment['user_id'] === null;
