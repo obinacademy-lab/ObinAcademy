@@ -3,7 +3,6 @@ require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/enroll_panel.php';
 require __DIR__ . '/../includes/enrollment.php';
-require __DIR__ . '/../includes/comments.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -21,10 +20,6 @@ if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
     require __DIR__ . '/../includes/footer.php';
     exit;
 }
-
-$comments = get_visible_comments((int) $course['id']);
-$commentCount = count($comments);
-$canModerateComments = $isOwner || $isAdmin;
 
 // A plain, publicly-shown view counter — not deduped per visitor, and
 // excludes the course's own creator/admin so their own checks don't
@@ -55,25 +50,6 @@ $isInterested = $user ? is_interested_in_course((int) $user['id'], (int) $course
 $totalLessons = 0;
 foreach ($course['modules'] as $m) $totalLessons += count($m['lessons']);
 
-$reviewCount = count($course['reviews']);
-$avgRating = 0;
-$ratingBreakdown = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
-if ($reviewCount > 0) {
-    $sum = 0;
-    foreach ($course['reviews'] as $r) {
-        $sum += (int) $r['rating'];
-        $ratingBreakdown[(int) $r['rating']]++;
-    }
-    $avgRating = $sum / $reviewCount;
-}
-$myReview = null;
-if ($user) {
-    foreach ($course['reviews'] as $r) {
-        if ((int) $r['author_id'] === (int) $user['id']) { $myReview = $r; break; }
-    }
-}
-
-
 $statusLabel = ['DRAFT' => 'a draft', 'PENDING_REVIEW' => 'pending admin review', 'REJECTED' => 'rejected and needs changes'];
 
 $pageTitle = $course['title'] . ' — Obin Academy';
@@ -102,13 +78,6 @@ if ((float) $course['price'] > 0) {
         'priceCurrency' => 'UGX',
         'url' => base_url('courses/view.php?slug=' . $course['slug']),
         'availability' => 'https://schema.org/InStock',
-    ];
-}
-if ($reviewCount > 0) {
-    $structuredData['aggregateRating'] = [
-        '@type' => 'AggregateRating',
-        'ratingValue' => number_format($avgRating, 1),
-        'reviewCount' => $reviewCount,
     ];
 }
 if (!empty($course['creator_name'])) {
@@ -147,14 +116,6 @@ require __DIR__ . '/../includes/header.php';
       <p class="summary"><?= e($course['summary']) ?></p>
 
       <div class="meta-row">
-        <span class="meta-chip">
-          <?php dash_icon('star'); ?>
-          <?php if ($reviewCount > 0): ?>
-            <?= number_format($avgRating, 1) ?> (<?= $reviewCount ?> review<?= $reviewCount === 1 ? '' : 's' ?>)
-          <?php else: ?>
-            No reviews yet
-          <?php endif; ?>
-        </span>
         <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> students</span>
         <span class="meta-chip"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
         <span class="meta-chip"><?php dash_icon('play'); ?><?= $totalLessons ?> lessons</span>
@@ -223,184 +184,6 @@ require __DIR__ . '/../includes/header.php';
         <?php endforeach; ?>
       </div>
 
-      <h2 class="h3" style="margin-top:48px;">Reviews<?= $reviewCount > 0 ? " ($reviewCount)" : '' ?></h2>
-
-      <div class="reviews-grid">
-        <?php if ($reviewCount > 0): ?>
-          <div class="rsummary reveal">
-            <div class="num"><?= number_format($avgRating, 1) ?></div>
-            <div class="stars"><?= str_repeat('★', (int) round($avgRating)) . str_repeat('☆', 5 - (int) round($avgRating)) ?></div>
-            <div class="count"><?= $reviewCount ?> review<?= $reviewCount === 1 ? '' : 's' ?></div>
-            <div class="bars">
-              <?php for ($star = 5; $star >= 1; $star--): $count = $ratingBreakdown[$star]; $pct = $reviewCount > 0 ? round($count / $reviewCount * 100) : 0; ?>
-                <div class="rbar-row">
-                  <span class="label"><?= $star ?> star</span>
-                  <span class="rbar-track"><span class="rbar-fill" style="--pct:<?= $pct ?>%;"></span></span>
-                  <span class="count"><?= $count ?></span>
-                </div>
-              <?php endfor; ?>
-            </div>
-          </div>
-        <?php endif; ?>
-
-        <div>
-          <?php if ($isEnrolled && $user): ?>
-            <div data-review-form data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-review.php')) ?>">
-              <form data-review-submit class="rform reveal">
-                <label>Your Rating</label>
-                <div class="star-input" data-star-input>
-                  <?php for ($i = 1; $i <= 5; $i++): ?>
-                    <button type="button" data-star="<?= $i ?>"><?= $myReview && (int) $myReview['rating'] >= $i ? '★' : '☆' ?></button>
-                  <?php endfor; ?>
-                </div>
-                <input type="hidden" name="rating" value="<?= $myReview ? (int) $myReview['rating'] : 5 ?>">
-                <label for="comment" style="display:block; margin-top:14px;">Your Review</label>
-                <textarea id="comment" name="comment" rows="3" placeholder="What did you learn? Would you recommend it?"><?= e($myReview['comment'] ?? '') ?></textarea>
-                <p class="error-text hidden" data-review-error></p>
-                <button type="submit" class="btn btn-primary"><?= $myReview ? 'Update Review' : 'Submit Review' ?></button>
-              </form>
-            </div>
-          <?php elseif ($isEnrolled): ?>
-            <p class="card card-pad muted small reveal" style="border-style:dashed;">
-              <a href="<?= e(base_url('signup.php')) ?>" style="color:var(--accent); font-weight:600;">Create a free account</a> to leave a review after completing this course.
-            </p>
-          <?php elseif ($user): ?>
-            <p class="card card-pad muted small reveal" style="border-style:dashed;">Enroll in this course to leave a review once you've learned from it.</p>
-          <?php else: ?>
-            <p class="card card-pad muted small reveal" style="border-style:dashed;">
-              <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to leave a review after completing this course.
-            </p>
-          <?php endif; ?>
-
-          <?php if (!$course['reviews']): ?>
-            <p class="small muted" style="margin-top:16px;">No reviews yet. Be the first to share your experience.</p>
-          <?php else: ?>
-            <div class="rlist">
-              <?php foreach ($course['reviews'] as $ri => $r): ?>
-                <div class="rcard reveal reveal-delay-<?= min($ri + 1, 5) ?>">
-                  <span class="quote">&rdquo;</span>
-                  <div class="head">
-                    <div class="avatar">
-                      <?php if (!empty($r['author_avatar_url'])): ?><img src="<?= e(asset_src($r['author_avatar_url'])) ?>" alt="">
-                      <?php else: ?><?= e(mb_substr($r['author_name'], 0, 1)) ?><?php endif; ?>
-                    </div>
-                    <div>
-                      <div class="name"><?= e($r['author_name']) ?></div>
-                      <div class="stars"><?= str_repeat('★', (int) $r['rating']) . str_repeat('☆', 5 - (int) $r['rating']) ?></div>
-                    </div>
-                  </div>
-                  <p class="comment"><?= e($r['comment']) ?></p>
-                </div>
-              <?php endforeach; ?>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
-
-      <div class="comments-heading">
-        <span class="comments-heading-icon"><?php dash_icon('message-square'); ?></span>
-        <h2 class="h3">Comments<?= $commentCount > 0 ? " ($commentCount)" : '' ?></h2>
-      </div>
-      <p class="muted small" style="margin-top:4px;">Open to any Obin Academy member — you don't need to be enrolled to join the discussion.</p>
-
-      <div data-comments-root data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-comment.php')) ?>" data-delete-url="<?= e(base_url('api/delete-comment.php')) ?>" style="margin-top:18px; max-width:660px;">
-        <?php if ($user): ?>
-          <form data-comment-submit class="comment-form reveal">
-            <div class="avatar comment-form-avatar">
-              <?php if (!empty($user['avatar_url'])): ?><img src="<?= e(asset_src($user['avatar_url'])) ?>" alt="">
-              <?php else: ?><?= e(mb_substr($user['name'], 0, 1)) ?><?php endif; ?>
-            </div>
-            <div class="comment-form-body">
-              <textarea id="commentBody" name="body" rows="2" maxlength="2000" placeholder="Ask a question or share your thoughts about this course…" required></textarea>
-              <div class="comment-form-footer">
-                <p class="error-text hidden" data-comment-error></p>
-                <span class="comment-char-count" data-char-count>2000</span>
-                <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
-              </div>
-            </div>
-          </form>
-        <?php else: ?>
-          <p class="card card-pad muted small reveal" style="border-style:dashed;">
-            <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to join the discussion — no enrollment needed.
-          </p>
-        <?php endif; ?>
-
-        <?php if (!$comments): ?>
-          <div class="comment-empty">
-            <?php dash_icon('message-square'); ?>
-            <p class="small muted">No comments yet. Be the first to start the discussion.</p>
-          </div>
-        <?php else: ?>
-          <div class="clist" data-comment-list>
-            <?php foreach ($comments as $ci => $cm): ?>
-              <div class="ccard reveal reveal-delay-<?= min($ci + 1, 5) ?>" data-comment-id="<?= (int) $cm['id'] ?>">
-                <div class="head">
-                  <div class="avatar">
-                    <?php if (!empty($cm['author_avatar_url'])): ?><img src="<?= e(asset_src($cm['author_avatar_url'])) ?>" alt="">
-                    <?php else: ?><?= e(mb_substr($cm['author_name'], 0, 1)) ?><?php endif; ?>
-                  </div>
-                  <div>
-                    <div class="name"><?= e($cm['author_name']) ?></div>
-                    <div class="small muted"><?= e(time_ago($cm['created_at'])) ?></div>
-                  </div>
-                  <?php if ($user && ($canModerateComments || (int) $cm['user_id'] === (int) $user['id'])): ?>
-                    <button type="button" class="ccard-delete" data-comment-delete title="Delete comment"><?php dash_icon('trash'); ?></button>
-                  <?php endif; ?>
-                </div>
-                <p class="comment"><?= nl2br(e($cm['body'])) ?></p>
-
-                <?php if ($user): ?>
-                  <button type="button" class="comment-reply-toggle" data-reply-toggle data-reply-to-id="<?= (int) $cm['id'] ?>" data-reply-to-name="<?= e($cm['author_name']) ?>">↩ Reply</button>
-                <?php endif; ?>
-
-                <?php if ($cm['replies']): ?>
-                  <div class="comment-replies">
-                    <?php foreach ($cm['replies'] as $rp): ?>
-                      <div class="comment-reply" data-comment-id="<?= (int) $rp['id'] ?>">
-                        <div class="head">
-                          <div class="avatar">
-                            <?php if (!empty($rp['author_avatar_url'])): ?><img src="<?= e(asset_src($rp['author_avatar_url'])) ?>" alt="">
-                            <?php else: ?><?= e(mb_substr($rp['author_name'], 0, 1)) ?><?php endif; ?>
-                          </div>
-                          <div>
-                            <div class="name"><?= e($rp['author_name']) ?></div>
-                            <div class="small muted"><?= e(time_ago($rp['created_at'])) ?></div>
-                          </div>
-                          <?php if ($user && ($canModerateComments || (int) $rp['user_id'] === (int) $user['id'])): ?>
-                            <button type="button" class="ccard-delete" data-comment-delete title="Delete reply"><?php dash_icon('trash'); ?></button>
-                          <?php endif; ?>
-                        </div>
-                        <?php if ($rp['reply_to_author_name'] && $rp['reply_to_author_name'] !== $cm['author_name']): ?>
-                          <div class="comment-reply-to">↪ Replying to <strong><?= e($rp['reply_to_author_name']) ?></strong></div>
-                        <?php endif; ?>
-                        <p class="comment"><?= nl2br(e($rp['body'])) ?></p>
-                        <?php if ($user): ?>
-                          <button type="button" class="comment-reply-toggle" data-reply-toggle data-reply-to-id="<?= (int) $rp['id'] ?>" data-reply-to-name="<?= e($rp['author_name']) ?>">↩ Reply</button>
-                        <?php endif; ?>
-                      </div>
-                    <?php endforeach; ?>
-                  </div>
-                <?php endif; ?>
-
-                <?php if ($user): ?>
-                  <form data-comment-submit data-thread-id="<?= (int) $cm['id'] ?>" class="comment-reply-form">
-                    <div class="comment-reply-to-chip hidden" data-reply-chip>
-                      <span>Replying to <strong data-reply-chip-name></strong></span>
-                      <button type="button" data-reply-cancel aria-label="Cancel reply target">✕</button>
-                    </div>
-                    <textarea name="body" rows="2" maxlength="2000" placeholder="Write a reply…" required></textarea>
-                    <div class="comment-form-footer">
-                      <p class="error-text hidden" data-comment-error></p>
-                      <span class="comment-char-count" data-char-count>2000</span>
-                      <button type="submit" class="btn btn-outline btn-sm">Post Reply</button>
-                    </div>
-                  </form>
-                <?php endif; ?>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        <?php endif; ?>
-      </div>
     </div>
 
     <aside class="course-sidebar">
@@ -442,7 +225,5 @@ require __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
-<script src="<?= e(versioned_asset('assets/js/review.js')) ?>"></script>
-<script src="<?= e(versioned_asset('assets/js/comments.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
