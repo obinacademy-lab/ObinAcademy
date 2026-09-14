@@ -92,6 +92,55 @@ function e(?string $value): string {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+/**
+ * Renders a plain-text course/event description (as typed into a textarea —
+ * blank-line-separated paragraphs, with "- " or "* " prefixed lines treated
+ * as a bullet list) as safe, structured HTML. Keeps creators free of a rich
+ * text editor while giving lists real markup instead of raw dashes.
+ */
+function format_rich_text(?string $text): string {
+    $text = trim((string) $text);
+    if ($text === '') return '';
+
+    $lines = explode("\n", str_replace("\r\n", "\n", $text));
+    $html = '';
+    $paraLines = [];
+    $listItems = [];
+
+    $flushPara = function () use (&$html, &$paraLines) {
+        if ($paraLines) {
+            $html .= '<p>' . implode('<br>', array_map('e', $paraLines)) . '</p>';
+            $paraLines = [];
+        }
+    };
+    $flushList = function () use (&$html, &$listItems) {
+        if ($listItems) {
+            $html .= '<ul class="rich-text-list">';
+            foreach ($listItems as $item) $html .= '<li>' . e($item) . '</li>';
+            $html .= '</ul>';
+            $listItems = [];
+        }
+    };
+
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '') {
+            $flushPara();
+            $flushList();
+        } elseif (preg_match('/^[-*]\s+(.+)/', $trimmed, $m)) {
+            $flushPara();
+            $listItems[] = $m[1];
+        } else {
+            $flushList();
+            $paraLines[] = $trimmed;
+        }
+    }
+    $flushPara();
+    $flushList();
+
+    return $html;
+}
+
 /** UGX has no minor unit — always round to whole shillings. */
 function format_money(float $amount): string {
     return 'UGX ' . number_format(round($amount), 0);

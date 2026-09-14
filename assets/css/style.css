@@ -1255,10 +1255,26 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    utility sizes (14-14.5px) for easier reading of the actual course
    content — the description, curriculum, and reviews someone reads to
    decide whether to enroll. */
-.course-content .course-description { font-size: 17px; }
+.course-content .course-description { font-size: 17px; margin-top: 14px; line-height: 1.75; }
 .course-content .module-block .module-title { font-size: 15.5px; }
 .course-content .module-block li { font-size: 15.5px; }
 .course-content .review-card p.comment { font-size: 16px; }
+
+/* format_rich_text() output: blank-line paragraphs + "- "/"* " bullet
+   blocks from the plain-text description textarea, given real spacing and
+   list markup instead of running together as one dense block of dashes. */
+.course-description p { margin-top: 18px; }
+.course-description p:first-child { margin-top: 0; }
+.course-description .rich-text-list {
+  list-style: none; margin: 14px 0 18px; padding: 0;
+  display: flex; flex-direction: column; gap: 11px;
+}
+.course-description .rich-text-list:last-child { margin-bottom: 0; }
+.course-description .rich-text-list li { position: relative; padding-left: 26px; }
+.course-description .rich-text-list li::before {
+  content: ""; position: absolute; left: 2px; top: 9px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+}
 
 /* Light hero variant for courses/index.php + courses/view.php only —
    everywhere else .course-hero keeps its dark navy treatment. */
