@@ -1863,7 +1863,12 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .brand-pane .glow-a { top: -140px; right: -120px; width: 340px; height: 340px; background: var(--accent); opacity: .35; }
 .brand-pane .glow-b { bottom: -160px; left: -100px; width: 320px; height: 320px; background: var(--gold); opacity: .16; }
 
-.brand-copy { margin-top: auto; padding-top: 60px; }
+/* max-width here, not on the headline/stats/quote individually, is what
+   keeps every block's right edge lined up in one column — before this,
+   the headline/sub were capped for readable line-length but the stats
+   row and quote card stretched to the panel's full width, so the right
+   edge zig-zagged down the page instead of forming a clean column. */
+.brand-copy { margin-top: auto; padding-top: 60px; max-width: 400px; }
 @media (max-width: 900px) { .brand-copy { padding-top: 28px; } }
 .brand-eyebrow {
   display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700;
@@ -1903,7 +1908,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .form-body h1 { font-size: 27px; }
 .form-body .lede { margin-top: 9px; font-size: 14.5px; }
 
-.auth-trust-row { margin-top: auto; padding-top: 28px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.auth-trust-row { margin-top: auto; padding-top: 28px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; max-width: 380px; }
 .auth-trust-row .item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
 .auth-trust-row .item svg { width: 14px; height: 14px; color: var(--success); flex-shrink: 0; }
 
