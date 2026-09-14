@@ -11,6 +11,35 @@ if ($mySubscription && in_array($mySubscription['status'], ['ACTIVE', 'GRACE'], 
 
 $stats = get_platform_stats();
 
+// Both tiers unlock the exact identical catalog — Pro is a higher monthly
+// amount for members who want to support creators more directly, so its
+// checklist gets one honest extra line, not a fake feature difference.
+$planCopy = [
+    'GO' => [
+        'blurb' => 'Unlock every course on Obin Academy and start learning today — one plan, no upsells, no per-course pricing.',
+        'perks' => [
+            'Full access to every course, every category',
+            'New courses included the moment they publish',
+            'Certificate of completion on every course',
+            'Stream video and PDF lessons on any device',
+            'Pay and renew by MTN or Airtel Mobile Money',
+            'Cancel anytime — no long contract',
+        ],
+    ],
+    'PRO' => [
+        'blurb' => 'The exact same full catalog as Go, at a higher monthly amount for members who want to back creators more directly.',
+        'perks' => [
+            'Full access to every course, every category',
+            'New courses included the moment they publish',
+            'Certificate of completion on every course',
+            'Stream video and PDF lessons on any device',
+            'Pay and renew by MTN or Airtel Mobile Money',
+            'Cancel anytime — no long contract',
+            'Directly supports the creators you learn from',
+        ],
+    ],
+];
+
 $pageTitle = 'Subscribe — Obin Academy';
 $pageDescription = 'One monthly payment, full access to every course on Obin Academy. Choose Go, Plus, or Pro.';
 require __DIR__ . '/includes/header.php';
@@ -78,29 +107,40 @@ require __DIR__ . '/includes/header.php';
         </div>
       </div>
     <?php else: ?>
-      <div class="grid md:grid-2" style="gap:24px; max-width:720px; margin:0 auto;">
-        <?php foreach (SUBSCRIPTION_TIERS as $tierKey => $tierInfo): ?>
-          <div class="card card-pad">
-            <h2 class="h3"><?= e($tierInfo['label']) ?></h2>
-            <p class="muted small" style="margin-top:6px;"><?= e($tierInfo['tagline']) ?></p>
-            <div style="margin-top:16px;">
-              <span style="font-size:32px; font-weight:800;"><?= e(format_money((float) $tierInfo['price'])) ?></span>
-              <span class="muted small">/ month</span>
+      <div class="plans-grid">
+        <?php foreach (SUBSCRIPTION_TIERS as $tierKey => $tierInfo): $plan = $planCopy[$tierKey]; ?>
+          <div class="plan-card reveal">
+            <div class="plan-card-glow" aria-hidden="true"></div>
+            <span class="plan-tag"><?php dash_icon('crown'); ?><?= e($tierInfo['label']) ?></span>
+            <div class="plan-price">
+              <span class="amount"><?= e(format_money((float) $tierInfo['price'])) ?></span>
+              <span class="period">/ month</span>
             </div>
+            <p class="plan-billing-note">Billed Monthly</p>
+            <p class="plan-blurb"><?= e($plan['blurb']) ?></p>
 
-            <div style="margin-top:20px;" data-payment-widget
+            <ul class="check-list">
+              <?php foreach ($plan['perks'] as $perk): ?>
+                <li>
+                  <span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                  <span class="label-text"><?= e($perk) ?></span>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+
+            <div data-payment-widget
                  data-tier="<?= e($tierKey) ?>"
                  data-initiate-url="<?= e(base_url('api/initiate-subscription.php')) ?>"
                  data-success-redirect="<?= e(base_url('dashboard/subscription.php')) ?>">
               <div data-state="idle">
-                <button class="btn btn-primary btn-block btn-lg" data-action="start">📱 Subscribe with Mobile Money</button>
+                <button class="btn btn-gold btn-block btn-lg" data-action="start">📱 Get <?= e($tierInfo['label']) ?> Access Now</button>
               </div>
               <div data-state="phone" class="hidden guest-form">
                 <div class="field-icon">
                   <?php dash_icon('wallet'); ?>
                   <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
                 </div>
-                <button class="btn btn-primary btn-block" data-action="pay">Pay <?= e(format_money((float) $tierInfo['price'])) ?></button>
+                <button class="btn btn-gold btn-block" data-action="pay">Pay <?= e(format_money((float) $tierInfo['price'])) ?></button>
               </div>
               <div data-state="waiting" class="hidden pay-waiting">
                 <div class="spinner"></div>
@@ -113,10 +153,11 @@ require __DIR__ . '/includes/header.php';
               <div data-state="failed" class="hidden pay-failed">
                 <p style="font-weight:700;">Payment not completed</p>
                 <p class="small muted" data-fail-text></p>
-                <button class="btn btn-primary btn-sm" data-action="retry">Try Again</button>
+                <button class="btn btn-gold btn-sm" data-action="retry">Try Again</button>
               </div>
               <p class="error-text hidden" data-error></p>
             </div>
+            <p class="plan-disclaimer">Pay right here on the page with MTN or Airtel Mobile Money — no redirect, no card needed.</p>
           </div>
         <?php endforeach; ?>
       </div>
