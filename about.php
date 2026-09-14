@@ -68,10 +68,6 @@ $aboutFaqs = [
     ['Do I need a laptop to learn?', "No. Obin Academy works in any phone, tablet, or laptop browser, so you can learn from wherever you already are."],
     ['How much can creators earn?', 'Creators set their own price and keep 90% of every sale. Obin Academy takes a transparent 10% platform fee — nothing hidden.'],
     ['Will I get a certificate?', 'Yes — completing all lessons in a course automatically unlocks a Certificate of Completion in your learner dashboard.'],
-    ['How does billing work?', "You're charged once by mobile money when you subscribe, then again every 30 days to keep your access active. If a renewal fails, you get a short grace window to fix it before access pauses."],
-    ['Can I cancel anytime?', "Yes — cancel from your Subscription dashboard whenever you want. You'll keep access until your current period ends, no cancellation fee."],
-    ["What's the difference between Go and Pro?", 'Both plans unlock the exact same full catalog — Pro is simply a higher monthly amount for members who want to support creators more directly.'],
-    ['Do new courses cost extra?', 'No. Every course a creator publishes — now or in the future — is already included in your subscription.'],
 ];
 
 $industries = [
