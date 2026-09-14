@@ -121,25 +121,6 @@ require __DIR__ . '/includes/header.php';
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
-
-    <div class="faq">
-      <details class="faq-item" open>
-        <summary>How does billing work? <span class="chev">▾</span></summary>
-        <p>You're charged once by mobile money when you subscribe, then again every 30 days to keep your access active. If a renewal fails, you get a short grace window to fix it before access pauses.</p>
-      </details>
-      <details class="faq-item">
-        <summary>Can I cancel anytime? <span class="chev">▾</span></summary>
-        <p>Yes — cancel from your Subscription dashboard whenever you want. You'll keep access until your current period ends, no cancellation fee.</p>
-      </details>
-      <details class="faq-item">
-        <summary>What's the difference between Go and Pro? <span class="chev">▾</span></summary>
-        <p>Both plans unlock the exact same full catalog — Pro is simply a higher monthly amount for members who want to support creators more directly.</p>
-      </details>
-      <details class="faq-item">
-        <summary>Do new courses cost extra? <span class="chev">▾</span></summary>
-        <p>No. Every course a creator publishes — now or in the future — is already included in your subscription.</p>
-      </details>
-    </div>
   </div>
 </section>
 
