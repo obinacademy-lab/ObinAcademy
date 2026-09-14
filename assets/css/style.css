@@ -1543,7 +1543,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .path-card { border-radius: var(--radius-lg); padding: 36px 32px; }
 .path-old { background: var(--surface); border: 1.5px dashed var(--border-strong); }
 .path-old .path-tag { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.path-old .path-amount { margin-top: 10px; font-size: 30px; font-weight: 800; color: var(--ink); }
+.path-old .path-amount { margin-top: 10px; font-size: 30px; font-weight: 800; color: var(--gold-dark); }
 .path-old .path-amount span { font-size: 14px; font-weight: 700; color: var(--muted); }
 .path-old p.path-desc { margin-top: 14px; color: var(--muted); font-size: 14.5px; line-height: 1.65; }
 .path-vs { display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--muted); font-size: 13px; letter-spacing: 0.08em; }
