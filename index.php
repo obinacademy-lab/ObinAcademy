@@ -201,6 +201,27 @@ require __DIR__ . '/includes/header.php';
   </div>
 </section>
 
+<section class="section" style="background:var(--surface);">
+  <div class="container">
+    <div class="why-exist-grid">
+      <div class="why-exist-photo reveal">
+        <img src="<?= e(versioned_asset('assets/img/faceofbrand.jpeg')) ?>" alt="Obin Ivan, Founder &amp; CEO of Obin Academy">
+      </div>
+      <div class="reveal reveal-delay-2">
+        <span class="eyebrow">Meet the Founder</span>
+        <h2 class="h2" style="margin-top:14px;">Built By Someone Who's Done The Work</h2>
+        <p class="lede" style="margin-top:16px; max-width:none; font-size:16.5px; line-height:1.75; color:var(--muted);">
+          I built Obin Academy because I believe every African with a skill worth teaching — and every person ready to learn one — deserves a platform that actually works for how they live and pay. No imported theory, no gatekeeping. Just practical skills, taught by people who've done the work, unlocked with a phone and mobile money.
+        </p>
+        <div class="mission-callout" style="margin-top:24px;">
+          <span class="tag">Obin Ivan</span>
+          <p>Founder &amp; CEO, Obin Academy</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <?php if ($testimonials): ?>
   <section class="section testimonials-decor">
     <div class="container">
