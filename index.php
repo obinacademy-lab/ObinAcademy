@@ -74,9 +74,23 @@ require __DIR__ . '/includes/header.php';
       <div class="home-hero-copy">
         <p class="founder-welcome-line reveal">Hi, I'm Obin Ivan — welcome to Obin Academy, the platform I built to help you learn a real skill and start earning, right from your phone.</p>
         <span class="pill reveal reveal-delay-1"><?php dash_icon('sparkle'); ?>Skills That Pay You Back</span>
-        <h1 class="reveal reveal-delay-2">The System Taught You to Chase Opportunities. We Teach You to Create Them.</h1>
-        <div class="summary reveal reveal-delay-3">
-          <p>Millions spend years earning certificates, yet still struggle because they were never taught the skills today's economy rewards. Obin Academy equips you with practical, in-demand skills in AI, Business, Finance, Technology, Digital Marketing, Content Creation, Web Development, and more—taught by experienced African creators. Stop waiting for opportunity. Start building the skills that create it.</p>
+        <div class="hero-quote reveal reveal-delay-2">
+          <span class="hero-quote-mark-open" aria-hidden="true">
+            <svg viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 36V22.7C0 9.1 7.9 1.1 19.9 0l1.6 5.4C13.7 7.4 9.6 12.6 9.1 19.6h10.4V36H0Z" fill="url(#heroQuoteGradOpen)"></path>
+              <path d="M26.6 36V22.7C26.6 9.1 34.5 1.1 46.5 0l1.6 5.4c-7.8 2-11.9 7.2-12.4 14.2h10.4V36H26.6Z" fill="url(#heroQuoteGradOpen)"></path>
+              <defs><linearGradient id="heroQuoteGradOpen" x1="0" y1="0" x2="48" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe49a"></stop><stop offset="1" stop-color="#f5b301"></stop></linearGradient></defs>
+            </svg>
+          </span>
+          <h1 class="hero-quote-headline">The System Taught You to Chase Opportunities. We Teach You to Create Them.</h1>
+          <p class="hero-quote-body">Millions spend years earning certificates, yet still struggle because they were never taught the skills today's economy rewards. Obin Academy equips you with practical, in-demand skills in AI, Business, Finance, Technology, Digital Marketing, Content Creation, Web Development, and more—taught by experienced African creators. Stop waiting for opportunity. Start building the skills that create it.</p>
+          <span class="hero-quote-mark-close" aria-hidden="true">
+            <svg viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 36V22.7C0 9.1 7.9 1.1 19.9 0l1.6 5.4C13.7 7.4 9.6 12.6 9.1 19.6h10.4V36H0Z" fill="url(#heroQuoteGradClose)"></path>
+              <path d="M26.6 36V22.7C26.6 9.1 34.5 1.1 46.5 0l1.6 5.4c-7.8 2-11.9 7.2-12.4 14.2h10.4V36H26.6Z" fill="url(#heroQuoteGradClose)"></path>
+              <defs><linearGradient id="heroQuoteGradClose" x1="0" y1="0" x2="48" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe49a"></stop><stop offset="1" stop-color="#f5b301"></stop></linearGradient></defs>
+            </svg>
+          </span>
         </div>
         <div class="row gap-2 wrap reveal reveal-delay-4" style="margin-top:30px;">
           <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-gold btn-lg">Browse Courses <span class="btn-arrow">→</span></a>
