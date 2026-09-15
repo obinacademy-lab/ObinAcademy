@@ -1288,9 +1288,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    side-by-side with the existing headline/CTA so the founder is the
    first thing a visitor sees, without pushing anything below the fold. ---------- */
 .home-hero-split-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr; gap: 40px; align-items: center; }
-@media (min-width: 860px) { .home-hero-split-grid { grid-template-columns: 0.85fr 1.15fr; gap: 56px; } }
+@media (min-width: 860px) { .home-hero-split-grid { grid-template-columns: 1fr 1.1fr; gap: 56px; } }
 
-.founder-welcome-photo { position: relative; max-width: 300px; margin: 0 auto; }
+.founder-welcome-photo { position: relative; max-width: 420px; margin: 0 auto; }
 @media (min-width: 860px) { .founder-welcome-photo { margin: 0; } }
 .founder-welcome-photo img {
   width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block;

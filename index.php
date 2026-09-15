@@ -60,7 +60,7 @@ require __DIR__ . '/includes/header.php';
     <div class="home-hero-split-grid">
       <div class="founder-welcome-photo reveal">
         <img src="<?= e(versioned_asset('assets/img/faceofbrand.jpeg')) ?>" alt="Obin Ivan, Founder &amp; CEO of Obin Academy">
-        <span class="founder-badge">👋 Obin Ivan, Founder &amp; CEO</span>
+        <span class="founder-badge">Obin Ivan, Founder &amp; CEO</span>
       </div>
       <div class="home-hero-copy">
         <p class="founder-welcome-line reveal">Hi, I'm Obin Ivan — welcome to Obin Academy, the platform I built to help you learn a real skill and start earning, right from your phone.</p>
