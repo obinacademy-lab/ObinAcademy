@@ -43,56 +43,6 @@ $structuredData = [
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="course-hero home-hero home-hero-split">
-  <div class="home-hero-grid" aria-hidden="true"></div>
-  <div class="course-hero-glow" aria-hidden="true"></div>
-  <div class="home-hero-glow-2" aria-hidden="true"></div>
-  <div class="container">
-    <div class="home-hero-split-grid">
-      <div class="founder-welcome-photo reveal">
-        <div class="founder-photo-frame" aria-hidden="true"></div>
-        <div class="founder-photo-glow" aria-hidden="true"></div>
-        <div class="founder-photo-inner">
-          <img src="<?= e(versioned_asset('assets/img/faceofbrand.jpeg')) ?>" alt="Obin Ivan, Founder &amp; CEO of Obin Academy">
-          <div class="founder-photo-vignette" aria-hidden="true"></div>
-          <div class="founder-photo-shine" aria-hidden="true"></div>
-        </div>
-        <span class="founder-badge">
-          <span class="founder-badge-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
-          Obin Ivan, Founder &amp; CEO
-        </span>
-      </div>
-      <div class="home-hero-copy">
-        <p class="founder-welcome-line reveal">Hi, I'm Obin Ivan — welcome to Obin Academy, the platform I built to help you learn a real skill and start earning, right from your phone.</p>
-        <span class="pill reveal reveal-delay-1"><?php dash_icon('sparkle'); ?>Skills That Pay You Back</span>
-        <div class="hero-quote reveal reveal-delay-2">
-          <span class="hero-quote-mark-open" aria-hidden="true">
-            <svg viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0 36V22.7C0 9.1 7.9 1.1 19.9 0l1.6 5.4C13.7 7.4 9.6 12.6 9.1 19.6h10.4V36H0Z" fill="url(#heroQuoteGradOpen)"></path>
-              <path d="M26.6 36V22.7C26.6 9.1 34.5 1.1 46.5 0l1.6 5.4c-7.8 2-11.9 7.2-12.4 14.2h10.4V36H26.6Z" fill="url(#heroQuoteGradOpen)"></path>
-              <defs><linearGradient id="heroQuoteGradOpen" x1="0" y1="0" x2="48" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe49a"></stop><stop offset="1" stop-color="#f5b301"></stop></linearGradient></defs>
-            </svg>
-          </span>
-          <h1 class="hero-quote-headline">The System Taught You to Chase Opportunities. We Teach You to Create Them.</h1>
-          <p class="hero-quote-body">Millions spend years earning certificates, yet still struggle because they were never taught the skills today's economy rewards. Obin Academy equips you with practical, in-demand skills in AI, Business, Finance, Technology, Digital Marketing, Content Creation, Web Development, and more—taught by experienced African creators. Stop waiting for opportunity. Start building the skills that create it.</p>
-          <span class="hero-quote-mark-close" aria-hidden="true">
-            <svg viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0 36V22.7C0 9.1 7.9 1.1 19.9 0l1.6 5.4C13.7 7.4 9.6 12.6 9.1 19.6h10.4V36H0Z" fill="url(#heroQuoteGradClose)"></path>
-              <path d="M26.6 36V22.7C26.6 9.1 34.5 1.1 46.5 0l1.6 5.4c-7.8 2-11.9 7.2-12.4 14.2h10.4V36H26.6Z" fill="url(#heroQuoteGradClose)"></path>
-              <defs><linearGradient id="heroQuoteGradClose" x1="0" y1="0" x2="48" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe49a"></stop><stop offset="1" stop-color="#f5b301"></stop></linearGradient></defs>
-            </svg>
-          </span>
-        </div>
-        <div class="row gap-2 wrap reveal reveal-delay-4" style="margin-top:30px;">
-          <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-gold btn-lg">Browse Courses <span class="btn-arrow">→</span></a>
-          <a href="#included" class="btn btn-outline-light btn-lg">See What's Included</a>
-        </div>
-        <p class="small reveal reveal-delay-5" style="margin-top:16px; color:rgba(255,255,255,0.55);">Pay only for the course you want. No subscriptions, no hidden fees.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <?php if ($catalogPreview): ?>
 <section class="section" style="background:var(--surface);">
   <div class="container">
