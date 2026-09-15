@@ -97,33 +97,34 @@ require __DIR__ . '/../includes/header.php';
   </div>
 <?php endif; ?>
 
-<section class="course-hero course-hero-centered">
-  <div class="course-hero-glow" aria-hidden="true"></div>
+<section class="section" style="padding-bottom:28px;">
   <div class="container">
-    <nav class="breadcrumb reveal">
-      <a href="<?= e(base_url('/')) ?>">Home</a>
-      <?php dash_icon('chevron-right'); ?>
-      <a href="<?= e(base_url('courses/index.php')) ?>">Courses</a>
-      <?php dash_icon('chevron-right'); ?>
-      <a href="<?= e(base_url('courses/index.php?category=' . $course['category_slug'])) ?>"><?= e($course['category_name']) ?></a>
-    </nav>
+    <div class="course-detail-hero reveal">
+      <div class="course-detail-hero-eyebrow-row">
+        <span class="dash" aria-hidden="true"></span>
+        <span class="txt"><?= e($course['category_name']) ?> Course</span>
+      </div>
+      <nav class="course-detail-hero-crumb">
+        <a href="<?= e(base_url('/')) ?>">Home</a><span class="sep">/</span>
+        <a href="<?= e(base_url('courses/index.php')) ?>">Courses</a><span class="sep">/</span>
+        <a href="<?= e(base_url('courses/index.php?category=' . $course['category_slug'])) ?>"><?= e($course['category_name']) ?></a>
+      </nav>
 
-    <div class="reveal reveal-delay-1">
-      <span class="pill"><?php dash_icon('tag'); ?><?= e($course['category_name']) ?></span>
-      <h1><?= e($course['title']) ?></h1>
-      <p class="summary"><?= e($course['summary']) ?></p>
+      <div class="course-detail-hero-title-wrap"><h1><?= e($course['title']) ?></h1></div>
+      <div class="course-detail-hero-rule" aria-hidden="true"></div>
+      <p class="course-detail-hero-summary"><?= e($course['summary']) ?></p>
 
-      <div class="meta-row">
-        <span class="meta-chip"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> students</span>
-        <span class="meta-chip"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
-        <span class="meta-chip"><?php dash_icon('play'); ?><?= $totalLessons ?> lessons</span>
+      <div class="course-detail-hero-byline">
+        <span class="stat"><span class="num"><?= (int) $course['student_count'] ?></span><span class="lbl">student<?= (int) $course['student_count'] === 1 ? '' : 's' ?></span></span>
+        <span class="stat"><span class="num"><?= number_format((int) $course['view_count']) ?></span><span class="lbl">view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span></span>
+        <span class="stat"><span class="num"><?= $totalLessons ?></span><span class="lbl">lesson<?= $totalLessons === 1 ? '' : 's' ?></span></span>
         <?php if (!empty($course['reviewed_at'])): ?>
-          <span class="meta-chip"><?php dash_icon('calendar'); ?>Published <?= e(format_date($course['reviewed_at'])) ?> at <?= e(date('g:i A', strtotime($course['reviewed_at']))) ?></span>
+          <span class="pub">Published <?= e(format_date($course['reviewed_at'])) ?> at <?= e(date('g:i A', strtotime($course['reviewed_at']))) ?></span>
         <?php endif; ?>
       </div>
 
-      <div class="row gap-2 wrap" style="align-items:center; margin-top:26px;">
-        <a href="<?= e(base_url('profile.php?id=' . $course['creator_user_id'])) ?>" class="instructor">
+      <div class="course-detail-hero-foot">
+        <a href="<?= e(base_url('profile.php?id=' . $course['creator_user_id'])) ?>" class="course-detail-hero-instructor">
           <div class="avatar">
             <?php if (!empty($course['creator_avatar_url'])): ?>
               <img src="<?= e(asset_src($course['creator_avatar_url'])) ?>" alt="">
