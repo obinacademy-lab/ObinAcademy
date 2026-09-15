@@ -1568,6 +1568,28 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .center-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
 .center-grid > .value-card { flex: 1 1 250px; max-width: 280px; }
 
+/* ---------- "Who It's For" audience cards (homepage) — same card
+   language as join.digital-launchpad.com's "Who is Digital Launchpad
+   for?" section (dark card, circular icon badge, big bold uppercase
+   title), reskinned into Obin's navy/gold instead of black/orange. ---------- */
+.audience-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 640px) { .audience-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .audience-grid { grid-template-columns: repeat(4, 1fr); } }
+.audience-card {
+  text-align: center; border-radius: var(--radius-lg); padding: 36px 26px; color: #fff;
+  background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800));
+}
+.audience-icon-circle {
+  display: flex; align-items: center; justify-content: center; margin: 0 auto;
+  width: 64px; height: 64px; border-radius: 50%; font-size: 28px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+}
+.audience-card h3 {
+  margin-top: 20px; font-size: 19px; font-weight: 800; letter-spacing: 0.02em;
+  text-transform: uppercase; color: var(--gold);
+}
+.audience-card p { margin-top: 12px; font-size: 14px; line-height: 1.65; color: rgba(255,255,255,0.75); }
+
 /* ---------- two-paths comparison (homepage) ---------- */
 .paths-grid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: stretch; margin-top: 44px; }
 @media (min-width: 800px) { .paths-grid { grid-template-columns: 1fr auto 1fr; gap: 24px; } }

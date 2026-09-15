@@ -105,10 +105,10 @@ require __DIR__ . '/includes/header.php';
       <h2 class="h2" style="margin-top:10px;">Wherever You're Starting From</h2>
       <p class="lede" style="margin-top:10px; max-width:none;">Obin Academy isn't built for one type of learner — it's built for anyone in East Africa ready to build a skill that pays.</p>
     </div>
-    <div class="center-grid" style="margin-top:36px;">
+    <div class="audience-grid" style="margin-top:36px;">
       <?php foreach ($audiences as $i => [$emoji, $tint, $title, $desc]): ?>
-        <div class="value-card reveal reveal-delay-<?= min($i + 1, 5) ?>">
-          <span class="icon-badge" style="--tint:<?= e($tint) ?>;"><?= $emoji ?></span>
+        <div class="audience-card reveal reveal-delay-<?= min($i + 1, 5) ?>">
+          <span class="audience-icon-circle"><?= $emoji ?></span>
           <h3><?= e($title) ?></h3>
           <p><?= e($desc) ?></p>
         </div>
