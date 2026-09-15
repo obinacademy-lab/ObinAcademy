@@ -139,7 +139,7 @@ require __DIR__ . '/includes/header.php';
     <div class="paths-grid">
       <div class="path-card path-old reveal">
         <div class="path-tag">The Old Way</div>
-        <div class="path-amount">Years + Millions <span>in UGX</span></div>
+        <div class="path-amount">Years + Millions <span>in Traditional Education</span></div>
         <p class="path-desc">Tuition, textbooks, and years of your time — for a general degree that may not teach you the specific, practical skill you actually need to earn.</p>
         <span class="path-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>Stuck With the Same Outcome</span>
       </div>
