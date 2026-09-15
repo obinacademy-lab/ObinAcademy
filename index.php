@@ -59,8 +59,17 @@ require __DIR__ . '/includes/header.php';
   <div class="container">
     <div class="home-hero-split-grid">
       <div class="founder-welcome-photo reveal">
-        <img src="<?= e(versioned_asset('assets/img/faceofbrand.jpeg')) ?>" alt="Obin Ivan, Founder &amp; CEO of Obin Academy">
-        <span class="founder-badge">Obin Ivan, Founder &amp; CEO</span>
+        <div class="founder-photo-frame" aria-hidden="true"></div>
+        <div class="founder-photo-glow" aria-hidden="true"></div>
+        <div class="founder-photo-inner">
+          <img src="<?= e(versioned_asset('assets/img/faceofbrand.jpeg')) ?>" alt="Obin Ivan, Founder &amp; CEO of Obin Academy">
+          <div class="founder-photo-vignette" aria-hidden="true"></div>
+          <div class="founder-photo-shine" aria-hidden="true"></div>
+        </div>
+        <span class="founder-badge">
+          <span class="founder-badge-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+          Obin Ivan, Founder &amp; CEO
+        </span>
       </div>
       <div class="home-hero-copy">
         <p class="founder-welcome-line reveal">Hi, I'm Obin Ivan — welcome to Obin Academy, the platform I built to help you learn a real skill and start earning, right from your phone.</p>

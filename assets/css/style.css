@@ -1286,18 +1286,83 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 .founder-welcome-photo { position: relative; max-width: 420px; margin: 0 auto; }
 @media (min-width: 860px) { .founder-welcome-photo { margin: 0; } }
+
+/* premium framing: a layered gold-outline card offset behind the photo,
+   a breathing ambient glow, a bottom vignette, and a one-time diagonal
+   shine sweep the moment the photo scrolls into view — all keyed off
+   the existing .reveal/.in-view scroll system, no separate JS needed. */
+.founder-photo-frame {
+  position: absolute; inset: 16px -16px -16px 16px; z-index: 0;
+  border: 1.5px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  border-radius: var(--radius-lg);
+  transform: rotate(-2.2deg);
+  opacity: 0; transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), border-color 0.4s ease, opacity 0.7s ease 0.15s;
+}
+.founder-welcome-photo.in-view .founder-photo-frame { opacity: 1; }
+.founder-welcome-photo:hover .founder-photo-frame { transform: rotate(-1.1deg) translate(4px, -4px); border-color: color-mix(in srgb, var(--gold) 85%, transparent); }
+
+.founder-photo-glow {
+  position: absolute; z-index: 0; top: 50%; left: 50%; width: 320px; height: 320px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, var(--gold) 0%, transparent 72%);
+  opacity: 0; filter: blur(60px); pointer-events: none;
+  transition: opacity 1.1s ease 0.3s;
+  animation: photo-glow-breathe 8s ease-in-out infinite;
+}
+.founder-welcome-photo.in-view .founder-photo-glow { opacity: 0.24; }
+@keyframes photo-glow-breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.12); } }
+
+.founder-photo-inner { position: relative; z-index: 1; border-radius: var(--radius-lg); overflow: hidden; }
 .founder-welcome-photo img {
   width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block;
   border-radius: var(--radius-lg); border: 3px solid rgba(255,255,255,0.16);
   box-shadow: 0 30px 60px -24px rgba(0,0,0,0.55);
+  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), box-shadow 0.5s ease;
 }
+.founder-welcome-photo:hover img { transform: scale(1.035) translateY(-3px); box-shadow: 0 40px 72px -18px rgba(0,0,0,0.62); }
+
+.founder-photo-vignette {
+  position: absolute; z-index: 2; inset: 0; border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, transparent 58%, rgba(8,12,28,0.55) 100%);
+  pointer-events: none;
+}
+
+.founder-photo-shine {
+  position: absolute; z-index: 3; inset: 0; border-radius: var(--radius-lg);
+  background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.4) 50%, transparent 58%);
+  transform: translateX(-130%);
+  pointer-events: none;
+}
+.founder-welcome-photo.in-view .founder-photo-shine { animation: photo-shine-sweep 1.3s ease 0.55s 1; }
+@keyframes photo-shine-sweep { to { transform: translateX(130%); } }
+
 .founder-badge {
-  position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); white-space: nowrap;
-  display: inline-flex; align-items: center; gap: 6px;
+  position: absolute; z-index: 4; left: 50%; bottom: -16px; transform: translateX(-50%) scale(0.85); white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 7px;
   background: #fff; color: var(--ink); font-size: 12px; font-weight: 800;
-  padding: 8px 16px; border-radius: var(--radius-full); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.45);
+  padding: 8px 16px 8px 12px; border-radius: var(--radius-full); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.45);
+  opacity: 0; transition: opacity 0.5s ease 0.85s, transform 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.85s;
 }
-@media (min-width: 860px) { .founder-badge { left: 20px; transform: none; } }
+.founder-welcome-photo.in-view .founder-badge { opacity: 1; transform: translateX(-50%) scale(1); }
+.founder-welcome-photo:hover .founder-badge { transform: translateX(-50%) translateY(-3px) scale(1); }
+@media (min-width: 860px) {
+  .founder-badge { left: 20px; transform: translateY(6px) scale(0.85); }
+  .founder-welcome-photo.in-view .founder-badge { transform: translateY(0) scale(1); }
+  .founder-welcome-photo:hover .founder-badge { transform: translateY(-3px) scale(1); }
+}
+.founder-badge-check {
+  width: 15px; height: 15px; flex-shrink: 0; border-radius: 50%;
+  background: var(--gold); color: #1e1400; display: inline-flex; align-items: center; justify-content: center;
+}
+.founder-badge-check svg { width: 9px; height: 9px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .founder-photo-frame, .founder-photo-glow, .founder-welcome-photo img, .founder-badge { transition: none; }
+  .founder-photo-glow, .founder-photo-shine { animation: none; }
+  .founder-welcome-photo.in-view .founder-photo-frame,
+  .founder-welcome-photo.in-view .founder-photo-glow,
+  .founder-welcome-photo.in-view .founder-badge { opacity: 1; transform: none; }
+}
 
 .home-hero-copy { text-align: left; }
 .founder-welcome-line {
