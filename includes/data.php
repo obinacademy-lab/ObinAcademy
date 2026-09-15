@@ -25,14 +25,14 @@ function get_course_cards(string $whereSql = '', array $params = [], string $ord
 }
 
 function get_featured_courses(int $take = 6): array {
-    return get_course_cards('', [], 'c.created_at DESC', $take);
+    return get_course_cards('', [], POPULARITY_ORDER, $take);
 }
 
-// A purchase (an enrollment) signals real commitment, a view just curiosity —
-// weighting student_count 10x keeps a handful of paying students ranking
-// above a course that's only racked up page views, while still letting raw
-// view volume matter for courses too new to have many sales yet.
-const POPULARITY_ORDER = '(student_count * 10 + c.view_count) DESC, c.created_at DESC';
+// Ranks by view_count first, then by student_count (enrollments/purchases) as
+// the tiebreaker — the most-viewed course leads even if a lower-viewed course
+// has more purchases, and among courses with the same view count the
+// most-bought one wins. created_at is the final tiebreak for stability.
+const POPULARITY_ORDER = 'c.view_count DESC, student_count DESC, c.created_at DESC';
 
 const COURSE_SORT_OPTIONS = [
     'newest' => ['label' => 'Newest', 'order' => 'c.created_at DESC'],
