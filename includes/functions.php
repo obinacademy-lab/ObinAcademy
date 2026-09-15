@@ -14,6 +14,22 @@ const MAX_DAILY_WITHDRAWAL_UGX = 3000000;
 // PUBLISHED), not created_at (which could be from long before it was ready).
 const NEW_COURSE_BADGE_DAYS = 14;
 
+const ACCESS_DURATION_OPTIONS = [
+    ['label' => '30 days', 'days' => 30],
+    ['label' => '90 days', 'days' => 90],
+    ['label' => '180 days', 'days' => 180],
+    ['label' => '365 days', 'days' => 365],
+    ['label' => 'Lifetime access', 'days' => null],
+];
+
+const SALE_DURATION_OPTIONS = [
+    ['label' => '3 days', 'days' => 3],
+    ['label' => '5 days', 'days' => 5],
+    ['label' => '7 days', 'days' => 7],
+    ['label' => '14 days', 'days' => 14],
+    ['label' => '30 days', 'days' => 30],
+];
+
 /**
  * Every dashboard theme color available to a user (Settings → Dashboard
  * Theme), each a fully-designed "dark shell + one accent" pairing — never a

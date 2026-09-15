@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/enrollment.php';
-require __DIR__ . '/../includes/subscriptions.php';
 
 // A PDF/text lesson has no natural playback clock, so "marked complete"
 // stands in for watch-time — a fixed credit, once per (user, lesson),
@@ -21,15 +20,12 @@ if (!$lesson) json_response(['error' => 'Lesson not found.'], 404);
 $isOwner = (int) $lesson['creator_id'] === (int) $user['id'];
 $isAdmin = $user['role'] === 'ADMIN';
 $enrollment = db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $lesson['course_id']]);
-$hasSubAccess = !$enrollment && user_has_active_subscription((int) $user['id']);
 
-if (!$isOwner && !$isAdmin && !$enrollment && !$hasSubAccess) {
+if (!$isOwner && !$isAdmin && !$enrollment) {
     json_response(['error' => 'You do not have access to this lesson.'], 403);
 }
 
-// Same reasoning as track-watch-time.php: a creator/admin preview never
-// counts toward the payout pool, only a genuine learner's completion does.
-if ($enrollment || $hasSubAccess) {
+if ($enrollment) {
     db_run(
         'INSERT IGNORE INTO lesson_text_completions (credit_seconds, user_id, lesson_id) VALUES (?, ?, ?)',
         [TEXT_LESSON_WATCH_CREDIT_SECONDS, $user['id'], $lessonId]

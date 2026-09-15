@@ -7,14 +7,13 @@ header('Content-Type: application/xml; charset=utf-8');
 /** @var array<int, array{loc: string, lastmod?: string, changefreq?: string, priority?: string}> */
 $urls = [];
 
-// The catalog is public again — courses/index.php, its category filters,
-// and every published course's own detail page are real, crawlable
-// content. Only the actual lesson stream (learn.php/stream.php) stays out,
-// since that still requires an active subscription.
+// courses/index.php, its category filters, and every published course's
+// own detail page are real, crawlable content. Only the actual lesson
+// stream (learn.php/stream.php) stays out, since that still requires
+// enrollment.
 $staticPages = [
     ['index.php', 'daily', '1.0'],
     ['courses/index.php', 'daily', '0.9'],
-    ['subscribe.php', 'daily', '0.9'],
     ['skills.php', 'weekly', '0.6'],
     ['stories.php', 'weekly', '0.5'],
     ['become-creator.php', 'monthly', '0.6'],

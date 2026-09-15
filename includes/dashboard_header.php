@@ -11,7 +11,6 @@ $navByRole = [
     'LEARNER' => [
         'Learning' => [
             ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
-            ['/dashboard/subscription.php', 'My Subscription', 'crown'],
         ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],
@@ -45,7 +44,6 @@ $navByRole = [
             ['/dashboard/admin/categories.php', 'Categories', 'tag'],
             ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
             ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
-            ['/dashboard/admin/subscriptions.php', 'Subscriptions', 'crown'],
             ['/dashboard/admin/comments.php', 'Comments', 'message-square'],
         ],
         'System' => [

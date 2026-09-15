@@ -2,10 +2,7 @@
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/data.php';
 require __DIR__ . '/../../includes/course_card.php';
-require __DIR__ . '/../../includes/subscriptions.php';
 $user = require_login();
-
-$mySubscription = user_has_active_subscription((int) $user['id']);
 
 $enrollments = db_all('
     SELECT e.*, c.title, c.slug, c.thumbnail_url, c.category_id, cat.name AS category_name,
@@ -99,16 +96,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline">Browse Courses</a>
   </div>
 </div>
-
-<?php if ($mySubscription): ?>
-  <div class="card card-pad row between wrap gap-3 reveal" style="margin-top:20px; align-items:center; border-color: color-mix(in srgb, var(--accent) 30%, var(--border));">
-    <div class="row gap-2" style="align-items:center;">
-      <?php dash_icon('crown'); ?>
-      <p class="small" style="font-weight:600;">Your <?= e(SUBSCRIPTION_TIERS[$mySubscription['tier']]['label']) ?> subscription gives you full catalog access — the courses below are just what you've individually enrolled in.</p>
-    </div>
-    <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline btn-sm">Browse Full Catalog</a>
-  </div>
-<?php endif; ?>
 
 <div class="grid md:grid-2 lg:grid-4" style="margin-top:24px;">
   <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#2563eb;">

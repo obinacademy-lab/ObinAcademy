@@ -3,7 +3,6 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/enroll_panel.php';
 require __DIR__ . '/includes/enrollment.php';
-require __DIR__ . '/includes/subscriptions.php';
 
 $user = current_user();
 $slug = query_param('slug');
@@ -15,12 +14,7 @@ $enrollment = $user
     ? db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : guest_enrollment_for_course((int) $course['id']);
 
-// A subscriber can learn any course without ever buying it individually —
-// but has no `enrollments` row, so progress/certificates stay purchase-only
-// for now (see includes/subscriptions.php).
-$hasSubAccess = !$enrollment && $user && !$isOwner && user_has_active_subscription((int) $user['id']);
-
-if (!$enrollment && !$isOwner && !$hasSubAccess) redirect('/courses/view.php?slug=' . $slug);
+if (!$enrollment && !$isOwner) redirect('/courses/view.php?slug=' . $slug);
 $isGuest = !$user && !$isOwner;
 
 $isExpired = !$isOwner && $enrollment && $enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time();
@@ -43,9 +37,6 @@ if ($isExpired) {
     exit;
 }
 
-// Premium upgrade is retired (it was an upsell on top of a one-time course
-// purchase, which no longer exists) — is_premium/premium_price stay purely
-// to honor download rights a grandfathered buyer already paid for.
 $isPremium = $isOwner || ($enrollment && (bool) $enrollment['is_premium']);
 // A free course the creator never set a premium download price on has no
 // paywall to protect — let downloads through without requiring a premium

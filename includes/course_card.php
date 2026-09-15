@@ -1,18 +1,21 @@
 <?php
 /**
  * Renders a course card. Expects $c (a get_course_cards() row) in scope.
- * No price/sale display — every course is included in a subscription now,
- * never sold individually, so a per-course price would be misleading.
  * Always carries .reveal (scroll fade-in) — every grid this renders into
  * gets a wave-in for free, no per-call-site wiring needed (see the
  * nth-child stagger and combined .course-card.reveal transition in
  * style.css, right below the .course-card rules).
  */
 function render_course_card(array $c): void {
+    $hasSale = course_has_active_sale($c);
+    $displayPrice = $hasSale ? (float) $c['sale_price'] : (float) $c['price'];
+    $saleDaysLeft = $hasSale ? course_sale_days_left($c) : null;
     ?>
     <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="course-card reveal">
       <div class="thumb">
-        <?php if (!empty($c['reviewed_at']) && strtotime($c['reviewed_at']) >= strtotime('-' . NEW_COURSE_BADGE_DAYS . ' days')): ?>
+        <?php if ($hasSale): ?>
+          <span class="badge-pill badge-sale">🔥 <?= $saleDaysLeft !== null ? $saleDaysLeft . ' day' . ($saleDaysLeft === 1 ? '' : 's') . ' left' : 'On Sale' ?></span>
+        <?php elseif (!empty($c['reviewed_at']) && strtotime($c['reviewed_at']) >= strtotime('-' . NEW_COURSE_BADGE_DAYS . ' days')): ?>
           <span class="badge-pill badge-new">New</span>
         <?php endif; ?>
         <?php if (!empty($c['thumbnail_url'])): ?>
@@ -39,8 +42,18 @@ function render_course_card(array $c): void {
           <span><?php dash_icon('eye'); ?><?= number_format((int) $c['view_count']) ?> view<?= (int) $c['view_count'] === 1 ? '' : 's' ?></span>
         </div>
 
-        <div class="incl-row">
-          <span class="incl-tag"><?php dash_icon('crown'); ?>Included in Subscription</span>
+        <div class="price-row">
+          <?php if (!empty($c['reviewed_at'])): ?>
+            <span class="posted-date"><?php dash_icon('calendar'); ?><?= e(format_date($c['reviewed_at'])) ?> &middot; <?= e(date('g:i A', strtotime($c['reviewed_at']))) ?></span>
+          <?php endif; ?>
+          <span class="price">
+            <?php if ($hasSale): ?><span class="price-strike"><?= e(format_money((float) $c['price'])) ?></span><?php endif; ?>
+            <?php if ($displayPrice > 0): ?>
+              <span class="currency">UGX</span><?= number_format($displayPrice) ?>
+            <?php else: ?>
+              Free
+            <?php endif; ?>
+          </span>
         </div>
       </div>
     </a>

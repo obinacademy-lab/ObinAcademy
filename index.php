@@ -23,16 +23,16 @@ $audiences = [
 ];
 
 $included = [
-    ['📚', '#2563eb', 'The Full Catalog', 'Every course on Obin Academy, from every creator, in every category — nothing held back for a higher tier.'],
-    ['✨', '#f5b301', 'New Courses Included', "When a creator publishes something new, it's already part of your subscription — no upgrade needed."],
-    ['📱', '#10b981', 'Mobile Money Checkout', 'Subscribe and renew with MTN or Airtel — no card required, built for how East Africa actually pays.'],
+    ['📚', '#2563eb', 'A Real Catalog to Choose From', 'Courses across Finance, AI, Business, Tech, and more, from real African creators — pick the one that actually matches what you need.'],
+    ['💰', '#f5b301', 'Pay Once, Own It', 'No recurring charges — pay for a course once and keep access for as long as the creator set, some even for life.'],
+    ['📱', '#10b981', 'Mobile Money Checkout', 'Pay instantly with MTN or Airtel — no card required, built for how East Africa actually pays.'],
     ['💻', '#06b6d4', 'Learn On Any Device', 'Stream video lessons and read PDFs from your phone, tablet, or laptop — pick up right where you left off.'],
     ['🏆', '#f97316', 'Certificate of Completion', 'Finish a course and get a shareable certificate — real proof of the skill, not just a stamp for finishing.'],
     ['💬', '#8b5cf6', 'Ask Questions, Get Answers', "Comment directly on any lesson — creators and fellow learners weigh in, so you're never stuck alone."],
 ];
 
 $pageTitle = 'Obin Academy — Learn New Skills, Teach What You Know';
-$pageDescription = "One subscription unlocks every course on Obin Academy — Finance, AI, Business, Tech and more — taught by East Africa's best creators. Pay instantly with MTN or Airtel Mobile Money.";
+$pageDescription = "Buy only the courses you want on Obin Academy — Finance, AI, Business, Tech and more — taught by East Africa's best creators. Pay instantly with MTN or Airtel Mobile Money.";
 $structuredData = [
     '@context' => 'https://schema.org',
     '@graph' => [
@@ -74,10 +74,10 @@ require __DIR__ . '/includes/header.php';
           <p>Join Obin Academy and become part of Africa's next generation of creators, entrepreneurs, and innovators.</p>
         </div>
         <div class="row gap-2 wrap reveal reveal-delay-4" style="margin-top:30px;">
-          <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-gold btn-lg">Get Started Now <span class="btn-arrow">→</span></a>
+          <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-gold btn-lg">Browse Courses <span class="btn-arrow">→</span></a>
           <a href="#included" class="btn btn-outline-light btn-lg">See What's Included</a>
         </div>
-        <p class="small reveal reveal-delay-5" style="margin-top:16px; color:rgba(255,255,255,0.55);">Cancel anytime. No long contracts, no hidden fees.</p>
+        <p class="small reveal reveal-delay-5" style="margin-top:16px; color:rgba(255,255,255,0.55);">Pay only for the course you want. No subscriptions, no hidden fees.</p>
       </div>
     </div>
   </div>
@@ -89,7 +89,7 @@ require __DIR__ . '/includes/header.php';
     <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
       <span class="eyebrow">The Catalog</span>
       <h2 class="h2" style="margin-top:10px;">See What's Waiting Inside</h2>
-      <p class="lede" style="margin-top:10px; max-width:none;">A preview of real courses on Obin Academy — browse the full catalog free, then subscribe to start watching.</p>
+      <p class="lede" style="margin-top:10px; max-width:none;">A preview of real courses on Obin Academy — browse the full catalog free, then pay only for the one you want.</p>
     </div>
     <div class="grid sm:grid-2 lg:grid-3" style="margin-top:36px;">
       <?php foreach ($catalogPreview as $c): render_course_card($c); endforeach; ?>
@@ -136,9 +136,9 @@ require __DIR__ . '/includes/header.php';
       <div class="path-vs">VS</div>
       <div class="path-card path-new reveal reveal-delay-1">
         <div class="path-tag">Obin Academy</div>
-        <div class="path-amount">One Subscription <span>/ month</span></div>
-        <p class="path-desc">Every practical course on the platform, taught by people already doing the work — start learning today, pay by Mobile Money, cancel whenever you want.</p>
-        <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-gold btn-block btn-lg">Give Me Access Now <span class="btn-arrow">→</span></a>
+        <div class="path-amount">One Course <span>at a time</span></div>
+        <p class="path-desc">Pay once for the specific skill you actually need, taught by people already doing the work — start learning today by Mobile Money, own it for good.</p>
+        <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-gold btn-block btn-lg">Browse the Catalog <span class="btn-arrow">→</span></a>
       </div>
     </div>
   </div>
@@ -178,7 +178,7 @@ require __DIR__ . '/includes/header.php';
       <?php endforeach; ?>
     </div>
     <div class="text-center" style="margin-top:40px;">
-      <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-primary btn-lg">Subscribe to Start Learning <span class="btn-arrow">→</span></a>
+      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Browse Courses <span class="btn-arrow">→</span></a>
     </div>
   </div>
 </section>
@@ -197,13 +197,13 @@ require __DIR__ . '/includes/header.php';
       </div>
       <div class="launch-step reveal reveal-delay-2">
         <span class="step-num">2</span>
-        <h3>Choose Go or Pro</h3>
-        <p>Pick a plan and pay instantly with MTN or Airtel Mobile Money.</p>
+        <h3>Pick a Course</h3>
+        <p>Find the one skill you actually need and pay for just that course.</p>
       </div>
       <div class="launch-step reveal reveal-delay-3">
         <span class="step-num">3</span>
-        <h3>Unlock the Full Catalog</h3>
-        <p>Every course, every category, no extra charge — start immediately.</p>
+        <h3>Pay by Mobile Money</h3>
+        <p>MTN or Airtel, approved on your phone in seconds — start immediately.</p>
       </div>
       <div class="launch-step reveal reveal-delay-4">
         <span class="step-num">4</span>
@@ -262,10 +262,10 @@ require __DIR__ . '/includes/header.php';
 <section class="section">
   <div class="container cta-panel-premium reveal">
     <span class="eyebrow">Ready When You Are</span>
-    <h2 class="h2" style="margin-top:14px;">Your Next Skill Is One Subscription Away.</h2>
-    <p class="lede" style="margin:16px auto 0;">Join Obin Academy today and get instant access to every course on the platform.</p>
-    <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-primary btn-lg" style="margin-top:26px;">Subscribe Now <span class="btn-arrow">→</span></a>
-    <p class="small muted" style="margin-top:14px;">Pay with MTN or Airtel Mobile Money · Cancel anytime</p>
+    <h2 class="h2" style="margin-top:14px;">Your Next Skill Is One Course Away.</h2>
+    <p class="lede" style="margin:16px auto 0;">Join Obin Academy today and buy the exact course you need to get started.</p>
+    <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg" style="margin-top:26px;">Browse Courses <span class="btn-arrow">→</span></a>
+    <p class="small muted" style="margin-top:14px;">Pay with MTN or Airtel Mobile Money · Own it for good</p>
   </div>
 </section>
 

@@ -33,7 +33,7 @@ $pageTitle = 'Review Course — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <h1 class="h2"><?= e($course['title']) ?></h1>
-<p class="muted" style="margin-top:6px;">by <?= e($course['creator_name']) ?></p>
+<p class="muted" style="margin-top:6px;">by <?= e($course['creator_name']) ?> &middot; <?= e(format_money((float) $course['price'])) ?></p>
 
 <div class="card card-pad" style="margin-top:20px;">
   <h3 class="small" style="font-weight:700; text-transform:uppercase; color:var(--muted);">Summary</h3>

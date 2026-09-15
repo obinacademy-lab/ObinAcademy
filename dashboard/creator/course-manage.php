@@ -29,11 +29,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = post('title');
         $summary = post('summary');
         $description = post('description');
+        $price = (float) post('price', '0');
+        $salePriceRaw = post('salePrice');
+        $salePrice = $salePriceRaw === '' ? null : (float) $salePriceRaw;
+        $saleDurationRaw = post('saleDurationDays');
+        // Default: leave whatever end date is already on the course alone —
+        // so re-saving other fields (title, description, thumbnail...) never
+        // silently resets an active countdown. Only "clear" or an explicit
+        // duration choice changes it.
+        $saleEndsAt = $course['sale_ends_at'];
+        if ($salePrice === null) {
+            $saleEndsAt = null;
+        } elseif ($saleDurationRaw === 'clear') {
+            $saleEndsAt = null;
+        } elseif ($saleDurationRaw !== '' && ctype_digit($saleDurationRaw)) {
+            $saleEndsAt = date('Y-m-d H:i:s', strtotime('+' . (int) $saleDurationRaw . ' days'));
+        }
         $categoryId = (int) post('categoryId');
+
+        $accessDurationRaw = post('accessDurationDays', 'lifetime');
+        $accessDurationDays = $accessDurationRaw === 'lifetime' ? null : (int) $accessDurationRaw;
+        $premiumPriceRaw = post('premiumPrice');
+        $premiumPrice = $premiumPriceRaw === '' ? null : (float) $premiumPriceRaw;
 
         if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
         if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
         if (strlen($description) < 20) $errors[] = 'Description must be at least 20 characters.';
+        if ($salePrice !== null && ($salePrice <= 0 || $salePrice >= $price)) {
+            $errors[] = 'Sale price must be greater than 0 and less than the regular price.';
+        }
+        // A brand-new sale (the course wasn't already on sale) always needs a
+        // real end date — matches the platform-wide promise that a discount
+        // is genuinely time-limited, never an indefinite "sale" left running forever.
+        if ($salePrice !== null && empty($course['sale_price']) && $saleEndsAt === null) {
+            $errors[] = 'Choose how many days this sale price should run for.';
+        }
 
         $thumbnailUrl = null;
         if (!empty($_FILES['thumbnail']['name'])) {
@@ -42,11 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            // No price/sale/access-duration/premium-price to set anymore —
-            // every course is included in every subscriber's access, not
-            // sold individually (see includes/subscriptions.php).
-            $sql = 'UPDATE courses SET title=?, summary=?, description=?, category_id=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
-            $params = [$title, $summary, $description, $categoryId];
+            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
+            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice];
             if ($thumbnailUrl) $params[] = $thumbnailUrl;
             $params[] = $courseId;
             db_run($sql, $params);
@@ -171,7 +198,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="row between wrap gap-3 reveal">
   <div>
     <h1 class="h2"><?= e($course['title']) ?></h1>
-    <p class="muted" style="margin-top:6px;"><?= $studentCount ?> student<?= $studentCount === 1 ? '' : 's' ?></p>
+    <p class="muted" style="margin-top:6px;"><?= e(format_money((float) $course['price'])) ?> &middot; <?= $studentCount ?> student<?= $studentCount === 1 ? '' : 's' ?></p>
     <span class="badge <?= $badgeClass[$course['status']] ?>" style="margin-top:10px; display:inline-flex;"><?= $statusLabel[$course['status']] ?></span>
   </div>
   <div class="row gap-2 wrap">
@@ -229,16 +256,52 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?= csrf_field() ?>
     <input type="hidden" name="_action" value="update_details">
     <div class="field"><label>Course Title</label><input name="title" required value="<?= e($course['title']) ?>"></div>
+    <div class="grid sm:grid-2">
+      <div class="field">
+        <label>Category</label>
+        <select name="categoryId" required>
+          <?php foreach ($categories as $cat): ?>
+            <option value="<?= (int) $cat['id'] ?>" <?= (int) $cat['id'] === (int) $course['category_id'] ? 'selected' : '' ?>><?= e($cat['name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="field"><label>Price (UGX)</label><input name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" required></div>
+    </div>
     <div class="field">
-      <label>Category</label>
-      <select name="categoryId" required>
-        <?php foreach ($categories as $cat): ?>
-          <option value="<?= (int) $cat['id'] ?>" <?= (int) $cat['id'] === (int) $course['category_id'] ? 'selected' : '' ?>><?= e($cat['name']) ?></option>
+      <label>Sale Price (UGX, optional)</label>
+      <input name="salePrice" type="number" min="0" step="1" value="<?= e($course['sale_price'] !== null ? (string) $course['sale_price'] : '') ?>" placeholder="Leave blank for no discount">
+      <p class="help">When set (and lower than the price above), learners see the discounted price everywhere and pay that instead.</p>
+    </div>
+    <div class="field">
+      <label>Sale Ends In</label>
+      <select name="saleDurationDays">
+        <option value="">Don't change<?= $course['sale_ends_at'] ? '' : ' (no end date set)' ?></option>
+        <?php foreach (SALE_DURATION_OPTIONS as $o): ?>
+          <option value="<?= $o['days'] ?>"><?= e($o['label']) ?> from today</option>
         <?php endforeach; ?>
+        <option value="clear">No end date (runs until you remove it)</option>
       </select>
+      <p class="help">
+        <?php if ($course['sale_ends_at']): ?>
+          The current sale price ends <?= e(format_date($course['sale_ends_at'])) ?>. Pick a new option above to change that.
+        <?php else: ?>
+          A brand-new sale price needs a real end date — pick how many days it should run for.
+        <?php endif; ?>
+      </p>
     </div>
     <div class="field"><label>Short Summary</label><input name="summary" required value="<?= e($course['summary']) ?>"></div>
     <div class="field"><label>Full Description</label><textarea name="description" rows="5" required><?= e($course['description']) ?></textarea></div>
+    <div class="grid sm:grid-2">
+      <div class="field">
+        <label>Course Access Duration</label>
+        <select name="accessDurationDays">
+          <?php foreach (ACCESS_DURATION_OPTIONS as $o): ?>
+            <option value="<?= $o['days'] ?? 'lifetime' ?>" <?= ($course['access_duration_days'] === null ? 'lifetime' : (string) $course['access_duration_days']) === (string) ($o['days'] ?? 'lifetime') ? 'selected' : '' ?>><?= e($o['label']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="field"><label>Premium Download Price (UGX, optional)</label><input name="premiumPrice" type="number" min="0" step="1" value="<?= e($course['premium_price'] !== null ? (string) $course['premium_price'] : '') ?>" placeholder="Leave blank to disable downloads"></div>
+    </div>
     <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
     <button type="submit" class="btn btn-primary">Save Changes</button>
   </form>

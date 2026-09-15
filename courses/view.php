@@ -3,7 +3,6 @@ require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/enroll_panel.php';
 require __DIR__ . '/../includes/enrollment.php';
-require __DIR__ . '/../includes/subscriptions.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -25,7 +24,7 @@ if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
 $isEnrolled = $user
     ? (bool) db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : (bool) guest_enrollment_for_course((int) $course['id']);
-$isSubscriber = (bool) ($user && user_has_active_subscription((int) $user['id']));
+$isInterested = $user ? is_interested_in_course((int) $user['id'], (int) $course['id']) : false;
 
 // A plain, publicly-shown view counter — not deduped per visitor, and
 // excludes the course's own creator/admin so their own checks don't
@@ -57,10 +56,6 @@ $pageTitle = $course['title'] . ' — Obin Academy';
 $pageDescription = mb_strimwidth(preg_replace('/\s+/', ' ', trim($course['summary'])), 0, 160, '…');
 if (!empty($course['thumbnail_url'])) $pageImage = asset_src($course['thumbnail_url']);
 $pageType = 'website';
-// Public and crawlable again — only a preview of an unpublished course
-// stays out of the index. No `offers`/price in the structured data since
-// courses are never sold individually anymore, just included in a
-// subscription.
 $noindex = $course['status'] !== 'PUBLISHED';
 $structuredData = [
     '@context' => 'https://schema.org',
@@ -73,6 +68,23 @@ $structuredData = [
         'sameAs' => base_url('index.php'),
     ],
 ];
+if (!empty($course['thumbnail_url'])) $structuredData['image'] = asset_src($course['thumbnail_url']);
+if ((float) $course['price'] > 0) {
+    $structuredData['offers'] = [
+        '@type' => 'Offer',
+        'price' => number_format(course_has_active_sale($course) ? (float) $course['sale_price'] : (float) $course['price'], 2, '.', ''),
+        'priceCurrency' => 'UGX',
+        'url' => base_url('courses/view.php?slug=' . $course['slug']),
+        'availability' => 'https://schema.org/InStock',
+    ];
+}
+if (!empty($course['creator_name'])) {
+    $structuredData['hasCourseInstance'] = [
+        '@type' => 'CourseInstance',
+        'courseMode' => 'online',
+        'instructor' => ['@type' => 'Person', 'name' => $course['creator_name']],
+    ];
+}
 
 $stats = get_platform_stats();
 
@@ -173,10 +185,43 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <aside class="course-sidebar">
-      <?php render_enroll_panel($course, $isOwner, $isEnrolled, $isSubscriber); ?>
+      <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled, $isInterested); ?>
     </aside>
   </div>
 </section>
 
+<?php if (!$user && $course['status'] === 'PUBLISHED'): ?>
+  <?php
+    $popupHasSale = course_has_active_sale($course);
+    $popupPrice = $popupHasSale ? (float) $course['sale_price'] : (float) $course['price'];
+  ?>
+  <div class="lead-overlay" data-guest-course-overlay>
+    <div class="lead-modal">
+      <button type="button" class="lead-modal-close" data-guest-course-close aria-label="Close">&times;</button>
+      <div class="lead-modal-icon">🔒</div>
+      <h2>Create a Free Account to Start Learning</h2>
+      <p class="lead-sub">Join Obin Academy to unlock &ldquo;<?= e($course['title']) ?>&rdquo; — <?= $popupPrice > 0 ? e(format_money($popupPrice)) . ', one-time payment' : 'free' ?>. Takes less than a minute.</p>
+      <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-primary btn-block btn-lg">Join Now <span class="btn-arrow">→</span></a>
+      <p class="small muted" style="margin-top:12px; text-align:center;">
+        Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a>
+        &nbsp;&middot;&nbsp;
+        <a href="#" data-guest-course-close style="color:var(--muted); font-weight:600;">Continue browsing</a>
+      </p>
+    </div>
+  </div>
+  <script>
+    (() => {
+      var overlay = document.querySelector('[data-guest-course-overlay]');
+      if (!overlay) return;
+      function open() { overlay.classList.add('open'); requestAnimationFrame(() => overlay.classList.add('visible')); }
+      function close() { overlay.classList.remove('visible'); setTimeout(() => overlay.classList.remove('open'), 250); }
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+      overlay.querySelectorAll('[data-guest-course-close]').forEach((btn) => btn.addEventListener('click', (e) => { e.preventDefault(); close(); }));
+      setTimeout(open, 900);
+    })();
+  </script>
+<?php endif; ?>
+
+<script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

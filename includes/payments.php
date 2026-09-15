@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/iotec.php';
 require_once __DIR__ . '/email.php';
-require_once __DIR__ . '/subscriptions.php';
+require_once __DIR__ . '/subscriptions.php'; // gutted to just historical SUBSCRIPTION-payment read helpers — see includes/subscriptions.php
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -65,12 +65,6 @@ function resolve_payment_with_iotec(array $payment): array {
     $isGuestPayment = $payment['user_id'] === null;
 
     if ($result['status'] === 'Success') {
-        if ($payment['type'] === 'SUBSCRIPTION') {
-            apply_subscription_payment_success($payment, $result['statusMessage'] ?? null);
-            send_subscription_receipt_email($payment);
-            return ['status' => 'SUCCESS'];
-        }
-
         if ($payment['type'] === 'PREMIUM_UPGRADE') {
             $enrollment = db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$payment['user_id'], $payment['course_id']]);
             if ($enrollment && (int) $enrollment['is_premium'] === 0) {
@@ -152,21 +146,149 @@ function resolve_payment_with_iotec(array $payment): array {
 }
 
 /**
- * initiate_payment() and initiate_premium_upgrade() — the one-time course
- * purchase and premium-download-upgrade entry points — were removed once
- * learning any course required a subscription. resolve_payment_with_iotec()
- * above still has to correctly resolve any COURSE_PURCHASE/PREMIUM_UPGRADE
- * payment that was already PENDING at the moment that shipped, so its
- * branches for those two types (and fetch_payment_with_course(),
- * split_sale(), AFFILIATE_COMMISSION_RATE) stay exactly as they are —
- * legacy resolution only, no code path creates a new one of these anymore.
+ * Starts a mobile-money collection for a course purchase. Pass $userId for a
+ * logged-in learner, or null plus $guestName/$guestEmail for guest checkout
+ * (no account). A guest payment gets a one-time poll token (plaintext
+ * returned here, only its hash stored) so the browser can keep polling
+ * poll_payment_status() without a session identity.
+ * @return array{paymentId?: int, pollToken?: string, error?: string}
  */
+function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null): array {
+    if (!validate_phone($phone)) return ['error' => 'Enter a valid phone number.'];
+
+    $isGuest = $userId === null;
+    if ($isGuest) {
+        $guestName = trim((string) $guestName);
+        $guestEmail = strtolower(trim((string) $guestEmail));
+        if ($guestName === '') return ['error' => 'Enter your name.'];
+        if (!filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) return ['error' => 'Enter a valid email address.'];
+    }
+
+    $course = db_one('SELECT * FROM courses WHERE id = ?', [$courseId]);
+    if (!$course || $course['status'] !== 'PUBLISHED') return ['error' => 'Course not found.'];
+    if (!$isGuest && (int) $course['creator_id'] === $userId) return ['error' => 'Creators cannot enroll in their own course.'];
+    if ((float) $course['price'] <= 0) return ['error' => 'This course is free — use the enroll button instead.'];
+
+    // A sale price only takes effect if it's actually a discount and, when
+    // the creator gave it an end date, that date hasn't passed — a stale
+    // sale_price left >= the current price (e.g. after the creator lowered
+    // price directly), or one whose time window has simply run out, is
+    // silently ignored rather than overcharging or no-oping strangely.
+    $unitPrice = (float) $course['price'];
+    $originalAmount = null;
+    if (course_has_active_sale($course)) {
+        $originalAmount = (float) $course['price'];
+        $unitPrice = (float) $course['sale_price'];
+    }
+    $finalPrice = $unitPrice;
+
+    $existingEnrollment = $isGuest
+        ? db_one('SELECT id FROM enrollments WHERE course_id = ? AND guest_email = ? AND user_id IS NULL', [$courseId, $guestEmail])
+        : db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$userId, $courseId]);
+    if ($existingEnrollment) return ['error' => "You're already enrolled in this course."];
+
+    $existingPending = $isGuest
+        ? db_one("SELECT id FROM payments WHERE course_id = ? AND guest_email = ? AND status = 'PENDING' ORDER BY created_at DESC LIMIT 1", [$courseId, $guestEmail])
+        : db_one("SELECT id FROM payments WHERE user_id = ? AND course_id = ? AND status = 'PENDING' ORDER BY created_at DESC LIMIT 1", [$userId, $courseId]);
+
+    if ($existingPending) {
+        // Reconcile against iotec's real status before reusing this row — it
+        // may have already succeeded or failed after the browser gave up
+        // polling it, in which case reusing it as-is would either strand a
+        // paying learner with no access, or block every retry forever.
+        $resolved = resolve_payment_with_iotec(fetch_payment_with_course((int) $existingPending['id']));
+
+        if ($resolved['status'] === 'SUCCESS') {
+            return ['error' => $isGuest
+                ? "You've already paid for this course — check your email for the access link."
+                : "You're already enrolled in this course."];
+        }
+
+        if ($resolved['status'] === 'PENDING') {
+            if (!$isGuest) return ['paymentId' => (int) $existingPending['id']];
+            // Reissue a fresh poll token bound to the same pending row.
+            [$pollToken, $pollTokenHash] = make_access_token();
+            db_run('UPDATE payments SET access_token_hash = ? WHERE id = ?', [$pollTokenHash, $existingPending['id']]);
+            return ['paymentId' => (int) $existingPending['id'], 'pollToken' => $pollToken];
+        }
+
+        // FAILED — fall through and start a fresh collection below.
+    }
+
+    $affiliateId = resolve_affiliate_id_from_cookie($userId);
+
+    $pollToken = null;
+    if ($isGuest) {
+        [$pollToken, $pollTokenHash] = make_access_token();
+        $paymentId = db_insert(
+            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, affiliate_id, amount, original_amount, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$guestName, $guestEmail, $pollTokenHash, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone]
+        );
+    } else {
+        $paymentId = db_insert(
+            "INSERT INTO payments (user_id, course_id, affiliate_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$userId, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone]
+        );
+    }
+
+    try {
+        $result = iotec_initiate_collection($finalPrice, $phone, (string) $paymentId, substr("Obin Academy - {$course['title']}", 0, 100));
+        db_run('UPDATE payments SET iotec_transaction_id = ? WHERE id = ?', [$result['transactionId'], $paymentId]);
+    } catch (Throwable $e) {
+        error_log('[iotec] initiateCollection failed for payment ' . $paymentId . ': ' . $e->getMessage());
+        db_run("UPDATE payments SET status = 'FAILED', status_message = ? WHERE id = ?", [$e->getMessage(), $paymentId]);
+        return ['error' => "We couldn't start the mobile money payment. Please try again."];
+    }
+
+    return $isGuest ? ['paymentId' => $paymentId, 'pollToken' => $pollToken] : ['paymentId' => $paymentId];
+}
+
+/** @return array{paymentId?: int, error?: string} */
+function initiate_premium_upgrade(int $userId, int $courseId, string $phone): array {
+    if (!validate_phone($phone)) return ['error' => 'Enter a valid phone number.'];
+
+    $course = db_one('SELECT * FROM courses WHERE id = ?', [$courseId]);
+    if (!$course || $course['status'] !== 'PUBLISHED') return ['error' => 'Course not found.'];
+    if (empty($course['premium_price']) || (float) $course['premium_price'] <= 0) {
+        return ['error' => "This course doesn't offer a premium download upgrade."];
+    }
+
+    $enrollment = db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$userId, $courseId]);
+    if (!$enrollment) return ['error' => 'Enroll in this course before upgrading to premium.'];
+    if ((int) $enrollment['is_premium'] === 1) return ['error' => 'You already have premium access to this course.'];
+
+    $existingPending = db_one(
+        "SELECT id FROM payments WHERE user_id = ? AND course_id = ? AND type = 'PREMIUM_UPGRADE' AND status = 'PENDING' ORDER BY created_at DESC LIMIT 1",
+        [$userId, $courseId]
+    );
+    if ($existingPending) {
+        $resolved = resolve_payment_with_iotec(fetch_payment_with_course((int) $existingPending['id']));
+        if ($resolved['status'] === 'SUCCESS') return ['error' => 'You already have premium access to this course.'];
+        if ($resolved['status'] === 'PENDING') return ['paymentId' => (int) $existingPending['id']];
+        // FAILED — fall through and start a fresh collection below.
+    }
+
+    $paymentId = db_insert(
+        "INSERT INTO payments (user_id, course_id, amount, phone, type, status) VALUES (?, ?, ?, ?, 'PREMIUM_UPGRADE', 'PENDING')",
+        [$userId, $courseId, $course['premium_price'], $phone]
+    );
+
+    try {
+        $result = iotec_initiate_collection((float) $course['premium_price'], $phone, (string) $paymentId, substr("Obin Academy - {$course['title']} (Premium)", 0, 100));
+        db_run('UPDATE payments SET iotec_transaction_id = ? WHERE id = ?', [$result['transactionId'], $paymentId]);
+    } catch (Throwable $e) {
+        error_log('[iotec] initiateCollection failed for premium payment ' . $paymentId . ': ' . $e->getMessage());
+        db_run("UPDATE payments SET status = 'FAILED', status_message = ? WHERE id = ?", [$e->getMessage(), $paymentId]);
+        return ['error' => "We couldn't start the mobile money payment. Please try again."];
+    }
+
+    return ['paymentId' => $paymentId];
+}
 
 /**
  * Pass $userId for a logged-in learner, or null plus a poll token for a
  * guest — that token is the guest's only proof this payment is theirs,
- * since they have no session identity. (Guest payments themselves are
- * legacy now too — see the note above.)
+ * since they have no session identity.
  * @return array{status: string, statusMessage?: string, accessUrl?: string}
  */
 function poll_payment_status(?int $userId, int $paymentId, ?string $pollToken = null): array {
