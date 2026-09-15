@@ -53,19 +53,28 @@ $structuredData = [
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="course-hero course-hero-centered home-hero">
+<section class="course-hero home-hero home-hero-split">
   <div class="home-hero-grid" aria-hidden="true"></div>
   <div class="course-hero-glow" aria-hidden="true"></div>
   <div class="home-hero-glow-2" aria-hidden="true"></div>
   <div class="container">
-    <span class="pill reveal"><?php dash_icon('sparkle'); ?>Skills That Pay You Back</span>
-    <h1 class="reveal reveal-delay-1">Learn What Actually Grows Your Income.</h1>
-    <p class="summary reveal reveal-delay-2">One subscription unlocks every course on Obin Academy — Finance, AI, Business, Tech, and more — taught by East Africa's best creators. Pay by MTN or Airtel Mobile Money.</p>
-    <div class="row gap-2 wrap reveal reveal-delay-3" style="justify-content:center; margin-top:30px;">
-      <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-gold btn-lg">Get Started Now <span class="btn-arrow">→</span></a>
-      <a href="#included" class="btn btn-outline-light btn-lg">See What's Included</a>
+    <div class="home-hero-split-grid">
+      <div class="founder-welcome-photo reveal">
+        <img src="<?= e(versioned_asset('assets/img/faceofbrand.jpeg')) ?>" alt="Obin Ivan, Founder &amp; CEO of Obin Academy">
+        <span class="founder-badge">👋 Obin Ivan, Founder &amp; CEO</span>
+      </div>
+      <div class="home-hero-copy">
+        <p class="founder-welcome-line reveal">Hi, I'm Obin Ivan — welcome to Obin Academy, the platform I built to help you learn a real skill and start earning, right from your phone.</p>
+        <span class="pill reveal reveal-delay-1"><?php dash_icon('sparkle'); ?>Skills That Pay You Back</span>
+        <h1 class="reveal reveal-delay-2">Learn What Actually Grows Your Income.</h1>
+        <p class="summary reveal reveal-delay-3">One subscription unlocks every course on Obin Academy — Finance, AI, Business, Tech, and more — taught by East Africa's best creators. Pay by MTN or Airtel Mobile Money.</p>
+        <div class="row gap-2 wrap reveal reveal-delay-4" style="margin-top:30px;">
+          <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-gold btn-lg">Get Started Now <span class="btn-arrow">→</span></a>
+          <a href="#included" class="btn btn-outline-light btn-lg">See What's Included</a>
+        </div>
+        <p class="small reveal reveal-delay-5" style="margin-top:16px; color:rgba(255,255,255,0.55);">Cancel anytime. No long contracts, no hidden fees.</p>
+      </div>
     </div>
-    <p class="small reveal reveal-delay-4" style="margin-top:16px; color:rgba(255,255,255,0.55);">Cancel anytime. No long contracts, no hidden fees.</p>
   </div>
 </section>
 
@@ -196,27 +205,6 @@ require __DIR__ . '/includes/header.php';
         <span class="step-num">4</span>
         <h3>Learn, Finish, Get Certified</h3>
         <p>Complete a course at your pace and earn a certificate to show for it.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" style="background:var(--surface);">
-  <div class="container">
-    <div class="why-exist-grid">
-      <div class="why-exist-photo reveal">
-        <img src="<?= e(versioned_asset('assets/img/faceofbrand.jpeg')) ?>" alt="Obin Ivan, Founder &amp; CEO of Obin Academy">
-      </div>
-      <div class="reveal reveal-delay-2">
-        <span class="eyebrow">Meet the Founder</span>
-        <h2 class="h2" style="margin-top:14px;">Built By Someone Who's Done The Work</h2>
-        <p class="lede" style="margin-top:16px; max-width:none; font-size:16.5px; line-height:1.75; color:var(--muted);">
-          I built Obin Academy because I believe every African with a skill worth teaching — and every person ready to learn one — deserves a platform that actually works for how they live and pay. No imported theory, no gatekeeping. Just practical skills, taught by people who've done the work, unlocked with a phone and mobile money.
-        </p>
-        <div class="mission-callout" style="margin-top:24px;">
-          <span class="tag">Obin Ivan</span>
-          <p>Founder &amp; CEO, Obin Academy</p>
-        </div>
       </div>
     </div>
   </div>

@@ -1284,6 +1284,37 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 @media (prefers-reduced-motion: reduce) { .home-hero-glow-2 { animation: none; } }
 
+/* ---------- homepage hero: founder photo + welcome message, balanced
+   side-by-side with the existing headline/CTA so the founder is the
+   first thing a visitor sees, without pushing anything below the fold. ---------- */
+.home-hero-split-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr; gap: 40px; align-items: center; }
+@media (min-width: 860px) { .home-hero-split-grid { grid-template-columns: 0.85fr 1.15fr; gap: 56px; } }
+
+.founder-welcome-photo { position: relative; max-width: 300px; margin: 0 auto; }
+@media (min-width: 860px) { .founder-welcome-photo { margin: 0; } }
+.founder-welcome-photo img {
+  width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block;
+  border-radius: var(--radius-lg); border: 3px solid rgba(255,255,255,0.16);
+  box-shadow: 0 30px 60px -24px rgba(0,0,0,0.55);
+}
+.founder-badge {
+  position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fff; color: var(--ink); font-size: 12px; font-weight: 800;
+  padding: 8px 16px; border-radius: var(--radius-full); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.45);
+}
+@media (min-width: 860px) { .founder-badge { left: 20px; transform: none; } }
+
+.home-hero-copy { text-align: left; }
+.founder-welcome-line {
+  font-size: 15px; font-style: italic; color: rgba(255,255,255,0.82); line-height: 1.6;
+  max-width: 480px; padding-left: 14px; border-left: 3px solid var(--gold); margin-bottom: 22px;
+}
+.home-hero-split h1 { color: var(--gold); font-size: clamp(28px, 4vw, 42px); margin-left: 0; margin-right: 0; }
+.home-hero-split .summary { font-size: 16.5px; margin-left: 0; margin-right: 0; }
+@media (max-width: 859px) { .home-hero-copy, .founder-welcome-line { text-align: center; margin-left: auto; margin-right: auto; } }
+@media (max-width: 859px) { .home-hero-copy .row { justify-content: center; } }
+
 .breadcrumb { display:flex; align-items:center; gap:6px; font-size:12.5px; color:rgba(255,255,255,0.55); flex-wrap:wrap; }
 .breadcrumb a { color:rgba(255,255,255,0.55); transition: color 0.15s ease; }
 .breadcrumb a:hover { color:#fff; }
