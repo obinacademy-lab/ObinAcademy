@@ -66,8 +66,14 @@ require __DIR__ . '/includes/header.php';
       <div class="home-hero-copy">
         <p class="founder-welcome-line reveal">Hi, I'm Obin Ivan — welcome to Obin Academy, the platform I built to help you learn a real skill and start earning, right from your phone.</p>
         <span class="pill reveal reveal-delay-1"><?php dash_icon('sparkle'); ?>Skills That Pay You Back</span>
-        <h1 class="reveal reveal-delay-2">Learn What Actually Grows Your Income.</h1>
-        <p class="summary reveal reveal-delay-3">One subscription unlocks every course on Obin Academy — Finance, AI, Business, Tech, and more — taught by East Africa's best creators. Pay by MTN or Airtel Mobile Money.</p>
+        <h1 class="reveal reveal-delay-2">The System Was Designed to Help You Find a Job. Not Build Wealth.</h1>
+        <div class="summary reveal reveal-delay-3">
+          <p>You've spent years learning how to pass exams, earn certificates, and wait for opportunities. Yet millions of talented people are still underpaid, unemployed, or stuck because they were never taught the skills today's economy rewards.</p>
+          <p><strong>Obin Academy is different.</strong></p>
+          <p>Learn practical, in-demand skills in AI, Business, Finance, Technology, Digital Marketing, Content Creation, Web Development, and more—taught by experienced African creators who are building real businesses and solving real problems.</p>
+          <p>Stop waiting for opportunity. Start building the skills that help you create it. Your future income starts with what you choose to learn today.</p>
+          <p>Join Obin Academy and become part of Africa's next generation of creators, entrepreneurs, and innovators.</p>
+        </div>
         <div class="row gap-2 wrap reveal reveal-delay-4" style="margin-top:30px;">
           <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-gold btn-lg">Get Started Now <span class="btn-arrow">→</span></a>
           <a href="#included" class="btn btn-outline-light btn-lg">See What's Included</a>

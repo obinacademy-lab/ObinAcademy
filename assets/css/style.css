@@ -1311,7 +1311,11 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   max-width: 480px; padding-left: 14px; border-left: 3px solid var(--gold); margin-bottom: 22px;
 }
 .home-hero-split h1 { color: var(--gold); font-size: clamp(28px, 4vw, 42px); margin-left: 0; margin-right: 0; }
-.home-hero-split .summary { font-size: 16.5px; margin-left: 0; margin-right: 0; }
+.home-hero-split .summary { font-size: 16.5px; margin-left: 0; margin-right: 0; max-width: 620px; }
+/* .summary is usually a single <p>, but the homepage hero now wraps several
+   — p has a global zero margin reset, so give consecutive paragraphs some
+   breathing room wherever .summary does hold more than one. */
+.summary p + p { margin-top: 14px; }
 @media (max-width: 859px) { .home-hero-copy, .founder-welcome-line { text-align: center; margin-left: auto; margin-right: auto; } }
 @media (max-width: 859px) { .home-hero-copy .row { justify-content: center; } }
 
