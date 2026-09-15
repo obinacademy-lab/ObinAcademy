@@ -184,27 +184,6 @@ require __DIR__ . '/includes/header.php';
 <section class="section" style="background:var(--surface);">
   <div class="container">
     <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
-      <span class="eyebrow">Every Category</span>
-      <h2 class="h2" style="margin-top:10px;">Skills Across Every Category</h2>
-      <p class="lede" style="margin-top:10px; max-width:none;">Finance, tech, marketing, and more — find the course that fits what you're trying to build.</p>
-    </div>
-    <div class="industry-grid" style="margin-top:36px;">
-      <?php foreach ($industries as [$name, $slug, $emoji, $glow]): ?>
-        <a href="<?= e(base_url('courses/index.php?category=' . $slug)) ?>" class="industry-item industry-glow industry-glow-<?= e($glow) ?> reveal">
-          <span class="icon-wrap"><?= $emoji ?></span>
-          <span class="label"><?= e($name) ?></span>
-        </a>
-      <?php endforeach; ?>
-    </div>
-    <div class="text-center" style="margin-top:40px;">
-      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Browse Courses <span class="btn-arrow">→</span></a>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
       <span class="eyebrow">How It Works</span>
       <h2 class="h2" style="margin-top:10px;">Start Learning in Minutes</h2>
     </div>
@@ -229,6 +208,27 @@ require __DIR__ . '/includes/header.php';
         <h3>Learn, Finish, Get Certified</h3>
         <p>Complete a course at your pace and earn a certificate to show for it.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
+      <span class="eyebrow">Every Category</span>
+      <h2 class="h2" style="margin-top:10px;">Skills Across Every Category</h2>
+      <p class="lede" style="margin-top:10px; max-width:none;">Finance, tech, marketing, and more — find the course that fits what you're trying to build.</p>
+    </div>
+    <div class="industry-grid" style="margin-top:36px;">
+      <?php foreach ($industries as [$name, $slug, $emoji, $glow]): ?>
+        <a href="<?= e(base_url('courses/index.php?category=' . $slug)) ?>" class="industry-item industry-glow industry-glow-<?= e($glow) ?> reveal">
+          <span class="icon-wrap"><?= $emoji ?></span>
+          <span class="label"><?= e($name) ?></span>
+        </a>
+      <?php endforeach; ?>
+    </div>
+    <div class="text-center" style="margin-top:40px;">
+      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Browse Courses <span class="btn-arrow">→</span></a>
     </div>
   </div>
 </section>
