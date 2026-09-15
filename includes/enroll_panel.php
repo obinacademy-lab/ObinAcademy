@@ -72,7 +72,13 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                data-initiate-url="<?= e(base_url('api/initiate-payment.php')) ?>"
                data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
             <div data-state="idle">
-              <button class="btn btn-primary btn-block btn-lg" data-action="start">📱 Pay with Mobile Money</button>
+              <button class="btn btn-primary btn-block btn-lg" data-action="start">
+                <span class="pay-logo-pair">
+                  <span class="pay-logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN"></span>
+                  <span class="pay-logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel"></span>
+                </span>
+                Pay with Mobile Money
+              </button>
             </div>
             <div data-state="phone" class="hidden guest-form">
               <div class="field-icon">
@@ -120,8 +126,8 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
 
         <div class="enroll-trust">
           <div class="pay-badges">
-            <span class="pay-badge pay-badge-mtn">MTN Mobile Money</span>
-            <span class="pay-badge pay-badge-airtel">Airtel Money</span>
+            <span class="pay-badge pay-badge-mtn"><span class="logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN"></span>MTN Mobile Money</span>
+            <span class="pay-badge pay-badge-airtel"><span class="logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel"></span>Airtel Money</span>
           </div>
           <div class="secure-note"><?php dash_icon('shield'); ?>Secure checkout</div>
         </div>

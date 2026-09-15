@@ -163,7 +163,14 @@ require __DIR__ . '/includes/header.php';
     <div class="center-grid" style="margin-top:36px;">
       <?php foreach ($included as $i => [$emoji, $tint, $title, $desc]): ?>
         <div class="value-card reveal reveal-delay-<?= min($i % 5 + 1, 5) ?>">
-          <span class="icon-badge" style="--tint:<?= e($tint) ?>;"><?= $emoji ?></span>
+          <?php if ($emoji === '📱'): ?>
+            <span class="icon-badge icon-badge-logos" style="--tint:<?= e($tint) ?>;">
+              <span class="pay-logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN"></span>
+              <span class="pay-logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel"></span>
+            </span>
+          <?php else: ?>
+            <span class="icon-badge" style="--tint:<?= e($tint) ?>;"><?= $emoji ?></span>
+          <?php endif; ?>
           <h3><?= e($title) ?></h3>
           <p><?= e($desc) ?></p>
         </div>
@@ -249,12 +256,28 @@ require __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <section class="section">
-  <div class="container cta-panel-premium reveal">
-    <span class="eyebrow">Ready When You Are</span>
-    <h2 class="h2" style="margin-top:14px;">Your Next Skill Is One Course Away.</h2>
-    <p class="lede" style="margin:16px auto 0;">Join Obin Academy today and buy the exact course you need to get started.</p>
-    <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg" style="margin-top:26px;">Browse Courses <span class="btn-arrow">→</span></a>
-    <p class="small muted" style="margin-top:14px;">Pay with MTN or Airtel Mobile Money · Own it for good</p>
+  <div class="container">
+    <div class="home-final-cta reveal">
+      <div class="home-final-cta-grid" aria-hidden="true"></div>
+      <div class="home-final-cta-glow" aria-hidden="true"></div>
+      <div class="home-final-cta-inner">
+        <div class="home-final-cta-rule" aria-hidden="true"></div>
+        <span class="home-final-cta-eyebrow">Ready When You Are</span>
+        <h2>Your Next Skill Is One Course Away.</h2>
+        <p class="home-final-cta-lede">Join Obin Academy today and buy the exact course you need to get started.</p>
+        <div class="home-final-cta-btn-wrap">
+          <a href="<?= e(base_url('courses/index.php')) ?>" class="home-final-cta-btn">Browse Courses <span class="btn-arrow">→</span></a>
+        </div>
+        <div class="home-final-cta-trust">
+          <div class="home-final-cta-trust-logos">
+            <span class="home-final-cta-trust-logo"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN"></span>
+            <span class="home-final-cta-trust-logo"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel"></span>
+          </div>
+          <span class="home-final-cta-trust-sep"></span>
+          <span class="txt">Pay with MTN or Airtel Mobile Money · Own it for good</span>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
