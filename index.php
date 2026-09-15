@@ -105,7 +105,7 @@ require __DIR__ . '/includes/header.php';
       <?php foreach ($catalogPreview as $c): render_course_card($c); endforeach; ?>
     </div>
     <div class="text-center" style="margin-top:40px;">
-      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Browse the Full Catalog <span class="btn-arrow">→</span></a>
+      <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary btn-lg">Browse Courses <span class="btn-arrow">→</span></a>
     </div>
   </div>
 </section>
@@ -148,7 +148,7 @@ require __DIR__ . '/includes/header.php';
         <div class="path-tag">Obin Academy</div>
         <div class="path-amount">One Course <span>at a time</span></div>
         <p class="path-desc">Pay once for the specific skill you actually need, taught by people already doing the work — start learning today by Mobile Money, own it for good.</p>
-        <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-gold btn-block btn-lg">Browse the Catalog <span class="btn-arrow">→</span></a>
+        <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-gold btn-block btn-lg">Browse Courses <span class="btn-arrow">→</span></a>
       </div>
     </div>
   </div>
