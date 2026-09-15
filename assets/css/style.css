@@ -1593,12 +1593,13 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    the exact same catalog — no "recommended" badge on either, that would
    misrepresent a price-only difference as a feature difference. ---------- */
 .plans-grid { display: grid; grid-template-columns: 1fr; gap: 28px; max-width: 760px; margin: 0 auto; }
-@media (min-width: 760px) { .plans-grid { grid-template-columns: 1fr 1fr; align-items: start; } }
+@media (min-width: 760px) { .plans-grid { grid-template-columns: 1fr 1fr; align-items: stretch; } }
 .plan-card {
   position: relative; overflow: hidden; border-radius: var(--radius-lg);
   background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800));
   color: #fff; padding: 40px 32px;
   box-shadow: 0 30px 60px -24px rgba(16, 24, 40, 0.4);
+  display: flex; flex-direction: column;
 }
 .plan-card-glow {
   position: absolute; top: -100px; right: -90px; width: 280px; height: 280px; border-radius: 50%;
@@ -1619,7 +1620,10 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .plan-card .check-list { position: relative; margin-top: 26px; gap: 13px; }
 .plan-card .check-list .check-icon { background: rgba(255,255,255,0.14); color: var(--gold); }
 .plan-card .check-list .label-text { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; }
-.plan-card [data-payment-widget] { position: relative; margin-top: 30px; }
+/* Pushed to the bottom of the flex column regardless of how many checklist
+   lines came before it, so the CTA/disclaimer sit at the same height on
+   both cards even though Pro's list has one more line than Go's. */
+.plan-card [data-payment-widget] { position: relative; margin-top: auto; padding-top: 30px; }
 .plan-disclaimer { position: relative; margin-top: 14px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5; }
 
 /* ---------- community tag pills (about page) ---------- */
