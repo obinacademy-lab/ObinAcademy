@@ -1594,26 +1594,38 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 .audience-card p { margin-top: 12px; font-size: 14px; line-height: 1.65; color: rgba(255,255,255,0.75); }
 
-/* ---------- two-paths comparison (homepage) ---------- */
+/* ---------- two-paths comparison (homepage) — matches
+   join.digital-launchpad.com's "Two Paths, One Choice" anatomy exactly:
+   a muted, outlined "avoid this" card vs. a solid, glowing "choose this"
+   card, a circular VS badge between them, and a pill/button anchoring the
+   bottom of BOTH cards (not just the winning one). ---------- */
 .paths-grid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: stretch; margin-top: 44px; }
 @media (min-width: 800px) { .paths-grid { grid-template-columns: 1fr auto 1fr; gap: 24px; } }
-.path-card { border-radius: var(--radius-lg); padding: 36px 32px; }
-/* Branded gold, mirroring .path-new's branded blue below — same card
-   anatomy (gradient + glow blob in the other card's accent color + dark
-   text for contrast), just the inverse palette. */
+.path-card { position: relative; border-radius: var(--radius-lg); padding: 36px 32px; display: flex; flex-direction: column; }
 .path-old {
-  background: linear-gradient(165deg, var(--gold-dark), var(--gold) 60%, #ffd76a);
-  position: relative; overflow: hidden; border: none;
+  background: var(--brand-950); border: 1.5px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  overflow: hidden;
 }
 .path-old::before {
   content: ""; position: absolute; top: -80px; left: -80px; width: 260px; height: 260px;
-  border-radius: 50%; background: var(--brand-900); opacity: 0.16; filter: blur(70px); pointer-events: none;
+  border-radius: 50%; background: var(--gold); opacity: 0.14; filter: blur(70px); pointer-events: none;
 }
-.path-old .path-tag { position: relative; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-950); }
-.path-old .path-amount { position: relative; margin-top: 10px; font-size: 30px; font-weight: 800; color: #1e1400; }
-.path-old .path-amount span { font-size: 14px; font-weight: 700; color: #4a2e00; }
-.path-old p.path-desc { position: relative; margin-top: 14px; color: #4a2e00; font-size: 14.5px; line-height: 1.65; }
-.path-vs { display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--muted); font-size: 13px; letter-spacing: 0.08em; }
+.path-old .path-tag { position: relative; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); }
+.path-old .path-amount { position: relative; margin-top: 10px; font-size: 30px; font-weight: 800; color: #fff; }
+.path-old .path-amount span { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.55); }
+.path-old p.path-desc { position: relative; margin-top: 14px; color: rgba(255,255,255,0.68); font-size: 14.5px; line-height: 1.65; }
+.path-badge {
+  position: relative; margin-top: 24px; display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+  border: 1.5px solid rgba(255,255,255,0.2); border-radius: var(--radius-full); padding: 10px 18px;
+  font-size: 12.5px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; color: rgba(255,255,255,0.75);
+}
+.path-badge svg { width: 15px; height: 15px; flex-shrink: 0; }
+.path-vs {
+  display: flex; align-items: center; justify-content: center; margin: 0 auto;
+  width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  font-weight: 800; color: var(--gold); font-size: 12.5px; letter-spacing: 0.06em; background: var(--brand-950);
+}
+@media (max-width: 799px) { .path-vs { margin: -8px auto; z-index: 1; } }
 .path-new {
   background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 65%, var(--brand-800));
   color: #fff; position: relative; overflow: hidden;
@@ -1626,7 +1638,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .path-new .path-amount { position: relative; margin-top: 10px; font-size: 30px; font-weight: 800; }
 .path-new .path-amount span { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.65); }
 .path-new p.path-desc { position: relative; margin-top: 14px; color: rgba(255,255,255,0.78); font-size: 14.5px; line-height: 1.65; }
-.path-new .btn { position: relative; margin-top: 22px; }
+.path-new .btn { position: relative; margin-top: 24px; }
 
 /* ---------- how-it-works steps (homepage) — reuses .step-num's circular
    badge (defined above, about page) for the number treatment. ---------- */

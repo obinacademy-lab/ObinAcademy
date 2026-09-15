@@ -131,13 +131,14 @@ require __DIR__ . '/includes/header.php';
         <div class="path-tag">The Old Way</div>
         <div class="path-amount">Years + Millions <span>in UGX</span></div>
         <p class="path-desc">Tuition, textbooks, and years of your time — for a general degree that may not teach you the specific, practical skill you actually need to earn.</p>
+        <span class="path-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>Stuck With the Same Outcome</span>
       </div>
       <div class="path-vs">VS</div>
       <div class="path-card path-new reveal reveal-delay-1">
         <div class="path-tag">Obin Academy</div>
         <div class="path-amount">One Subscription <span>/ month</span></div>
         <p class="path-desc">Every practical course on the platform, taught by people already doing the work — start learning today, pay by Mobile Money, cancel whenever you want.</p>
-        <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-gold">See Plans <span class="btn-arrow">→</span></a>
+        <a href="<?= e(base_url('subscribe.php')) ?>" class="btn btn-gold btn-block btn-lg">Give Me Access Now <span class="btn-arrow">→</span></a>
       </div>
     </div>
   </div>
