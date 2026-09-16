@@ -26,6 +26,9 @@ $stats = [
 // not just subscribers. Watching still requires a subscription, checked
 // independently on learn.php/stream.php.
 $teaching = $isCreator ? get_course_cards('c.creator_id = ?', [$profileId], 'c.created_at DESC', 6) : [];
+// No school_cover_url of their own yet — borrow a thumbnail from one of
+// their own published courses instead of showing a bare flat hero.
+$schoolCoverUrl = $isCreator ? ($profile['school_cover_url'] ?: get_creator_fallback_thumbnail($profileId)) : null;
 
 $socials = [
     'facebook' => $profile['facebook_url'],
@@ -41,8 +44,8 @@ require __DIR__ . '/includes/header.php';
 ?>
 <?php if ($isCreator): ?>
   <section class="school-hero">
-    <?php if (!empty($profile['school_cover_url'])): ?>
-      <div class="school-hero-cover"><img src="<?= e(asset_src($profile['school_cover_url'])) ?>" alt=""></div>
+    <?php if (!empty($schoolCoverUrl)): ?>
+      <div class="school-hero-cover"><img src="<?= e(asset_src($schoolCoverUrl)) ?>" alt=""></div>
     <?php endif; ?>
     <div class="container school-hero-inner">
       <span class="school-hero-byline">

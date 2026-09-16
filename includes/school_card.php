@@ -13,11 +13,15 @@ function render_school_card(array $school): void {
     $isSubscription = ($school['pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION';
     $courseCount = (int) $school['course_count'];
     $studentCount = (int) $school['student_count'];
+    // No school_cover_url of its own yet — borrow a course thumbnail
+    // (get_school_cards()'s fallback_thumbnail_url) rather than showing the
+    // plain placeholder box.
+    $coverUrl = $school['school_cover_url'] ?: ($school['fallback_thumbnail_url'] ?? null);
     ?>
     <a href="<?= e(base_url('profile.php?id=' . $school['id'])) ?>" class="home-discover-card reveal">
       <div class="thumb">
-        <?php if (!empty($school['school_cover_url'])): ?>
-          <img src="<?= e(asset_src($school['school_cover_url'])) ?>" alt="" loading="lazy">
+        <?php if (!empty($coverUrl)): ?>
+          <img src="<?= e(asset_src($coverUrl)) ?>" alt="" loading="lazy">
         <?php else: ?>
           <div class="placeholder">Obin Academy</div>
         <?php endif; ?>

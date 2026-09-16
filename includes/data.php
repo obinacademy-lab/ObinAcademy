@@ -89,7 +89,11 @@ function get_school_cards(string $whereSql = '', array $params = [], string $ord
           (SELECT COUNT(*) FROM courses c WHERE c.creator_id = u.id AND c.status = 'PUBLISHED') AS course_count,
           (SELECT COUNT(*) FROM enrollments e JOIN courses c2 ON c2.id = e.course_id WHERE c2.creator_id = u.id AND c2.status = 'PUBLISHED') AS student_count,
           (SELECT MIN(c3.price) FROM courses c3 WHERE c3.creator_id = u.id AND c3.status = 'PUBLISHED' AND c3.price > 0) AS min_price,
-          (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN courses c4 ON c4.id = r.course_id WHERE c4.creator_id = u.id) AS avg_rating
+          (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN courses c4 ON c4.id = r.course_id WHERE c4.creator_id = u.id) AS avg_rating,
+          -- A school with no school_cover_url of its own borrows the
+          -- thumbnail from its own most-recent published course instead of
+          -- the card falling back to the plain placeholder box.
+          (SELECT c6.thumbnail_url FROM courses c6 WHERE c6.creator_id = u.id AND c6.status = 'PUBLISHED' AND c6.thumbnail_url IS NOT NULL ORDER BY c6.created_at DESC LIMIT 1) AS fallback_thumbnail_url
         FROM users u
         WHERE u.role IN ('CREATOR', 'ADMIN')
           AND EXISTS (SELECT 1 FROM courses c5 WHERE c5.creator_id = u.id AND c5.status = 'PUBLISHED')
@@ -102,6 +106,16 @@ function get_school_cards(string $whereSql = '', array $params = [], string $ord
 
 function get_featured_schools(int $take = 6): array {
     return get_school_cards('', [], 'student_count DESC, course_count DESC, u.created_at ASC', $take);
+}
+
+/** Same fallback as get_school_cards()'s fallback_thumbnail_url, for a
+ * single creator's own profile.php hero rather than a list of cards. */
+function get_creator_fallback_thumbnail(int $creatorId): ?string {
+    $row = db_one(
+        "SELECT thumbnail_url FROM courses WHERE creator_id = ? AND status = 'PUBLISHED' AND thumbnail_url IS NOT NULL ORDER BY created_at DESC LIMIT 1",
+        [$creatorId]
+    );
+    return $row['thumbnail_url'] ?? null;
 }
 
 const SCHOOL_SORT_OPTIONS = [
