@@ -43,7 +43,7 @@ $inquiryTypes = [
 ];
 
 $ADMIN_EMAIL = 'obinacademy@gmail.com';
-$SUPPORT_EMAIL = 'support@obinacademy.com';
+$SUPPORT_EMAIL = 'info@obinacademy.site';
 $WHATSAPP_NUMBER = '256775361998';
 $PHONE_DISPLAY = '+256 775 361 998';
 

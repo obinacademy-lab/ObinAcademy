@@ -145,7 +145,7 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
           </p>
 
           <p style="color: #5b6670; font-size: 12.5px; text-align: center; margin-top: 28px;">
-            Keep this receipt for your records. Questions about this payment? Reply to this email or reach us at support@obinacademy.com.
+            Keep this receipt for your records. Questions about this payment? Reply to this email or reach us at info@obinacademy.site.
           </p>
         </div>
         HTML);
