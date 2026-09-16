@@ -55,7 +55,7 @@ require __DIR__ . '/includes/header.php';
         </span>
         by <?= e($profile['name']) ?><?php if ($profile['role'] === 'ADMIN'): ?> · Admin<?php endif; ?>
       </span>
-      <h1><?= e($profile['school_name'] ?: ($profile['name'] . "'s School")) ?></h1>
+      <h1><?= e($profile['school_name'] ?: $profile['name']) ?></h1>
       <?php if ($profile['headline']): ?><p class="school-hero-headline"><?= e($profile['headline']) ?></p><?php endif; ?>
       <div class="school-hero-stats">
         <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Course<?= $stats['teaching'] === 1 ? '' : 's' ?></span></div>

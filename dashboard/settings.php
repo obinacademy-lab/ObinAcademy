@@ -186,7 +186,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
   <?php if ($isCreator): ?>
     <div class="field">
       <label for="schoolName">Your School Name</label>
-      <p class="help" style="margin-bottom:8px;">Shown at the top of your public page instead of a generic profile — e.g. "Sarah's Finance Academy". Leave blank to use "<?= e($user['name']) ?>'s School".</p>
+      <p class="help" style="margin-bottom:8px;">Shown at the top of your public page instead of a generic profile — e.g. "Sarah's Finance Academy". Leave blank to just show "<?= e($user['name']) ?>".</p>
       <input id="schoolName" name="schoolName" type="text" placeholder="e.g. <?= e($user['name']) ?>'s School" value="<?= e($user['school_name'] ?? '') ?>">
     </div>
     <div class="field">

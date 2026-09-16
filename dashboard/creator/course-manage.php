@@ -19,7 +19,7 @@ $actingAsAdmin = $isAdmin && !$isOwner;
 // applies at all depends on THIS creator's pricing model.
 $courseCreator = db_one('SELECT pricing_model, school_monthly_price, school_name, name FROM users WHERE id = ?', [$course['creator_id']]);
 $creatorHasSubscription = $courseCreator['pricing_model'] === 'MONTHLY_SUBSCRIPTION' && (float) $courseCreator['school_monthly_price'] > 0;
-$creatorSchoolLabel = $courseCreator['school_name'] ?: ($courseCreator['name'] . "'s School");
+$creatorSchoolLabel = $courseCreator['school_name'] ?: $courseCreator['name'];
 
 function note_admin_edit(bool $actingAsAdmin, array $user, string $action, string $targetLabel, ?string $detail = null): void {
     if (!$actingAsAdmin) return;

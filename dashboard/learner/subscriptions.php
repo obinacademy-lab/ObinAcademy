@@ -22,7 +22,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php else: ?>
   <div class="stack gap-3" style="margin-top:24px; max-width:640px;">
     <?php foreach ($subscriptions as $sub):
-      $schoolLabel = $sub['school_name'] ?: ($sub['creator_name'] . "'s School");
+      $schoolLabel = $sub['school_name'] ?: $sub['creator_name'];
       $needsRenewal = in_array($sub['status'], ['GRACE', 'EXPIRED'], true);
     ?>
       <div class="card card-pad">

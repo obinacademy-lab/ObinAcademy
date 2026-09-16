@@ -54,7 +54,7 @@ if ($isExpired) {
       <h1 class="h3" style="margin-top:16px;"><?= $subscriptionLapsed ? 'Subscription Ended' : 'Access Expired' ?></h1>
       <p class="muted" style="margin-top:10px;">
         <?php if ($subscriptionLapsed): ?>
-          Your subscription to <?= e($course['creator_school_name'] ?: ($course['creator_name'] . "'s School")) ?> has ended.
+          Your subscription to <?= e($course['creator_school_name'] ?: $course['creator_name']) ?> has ended.
           Resubscribe to keep learning.
         <?php else: ?>
           Your access to "<?= e($course['title']) ?>" expired on <?= e(format_date($enrollment['expires_at'])) ?>.

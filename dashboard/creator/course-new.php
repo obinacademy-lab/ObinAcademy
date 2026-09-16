@@ -7,7 +7,7 @@ $user = require_role(['CREATOR', 'ADMIN']);
 $errors = [];
 $categories = get_categories();
 $creatorHasSubscription = $user['pricing_model'] === 'MONTHLY_SUBSCRIPTION' && (float) $user['school_monthly_price'] > 0;
-$creatorSchoolLabel = $user['school_name'] ?: ($user['name'] . "'s School");
+$creatorSchoolLabel = $user['school_name'] ?: $user['name'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();

@@ -30,7 +30,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $isSubscriptionIncluded = $schoolHasSubscription && (int) ($course['subscription_included'] ?? 1) === 1;
     $isSubscribed = $user && $isSubscriptionIncluded && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id']);
     $hasAccess = $isEnrolled || $isSubscribed;
-    $schoolLabel = $course['creator_school_name'] ?: ($course['creator_name'] . "'s School");
+    $schoolLabel = $course['creator_school_name'] ?: $course['creator_name'];
     $monthlyPrice = (float) ($course['creator_school_monthly_price'] ?? 0);
 
     $showPaidFlow = $user && !$hasAccess && !$isOwner && $isPublished && !$isSubscriptionIncluded && $price > 0;

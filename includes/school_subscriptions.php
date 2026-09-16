@@ -100,7 +100,7 @@ function initiate_school_subscription(int $learnerId, int $creatorId, string $ph
         [$learnerId, $existingSub ? $existingSub['id'] : null, $creatorId, $price, $phone]
     );
 
-    $schoolLabel = $creator['school_name'] ?: ($creator['name'] . "'s School");
+    $schoolLabel = $creator['school_name'] ?: $creator['name'];
     try {
         $result = iotec_initiate_collection($price, $phone, (string) $paymentId, substr("Obin Academy - {$schoolLabel} Subscription", 0, 100));
         db_run('UPDATE payments SET iotec_transaction_id = ? WHERE id = ?', [$result['transactionId'], $paymentId]);
@@ -175,7 +175,7 @@ function send_due_school_subscription_renewal_reminders(): int {
     );
     foreach ($due as $sub) {
         if (!$sub['learner_email']) continue;
-        $schoolLabel = $sub['school_name'] ?: ($sub['creator_name'] . "'s School");
+        $schoolLabel = $sub['school_name'] ?: $sub['creator_name'];
         $renewUrl = base_url('dashboard/learner/subscriptions.php');
         send_school_subscription_renewal_email($sub['learner_email'], $sub['learner_name'], $schoolLabel, $renewUrl);
         db_run('UPDATE school_subscriptions SET reminder_sent_at = NOW() WHERE id = ?', [$sub['id']]);

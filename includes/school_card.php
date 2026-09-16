@@ -9,7 +9,7 @@
  * style — same visual language, just school-shaped content.
  */
 function render_school_card(array $school): void {
-    $schoolLabel = $school['school_name'] ?: ($school['name'] . "'s School");
+    $schoolLabel = $school['school_name'] ?: $school['name'];
     $isSubscription = ($school['pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION';
     $courseCount = (int) $school['course_count'];
     $studentCount = (int) $school['student_count'];
