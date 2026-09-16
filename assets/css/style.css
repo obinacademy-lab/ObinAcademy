@@ -2029,13 +2029,19 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    --ink (already close to Skool's own tones) rather than inventing a new
    palette. Its own component, scoped to the homepage only. ---------- */
 .home-discover { background: var(--surface); }
-.home-discover-hero { max-width: 700px; margin: 0 auto; padding: 56px 24px 0; text-align: center; }
-.home-discover-hero h1 { margin: 0; font-size: clamp(32px, 5vw, 45px); font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
-.home-discover-hero .sub { margin: 10px 0 0; font-size: 18px; color: var(--ink); }
+.home-discover-hero { max-width: 700px; margin: 0 auto; padding: 60px 24px 0; text-align: center; }
+.home-discover-hero h1 {
+  margin: 0; font-size: clamp(32px, 5vw, 45px); font-weight: 700; letter-spacing: -0.01em; color: var(--ink);
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
+.home-discover-hero .sub {
+  margin: 10px 0 0; font-size: 18px; color: var(--ink);
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.05s;
+}
 .home-discover-hero .sub a { color: var(--accent); text-decoration: none; font-weight: 500; }
 .home-discover-hero .sub a:hover { text-decoration: underline; }
 
-.home-discover-search { max-width: 650px; margin: 28px auto 0; padding: 0 24px; }
+.home-discover-search { max-width: 650px; margin: 32px auto 0; padding: 0 24px; }
 .home-discover-search-box {
   display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 10px; padding: 16px 20px;
   box-shadow: 0 1px 2px rgba(60,64,67,.32), 0 2px 6px rgba(60,64,67,.15), 0 1px 8px rgba(0,0,0,.1);
@@ -2044,7 +2050,16 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .home-discover-search-box input { border: none; outline: none; font: inherit; font-size: 16px; width: 100%; background: none; color: var(--ink); }
 .home-discover-search-box input::placeholder { color: #b0b0b0; }
 
-.home-discover-chips { max-width: 1100px; margin: 24px auto 0; padding: 0 24px; display: flex; align-items: center; gap: 10px; overflow-x: auto; }
+/* Homepage hero search reuses .hero-search-v3 (see line ~1030) — it already
+   carries its own hero-rise entrance at animation-delay 0.15s, continuing
+   the same staggered rise as the h1/.sub above it. Only add what that
+   shared class doesn't: a focus ring, matching the site's other inputs. */
+.hero-search-v3:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent), 0 1px 2px rgba(32,33,36,.13), 0 2px 6px rgba(32,33,36,.06); }
+
+.home-discover-chips {
+  max-width: 1100px; margin: 28px auto 0; padding: 0 24px; display: flex; align-items: center; gap: 10px; overflow-x: auto;
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.2s;
+}
 .home-discover-chip {
   flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: var(--radius-full);
   font-size: 14px; font-weight: 600; background: #fff; color: var(--muted); border: 1px solid var(--border); white-space: nowrap;
@@ -2059,7 +2074,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 .home-discover-chip-filter svg { width: 16px; height: 16px; }
 
-.home-discover-grid-wrap { max-width: 1100px; margin: 0 auto; padding: 36px 24px 64px; }
+.home-discover-grid-wrap { max-width: 1100px; margin: 0 auto; padding: 44px 24px 64px; }
 .home-discover-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 @media (max-width: 860px) { .home-discover-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .home-discover-grid { grid-template-columns: 1fr; } }
@@ -2100,6 +2115,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (prefers-reduced-motion: reduce) {
   .home-discover-card.reveal, .home-discover-card .thumb img, .home-discover-card .thumb::after, .home-discover-card .avatar { transition: none; }
   .home-discover-card.reveal:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-discover-hero h1, .home-discover-hero .sub, .home-discover-chips { animation: none; }
 }
 .home-discover-card.reveal:nth-child(1) { transition-delay: 0s, 0s, 0s, 0s; }
 .home-discover-card.reveal:nth-child(2) { transition-delay: 0.08s, 0.08s, 0s, 0s; }
