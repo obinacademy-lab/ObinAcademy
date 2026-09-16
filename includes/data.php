@@ -74,6 +74,74 @@ function get_trending_courses(int $take = 3): array {
     );
 }
 
+/**
+ * Every creator's row (+ course/student counts, cheapest published-course
+ * price) for school-card rendering — see includes/school_card.php.
+ * $whereSql/$params filter the *creator* (u.*); course/category filtering
+ * happens against the EXISTS subquery a caller adds to $whereSql, same
+ * pattern get_course_cards() uses for courses.
+ */
+function get_school_cards(string $whereSql = '', array $params = [], string $orderBy = 'student_count DESC', ?int $limit = null): array {
+    $sql = "
+        SELECT u.id, u.name, u.school_name, u.avatar_url, u.school_cover_url, u.headline,
+          u.pricing_model, u.school_monthly_price,
+          (SELECT COUNT(*) FROM courses c WHERE c.creator_id = u.id AND c.status = 'PUBLISHED') AS course_count,
+          (SELECT COUNT(*) FROM enrollments e JOIN courses c2 ON c2.id = e.course_id WHERE c2.creator_id = u.id AND c2.status = 'PUBLISHED') AS student_count,
+          (SELECT MIN(c3.price) FROM courses c3 WHERE c3.creator_id = u.id AND c3.status = 'PUBLISHED' AND c3.price > 0) AS min_price,
+          (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN courses c4 ON c4.id = r.course_id WHERE c4.creator_id = u.id) AS avg_rating
+        FROM users u
+        WHERE u.role IN ('CREATOR', 'ADMIN')
+          AND EXISTS (SELECT 1 FROM courses c5 WHERE c5.creator_id = u.id AND c5.status = 'PUBLISHED')
+          " . ($whereSql ? "AND $whereSql" : '') . "
+        ORDER BY $orderBy
+    ";
+    if ($limit) $sql .= " LIMIT $limit";
+    return db_all($sql, $params);
+}
+
+function get_featured_schools(int $take = 6): array {
+    return get_school_cards('', [], 'student_count DESC, course_count DESC, u.created_at ASC', $take);
+}
+
+const SCHOOL_SORT_OPTIONS = [
+    'popular' => ['label' => 'Most Popular', 'order' => 'student_count DESC, course_count DESC'],
+    'newest' => ['label' => 'Newest', 'order' => 'u.created_at DESC'],
+    'rating' => ['label' => 'Highest Rated', 'order' => 'avg_rating DESC, student_count DESC'],
+];
+
+/** Schools with at least one reviewed course, highest-rated first — for a "Trending" spotlight row. */
+function get_trending_schools(int $take = 3): array {
+    return get_school_cards(
+        "EXISTS (SELECT 1 FROM courses ct JOIN reviews rt ON rt.course_id = ct.id WHERE ct.creator_id = u.id)",
+        [],
+        'avg_rating DESC, student_count DESC',
+        $take
+    );
+}
+
+/**
+ * @param string $query matches a school's own name, school_name, or any of
+ *   its published course titles.
+ * @param string $categorySlug schools with at least one published course in
+ *   this category.
+ */
+function search_schools(string $query = '', string $categorySlug = '', string $sort = 'popular'): array {
+    $where = [];
+    $params = [];
+    if ($categorySlug) {
+        $where[] = "EXISTS (SELECT 1 FROM courses cc JOIN categories cat ON cat.id = cc.category_id WHERE cc.creator_id = u.id AND cc.status = 'PUBLISHED' AND cat.slug = ?)";
+        $params[] = $categorySlug;
+    }
+    if ($query) {
+        $where[] = "(u.name LIKE ? OR u.school_name LIKE ? OR EXISTS (SELECT 1 FROM courses cq WHERE cq.creator_id = u.id AND cq.status = 'PUBLISHED' AND cq.title LIKE ?))";
+        $params[] = "%$query%";
+        $params[] = "%$query%";
+        $params[] = "%$query%";
+    }
+    $orderBy = SCHOOL_SORT_OPTIONS[$sort]['order'] ?? SCHOOL_SORT_OPTIONS['popular']['order'];
+    return get_school_cards(implode(' AND ', $where), $params, $orderBy);
+}
+
 function get_course_by_slug(string $slug): ?array {
     $course = db_one('
         SELECT c.*, cat.name AS category_name, cat.slug AS category_slug,

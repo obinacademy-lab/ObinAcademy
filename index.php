@@ -1,9 +1,9 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
-require __DIR__ . '/includes/course_card.php';
+require __DIR__ . '/includes/school_card.php';
 
-$catalogPreview = get_featured_courses(6);
+$schoolsPreview = get_featured_schools(6);
 $categories = get_categories();
 $categoryEmoji = [
     'finance' => '💰', 'business' => '💼', 'technology-software-development' => '💻',
@@ -40,8 +40,8 @@ require __DIR__ . '/includes/header.php';
 
 <div class="home-discover">
   <div class="home-discover-hero">
-    <h1>Discover courses</h1>
-    <p class="sub">or <a href="<?= e(base_url('become-creator.php')) ?>">become a creator</a></p>
+    <h1>Discover schools</h1>
+    <p class="sub">or <a href="<?= e(base_url('become-creator.php')) ?>">create your own school</a></p>
   </div>
 
   <div class="home-discover-search">
@@ -62,40 +62,13 @@ require __DIR__ . '/includes/header.php';
     </a>
   </nav>
 
-  <?php if ($catalogPreview): ?>
+  <?php if ($schoolsPreview): ?>
     <div class="home-discover-grid-wrap">
       <div class="home-discover-grid">
-        <?php foreach ($catalogPreview as $c): ?>
-          <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="home-discover-card reveal">
-            <div class="thumb">
-              <?php if (!empty($c['thumbnail_url'])): ?>
-                <img src="<?= e(asset_src($c['thumbnail_url'])) ?>" alt="" loading="lazy">
-              <?php else: ?>
-                <div class="placeholder">Obin Academy</div>
-              <?php endif; ?>
-              <span class="avatar">
-                <?php if (!empty($c['creator_avatar_url'])): ?>
-                  <img src="<?= e(asset_src($c['creator_avatar_url'])) ?>" alt="">
-                <?php else: ?><?= e(mb_substr($c['creator_name'], 0, 1)) ?><?php endif; ?>
-              </span>
-            </div>
-            <div class="body">
-              <h3><?= e($c['title']) ?></h3>
-              <p class="creator"><?= e($c['creator_name']) ?> &middot; <?= e($c['category_name']) ?></p>
-              <p class="desc"><?= e($c['summary']) ?></p>
-              <p class="meta">
-                <strong><?= number_format((int) $c['student_count']) ?></strong> student<?= (int) $c['student_count'] === 1 ? '' : 's' ?>
-                <span class="dot"></span>
-                <strong><?= number_format((int) $c['view_count']) ?></strong> view<?= (int) $c['view_count'] === 1 ? '' : 's' ?>
-                <span class="dot"></span>
-                <?= (float) $c['price'] > 0 ? e(format_money((float) $c['price'])) : 'Free' ?>
-              </p>
-            </div>
-          </a>
-        <?php endforeach; ?>
+        <?php foreach ($schoolsPreview as $school) render_school_card($school); ?>
       </div>
       <div class="home-discover-cta">
-        <a href="<?= e(base_url('courses/index.php')) ?>">Browse all courses <span class="btn-arrow">→</span></a>
+        <a href="<?= e(base_url('courses/index.php')) ?>">Browse all schools <span class="btn-arrow">→</span></a>
       </div>
     </div>
   <?php endif; ?>
