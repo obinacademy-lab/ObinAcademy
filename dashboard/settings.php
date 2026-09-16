@@ -28,11 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tiktokUrl = post('tiktokUrl');
     $linkedinUrl = post('linkedinUrl');
     $schoolName = $isCreator ? post('schoolName') : '';
+    $pricingModel = $isCreator ? post('pricingModel', 'PER_COURSE') : 'PER_COURSE';
+    $schoolMonthlyPrice = $isCreator ? post('schoolMonthlyPrice') : '';
 
     if (strlen($name) < 1) $errors[] = 'Name is required.';
     if ($phone !== '' && !preg_match('/^[0-9+\s-]{9,}$/', $phone)) $errors[] = 'Enter a valid phone number.';
     foreach (['Facebook' => $facebookUrl, 'Instagram' => $instagramUrl, 'YouTube' => $youtubeUrl, 'TikTok' => $tiktokUrl, 'LinkedIn' => $linkedinUrl] as $label => $url) {
         if ($url !== '' && !preg_match('#^https?://.+#i', $url)) $errors[] = "$label link must be a full URL starting with http:// or https://";
+    }
+    if ($isCreator) {
+        if (!in_array($pricingModel, ['PER_COURSE', 'MONTHLY_SUBSCRIPTION'], true)) $pricingModel = 'PER_COURSE';
+        if ($pricingModel === 'MONTHLY_SUBSCRIPTION' && (!is_numeric($schoolMonthlyPrice) || (float) $schoolMonthlyPrice <= 0)) {
+            $errors[] = 'Enter a monthly subscription price greater than zero.';
+        }
     }
 
     $avatarUrl = null;
@@ -54,12 +62,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         $sql = 'UPDATE users SET name=?, phone=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?'
-             . ($isCreator ? ', school_name=?' : '')
+             . ($isCreator ? ', school_name=?, pricing_model=?, school_monthly_price=?' : '')
              . ($avatarUrl ? ', avatar_url=?' : '')
              . ($schoolCoverUrl ? ', school_cover_url=?' : '')
              . ' WHERE id=?';
         $params = [$name, $phone ?: null, $headline ?: null, $bio ?: null, $facebookUrl ?: null, $instagramUrl ?: null, $youtubeUrl ?: null, $tiktokUrl ?: null, $linkedinUrl ?: null];
-        if ($isCreator) $params[] = $schoolName ?: null;
+        if ($isCreator) {
+            $params[] = $schoolName ?: null;
+            $params[] = $pricingModel;
+            $params[] = $pricingModel === 'MONTHLY_SUBSCRIPTION' ? (float) $schoolMonthlyPrice : null;
+        }
         if ($avatarUrl) $params[] = $avatarUrl;
         if ($schoolCoverUrl) $params[] = $schoolCoverUrl;
         $params[] = $user['id'];
@@ -168,6 +180,34 @@ require __DIR__ . '/../includes/dashboard_header.php';
       <p class="help" style="margin-bottom:8px;">A wide photo shown behind your school name. Leave blank to use the default Obin Academy banner.</p>
       <input id="schoolCover" name="schoolCover" type="file" accept="image/*">
     </div>
+    <div class="field">
+      <label>Pricing Model</label>
+      <p class="help" style="margin-bottom:10px;">Choose how learners pay for your school. Switching later doesn't affect anyone who already bought a course — they keep that course either way.</p>
+      <div class="stack gap-2">
+        <label class="row gap-2" style="align-items:flex-start; font-weight:600; cursor:pointer;">
+          <input type="radio" name="pricingModel" value="PER_COURSE" data-pricing-radio <?= ($user['pricing_model'] ?? 'PER_COURSE') === 'PER_COURSE' ? 'checked' : '' ?> style="margin-top:3px;">
+          <span>Charge per course<br><span class="help" style="font-weight:400;">Learners pay once for each course they want — set a price per course from the Creator Dashboard, like today.</span></span>
+        </label>
+        <label class="row gap-2" style="align-items:flex-start; font-weight:600; cursor:pointer;">
+          <input type="radio" name="pricingModel" value="MONTHLY_SUBSCRIPTION" data-pricing-radio <?= ($user['pricing_model'] ?? '') === 'MONTHLY_SUBSCRIPTION' ? 'checked' : '' ?> style="margin-top:3px;">
+          <span>Monthly subscription<br><span class="help" style="font-weight:400;">One monthly price unlocks every course you publish, now and any new ones you add later.</span></span>
+        </label>
+      </div>
+      <div class="field" data-monthly-price-field style="margin-top:14px; <?= ($user['pricing_model'] ?? '') === 'MONTHLY_SUBSCRIPTION' ? '' : 'display:none;' ?>">
+        <label for="schoolMonthlyPrice">Monthly Price (UGX)</label>
+        <input id="schoolMonthlyPrice" name="schoolMonthlyPrice" type="number" min="1000" step="1000" placeholder="e.g. 50000" value="<?= e($user['school_monthly_price'] ?? '') ?>">
+      </div>
+    </div>
+    <script>
+      (() => {
+        const radios = document.querySelectorAll('[data-pricing-radio]');
+        const priceField = document.querySelector('[data-monthly-price-field]');
+        if (!radios.length || !priceField) return;
+        radios.forEach((r) => r.addEventListener('change', () => {
+          priceField.style.display = document.querySelector('[data-pricing-radio]:checked').value === 'MONTHLY_SUBSCRIPTION' ? '' : 'none';
+        }));
+      })();
+    </script>
   <?php endif; ?>
 
   <button type="submit" class="btn btn-primary">Save Changes</button>
