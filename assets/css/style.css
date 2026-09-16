@@ -2966,7 +2966,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 .profile-edit-btn:hover { border-color: var(--border-strong); background: var(--surface); }
-.profile-bio { margin-top: 20px; font-size: 15px; line-height: 1.75; color: var(--ink); max-width: 620px; }
+.profile-bio { margin-top: 20px; font-size: 16px; line-height: 1.75; color: var(--ink); max-width: 620px; }
 
 .profile-stats-row { display: flex; flex-wrap: wrap; gap: 32px; margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); }
 .profile-stats-row .stat .value { display: block; font-size: 24px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; }
