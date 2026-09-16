@@ -39,12 +39,13 @@ require __DIR__ . '/includes/header.php';
     <p class="sub">or <a href="<?= e(base_url('become-creator.php')) ?>">become a creator</a></p>
   </div>
 
-  <form action="<?= e(base_url('courses/index.php')) ?>" method="get" class="home-discover-search">
-    <div class="home-discover-search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.35-4.35"></path></svg>
+  <div class="home-discover-search">
+    <form action="<?= e(base_url('courses/index.php')) ?>" method="get" class="hero-search-v3" style="margin:0;">
+      <?php dash_icon('search'); ?>
       <input type="text" name="q" placeholder="Search for anything">
-    </div>
-  </form>
+      <button type="submit">Search</button>
+    </form>
+  </div>
 
   <nav class="home-discover-chips">
     <a href="<?= e(base_url('courses/index.php')) ?>" class="home-discover-chip active">🔥 Trending</a>
