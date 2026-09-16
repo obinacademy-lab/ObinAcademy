@@ -53,9 +53,9 @@ $creatorBenefits = [
     ['🤝', '#6366f1', 'Build a Community', 'Cultivate your own learning community around the skills you teach.'],
 ];
 $creatorSteps = [
-    ['Apply to Become a Creator', 'Tell us about your expertise and submit your application for review.'],
-    ['Build Your Course', 'Use the Creator Dashboard to add modules, upload video or PDF lessons, and set your price.'],
-    ['Publish to the Marketplace', 'Once approved, your course goes live to every learner on Obin Academy.'],
+    ['Apply to Create Your School', 'Tell us about your expertise and submit your application for review.'],
+    ['Build Your First Course', 'Use the Creator Dashboard to add modules, upload video or PDF lessons, and choose your pricing.'],
+    ['Publish to Your School', 'Once approved, your course goes live on your own school page for every learner to find.'],
     ['Earn From Every Sale', 'Keep 90% of every sale, paid straight to your mobile money.'],
 ];
 
@@ -67,15 +67,15 @@ $exampleGross = $exampleCoursePrice * $exampleSalesCount;
 $examplePlatformFee = $exampleGross * 0.10;
 $exampleCreatorKeep = $exampleGross - $examplePlatformFee;
 
-$pageTitle = 'Become a Creator — Obin Academy';
-$pageDescription = 'Turn your knowledge into income. Apply to become a creator on Obin Academy — publish courses, set your own price, and keep 90% of every sale, paid instantly to mobile money.';
+$pageTitle = 'Create Your School — Obin Academy';
+$pageDescription = 'Turn your knowledge into income. Create your own school on Obin Academy — publish courses, choose your pricing, and keep 90% of every sale, paid instantly to mobile money.';
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero">
   <div class="container" style="max-width:720px; text-align:center;">
-    <span class="pill">Teach on Obin Academy</span>
+    <span class="pill">Create Your Own School</span>
     <h1 style="margin-top:14px;">Turn What You Know Into Income</h1>
-    <p class="summary" style="margin:14px auto 0;">Share your expertise with thousands of learners across East Africa. Upload video or PDF courses, get paid instantly via mobile money, and keep 90% of every sale.</p>
+    <p class="summary" style="margin:14px auto 0;">Start your own school on Obin Academy and share your expertise with thousands of learners across East Africa. Upload video or PDF courses, get paid instantly via mobile money, and keep 90% of every sale.</p>
 
     <?php if ($paidToCreators > 0): ?>
       <div class="hero-trust-stat">
@@ -85,7 +85,7 @@ require __DIR__ . '/includes/header.php';
     <?php endif; ?>
 
     <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:28px;">
-      <a href="#apply" class="btn btn-gold shine">Apply to Teach <span class="btn-arrow">→</span></a>
+      <a href="#apply" class="btn btn-gold shine">Create Your School <span class="btn-arrow">→</span></a>
       <a href="#how-it-works" class="btn btn-outline-light">See How It Works</a>
     </div>
   </div>
@@ -98,10 +98,10 @@ require __DIR__ . '/includes/header.php';
   <div class="container">
     <div class="why-exist-grid">
       <div class="reveal">
-        <span class="eyebrow">Why Teach on Obin Academy</span>
+        <span class="eyebrow">Why Start a School on Obin Academy</span>
         <h2 class="h2" style="margin-top:14px;">Your Knowledge Deserves to Be Paid Instantly</h2>
         <p class="lede" style="margin-top:16px; max-width:none; font-size:16.5px; line-height:1.75; color:var(--muted);">
-          Most platforms make you wait weeks for a payout. On Obin Academy, every sale is settled straight to your MTN or Airtel Mobile Money — no bank account, no delayed payout cycles, no chasing invoices. You set the price, you keep the majority of every sale, and we handle the platform, the payments, and the learners.
+          Most platforms make you wait weeks for a payout. On Obin Academy, every sale from your school is settled straight to your MTN or Airtel Mobile Money — no bank account, no delayed payout cycles, no chasing invoices. You choose how to charge — per course or a monthly subscription to your whole school — and we handle the platform, the payments, and the learners.
         </p>
         <div class="mission-callout" style="margin-top:24px;">
           <span class="tag">The Creator Split</span>
@@ -120,7 +120,7 @@ require __DIR__ . '/includes/header.php';
   <div class="container">
     <div class="text-center reveal" style="max-width:620px; margin:0 auto 40px;">
       <span class="eyebrow">What You Get</span>
-      <h2 class="h2" style="margin-top:10px;">Everything You Need to Succeed as a Creator</h2>
+      <h2 class="h2" style="margin-top:10px;">Everything You Need to Run Your Own School</h2>
       <p class="lede" style="margin-top:10px; max-width:none;">From unlimited course uploads to instant mobile money payouts — Obin Academy gives you everything to build a real teaching business.</p>
     </div>
     <div class="center-grid">
@@ -153,7 +153,7 @@ require __DIR__ . '/includes/header.php';
             </div>
           <?php endforeach; ?>
         </div>
-        <a href="#apply" class="btn btn-gold" style="margin-top:26px; position:relative; z-index:1;">Become a Creator <span class="btn-arrow">→</span></a>
+        <a href="#apply" class="btn btn-gold" style="margin-top:26px; position:relative; z-index:1;">Create Your School <span class="btn-arrow">→</span></a>
       </div>
       <div class="how-panel panel-creators reveal reveal-delay-2">
         <span class="how-panel-tag tag-gold">📊 Your Earnings</span>
@@ -190,7 +190,7 @@ require __DIR__ . '/includes/header.php';
   <div class="container" style="max-width:560px;">
     <div class="text-center reveal" style="margin:0 auto 28px;">
       <span class="eyebrow">Start Your Application</span>
-      <h2 class="h2" style="margin-top:10px;">Apply to Become a Creator</h2>
+      <h2 class="h2" style="margin-top:10px;">Apply to Create Your School</h2>
     </div>
     <?php if ($user && in_array($user['role'], ['CREATOR', 'ADMIN'], true)): ?>
       <div class="card card-pad" style="text-align:center;">
