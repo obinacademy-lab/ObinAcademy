@@ -1,8 +1,8 @@
 <?php
-require __DIR__ . '/../../includes/bootstrap.php';
-require __DIR__ . '/../../includes/data.php';
-require __DIR__ . '/../../includes/enroll_panel.php';
-require __DIR__ . '/../../includes/enrollment.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/data.php';
+require __DIR__ . '/../includes/enroll_panel.php';
+require __DIR__ . '/../includes/enrollment.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -15,9 +15,9 @@ $canPreview = $isOwner || $isAdmin;
 if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
     http_response_code(404);
     $pageTitle = 'Course Not Found — Obin Academy';
-    require __DIR__ . '/../../includes/header.php';
+    require __DIR__ . '/../includes/header.php';
     echo '<div class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Course not found</h1><p class="muted" style="margin-top:10px;">This course doesn\'t exist or isn\'t published yet.</p></div>';
-    require __DIR__ . '/../../includes/footer.php';
+    require __DIR__ . '/../includes/footer.php';
     exit;
 }
 
@@ -89,7 +89,7 @@ if (!empty($course['creator_name'])) {
     ];
 }
 
-require __DIR__ . '/../../includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <?php if ($course['status'] !== 'PUBLISHED'): ?>
@@ -255,4 +255,4 @@ require __DIR__ . '/../../includes/header.php';
 
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
-<?php require __DIR__ . '/../../includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
