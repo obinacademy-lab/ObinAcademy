@@ -15,16 +15,24 @@
 const SCHOOL_SUBSCRIPTION_PERIOD_DAYS = 30;
 const SCHOOL_SUBSCRIPTION_GRACE_DAYS = 3;
 
-/** True when $learnerId currently has paid, unexpired access to every course $creatorId publishes. */
+/**
+ * True when $learnerId currently has paid, unexpired access to every course
+ * $creatorId publishes. Computes the grace deadline directly from
+ * current_period_ends_at + SCHOOL_SUBSCRIPTION_GRACE_DAYS rather than
+ * trusting the stored status/grace_ends_at columns — access control stays
+ * correct even if cron/track-maintenance.php's sweep hasn't run recently;
+ * that sweep only keeps status current for display (the learner's
+ * subscriptions list, admin reporting), it isn't load-bearing for access.
+ */
 function learner_has_active_school_subscription(int $learnerId, int $creatorId): bool {
     $row = db_one(
-        "SELECT id FROM school_subscriptions
-         WHERE learner_id = ? AND creator_id = ? AND status IN ('ACTIVE','GRACE')
-           AND (grace_ends_at IS NULL OR grace_ends_at > NOW())
-         LIMIT 1",
+        "SELECT current_period_ends_at FROM school_subscriptions
+         WHERE learner_id = ? AND creator_id = ? AND status IN ('ACTIVE','GRACE') LIMIT 1",
         [$learnerId, $creatorId]
     );
-    return (bool) $row;
+    if (!$row) return false;
+    $graceDeadline = strtotime($row['current_period_ends_at']) + SCHOOL_SUBSCRIPTION_GRACE_DAYS * 86400;
+    return time() < $graceDeadline;
 }
 
 function get_school_subscription(int $learnerId, int $creatorId): ?array {
@@ -122,7 +130,7 @@ function apply_school_subscription_payment_success(array $payment): void {
         if ($existing) {
             $subscriptionId = (int) $existing['id'];
             db_run(
-                "UPDATE school_subscriptions SET status='ACTIVE', price=?, phone=?, current_period_ends_at=?, grace_ends_at=NULL, renewal_attempts_made=0, last_charge_attempt_at=NULL, canceled_at=NULL WHERE id=?",
+                "UPDATE school_subscriptions SET status='ACTIVE', price=?, phone=?, current_period_ends_at=?, grace_ends_at=NULL, renewal_attempts_made=0, last_charge_attempt_at=NULL, reminder_sent_at=NULL, canceled_at=NULL WHERE id=?",
                 [$payment['amount'], $payment['phone'], $periodEndsAt, $subscriptionId]
             );
         } else {
@@ -143,4 +151,56 @@ function apply_school_subscription_payment_success(array $payment): void {
         db()->rollBack();
         throw $e;
     }
+}
+
+const SCHOOL_SUBSCRIPTION_REMINDER_WINDOW_DAYS = 3;
+
+/**
+ * Emails a "renew now" reminder for every ACTIVE subscription ending within
+ * SCHOOL_SUBSCRIPTION_REMINDER_WINDOW_DAYS that hasn't been reminded yet for
+ * this period (reminder_sent_at is cleared on every successful renewal, so
+ * this fires again next period). Called from
+ * cron/track-maintenance.php — returns how many reminders went out.
+ */
+function send_due_school_subscription_renewal_reminders(): int {
+    $due = db_all(
+        "SELECT ss.id, ss.creator_id, u.name AS creator_name, u.school_name,
+                learner.name AS learner_name, learner.email AS learner_email
+         FROM school_subscriptions ss
+         JOIN users u ON u.id = ss.creator_id
+         JOIN users learner ON learner.id = ss.learner_id
+         WHERE ss.status = 'ACTIVE' AND ss.reminder_sent_at IS NULL
+           AND ss.current_period_ends_at <= DATE_ADD(NOW(), INTERVAL ? DAY)",
+        [SCHOOL_SUBSCRIPTION_REMINDER_WINDOW_DAYS]
+    );
+    foreach ($due as $sub) {
+        if (!$sub['learner_email']) continue;
+        $schoolLabel = $sub['school_name'] ?: ($sub['creator_name'] . "'s School");
+        $renewUrl = base_url('dashboard/learner/subscriptions.php');
+        send_school_subscription_renewal_email($sub['learner_email'], $sub['learner_name'], $schoolLabel, $renewUrl);
+        db_run('UPDATE school_subscriptions SET reminder_sent_at = NOW() WHERE id = ?', [$sub['id']]);
+    }
+    return count($due);
+}
+
+/**
+ * Walks subscription status forward for display purposes: ACTIVE rows past
+ * their period end move to GRACE, GRACE rows past their own grace window
+ * move to EXPIRED. Not load-bearing for access control (see the live
+ * computation in learner_has_active_school_subscription()) — this keeps
+ * status current for the learner's subscriptions list and admin reporting
+ * even if cron runs late. Called from cron/track-maintenance.php.
+ * @return array{to_grace: int, to_expired: int}
+ */
+function sweep_school_subscription_expirations(): array {
+    $toGrace = db_all("SELECT id FROM school_subscriptions WHERE status = 'ACTIVE' AND current_period_ends_at <= NOW()");
+    foreach ($toGrace as $row) {
+        $graceEndsAt = date('Y-m-d H:i:s', strtotime('+' . SCHOOL_SUBSCRIPTION_GRACE_DAYS . ' days'));
+        db_run("UPDATE school_subscriptions SET status = 'GRACE', grace_ends_at = ? WHERE id = ?", [$graceEndsAt, $row['id']]);
+    }
+    $toExpired = db_all("SELECT id FROM school_subscriptions WHERE status = 'GRACE' AND grace_ends_at <= NOW()");
+    foreach ($toExpired as $row) {
+        db_run("UPDATE school_subscriptions SET status = 'EXPIRED' WHERE id = ?", [$row['id']]);
+    }
+    return ['to_grace' => count($toGrace), 'to_expired' => count($toExpired)];
 }

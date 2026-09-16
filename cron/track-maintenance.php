@@ -18,6 +18,8 @@ require __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/leads.php';
 require_once __DIR__ . '/../includes/notifications.php';
 require_once __DIR__ . '/../includes/retention.php';
+require_once __DIR__ . '/../includes/email.php';
+require_once __DIR__ . '/../includes/school_subscriptions.php';
 
 function cron_section(string $label, callable $fn): void {
     try {
@@ -51,4 +53,14 @@ cron_section('notification_sweep', function () {
 cron_section('learner_retention', function () {
     $retentionCounts = send_due_retention_notifications();
     echo '[' . date('Y-m-d H:i:s') . "] learner retention: 5h={$retentionCounts['5h']} 24h={$retentionCounts['24h']} 72h={$retentionCounts['72h']}\n";
+});
+
+cron_section('school_subscription_renewal_reminders', function () {
+    $reminded = send_due_school_subscription_renewal_reminders();
+    echo '[' . date('Y-m-d H:i:s') . "] school subscription renewal reminders: {$reminded} sent\n";
+});
+
+cron_section('school_subscription_expiry_sweep', function () {
+    $swept = sweep_school_subscription_expirations();
+    echo '[' . date('Y-m-d H:i:s') . "] school subscription expiry sweep: to_grace={$swept['to_grace']} to_expired={$swept['to_expired']}\n";
 });

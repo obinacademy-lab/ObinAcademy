@@ -366,6 +366,10 @@ CREATE TABLE school_subscriptions (
   grace_ends_at DATETIME NULL,
   renewal_attempts_made TINYINT NOT NULL DEFAULT 0,
   last_charge_attempt_at DATETIME NULL,
+  -- Set when cron/track-maintenance.php emails a renewal reminder for the
+  -- CURRENT period, so the sweep doesn't re-email every run — reset back to
+  -- NULL on a successful renewal (see apply_school_subscription_payment_success()).
+  reminder_sent_at DATETIME NULL,
   started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   canceled_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

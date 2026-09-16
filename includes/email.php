@@ -90,6 +90,35 @@ function send_guest_access_email(string $to, string $name, string $courseTitle, 
 }
 
 /**
+ * A few days before a school subscription's current period ends — mobile
+ * money has no saved-token auto-renew, so this is the only heads-up a
+ * learner gets before their access pauses (see
+ * cron/track-maintenance.php's school_subscription_renewal_reminders
+ * section and includes/school_subscriptions.php).
+ */
+function send_school_subscription_renewal_email(string $to, string $name, string $schoolLabel, string $renewUrl): void {
+    resend_send($to, "Your subscription to {$schoolLabel} renews soon — Obin Academy", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">Hi {$name}, your subscription is ending soon</h2>
+          <p>
+            Your monthly subscription to <strong>{$schoolLabel}</strong> on Obin Academy is
+            about to end. Mobile money can't renew automatically — approve a new payment
+            below to keep your access to every course from this school.
+          </p>
+          <p>
+            <a href="{$renewUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              Renew Your Subscription
+            </a>
+          </p>
+          <p style="color: #5b6670; font-size: 14px;">
+            If you don't renew, your access to {$schoolLabel}'s courses will pause after a
+            short grace period — anything you bought individually stays yours either way.
+          </p>
+        </div>
+        HTML);
+}
+
+/**
  * Emailed right after a payment resolves to SUCCESS (course purchase or
  * premium upgrade), to both guest and logged-in learners — a receipt is
  * proof of payment independent of whatever access flow the learner uses.
