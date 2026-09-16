@@ -30,6 +30,11 @@ $categoryEmoji = [
     'marketing-digital-marketing' => '📣', 'design-creative' => '🎨', 'ecommerce' => '🛒',
     'education-teaching' => '🎓', 'agriculture' => '🌾', 'health-wellness' => '❤️',
     'artificial-intelligence' => '🤖', 'tech' => '💻',
+    'medical' => '🩺', 'food' => '🍽️', 'law' => '⚖️', 'human-resources' => '👥',
+    'engineering' => '⚙️', 'construction' => '🏗️', 'hospitality' => '🏨',
+    'fashion-beauty' => '👗', 'music-arts' => '🎵', 'photography-film' => '📷',
+    'sports-fitness' => '🏋️', 'logistics' => '🚚', 'environment' => '🌿',
+    'energy' => '⚡', 'automotive' => '🚗', 'media-journalism' => '📰',
 ];
 
 /** Rebuilds the browse URL with one param overridden, keeping the others intact. */
