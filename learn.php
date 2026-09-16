@@ -16,14 +16,18 @@ $enrollment = $user
     : guest_enrollment_for_course((int) $course['id']);
 
 // A learner with an active subscription to this course's school has access
-// to every course that creator publishes without ever buying this one
-// individually. Progress tracking, certificates, and stream.php's own
-// access check all key off an enrollments row, so lazily create one
-// (source=SUBSCRIPTION, no expires_at — its access is re-checked live
-// against the subscription below, not this row) the first time they open
-// the course, rather than teaching every downstream file about
-// subscriptions too. A PURCHASE-sourced row is never touched by this.
-$isSubscribed = $user && !$isOwner && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id']);
+// to every INCLUDED course that creator publishes (courses.subscription_
+// included = 0 opts a specific course out — the creator sells it
+// separately even to subscribers, see enroll_panel.php) without ever
+// buying it individually. Progress tracking, certificates, and
+// stream.php's own access check all key off an enrollments row, so lazily
+// create one (source=SUBSCRIPTION, no expires_at — its access is
+// re-checked live against the subscription below, not this row) the first
+// time they open the course, rather than teaching every downstream file
+// about subscriptions too. A PURCHASE-sourced row is never touched by this.
+$courseIsSubscriptionIncluded = ($course['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
+    && (int) ($course['subscription_included'] ?? 1) === 1;
+$isSubscribed = $user && !$isOwner && $courseIsSubscriptionIncluded && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id']);
 if (!$enrollment && $isSubscribed) {
     db_insert("INSERT INTO enrollments (user_id, course_id, expires_at, source) VALUES (?, ?, NULL, 'SUBSCRIPTION')", [$user['id'], $course['id']]);
     $enrollment = db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']]);

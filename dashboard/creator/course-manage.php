@@ -14,6 +14,13 @@ $isOwner = (int) $course['creator_id'] === (int) $user['id'];
 if (!$isOwner && !$isAdmin) { http_response_code(404); exit('Course not found'); }
 $actingAsAdmin = $isAdmin && !$isOwner;
 
+// The course's own creator, not necessarily $user (an admin can manage
+// someone else's course) — whether the "sell separately" toggle even
+// applies at all depends on THIS creator's pricing model.
+$courseCreator = db_one('SELECT pricing_model, school_monthly_price, school_name, name FROM users WHERE id = ?', [$course['creator_id']]);
+$creatorHasSubscription = $courseCreator['pricing_model'] === 'MONTHLY_SUBSCRIPTION' && (float) $courseCreator['school_monthly_price'] > 0;
+$creatorSchoolLabel = $courseCreator['school_name'] ?: ($courseCreator['name'] . "'s School");
+
 function note_admin_edit(bool $actingAsAdmin, array $user, string $action, string $targetLabel, ?string $detail = null): void {
     if (!$actingAsAdmin) return;
     log_admin_action((int) $user['id'], $user['name'] ?: $user['email'], $action, 'Course', $targetLabel, $detail);
@@ -29,6 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = post('title');
         $summary = post('summary');
         $description = post('description');
+        // Only meaningful when the creator's school is subscription-based —
+        // whether THIS course rides on the base subscription (default) or
+        // the creator sells it separately at its own price. A PER_COURSE
+        // creator's courses are always sold individually, so this posted
+        // value is ignored for them (forced back to included=1 below, though
+        // it's never read in that mode anyway).
+        $subscriptionIncluded = $creatorHasSubscription && post('subscriptionIncluded') === '0' ? 0 : 1;
         $price = (float) post('price', '0');
         $salePriceRaw = post('salePrice');
         $salePrice = $salePriceRaw === '' ? null : (float) $salePriceRaw;
@@ -45,6 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($saleDurationRaw !== '' && ctype_digit($saleDurationRaw)) {
             $saleEndsAt = date('Y-m-d H:i:s', strtotime('+' . (int) $saleDurationRaw . ' days'));
         }
+        // A course covered by the subscription never carries its own price —
+        // enforced here too, not just by hiding the field client-side, so a
+        // stale/tampered form submission can't leave a subscription-included
+        // course with a leftover individual price.
+        if ($creatorHasSubscription && $subscriptionIncluded === 1) {
+            $price = 0;
+            $salePrice = null;
+            $saleEndsAt = null;
+        }
         $categoryId = (int) post('categoryId');
 
         $accessDurationRaw = post('accessDurationDays', 'lifetime');
@@ -55,6 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
         if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
         if (strlen($description) < 20) $errors[] = 'Description must be at least 20 characters.';
+        if ($creatorHasSubscription && $subscriptionIncluded === 0 && $price <= 0) {
+            $errors[] = 'Set a price for this course, since you\'re selling it separately from your subscription.';
+        }
         if ($salePrice !== null && ($salePrice <= 0 || $salePrice >= $price)) {
             $errors[] = 'Sale price must be greater than 0 and less than the regular price.';
         }
@@ -72,8 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
-            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice];
+            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?, subscription_included=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
+            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice, $subscriptionIncluded];
             if ($thumbnailUrl) $params[] = $thumbnailUrl;
             $params[] = $courseId;
             db_run($sql, $params);
@@ -198,7 +224,14 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="row between wrap gap-3 reveal">
   <div>
     <h1 class="h2"><?= e($course['title']) ?></h1>
-    <p class="muted" style="margin-top:6px;"><?= e(format_money((float) $course['price'])) ?> &middot; <?= $studentCount ?> student<?= $studentCount === 1 ? '' : 's' ?></p>
+    <p class="muted" style="margin-top:6px;">
+      <?php if ($creatorHasSubscription && (int) $course['subscription_included'] === 1): ?>
+        Included in subscription (<?= e(format_money((float) $courseCreator['school_monthly_price'])) ?>/mo)
+      <?php else: ?>
+        <?= e(format_money((float) $course['price'])) ?>
+      <?php endif; ?>
+      &middot; <?= $studentCount ?> student<?= $studentCount === 1 ? '' : 's' ?>
+    </p>
     <span class="badge <?= $badgeClass[$course['status']] ?>" style="margin-top:10px; display:inline-flex;"><?= $statusLabel[$course['status']] ?></span>
   </div>
   <div class="row gap-2 wrap">
@@ -256,6 +289,25 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?= csrf_field() ?>
     <input type="hidden" name="_action" value="update_details">
     <div class="field"><label>Course Title</label><input name="title" required value="<?= e($course['title']) ?>"></div>
+
+    <?php $soldSeparately = $creatorHasSubscription && (int) $course['subscription_included'] === 0; ?>
+    <?php if ($creatorHasSubscription): ?>
+      <div class="field">
+        <label>Course Pricing</label>
+        <p class="help" style="margin-bottom:10px;">Your school is subscription-based. Choose whether this course is covered by that monthly subscription, or sold on its own.</p>
+        <div class="stack gap-2">
+          <label class="row gap-2" style="align-items:flex-start; font-weight:600; cursor:pointer;">
+            <input type="radio" name="subscriptionIncluded" value="1" data-sub-included-radio <?= !$soldSeparately ? 'checked' : '' ?> style="margin-top:3px;">
+            <span>Included in my subscription<br><span class="help" style="font-weight:400;">No separate price — covered by your <?= e($creatorSchoolLabel) ?> subscription like every other course.</span></span>
+          </label>
+          <label class="row gap-2" style="align-items:flex-start; font-weight:600; cursor:pointer;">
+            <input type="radio" name="subscriptionIncluded" value="0" data-sub-included-radio <?= $soldSeparately ? 'checked' : '' ?> style="margin-top:3px;">
+            <span>Sell separately<br><span class="help" style="font-weight:400;">Set its own price below — learners pay for this course individually, even if they're already subscribed.</span></span>
+          </label>
+        </div>
+      </div>
+    <?php endif; ?>
+
     <div class="grid sm:grid-2">
       <div class="field">
         <label>Category</label>
@@ -265,8 +317,12 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="field"><label>Price (UGX)</label><input name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" required></div>
+      <div class="field" data-price-field style="<?= $creatorHasSubscription && !$soldSeparately ? 'display:none;' : '' ?>">
+        <label>Price (UGX)</label>
+        <input name="price" type="number" min="0" step="1" value="<?= e((string) $course['price']) ?>" <?= $creatorHasSubscription && !$soldSeparately ? '' : 'required' ?>>
+      </div>
     </div>
+    <div data-sale-fields style="<?= $creatorHasSubscription && !$soldSeparately ? 'display:none;' : '' ?>">
     <div class="field">
       <label>Sale Price (UGX, optional)</label>
       <input name="salePrice" type="number" min="0" step="1" value="<?= e($course['sale_price'] !== null ? (string) $course['sale_price'] : '') ?>" placeholder="Leave blank for no discount">
@@ -289,6 +345,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <?php endif; ?>
       </p>
     </div>
+    </div>
     <div class="field"><label>Short Summary</label><input name="summary" required value="<?= e($course['summary']) ?>"></div>
     <div class="field"><label>Full Description</label><textarea name="description" rows="5" required><?= e($course['description']) ?></textarea></div>
     <div class="grid sm:grid-2">
@@ -306,6 +363,23 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <button type="submit" class="btn btn-primary">Save Changes</button>
   </form>
 </details>
+<?php if ($creatorHasSubscription): ?>
+  <script>
+    (() => {
+      const radios = document.querySelectorAll('[data-sub-included-radio]');
+      const priceField = document.querySelector('[data-price-field]');
+      const saleFields = document.querySelector('[data-sale-fields]');
+      const priceInput = priceField ? priceField.querySelector('input[name="price"]') : null;
+      if (!radios.length || !priceField || !saleFields) return;
+      radios.forEach((r) => r.addEventListener('change', () => {
+        const soldSeparately = document.querySelector('[data-sub-included-radio]:checked').value === '0';
+        priceField.style.display = soldSeparately ? '' : 'none';
+        saleFields.style.display = soldSeparately ? '' : 'none';
+        if (priceInput) priceInput.required = soldSeparately;
+      }));
+    })();
+  </script>
+<?php endif; ?>
 
 <h2 class="h3" style="margin-top:36px;">Views &amp; Interest</h2>
 <p class="muted small" style="margin-top:6px;">Aggregate numbers only — no visitor is ever identified from views alone. The list below is only learners who opted in themselves.</p>

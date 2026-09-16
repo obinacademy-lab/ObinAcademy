@@ -17,19 +17,24 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $isPublished = $course['status'] === 'PUBLISHED';
 
     // Once a creator's school is in subscription mode, every course they
-    // publish is subscription-gated — no more ad-hoc free/paid per course,
-    // even if this course's own price/sale fields are still set from
-    // before they switched. A learner who already owns this course from
-    // before the switch keeps it via $isEnrolled, checked first below.
-    $isSubscriptionSchool = ($course['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
+    // publish is subscription-gated by default — no more ad-hoc free/paid
+    // per course, even if this course's own price/sale fields are still set
+    // from before they switched. A creator can still opt a specific course
+    // OUT of the subscription (courses.subscription_included = 0) to sell
+    // it separately at its own price on top of the base subscription — see
+    // dashboard/creator/course-manage.php. A learner who already owns this
+    // course from before the switch keeps it via $isEnrolled, checked first
+    // below, regardless of which mode it's in now.
+    $schoolHasSubscription = ($course['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
         && (float) ($course['creator_school_monthly_price'] ?? 0) > 0;
-    $isSubscribed = $user && $isSubscriptionSchool && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id']);
+    $isSubscriptionIncluded = $schoolHasSubscription && (int) ($course['subscription_included'] ?? 1) === 1;
+    $isSubscribed = $user && $isSubscriptionIncluded && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id']);
     $hasAccess = $isEnrolled || $isSubscribed;
     $schoolLabel = $course['creator_school_name'] ?: ($course['creator_name'] . "'s School");
     $monthlyPrice = (float) ($course['creator_school_monthly_price'] ?? 0);
 
-    $showPaidFlow = $user && !$hasAccess && !$isOwner && $isPublished && !$isSubscriptionSchool && $price > 0;
-    $showSubscribeFlow = $user && !$hasAccess && !$isOwner && $isPublished && $isSubscriptionSchool;
+    $showPaidFlow = $user && !$hasAccess && !$isOwner && $isPublished && !$isSubscriptionIncluded && $price > 0;
+    $showSubscribeFlow = $user && !$hasAccess && !$isOwner && $isPublished && $isSubscriptionIncluded;
     $loginUrl = base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']));
     ?>
     <div class="enroll-panel reveal reveal-delay-2">
@@ -39,10 +44,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php else: ?>
           <div class="placeholder"><?php dash_icon('graduation-cap'); ?><span>Obin Academy</span></div>
         <?php endif; ?>
-        <?php if (!$isSubscriptionSchool && $hasSale): ?><span class="badge-pill badge-sale">🔥 <?= $saleDaysLeft !== null ? $saleDaysLeft . ' day' . ($saleDaysLeft === 1 ? '' : 's') . ' left' : 'On Sale' ?></span><?php endif; ?>
+        <?php if (!$isSubscriptionIncluded && $hasSale): ?><span class="badge-pill badge-sale">🔥 <?= $saleDaysLeft !== null ? $saleDaysLeft . ' day' . ($saleDaysLeft === 1 ? '' : 's') . ' left' : 'On Sale' ?></span><?php endif; ?>
       </div>
       <div class="pad">
-        <?php if ($isSubscriptionSchool): ?>
+        <?php if ($isSubscriptionIncluded): ?>
           <div class="price-row">
             <div class="price"><?= e(format_money($monthlyPrice)) ?></div>
             <span class="price-note" data-price-note>per month</span>
@@ -69,6 +74,9 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
             <?php dash_icon('clock'); ?>
             <?= $course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access after purchase' : 'Lifetime access' ?>
           </div>
+          <?php if ($schoolHasSubscription): ?>
+            <p class="small muted" style="margin-top:10px;">Sold separately — not included in the <?= e($schoolLabel) ?> subscription.</p>
+          <?php endif; ?>
         <?php endif; ?>
 
         <?php if ($isOwner): ?>
@@ -77,7 +85,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           <a href="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>" class="btn btn-primary btn-block btn-lg" style="margin-top:20px;">▶ Continue Learning</a>
         <?php elseif (!$isPublished): ?>
           <button class="btn btn-outline btn-block btn-lg" disabled style="margin-top:20px;">Not Yet Available</button>
-        <?php elseif ($isSubscriptionSchool && !$user): ?>
+        <?php elseif ($isSubscriptionIncluded && !$user): ?>
           <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-gold btn-block btn-lg shine" style="margin-top:20px;">Sign Up to Subscribe</a>
           <p class="guest-note">A subscription to <?= e($schoolLabel) ?> needs a free account first — that's where your receipt, access, and subscription live. <a href="<?= e($loginUrl) ?>">Already have an account? Log in</a></p>
         <?php elseif ($showSubscribeFlow): ?>
@@ -186,7 +194,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php endif; ?>
 
         <ul class="perks">
-          <li><?php dash_icon('check-circle'); ?><?= $isSubscriptionSchool ? 'Access while subscribed' : ($course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access' : 'Lifetime access') ?></li>
+          <li><?php dash_icon('check-circle'); ?><?= $isSubscriptionIncluded ? 'Access while subscribed' : ($course['access_duration_days'] ? (int) $course['access_duration_days'] . ' days of access' : 'Lifetime access') ?></li>
           <li><?php dash_icon('check-circle'); ?>Stream video lessons and PDFs anytime</li>
           <li><?php dash_icon('check-circle'); ?><?= !empty($course['premium_price']) ? 'Downloads available with Premium (' . e(format_money((float) $course['premium_price'])) . ')' : 'Certificate of completion' ?></li>
           <li><?php dash_icon('check-circle'); ?>Learn on any device</li>

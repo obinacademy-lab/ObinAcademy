@@ -7,13 +7,17 @@
  * style.css, right below the .course-card rules).
  */
 function render_course_card(array $c): void {
-    // Once a creator's school is in subscription mode, this course's own
-    // price/sale fields are cleared and irrelevant (see dashboard/settings.php
-    // and enroll_panel.php) — showing them as "Free" would be actively wrong,
-    // since the course still requires an active subscription to access.
-    $isSubscriptionSchool = ($c['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
-        && (float) ($c['creator_school_monthly_price'] ?? 0) > 0;
-    $hasSale = !$isSubscriptionSchool && course_has_active_sale($c);
+    // Once a creator's school is in subscription mode, an INCLUDED course's
+    // own price/sale fields are cleared and irrelevant (see
+    // dashboard/settings.php and enroll_panel.php) — showing them as "Free"
+    // would be actively wrong, since the course still requires an active
+    // subscription to access. A course the creator opted OUT of the
+    // subscription (subscription_included = 0) keeps its own real price and
+    // displays exactly like a normal per-course card.
+    $isSubscriptionIncluded = ($c['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
+        && (float) ($c['creator_school_monthly_price'] ?? 0) > 0
+        && (int) ($c['subscription_included'] ?? 1) === 1;
+    $hasSale = !$isSubscriptionIncluded && course_has_active_sale($c);
     $displayPrice = $hasSale ? (float) $c['sale_price'] : (float) $c['price'];
     $saleDaysLeft = $hasSale ? course_sale_days_left($c) : null;
     ?>
@@ -54,7 +58,7 @@ function render_course_card(array $c): void {
           <?php endif; ?>
           <span class="price">
             <?php if ($hasSale): ?><span class="price-strike"><?= e(format_money((float) $c['price'])) ?></span><?php endif; ?>
-            <?php if ($isSubscriptionSchool): ?>
+            <?php if ($isSubscriptionIncluded): ?>
               <span class="currency">UGX</span><?= number_format((float) $c['creator_school_monthly_price']) ?><span style="font-size:0.6em; font-weight:600;">/mo</span>
             <?php elseif ($displayPrice > 0): ?>
               <span class="currency">UGX</span><?= number_format($displayPrice) ?>

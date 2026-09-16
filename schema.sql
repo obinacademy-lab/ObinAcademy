@@ -86,6 +86,13 @@ CREATE TABLE courses (
   sale_ends_at DATETIME NULL,
   access_duration_days INT NULL,
   premium_price DECIMAL(12,2) NULL,
+  -- Only meaningful when the creator's school (users.pricing_model) is
+  -- MONTHLY_SUBSCRIPTION: 1 (default) means this course is covered by the
+  -- subscription like every other course; 0 means the creator sells it
+  -- separately at its own price instead, on top of the base subscription.
+  -- Ignored entirely for a PER_COURSE school, where every course is always
+  -- individually priced regardless of this flag.
+  subscription_included TINYINT(1) NOT NULL DEFAULT 1,
   view_count INT NOT NULL DEFAULT 0,
   status ENUM('DRAFT','PENDING_REVIEW','PUBLISHED','REJECTED','REMOVED') NOT NULL DEFAULT 'DRAFT',
   rejection_reason TEXT NULL,
