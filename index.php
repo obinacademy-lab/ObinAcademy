@@ -59,6 +59,7 @@ require __DIR__ . '/includes/header.php';
     <?php endforeach; ?>
     <a href="<?= e(base_url('courses/index.php')) ?>" class="home-discover-chip-filter" aria-label="More filters" title="More filters">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"></circle><circle cx="9" cy="18" r="2" fill="currentColor" stroke="none"></circle></svg>
+      Filter
     </a>
   </nav>
 
