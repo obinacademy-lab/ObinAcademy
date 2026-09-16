@@ -82,7 +82,7 @@ require __DIR__ . '/includes/header.php';
           <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
         </div>
         <?php if ($teaching): ?>
-          <div class="grid sm:grid-2 lg:grid-3">
+          <div class="grid sm:grid-2 lg:grid-2">
             <?php foreach ($teaching as $c) render_course_card($c); ?>
           </div>
         <?php endif; ?>
