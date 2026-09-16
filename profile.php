@@ -11,9 +11,16 @@ $user = current_user();
 $isMe = $user && (int) $user['id'] === $profileId;
 $isCreator = in_array($profile['role'], ['CREATOR', 'ADMIN'], true);
 
+$teachingSummary = $isCreator ? get_courses_teaching($profileId, 50) : [];
 $stats = [
     'completed' => get_courses_completed_count($profileId),
-    'teaching' => $isCreator ? count(get_courses_teaching($profileId, 50)) : 0,
+    'teaching' => count($teachingSummary),
+    // Total enrollments across this creator's own published courses — the
+    // same "own students" figure a course page already shows next to its
+    // creator (creator_student_count in get_course_by_slug()), surfaced
+    // here too so a creator's public profile reads as their own school:
+    // their own courses, taught to their own students.
+    'students' => array_sum(array_column($teachingSummary, 'student_count')),
 ];
 // The catalog is public now — anyone can browse a creator's course cards,
 // not just subscribers. Watching still requires a subscription, checked
@@ -62,6 +69,7 @@ require __DIR__ . '/includes/header.php';
         <?php endif; ?>
         <?php if ($isCreator): ?>
           <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Teaching</span></div>
+          <div class="stat"><span class="value"><?= number_format($stats['students']) ?></span><span class="label">Student<?= $stats['students'] === 1 ? '' : 's' ?></span></div>
         <?php endif; ?>
       </div>
     <?php endif; ?>
@@ -70,7 +78,7 @@ require __DIR__ . '/includes/header.php';
   <?php if ($isCreator && $stats['teaching'] > 0): ?>
     <div class="profile-section">
       <div class="profile-section-head">
-        <h2>Teaching</h2>
+        <h2><?= e($profile['name']) ?>'s Courses</h2>
         <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
       </div>
       <?php if ($teaching): ?>
