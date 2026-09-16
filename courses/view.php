@@ -1,8 +1,8 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/data.php';
-require __DIR__ . '/../includes/enroll_panel.php';
-require __DIR__ . '/../includes/enrollment.php';
+require __DIR__ . '/../../includes/bootstrap.php';
+require __DIR__ . '/../../includes/data.php';
+require __DIR__ . '/../../includes/enroll_panel.php';
+require __DIR__ . '/../../includes/enrollment.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -15,9 +15,9 @@ $canPreview = $isOwner || $isAdmin;
 if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
     http_response_code(404);
     $pageTitle = 'Course Not Found — Obin Academy';
-    require __DIR__ . '/../includes/header.php';
+    require __DIR__ . '/../../includes/header.php';
     echo '<div class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Course not found</h1><p class="muted" style="margin-top:10px;">This course doesn\'t exist or isn\'t published yet.</p></div>';
-    require __DIR__ . '/../includes/footer.php';
+    require __DIR__ . '/../../includes/footer.php';
     exit;
 }
 
@@ -89,7 +89,7 @@ if (!empty($course['creator_name'])) {
     ];
 }
 
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/../../includes/header.php';
 ?>
 
 <?php if ($course['status'] !== 'PUBLISHED'): ?>
@@ -99,8 +99,6 @@ require __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <section class="course-hero2">
-  <div class="course-hero2-grid" aria-hidden="true"></div>
-  <div class="course-hero2-glow" aria-hidden="true"></div>
   <div class="container course-hero2-inner reveal">
     <nav class="course-hero2-crumb">
       <a href="<?= e(base_url('/')) ?>">Home</a> / <a href="<?= e(base_url('courses/index.php')) ?>">Courses</a> / <a href="<?= e(base_url('courses/index.php?category=' . $course['category_slug'])) ?>"><?= e($course['category_name']) ?></a>
@@ -131,7 +129,7 @@ require __DIR__ . '/../includes/header.php';
           <span class="role"><?= e($course['creator_headline'] ?: 'Instructor') ?></span>
         </span>
       </a>
-      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'dark', (int) $course['id'], 'Share this course'); ?>
+      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light', (int) $course['id'], 'Share this course'); ?>
     </div>
   </div>
 </section>
@@ -255,4 +253,4 @@ require __DIR__ . '/../includes/header.php';
 
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/../../includes/footer.php'; ?>

@@ -1047,6 +1047,25 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (prefers-reduced-motion: reduce) {
   .home-hero-v3 h1, .hero-subline, .home-hero-v3 .summary, .hero-search-v3, .hero-stats-v3 { animation: none; }
 }
+
+/* Light-bg variants of the .course-hero pill/trust-stat/trust-row badges
+   (see line ~1472) — for pages moved from the dark .course-hero to the
+   flat .home-hero-v3 (contact.php, become-creator.php) that still want
+   that same "badge above the headline" component, just readable on a
+   light ground instead of assuming white text on dark. */
+.home-hero-v3 .pill {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+  padding: 6px 14px; border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--gold) 14%, white); color: #92660a;
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--border));
+}
+.home-hero-v3 .pill svg { width: 13px; height: 13px; flex-shrink: 0; }
+.home-hero-v3 .hero-trust-stat {
+  background: color-mix(in srgb, var(--gold) 12%, white); border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--border));
+  color: var(--ink); backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.home-hero-v3 .hero-trust-stat span { color: #92660a; }
+.home-hero-v3 .hero-trust-row .item { color: var(--muted); }
 @media (max-width: 640px) {
   .home-hero-v3 { padding: 44px 0 32px; }
   .home-hero-v3 h1 { font-size: 40px; }
@@ -1609,38 +1628,35 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    same as this file's existing pattern for superseded page designs
    (see .timeline/.tmod-* and .reviews-grid/.rsummary/.rcard further
    down, both from earlier redesigns of this same page). */
-.course-hero2 { position: relative; isolation: isolate; overflow: hidden; background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800)); color: #fff; padding: 44px 0 40px; }
-.course-hero2-grid { position: absolute; inset: 0; z-index: 0; opacity: 0.5;
-  background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 26px 26px;
-  mask-image: radial-gradient(ellipse 70% 65% at 50% 20%, #000 40%, transparent 90%);
+.course-hero2 { background: var(--surface); padding: 36px 0 40px; }
+.course-hero2-inner { }
+
+.course-hero2-crumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
+.course-hero2-crumb a { color: var(--muted); text-decoration: none; }
+.course-hero2-crumb a:hover { color: var(--ink); }
+
+.course-hero2-pill {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 7px 14px; border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--gold) 14%, white); color: #92660a; border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--border));
 }
-.course-hero2-glow { position: absolute; z-index: 0; top: -120px; right: -100px; width: 420px; height: 420px; border-radius: 50%; background: var(--gold); opacity: 0.16; filter: blur(110px); animation: footer-glow-breathe 12s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .course-hero2-glow { animation: none; } }
-.course-hero2-inner { position: relative; z-index: 1; }
 
-.course-hero2-crumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: rgba(255,255,255,0.5); flex-wrap: wrap; }
-.course-hero2-crumb a { color: rgba(255,255,255,0.5); text-decoration: none; }
-.course-hero2-crumb a:hover { color: #fff; }
-
-.course-hero2-pill { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; background: rgba(255,255,255,0.1); color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 7px 14px; border-radius: var(--radius-full); }
-
-.course-hero2-inner h1 { margin: 16px 0 0; font-size: clamp(26px, 4vw, 38px); font-weight: 800; line-height: 1.2; max-width: 720px; }
-.course-hero2-sub { margin: 12px 0 0; font-size: 15.5px; color: rgba(255,255,255,0.68); max-width: 620px; line-height: 1.6; }
+.course-hero2-inner h1 { margin: 16px 0 0; font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; max-width: 760px; color: var(--ink); }
+.course-hero2-sub { margin: 12px 0 0; font-size: 16px; color: var(--muted); max-width: 620px; line-height: 1.6; }
 
 .course-hero2-rating { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
 .course-hero2-rating .stars { color: var(--gold); font-size: 16px; letter-spacing: 1px; }
-.course-hero2-rating .num { font-weight: 800; font-size: 14px; }
-.course-hero2-rating .count { color: rgba(255,255,255,0.5); font-size: 13.5px; }
+.course-hero2-rating .num { font-weight: 800; font-size: 14px; color: var(--ink); }
+.course-hero2-rating .count { color: var(--muted); font-size: 13.5px; }
 
 .course-hero2-meta { margin-top: 22px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.course-hero2-meta .item { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: rgba(255,255,255,0.7); }
+.course-hero2-meta .item { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--muted); }
 .course-hero2-meta svg { width: 15px; height: 15px; flex-shrink: 0; }
-.course-hero2-instructor { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); padding: 6px 16px 6px 6px; border-radius: var(--radius-full); text-decoration: none; transition: background-color 0.2s ease, border-color 0.2s ease; }
-.course-hero2-instructor:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.25); }
+.course-hero2-instructor { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--border); padding: 6px 16px 6px 6px; border-radius: var(--radius-full); text-decoration: none; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.course-hero2-instructor:hover { border-color: var(--border-strong); box-shadow: var(--shadow-pop-ink); }
 .course-hero2-instructor .av { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: var(--gold); color: #241900; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
 .course-hero2-instructor .av img { width: 100%; height: 100%; object-fit: cover; }
-.course-hero2-instructor .name { display: block; color: #fff; font-weight: 700; font-size: 13.5px; }
-.course-hero2-instructor .role { display: block; color: rgba(255,255,255,0.55); font-size: 11.5px; }
+.course-hero2-instructor .name { display: block; color: var(--ink); font-weight: 700; font-size: 13.5px; }
+.course-hero2-instructor .role { display: block; color: var(--muted); font-size: 11.5px; }
 
 .course-flat-thumb { margin-top: 0; border-radius: 10px; overflow: hidden; background: var(--border); aspect-ratio: 16/9; }
 .course-flat-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -2968,46 +2984,36 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 /* ---------- creator "school" hero (profile.php) — a creator's public page
    reads as their own school (own name, own courses, own students) rather
-   than a generic member-profile card. Falls back to the shared navy
-   gradient when no school_cover_url is set, so it looks intentional
-   before a creator ever uploads a banner. ---------- */
-.school-hero {
-  position: relative; isolation: isolate; overflow: hidden;
-  background-color: var(--brand-950);
-  background-image: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800));
-  background-size: cover; background-position: center;
-  color: #fff; padding: 56px 0 44px;
-}
-.school-hero-glow {
-  position: absolute; z-index: 0; top: -120px; right: -100px; width: 420px; height: 420px; border-radius: 50%;
-  background: var(--gold); opacity: 0.16; filter: blur(110px); animation: footer-glow-breathe 12s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) { .school-hero-glow { animation: none; } }
-.school-hero-overlay {
-  position: absolute; inset: 0; z-index: 0;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-950) 45%, transparent) 0%, color-mix(in srgb, var(--brand-950) 78%, transparent) 100%);
-}
-.school-hero-inner { position: relative; z-index: 1; text-align: center; }
+   than a generic member-profile card. Flat like every other hero now
+   (see .home-hero-v3/.home-discover-hero) instead of a dark photo banner —
+   an uploaded school_cover_url shows as a rounded image strip above the
+   content instead of a full-bleed background. ---------- */
+.school-hero { background: var(--surface); padding: 44px 0 40px; text-align: center; }
+.school-hero-cover { max-width: 1000px; margin: 0 auto 28px; padding: 0 24px; }
+.school-hero-cover img { width: 100%; aspect-ratio: 3.4/1; object-fit: cover; border-radius: 14px; display: block; border: 1px solid var(--border); }
+@media (max-width: 700px) { .school-hero-cover img { aspect-ratio: 2/1; } }
+.school-hero-inner { text-align: center; }
 .school-hero-byline {
-  display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-  padding: 6px 16px 6px 6px; border-radius: var(--radius-full); font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85);
+  display: inline-flex; align-items: center; gap: 8px;
+  background: color-mix(in srgb, var(--gold) 14%, white); border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--border));
+  padding: 6px 16px 6px 6px; border-radius: var(--radius-full); font-size: 13px; font-weight: 700; color: #92660a;
 }
 .school-hero-avatar {
   width: 26px; height: 26px; border-radius: 50%; overflow: hidden; background: var(--gold); color: #241900;
   display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; flex-shrink: 0;
 }
 .school-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.school-hero-inner h1 { margin: 18px auto 0; font-size: clamp(28px, 4.5vw, 42px); font-weight: 800; line-height: 1.15; max-width: 760px; }
-.school-hero-headline { margin: 12px auto 0; max-width: 560px; font-size: 16px; color: rgba(255,255,255,0.72); line-height: 1.6; }
+.school-hero-inner h1 { margin: 18px auto 0; font-size: clamp(28px, 4.5vw, 42px); font-weight: 800; line-height: 1.15; max-width: 760px; color: var(--ink); }
+.school-hero-headline { margin: 12px auto 0; max-width: 560px; font-size: 16px; color: var(--muted); line-height: 1.6; }
 .school-hero-stats { display: flex; justify-content: center; gap: 36px; margin-top: 28px; }
-.school-hero-stats .value { display: block; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; color: #fff; }
-.school-hero-stats .label { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 600; margin-top: 4px; }
+.school-hero-stats .value { display: block; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); }
+.school-hero-stats .label { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 4px; }
 .school-hero-edit-btn {
-  display: inline-block; margin-top: 24px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.28);
-  color: #fff; font-size: 13.5px; font-weight: 700; padding: 10px 22px; border-radius: var(--radius-full); text-decoration: none;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  display: inline-block; margin-top: 24px; background: #fff; border: 1px solid var(--border-strong);
+  color: var(--ink); font-size: 13.5px; font-weight: 700; padding: 10px 22px; border-radius: var(--radius-full); text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.school-hero-edit-btn:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.4); }
+.school-hero-edit-btn:hover { border-color: var(--ink); box-shadow: var(--shadow-pop-ink); }
 @media (max-width: 560px) {
   .school-hero { padding: 44px 0 36px; }
   .school-hero-stats { gap: 24px; }

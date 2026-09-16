@@ -1,6 +1,6 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/data.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/data.php';
 
 /** Inline stroke-icon set (Lucide-style: 24x24, stroke-width 2, round caps) — matches the icons already used in header.php/footer.php. */
 function ci(string $name, string $class = ''): string {
@@ -109,18 +109,17 @@ $stats = get_platform_stats();
 
 $pageTitle = 'Contact & Support — Obin Academy';
 $pageDescription = "Get in touch with Obin Academy — support for learners, creators, and businesses. Real human support, replies within 24 hours.";
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 <!-- 1. Hero -->
-<section class="course-hero">
-  <div class="course-hero-glow" aria-hidden="true"></div>
+<section class="home-hero-v3">
   <div class="container" style="max-width:720px; text-align:center;">
     <span class="pill"><?= ci('headphones') ?> Support &amp; Contact Center</span>
-    <h1 style="text-align:center;">We're Here to Help</h1>
-    <p class="summary" style="margin-left:auto; margin-right:auto; text-align:center;">Whether you're a learner, creator, business, or partner, our team is ready to answer your questions and help you get the most out of Obin Academy.</p>
+    <h1>We're Here to Help</h1>
+    <p class="summary" style="margin-left:auto; margin-right:auto;">Whether you're a learner, creator, business, or partner, our team is ready to answer your questions and help you get the most out of Obin Academy.</p>
     <div class="row gap-2" style="justify-content:center; margin-top:26px;">
       <a href="#contact-form" class="btn btn-gold">Contact Support <span class="btn-arrow">→</span></a>
-      <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-outline-light">▶ Become a Creator</a>
+      <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-outline">▶ Become a Creator</a>
     </div>
     <div class="hero-trust-row">
       <span class="item"><?= ci('shield-check') ?> Secure &amp; Trusted</span>
@@ -431,4 +430,4 @@ require __DIR__ . '/includes/header.php';
     </div>
   </div>
 </div>
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
