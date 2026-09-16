@@ -138,6 +138,13 @@ CREATE TABLE enrollments (
   enrolled_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME NULL,
   is_premium TINYINT(1) NOT NULL DEFAULT 0,
+  -- PURCHASE (default) is kept forever, grandfathered even if the creator
+  -- later switches their school to subscription pricing. SUBSCRIPTION marks
+  -- a row lazily created the first time a subscriber opens a course they
+  -- never bought individually (see public/learn.php) — its access is
+  -- re-checked live against the subscription's current status on every
+  -- visit, unlike a PURCHASE row.
+  source ENUM('PURCHASE','SUBSCRIPTION') NOT NULL DEFAULT 'PURCHASE',
   user_id INT NULL,
   guest_name VARCHAR(191) NULL,
   guest_email VARCHAR(191) NULL,
@@ -196,13 +203,19 @@ CREATE TABLE payments (
   -- which already has subscription_id.
   subscription_id INT NULL,
   subscription_tier ENUM('GO','PRO') NULL,
-  -- Set only on a first-ever SCHOOL_SUBSCRIPTION payment, before a
-  -- school_subscriptions row exists to hang this off of (see
-  -- includes/school_subscriptions.php apply_school_subscription_payment_success()).
-  -- NULL on every renewal, which already has school_subscription_id. Unlike
-  -- the old platform-wide subscription_id/subscription_tier above (kept only
-  -- for historical display), this is the live, per-creator subscription.
+  -- NULL on a learner's very first SCHOOL_SUBSCRIPTION payment (no
+  -- school_subscriptions row exists yet to point at) — set once that row
+  -- exists, i.e. after the first payment succeeds and on every renewal
+  -- after that. Unlike the old platform-wide subscription_id/
+  -- subscription_tier above (kept only for historical display), this is
+  -- the live, per-creator subscription (see includes/school_subscriptions.php).
   school_subscription_id INT NULL,
+  -- Always set for a SCHOOL_SUBSCRIPTION payment (first payment AND every
+  -- renewal) — which creator's school this payment is for. Needed because
+  -- school_subscription_id above can't be set yet on that first payment;
+  -- this is how apply_school_subscription_payment_success() knows which
+  -- creator to create/renew the subscription for.
+  school_subscription_creator_id INT NULL,
   -- Captured at initiate_payment() time from the oa_aff attribution cookie
   -- (see includes/affiliates.php), not re-resolved later — so a payment
   -- keeps the affiliate who was actually credited at checkout even if that
@@ -215,6 +228,7 @@ CREATE TABLE payments (
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL,
   FOREIGN KEY (school_subscription_id) REFERENCES school_subscriptions(id) ON DELETE SET NULL,
+  FOREIGN KEY (school_subscription_creator_id) REFERENCES users(id) ON DELETE SET NULL,
   FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE SET NULL,
   INDEX idx_payments_user_course_status (user_id, course_id, status),
   UNIQUE KEY uniq_access_token_hash (access_token_hash)
@@ -228,7 +242,10 @@ CREATE TABLE earnings (
   platform_fee DECIMAL(12,2) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   creator_id INT NOT NULL,
-  course_id INT NOT NULL,
+  -- NULL for a school-subscription earning — it's paid for all-access to
+  -- everything that creator publishes, not tied to one course (mirrors
+  -- payments.course_id, already nullable for the same reason).
+  course_id INT NULL,
   FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -5,6 +5,7 @@
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/enrollment.php';
+require_once __DIR__ . '/includes/school_subscriptions.php';
 
 $user = current_user();
 
@@ -28,7 +29,16 @@ if (!$isOwner && !$isAdmin) {
         : guest_enrollment_for_course((int) $lesson['course_id']);
 
     if (!$enrollment) { http_response_code(403); exit('Forbidden'); }
-    if ($enrollment && $enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time()) {
+    // A SUBSCRIPTION-sourced row (see learn.php) never has its own
+    // expires_at — its real expiry is whether the subscription itself is
+    // still active, re-checked live here rather than trusted from whenever
+    // the row was created. A PURCHASE row keeps its normal expires_at check.
+    if ($enrollment['source'] === 'SUBSCRIPTION') {
+        if (!$user || !learner_has_active_school_subscription((int) $user['id'], (int) $lesson['creator_id'])) {
+            http_response_code(403);
+            exit('Access expired');
+        }
+    } elseif ($enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time()) {
         http_response_code(403);
         exit('Access expired');
     }

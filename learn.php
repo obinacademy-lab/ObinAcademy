@@ -3,6 +3,7 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/enroll_panel.php';
 require __DIR__ . '/includes/enrollment.php';
+require_once __DIR__ . '/includes/school_subscriptions.php';
 
 $user = current_user();
 $slug = query_param('slug');
@@ -14,21 +15,47 @@ $enrollment = $user
     ? db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : guest_enrollment_for_course((int) $course['id']);
 
+// A learner with an active subscription to this course's school has access
+// to every course that creator publishes without ever buying this one
+// individually. Progress tracking, certificates, and stream.php's own
+// access check all key off an enrollments row, so lazily create one
+// (source=SUBSCRIPTION, no expires_at — its access is re-checked live
+// against the subscription below, not this row) the first time they open
+// the course, rather than teaching every downstream file about
+// subscriptions too. A PURCHASE-sourced row is never touched by this.
+$isSubscribed = $user && !$isOwner && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id']);
+if (!$enrollment && $isSubscribed) {
+    db_insert("INSERT INTO enrollments (user_id, course_id, expires_at, source) VALUES (?, ?, NULL, 'SUBSCRIPTION')", [$user['id'], $course['id']]);
+    $enrollment = db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']]);
+}
+
 if (!$enrollment && !$isOwner) redirect('/courses/view.php?slug=' . $slug);
 $isGuest = !$user && !$isOwner;
 
-$isExpired = !$isOwner && $enrollment && $enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time();
+// A SUBSCRIPTION-sourced row's own expires_at is always NULL — its real
+// expiry is whether the subscription itself is still active, re-checked
+// live above rather than trusted from whenever this row was created.
+$subscriptionLapsed = $enrollment && $enrollment['source'] === 'SUBSCRIPTION' && !$isSubscribed;
+$isExpired = !$isOwner && $enrollment && (
+    $subscriptionLapsed
+    || ($enrollment['source'] === 'PURCHASE' && $enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time())
+);
 
 if ($isExpired) {
-    $pageTitle = 'Access Expired — Obin Academy';
+    $pageTitle = ($subscriptionLapsed ? 'Subscription Ended' : 'Access Expired') . ' — Obin Academy';
     require __DIR__ . '/includes/header.php';
     ?>
     <div class="container" style="max-width:440px; padding: 90px 20px; text-align:center;">
       <div style="font-size:40px;">🔒</div>
-      <h1 class="h3" style="margin-top:16px;">Access Expired</h1>
+      <h1 class="h3" style="margin-top:16px;"><?= $subscriptionLapsed ? 'Subscription Ended' : 'Access Expired' ?></h1>
       <p class="muted" style="margin-top:10px;">
-        Your access to "<?= e($course['title']) ?>" expired on <?= e(format_date($enrollment['expires_at'])) ?>.
-        Purchase the course again to keep learning.
+        <?php if ($subscriptionLapsed): ?>
+          Your subscription to <?= e($course['creator_school_name'] ?: ($course['creator_name'] . "'s School")) ?> has ended.
+          Resubscribe to keep learning.
+        <?php else: ?>
+          Your access to "<?= e($course['title']) ?>" expired on <?= e(format_date($enrollment['expires_at'])) ?>.
+          Purchase the course again to keep learning.
+        <?php endif; ?>
       </p>
       <a href="<?= e(base_url('courses/view.php?slug=' . $slug)) ?>" class="btn btn-primary" style="margin-top:20px;">View Course</a>
     </div>

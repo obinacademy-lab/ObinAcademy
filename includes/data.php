@@ -80,7 +80,8 @@ function get_course_by_slug(string $slug): ?array {
           u.id AS creator_user_id, u.name AS creator_name, u.avatar_url AS creator_avatar_url,
           u.headline AS creator_headline, u.bio AS creator_bio,
           u.facebook_url AS creator_facebook_url, u.instagram_url AS creator_instagram_url,
-          u.youtube_url AS creator_youtube_url, u.tiktok_url AS creator_tiktok_url, u.linkedin_url AS creator_linkedin_url
+          u.youtube_url AS creator_youtube_url, u.tiktok_url AS creator_tiktok_url, u.linkedin_url AS creator_linkedin_url,
+          u.school_name AS creator_school_name, u.pricing_model AS creator_pricing_model, u.school_monthly_price AS creator_school_monthly_price
         FROM courses c
         JOIN categories cat ON cat.id = c.category_id
         JOIN users u ON u.id = c.creator_id

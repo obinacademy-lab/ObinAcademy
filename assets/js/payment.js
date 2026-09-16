@@ -1,7 +1,7 @@
 // Mobile-money payment widget. Attach to any element with [data-payment-widget]
-// carrying data-course-id (or data-tier, for a subscription), data-initiate-url
-// and (optionally) data-success-redirect. Reused for course purchase,
-// premium-upgrade, and subscription flows.
+// carrying data-course-id, data-creator-id (for a school subscription), or
+// data-tier, plus data-initiate-url and (optionally) data-success-redirect.
+// Reused for course purchase, premium-upgrade, and school-subscription flows.
 (function () {
   const POLL_INTERVAL_MS = 2000;
   const MAX_POLLS = 90; // ~3 minutes
@@ -13,6 +13,7 @@
   function initWidget(root) {
     const courseId = root.dataset.courseId;
     const tier = root.dataset.tier;
+    const creatorId = root.dataset.creatorId;
     const initiateUrl = root.dataset.initiateUrl;
     // Poll lives in the same api/ folder as initiate — derive it from that
     // URL rather than hardcoding a root-relative path, since the app isn't
@@ -69,7 +70,7 @@
         if (statusText) statusText.textContent = "Starting payment...";
 
         try {
-          const body = { courseId, tier, phone, csrf_token: csrfToken() };
+          const body = { courseId, tier, creatorId, phone, csrf_token: csrfToken() };
           if (isGuest) { body.name = name; body.email = email; }
           const res = await fetch(initiateUrl, {
             method: "POST",

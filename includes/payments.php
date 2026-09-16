@@ -2,6 +2,7 @@
 require_once __DIR__ . '/iotec.php';
 require_once __DIR__ . '/email.php';
 require_once __DIR__ . '/subscriptions.php'; // gutted to just historical SUBSCRIPTION-payment read helpers — see includes/subscriptions.php
+require_once __DIR__ . '/school_subscriptions.php'; // the live, per-creator subscription system — see includes/school_subscriptions.php
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -30,7 +31,9 @@ function fetch_payment_with_course(int $paymentId): ?array {
 function fetch_payment_by_id(int $paymentId): ?array {
     $type = db_one('SELECT type FROM payments WHERE id = ?', [$paymentId]);
     if (!$type) return null;
-    return $type['type'] === 'SUBSCRIPTION' ? fetch_payment_with_subscription($paymentId) : fetch_payment_with_course($paymentId);
+    if ($type['type'] === 'SUBSCRIPTION') return fetch_payment_with_subscription($paymentId);
+    if ($type['type'] === 'SCHOOL_SUBSCRIPTION') return fetch_payment_with_school_subscription($paymentId);
+    return fetch_payment_with_course($paymentId);
 }
 
 /**
@@ -65,6 +68,12 @@ function resolve_payment_with_iotec(array $payment): array {
     $isGuestPayment = $payment['user_id'] === null;
 
     if ($result['status'] === 'Success') {
+        if ($payment['type'] === 'SCHOOL_SUBSCRIPTION') {
+            db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
+            apply_school_subscription_payment_success($payment);
+            return ['status' => 'SUCCESS'];
+        }
+
         if ($payment['type'] === 'PREMIUM_UPGRADE') {
             $enrollment = db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$payment['user_id'], $payment['course_id']]);
             if ($enrollment && (int) $enrollment['is_premium'] === 0) {
