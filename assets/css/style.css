@@ -567,48 +567,33 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (min-width: 640px) { .footer-bottom { flex-direction: row; } }
 .footer-bottom .made-for { font-weight: 600; color: rgba(255,255,255,0.55); }
 
-/* Compact footer: a single flat utility bar — logo, nav, copyright and a
-   WhatsApp chip on one quiet line, no glow/gradient/card framing. Deliberate
-   restraint over the richer decorated look .site-footer's base rules were
-   built for. No extra margin-top here — every page already ends inside a
-   .section with its own 56-88px bottom padding, so stacking this on top of
-   that was leaving a tall, contentless white gap before the footer started. */
-.site-footer-compact { padding: 22px 0; margin-top: 0; background: var(--brand-950); }
+/* Compact footer: structured columns (Brand / Explore / Connect) that
+   stack cleanly on mobile instead of relying on horizontal wrapping — the
+   earlier single-line bar hid its dividers under 860px and let logo, all
+   5 nav links, copyright and the WhatsApp button wrap freely, collapsing
+   into a tall, disordered stack. No extra margin-top here — every page
+   already ends inside a .section with its own 56-88px bottom padding, so
+   stacking this on top of that was leaving a tall, contentless white gap
+   before the footer started. */
+.site-footer-compact { padding: 48px 0 0; margin-top: 0; background: var(--brand-950); }
 
-.footer-bar { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
-@media (max-width: 860px) { .footer-bar { justify-content: center; text-align: center; } }
-.footer-bar .logo-mark { width: 28px; height: 28px; border-radius: 8px; }
-.footer-bar .logo-mark svg { width: 16px; height: 16px; }
-.footer-bar .logo-text { font-size: 15.5px; }
+.footer-cols { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 40px; padding-bottom: 36px; }
+@media (max-width: 700px) { .footer-cols { grid-template-columns: 1fr; gap: 32px; } }
 
-.footer-bar-div { width: 1px; height: 18px; background: rgba(255,255,255,0.14); flex-shrink: 0; }
-@media (max-width: 860px) { .footer-bar-div { display: none; } }
+.footer-col-brand .logo-text { font-size: 18px; }
+.footer-col-brand p { margin: 14px 0 0; font-size: 13.5px; line-height: 1.65; color: rgba(255,255,255,0.5); max-width: 280px; }
 
-.footer-bar-nav { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.footer-bar-nav a { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.15s ease; }
-.footer-bar-nav a:hover { color: #fff; }
+.footer-col h4 { margin: 0 0 16px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); }
+.footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.footer-col ul a { color: rgba(255,255,255,0.68); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.15s ease; }
+.footer-col ul a:hover { color: #fff; }
 
-.footer-bar-spacer { flex: 1 1 auto; }
-@media (max-width: 860px) { .footer-bar-spacer { flex-basis: 100%; height: 0; } }
-
-.footer-bar-copy { font-size: 11.5px; color: rgba(255,255,255,0.4); white-space: nowrap; }
-
-.site-footer a.whatsapp-chip {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(37,211,102,0.14); border: 1px solid rgba(37,211,102,0.35); color: #6ee7a8;
-  font-weight: 700; font-size: 12px; padding: 7px 14px 7px 10px; border-radius: var(--radius-full);
-  text-decoration: none; transition: background-color 0.2s ease, border-color 0.2s ease; flex-shrink: 0;
-}
-.site-footer a.whatsapp-chip:hover { background: rgba(37,211,102,0.22); border-color: rgba(37,211,102,0.55); color: #6ee7a8; }
-.whatsapp-chip svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
-.whatsapp-chip .ping { position: relative; width: 6px; height: 6px; border-radius: 50%; background: #6ee7a8; flex-shrink: 0; }
-.whatsapp-chip .ping::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; background: #6ee7a8; opacity: 0.6; animation: footer-ping 1.8s ease-out infinite; }
+.footer-bottom-row { border-top: 1px solid rgba(255,255,255,0.1); padding: 20px 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); }
 
 @media (prefers-reduced-motion: reduce) {
   .site-footer::before { animation: none; }
   .footer-legal-links a::after { transition: none; }
   .whatsapp-btn .ping::before { animation: none; }
-  .whatsapp-chip .ping::before { animation: none; }
 }
 
 /* ---------- hero ---------- */
