@@ -629,24 +629,30 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   .whatsapp-btn .ping::before { animation: none; }
 }
 
-/* ---------- minimal footer (footer.php) — matches skool.com's own footer:
-   one plain row of text links on a bare ground, no dark card, no columns,
-   no logo repeated down here. Supersedes the dark .site-footer/.footer-cols
-   block above, left in place unused (still referenced by contact.php's own
-   inline .whatsapp-btn, and .footer-socials/.whatsapp-btn stay defined for
-   that reason) rather than deleted. ---------- */
-.site-footer-minimal { background: var(--surface); border-top: 1px solid var(--border); padding: 28px 0; margin-top: 64px; }
+/* ---------- minimal footer (footer.php) — layout matches skool.com's own
+   footer: one plain row of links, no columns, no logo repeated down here.
+   Background/text colors instead match the platform's own theme (the same
+   dark brand gradient .site-header uses) rather than Skool's neutral
+   white, so the footer reads as Obin Academy's color, not a copy of
+   Skool's. Supersedes the dark .site-footer/.footer-cols block above, left
+   in place unused (still referenced by contact.php's own inline
+   .whatsapp-btn, and .footer-socials/.whatsapp-btn stay defined for that
+   reason) rather than deleted. ---------- */
+.site-footer-minimal {
+  background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800));
+  padding: 28px 0; margin-top: 64px;
+}
 .footer-minimal-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px 28px; }
 .footer-minimal-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; }
-.footer-minimal-links a { font-size: 13.5px; font-weight: 600; color: var(--muted); text-decoration: none; transition: color 0.15s ease; }
-.footer-minimal-links a:hover { color: var(--ink); }
+.footer-minimal-links a { font-size: 13.5px; font-weight: 600; color: rgba(255,255,255,0.72); text-decoration: none; transition: color 0.15s ease; }
+.footer-minimal-links a:hover { color: #fff; }
 .footer-minimal-meta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .footer-minimal-socials { display: flex; align-items: center; gap: 14px; }
-.footer-minimal-socials a { color: var(--muted); display: flex; transition: color 0.15s ease; }
-.footer-minimal-socials a:hover { color: var(--ink); }
+.footer-minimal-socials a { color: rgba(255,255,255,0.72); display: flex; transition: color 0.15s ease; }
+.footer-minimal-socials a:hover { color: #fff; }
 .footer-minimal-socials svg { width: 16px; height: 16px; fill: currentColor; }
 .footer-minimal-socials a.email svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.footer-minimal-copy { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.footer-minimal-copy { font-size: 12.5px; color: rgba(255,255,255,0.5); white-space: nowrap; }
 @media (max-width: 640px) {
   .footer-minimal-inner { flex-direction: column; text-align: center; gap: 16px; }
   .footer-minimal-links { justify-content: center; }
