@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $youtubeUrl = post('youtubeUrl');
     $tiktokUrl = post('tiktokUrl');
     $linkedinUrl = post('linkedinUrl');
+    $schoolName = $isCreator ? post('schoolName') : '';
 
     if (strlen($name) < 1) $errors[] = 'Name is required.';
     if ($phone !== '' && !preg_match('/^[0-9+\s-]{9,}$/', $phone)) $errors[] = 'Enter a valid phone number.';
@@ -42,11 +43,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = $e->getMessage();
         }
     }
+    $schoolCoverUrl = null;
+    if ($isCreator && !empty($_FILES['schoolCover']['name'])) {
+        try {
+            $schoolCoverUrl = save_upload($_FILES['schoolCover'], 'thumbnails');
+        } catch (Throwable $e) {
+            $errors[] = $e->getMessage();
+        }
+    }
 
     if (!$errors) {
-        $sql = 'UPDATE users SET name=?, phone=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?' . ($avatarUrl ? ', avatar_url=?' : '') . ' WHERE id=?';
+        $sql = 'UPDATE users SET name=?, phone=?, headline=?, bio=?, facebook_url=?, instagram_url=?, youtube_url=?, tiktok_url=?, linkedin_url=?'
+             . ($isCreator ? ', school_name=?' : '')
+             . ($avatarUrl ? ', avatar_url=?' : '')
+             . ($schoolCoverUrl ? ', school_cover_url=?' : '')
+             . ' WHERE id=?';
         $params = [$name, $phone ?: null, $headline ?: null, $bio ?: null, $facebookUrl ?: null, $instagramUrl ?: null, $youtubeUrl ?: null, $tiktokUrl ?: null, $linkedinUrl ?: null];
+        if ($isCreator) $params[] = $schoolName ?: null;
         if ($avatarUrl) $params[] = $avatarUrl;
+        if ($schoolCoverUrl) $params[] = $schoolCoverUrl;
         $params[] = $user['id'];
         db_run($sql, $params);
 
@@ -141,6 +156,19 @@ require __DIR__ . '/../includes/dashboard_header.php';
     <label for="avatar">Profile Photo</label>
     <input id="avatar" name="avatar" type="file" accept="image/*">
   </div>
+
+  <?php if ($isCreator): ?>
+    <div class="field">
+      <label for="schoolName">Your School Name</label>
+      <p class="help" style="margin-bottom:8px;">Shown at the top of your public page instead of a generic profile — e.g. "Sarah's Finance Academy". Leave blank to use "<?= e($user['name']) ?>'s School".</p>
+      <input id="schoolName" name="schoolName" type="text" placeholder="e.g. <?= e($user['name']) ?>'s School" value="<?= e($user['school_name'] ?? '') ?>">
+    </div>
+    <div class="field">
+      <label for="schoolCover">School Cover Banner</label>
+      <p class="help" style="margin-bottom:8px;">A wide photo shown behind your school name. Leave blank to use the default Obin Academy banner.</p>
+      <input id="schoolCover" name="schoolCover" type="file" accept="image/*">
+    </div>
+  <?php endif; ?>
 
   <button type="submit" class="btn btn-primary">Save Changes</button>
 </form>

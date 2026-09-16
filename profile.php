@@ -39,58 +39,85 @@ $pageTitle = $profile['name'] . ' — Obin Academy';
 $pageDescription = $profile['headline'] ?: ($profile['bio'] ? mb_strimwidth($profile['bio'], 0, 155, '…') : 'View ' . $profile['name'] . '\'s profile on Obin Academy.');
 require __DIR__ . '/includes/header.php';
 ?>
-<div class="container" style="max-width:900px; padding-top:40px; padding-bottom:80px;">
-  <div class="profile-hero">
-    <div class="profile-hero-top">
-      <div class="profile-avatar">
-        <?php if ($profile['avatar_url']): ?><img src="<?= e(asset_src($profile['avatar_url'])) ?>" alt="">
-        <?php else: ?><?= e(mb_substr($profile['name'], 0, 1)) ?><?php endif; ?>
-      </div>
-      <div class="profile-identity">
-        <div class="profile-name-row">
-          <h1><?= e($profile['name']) ?></h1>
-          <?php if ($isCreator): ?><span class="role-badge"><?= $profile['role'] === 'ADMIN' ? 'Admin' : 'Creator' ?></span><?php endif; ?>
-        </div>
-        <?php if ($profile['headline']): ?><p class="profile-headline"><?= e($profile['headline']) ?></p><?php endif; ?>
+<?php if ($isCreator): ?>
+  <section class="school-hero" <?php if (!empty($profile['school_cover_url'])): ?>style="background-image:url('<?= e(asset_src($profile['school_cover_url'])) ?>');"<?php endif; ?>>
+    <div class="school-hero-glow" aria-hidden="true"></div>
+    <div class="school-hero-overlay"></div>
+    <div class="container school-hero-inner">
+      <span class="school-hero-byline">
+        <span class="school-hero-avatar">
+          <?php if ($profile['avatar_url']): ?><img src="<?= e(asset_src($profile['avatar_url'])) ?>" alt="">
+          <?php else: ?><?= e(mb_substr($profile['name'], 0, 1)) ?><?php endif; ?>
+        </span>
+        by <?= e($profile['name']) ?><?php if ($profile['role'] === 'ADMIN'): ?> · Admin<?php endif; ?>
+      </span>
+      <h1><?= e($profile['school_name'] ?: ($profile['name'] . "'s School")) ?></h1>
+      <?php if ($profile['headline']): ?><p class="school-hero-headline"><?= e($profile['headline']) ?></p><?php endif; ?>
+      <div class="school-hero-stats">
+        <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Course<?= $stats['teaching'] === 1 ? '' : 's' ?></span></div>
+        <div class="stat"><span class="value"><?= number_format($stats['students']) ?></span><span class="label">Student<?= $stats['students'] === 1 ? '' : 's' ?></span></div>
       </div>
       <?php if ($isMe): ?>
-        <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="profile-edit-btn">Edit Profile</a>
+        <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="school-hero-edit-btn">Edit Your School</a>
       <?php endif; ?>
     </div>
+  </section>
 
-    <?php if ($profile['bio']): ?><div class="profile-bio"><?= nl2br(e($profile['bio'])) ?></div><?php endif; ?>
+  <?php if ($profile['bio'] || array_filter($socials)): ?>
+    <div class="container" style="max-width:640px; padding-top:40px; text-align:center;">
+      <?php if ($profile['bio']): ?><div class="profile-bio" style="margin:0 auto; max-width:none;"><?= nl2br(e($profile['bio'])) ?></div><?php endif; ?>
+      <?php render_social_links($socials); ?>
+    </div>
+  <?php endif; ?>
 
-    <?php render_social_links($socials); ?>
-
-    <?php if (($profile['role'] === 'LEARNER' || $stats['completed'] > 0) || $isCreator): ?>
-      <div class="profile-stats-row">
-        <?php if ($profile['role'] === 'LEARNER' || $stats['completed'] > 0): ?>
-          <div class="stat"><span class="value"><?= number_format($stats['completed']) ?></span><span class="label">Completed</span></div>
+  <div class="container" style="max-width:900px; padding-top:40px; padding-bottom:80px;">
+    <?php if ($stats['teaching'] > 0): ?>
+      <div class="profile-section" style="margin-top:0;">
+        <div class="profile-section-head">
+          <h2><?= e($profile['name']) ?>'s Courses</h2>
+          <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
+        </div>
+        <?php if ($teaching): ?>
+          <div class="grid sm:grid-2 lg:grid-3">
+            <?php foreach ($teaching as $c) render_course_card($c); ?>
+          </div>
         <?php endif; ?>
-        <?php if ($isCreator): ?>
-          <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Teaching</span></div>
-          <div class="stat"><span class="value"><?= number_format($stats['students']) ?></span><span class="label">Student<?= $stats['students'] === 1 ? '' : 's' ?></span></div>
-        <?php endif; ?>
+      </div>
+    <?php else: ?>
+      <div class="card card-pad" style="text-align:center; border-style:dashed;">
+        <p class="muted"><?= e($profile['name']) ?> hasn't published any courses yet.</p>
       </div>
     <?php endif; ?>
   </div>
-
-  <?php if ($isCreator && $stats['teaching'] > 0): ?>
-    <div class="profile-section">
-      <div class="profile-section-head">
-        <h2><?= e($profile['name']) ?>'s Courses</h2>
-        <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
-      </div>
-      <?php if ($teaching): ?>
-        <div class="grid sm:grid-2 lg:grid-3">
-          <?php foreach ($teaching as $c) render_course_card($c); ?>
+<?php else: ?>
+  <div class="container" style="max-width:900px; padding-top:40px; padding-bottom:80px;">
+    <div class="profile-hero">
+      <div class="profile-hero-top">
+        <div class="profile-avatar">
+          <?php if ($profile['avatar_url']): ?><img src="<?= e(asset_src($profile['avatar_url'])) ?>" alt="">
+          <?php else: ?><?= e(mb_substr($profile['name'], 0, 1)) ?><?php endif; ?>
         </div>
-      <?php else: ?>
-        <div class="card card-pad" style="text-align:center; border-style:dashed;">
-          <p class="muted"><?= e($profile['name']) ?> hasn't published any courses yet.</p>
+        <div class="profile-identity">
+          <div class="profile-name-row">
+            <h1><?= e($profile['name']) ?></h1>
+          </div>
+          <?php if ($profile['headline']): ?><p class="profile-headline"><?= e($profile['headline']) ?></p><?php endif; ?>
+        </div>
+        <?php if ($isMe): ?>
+          <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="profile-edit-btn">Edit Profile</a>
+        <?php endif; ?>
+      </div>
+
+      <?php if ($profile['bio']): ?><div class="profile-bio"><?= nl2br(e($profile['bio'])) ?></div><?php endif; ?>
+
+      <?php render_social_links($socials); ?>
+
+      <?php if ($profile['role'] === 'LEARNER' || $stats['completed'] > 0): ?>
+        <div class="profile-stats-row">
+          <div class="stat"><span class="value"><?= number_format($stats['completed']) ?></span><span class="label">Completed</span></div>
         </div>
       <?php endif; ?>
     </div>
-  <?php endif; ?>
-</div>
+  </div>
+<?php endif; ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>
