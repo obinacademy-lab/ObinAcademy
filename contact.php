@@ -113,7 +113,7 @@ require __DIR__ . '/includes/header.php';
 ?>
 <!-- 1. Hero -->
 <section class="home-hero-v3">
-  <div class="container" style="max-width:720px; text-align:center;">
+  <div class="container" style="max-width:900px; text-align:center;">
     <span class="pill"><?= ci('headphones') ?> Support &amp; Contact Center</span>
     <h1>We're Here to Help</h1>
     <p class="summary" style="margin-left:auto; margin-right:auto;">Whether you're a learner, creator, business, or partner, our team is ready to answer your questions and help you get the most out of Obin Academy.</p>

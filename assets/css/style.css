@@ -2045,7 +2045,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    --ink (already close to Skool's own tones) rather than inventing a new
    palette. Its own component, scoped to the homepage only. ---------- */
 .home-discover { background: var(--surface); }
-.home-discover-hero { max-width: 700px; margin: 0 auto; padding: 60px 24px 0; text-align: center; }
+.home-discover-hero { max-width: 900px; margin: 0 auto; padding: 60px 24px 0; text-align: center; }
 .home-discover-hero h1 {
   margin: 0; font-size: clamp(38px, 7vw, 64px); font-weight: 800; letter-spacing: -0.02em; color: var(--ink);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both;
