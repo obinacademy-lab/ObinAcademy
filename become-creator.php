@@ -101,7 +101,7 @@ require __DIR__ . '/includes/header.php';
         <span class="eyebrow">Why Start a School on Obin Academy</span>
         <h2 class="h2" style="margin-top:14px;">Your Knowledge Deserves to Be Paid Instantly</h2>
         <p class="lede" style="margin-top:16px; max-width:none; font-size:16.5px; line-height:1.75; color:var(--muted);">
-          Most platforms make you wait weeks for a payout. On Obin Academy, every sale from your school is settled straight to your MTN or Airtel Mobile Money — no bank account, no delayed payout cycles, no chasing invoices. You choose how to charge — per course or a monthly subscription to your whole school — and we handle the platform, the payments, and the learners.
+          Most platforms make you wait weeks for a payout. On Obin Academy, every sale from your school is settled straight to your MTN or Airtel Mobile Money — no bank account, no delayed payout cycles, no chasing invoices. You choose how to charge — a one-time price per course, or a monthly subscription price per course — and we handle the platform, the payments, and the learners.
         </p>
         <div class="mission-callout" style="margin-top:24px;">
           <span class="tag">The Creator Split</span>

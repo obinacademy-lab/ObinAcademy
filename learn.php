@@ -15,11 +15,12 @@ $enrollment = $user
     ? db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : guest_enrollment_for_course((int) $course['id']);
 
-// A learner with an active subscription to this course's school has access
-// to every INCLUDED course that creator publishes (courses.subscription_
-// included = 0 opts a specific course out — the creator sells it
-// separately even to subscribers, see enroll_panel.php) without ever
-// buying it individually. Progress tracking, certificates, and
+// A learner with an active subscription to THIS SPECIFIC course (courses.
+// subscription_included = 0 opts a course out entirely — the creator sells
+// it separately even to subscribers, see enroll_panel.php) has access
+// without ever buying it individually — but a subscription unlocks only
+// one course at a time per creator, not every course they publish; see
+// includes/school_subscriptions.php. Progress tracking, certificates, and
 // stream.php's own access check all key off an enrollments row, so lazily
 // create one (source=SUBSCRIPTION, no expires_at — its access is
 // re-checked live against the subscription below, not this row) the first
@@ -27,7 +28,7 @@ $enrollment = $user
 // about subscriptions too. A PURCHASE-sourced row is never touched by this.
 $courseIsSubscriptionIncluded = ($course['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
     && (int) ($course['subscription_included'] ?? 1) === 1;
-$isSubscribed = $user && !$isOwner && $courseIsSubscriptionIncluded && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id']);
+$isSubscribed = $user && !$isOwner && $courseIsSubscriptionIncluded && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id'], (int) $course['id']);
 if (!$enrollment && $isSubscribed) {
     db_insert("INSERT INTO enrollments (user_id, course_id, expires_at, source) VALUES (?, ?, NULL, 'SUBSCRIPTION')", [$user['id'], $course['id']]);
     $enrollment = db_one('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']]);

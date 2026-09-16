@@ -204,7 +204,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
         </label>
         <label class="row gap-2" style="align-items:flex-start; font-weight:600; cursor:pointer;">
           <input type="radio" name="pricingModel" value="MONTHLY_SUBSCRIPTION" data-pricing-radio <?= ($user['pricing_model'] ?? '') === 'MONTHLY_SUBSCRIPTION' ? 'checked' : '' ?> style="margin-top:3px;">
-          <span>Monthly subscription<br><span class="help" style="font-weight:400;">One monthly price unlocks every course you publish, now and any new ones you add later.</span></span>
+          <span>Monthly subscription<br><span class="help" style="font-weight:400;">Learners pay the same monthly price per course instead of a one-time fee — subscribing to one course doesn't unlock your others, they'd subscribe to each separately.</span></span>
         </label>
       </div>
       <div class="field" data-monthly-price-field style="margin-top:14px; <?= ($user['pricing_model'] ?? '') === 'MONTHLY_SUBSCRIPTION' ? '' : 'display:none;' ?>">

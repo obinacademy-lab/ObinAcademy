@@ -28,10 +28,22 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $schoolHasSubscription = ($course['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
         && (float) ($course['creator_school_monthly_price'] ?? 0) > 0;
     $isSubscriptionIncluded = $schoolHasSubscription && (int) ($course['subscription_included'] ?? 1) === 1;
-    $isSubscribed = $user && $isSubscriptionIncluded && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id']);
+    $isSubscribed = $user && $isSubscriptionIncluded && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id'], (int) $course['id']);
     $hasAccess = $isEnrolled || $isSubscribed;
     $schoolLabel = $course['creator_school_name'] ?: $course['creator_name'];
     $monthlyPrice = (float) ($course['creator_school_monthly_price'] ?? 0);
+    // A subscription unlocks only ONE course at a time per creator — if this
+    // learner already has an active subscription to a different course from
+    // this same creator, subscribing here switches their access to this
+    // course instead (the other one locks again). Surfaced so they don't
+    // pay expecting to keep both.
+    $otherActiveSub = $user && $isSubscriptionIncluded && !$isSubscribed
+        ? db_one(
+            "SELECT c.title FROM school_subscriptions ss JOIN courses c ON c.id = ss.course_id
+             WHERE ss.learner_id = ? AND ss.creator_id = ? AND ss.status IN ('ACTIVE','GRACE') LIMIT 1",
+            [(int) $user['id'], (int) $course['creator_user_id']]
+        )
+        : null;
 
     $showPaidFlow = $user && !$hasAccess && !$isOwner && $isPublished && !$isSubscriptionIncluded && $price > 0;
     $showSubscribeFlow = $user && !$hasAccess && !$isOwner && $isPublished && $isSubscriptionIncluded;
@@ -54,8 +66,13 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           </div>
           <div class="access-note">
             <?php dash_icon('graduation-cap'); ?>
-            All-access to every course from <?= e($schoolLabel) ?>
+            Access to this course while subscribed
           </div>
+          <?php if ($otherActiveSub): ?>
+            <p class="small muted" style="margin-top:10px;">
+              You're currently subscribed to <strong><?= e($otherActiveSub['title']) ?></strong>. Subscribing here switches your access to this course instead — one course at a time per school.
+            </p>
+          <?php endif; ?>
         <?php else: ?>
           <div class="price-row">
             <div class="price">
@@ -91,6 +108,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php elseif ($showSubscribeFlow): ?>
           <div style="margin-top:20px;" data-payment-widget
                data-creator-id="<?= (int) $course['creator_user_id'] ?>"
+               data-course-id="<?= (int) $course['id'] ?>"
                data-initiate-url="<?= e(base_url('api/initiate-school-subscription.php')) ?>"
                data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
             <div data-state="idle">
@@ -99,7 +117,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                   <span class="pay-logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN"></span>
                   <span class="pay-logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel"></span>
                 </span>
-                Subscribe to <?= e($schoolLabel) ?>
+                Subscribe to This Course
               </button>
             </div>
             <div data-state="phone" class="hidden guest-form">

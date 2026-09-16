@@ -298,7 +298,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <div class="stack gap-2">
           <label class="row gap-2" style="align-items:flex-start; font-weight:600; cursor:pointer;">
             <input type="radio" name="subscriptionIncluded" value="1" data-sub-included-radio <?= !$soldSeparately ? 'checked' : '' ?> style="margin-top:3px;">
-            <span>Included in my subscription<br><span class="help" style="font-weight:400;">No separate price — covered by your <?= e($creatorSchoolLabel) ?> subscription like every other course.</span></span>
+            <span>Included in my subscription<br><span class="help" style="font-weight:400;">No separate price — a learner unlocks it by subscribing to it directly, the same as your other subscription courses. A learner subscribed to a different one of your courses won't automatically get this one too.</span></span>
           </label>
           <label class="row gap-2" style="align-items:flex-start; font-weight:600; cursor:pointer;">
             <input type="radio" name="subscriptionIncluded" value="0" data-sub-included-radio <?= $soldSeparately ? 'checked' : '' ?> style="margin-top:3px;">

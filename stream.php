@@ -34,7 +34,7 @@ if (!$isOwner && !$isAdmin) {
     // still active, re-checked live here rather than trusted from whenever
     // the row was created. A PURCHASE row keeps its normal expires_at check.
     if ($enrollment['source'] === 'SUBSCRIPTION') {
-        if (!$user || !learner_has_active_school_subscription((int) $user['id'], (int) $lesson['creator_id'])) {
+        if (!$user || !learner_has_active_school_subscription((int) $user['id'], (int) $lesson['creator_id'], (int) $lesson['course_id'])) {
             http_response_code(403);
             exit('Access expired');
         }

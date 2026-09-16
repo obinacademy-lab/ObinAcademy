@@ -12,7 +12,7 @@ $pageTitle = 'My Subscriptions — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <h1 class="h2">My Subscriptions</h1>
-<p class="muted" style="margin-top:6px;">Monthly subscriptions to a creator's school — each one unlocks every course they publish, for as long as it stays active.</p>
+<p class="muted" style="margin-top:6px;">Monthly subscriptions to a creator's course — each one unlocks that one course, for as long as it stays active.</p>
 
 <?php if (!$subscriptions): ?>
   <div class="card card-pad" style="text-align:center; margin-top:24px; border-style:dashed;">
@@ -33,8 +33,13 @@ require __DIR__ . '/../../includes/dashboard_header.php';
               <?php else: ?><?= e(mb_substr($sub['creator_name'], 0, 1)) ?><?php endif; ?>
             </div>
             <div>
-              <a href="<?= e(base_url('profile.php?id=' . $sub['creator_id'])) ?>" style="font-weight:700; color:var(--ink);"><?= e($schoolLabel) ?></a>
-              <p class="small muted" style="margin-top:2px;"><?= e(format_money((float) $sub['price'])) ?>/month</p>
+              <?php if ($sub['course_title']): ?>
+                <a href="<?= e(base_url('courses/view.php?slug=' . $sub['course_slug'])) ?>" style="font-weight:700; color:var(--ink);"><?= e($sub['course_title']) ?></a>
+                <p class="small muted" style="margin-top:2px;"><?= e($schoolLabel) ?> &middot; <?= e(format_money((float) $sub['price'])) ?>/month</p>
+              <?php else: ?>
+                <a href="<?= e(base_url('profile.php?id=' . $sub['creator_id'])) ?>" style="font-weight:700; color:var(--ink);"><?= e($schoolLabel) ?></a>
+                <p class="small muted" style="margin-top:2px;"><?= e(format_money((float) $sub['price'])) ?>/month</p>
+              <?php endif; ?>
             </div>
           </div>
           <span class="badge <?= e($statusBadge[$sub['status']] ?? 'badge-draft') ?>"><?= e($statusLabel[$sub['status']] ?? $sub['status']) ?></span>
@@ -55,6 +60,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <?php if ($needsRenewal): ?>
           <div style="margin-top:16px;" data-payment-widget
                data-creator-id="<?= (int) $sub['creator_id'] ?>"
+               data-course-id="<?= (int) $sub['course_id'] ?>"
                data-initiate-url="<?= e(base_url('api/initiate-school-subscription.php')) ?>"
                data-success-redirect="<?= e(base_url('dashboard/learner/subscriptions.php')) ?>">
             <div data-state="idle">

@@ -19,7 +19,8 @@ if (!$user) {
 }
 
 $creatorId = (int) ($body['creatorId'] ?? 0);
+$courseId = (int) ($body['courseId'] ?? 0);
 $phone = trim((string) ($body['phone'] ?? ''));
 
-$result = initiate_school_subscription((int) $user['id'], $creatorId, $phone);
+$result = initiate_school_subscription((int) $user['id'], $creatorId, $courseId, $phone);
 json_response($result, isset($result['error']) ? 400 : 200);

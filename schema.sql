@@ -383,8 +383,15 @@ CREATE TABLE school_subscriptions (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   learner_id INT NOT NULL,
   creator_id INT NOT NULL,
+  -- Which single course this subscription currently unlocks — a learner
+  -- gets access to only this one course at a time, not every course the
+  -- creator publishes. Subscribing to a different course from the same
+  -- creator switches this rather than adding a second active course; see
+  -- includes/school_subscriptions.php.
+  course_id INT NULL,
   FOREIGN KEY (learner_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL,
   UNIQUE KEY uniq_learner_creator (learner_id, creator_id),
   INDEX idx_school_subs_status_period (status, current_period_ends_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
