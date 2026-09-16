@@ -1,6 +1,6 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/data.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
 
 $user = current_user();
 $errors = [];
@@ -69,7 +69,7 @@ $exampleCreatorKeep = $exampleGross - $examplePlatformFee;
 
 $pageTitle = 'Create Your School — Obin Academy';
 $pageDescription = 'Turn your knowledge into income. Create your own school on Obin Academy — publish courses, choose your pricing, and keep 90% of every sale, paid instantly to mobile money.';
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/includes/header.php';
 ?>
 <section class="home-hero-v3">
   <div class="container" style="max-width:720px; text-align:center;">
@@ -224,4 +224,4 @@ require __DIR__ . '/../includes/header.php';
     <?php endif; ?>
   </div>
 </div>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>

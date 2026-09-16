@@ -1,6 +1,6 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/data.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
 
 /** Inline stroke-icon set (Lucide-style: 24x24, stroke-width 2, round caps) — matches the icons already used in header.php/footer.php. */
 function ci(string $name, string $class = ''): string {
@@ -109,7 +109,7 @@ $stats = get_platform_stats();
 
 $pageTitle = 'Contact & Support — Obin Academy';
 $pageDescription = "Get in touch with Obin Academy — support for learners, creators, and businesses. Real human support, replies within 24 hours.";
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/includes/header.php';
 ?>
 <!-- 1. Hero -->
 <section class="home-hero-v3">
@@ -430,4 +430,4 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </div>
 </div>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>

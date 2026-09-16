@@ -1,11 +1,7 @@
 <?php
-// TEMPORARY DEBUG — remove after diagnosing the profile.php 500 error.
-ini_set('display_errors', '1');
-error_reporting(E_ALL);
-
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/data.php';
-require __DIR__ . '/../includes/course_card.php';
+require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/data.php';
+require __DIR__ . '/includes/course_card.php';
 
 $profileId = (int) query_param('id');
 $profile = $profileId ? get_profile($profileId) : null;
@@ -41,7 +37,7 @@ $socials = [
 
 $pageTitle = $profile['name'] . ' — Obin Academy';
 $pageDescription = $profile['headline'] ?: ($profile['bio'] ? mb_strimwidth($profile['bio'], 0, 155, '…') : 'View ' . $profile['name'] . '\'s profile on Obin Academy.');
-require __DIR__ . '/../includes/header.php';
+require __DIR__ . '/includes/header.php';
 ?>
 <?php if ($isCreator): ?>
   <section class="school-hero">
@@ -125,4 +121,4 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </div>
 <?php endif; ?>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php'; ?>
