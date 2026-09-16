@@ -68,8 +68,8 @@ require __DIR__ . '/includes/header.php';
   </section>
 
   <?php if ($profile['bio'] || array_filter($socials)): ?>
-    <div class="container" style="max-width:700px; padding-top:40px; text-align:center;">
-      <?php if ($profile['bio']): ?><div class="profile-bio" style="margin:0 auto; max-width:none; text-align:left;"><?= nl2br(e($profile['bio'])) ?></div><?php endif; ?>
+    <div class="container" style="max-width:900px; padding-top:40px; text-align:center;">
+      <?php if ($profile['bio']): ?><div class="profile-bio" style="margin:0 auto; max-width:none; text-align:left; font-size:17px;"><?= nl2br(e($profile['bio'])) ?></div><?php endif; ?>
       <?php render_social_links($socials); ?>
     </div>
   <?php endif; ?>
