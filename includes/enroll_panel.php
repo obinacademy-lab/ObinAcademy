@@ -60,11 +60,11 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
               <?php dash_icon('scroll-text'); ?>
               <input name="email" type="email" required placeholder="Email address">
             </div>
-            <button type="submit" class="btn btn-primary btn-block btn-lg">Get Free Access</button>
+            <button type="submit" class="btn btn-gold btn-block btn-lg shine">Get Free Access</button>
           </form>
           <p class="guest-note">We'll send you a link to access this course — no account needed. <a href="<?= e($loginUrl) ?>">Have an account? Log in</a></p>
         <?php elseif (!$user): ?>
-          <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-primary btn-block btn-lg" style="margin-top:20px;">Sign Up to Enroll</a>
+          <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-gold btn-block btn-lg shine" style="margin-top:20px;">Sign Up to Enroll</a>
           <p class="guest-note">Paid courses need a free account first — that's where your receipt, access, and certificate live. <a href="<?= e($loginUrl) ?>">Already have an account? Log in</a></p>
         <?php elseif ($showPaidFlow): ?>
           <div style="margin-top:20px;" data-payment-widget
@@ -72,7 +72,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                data-initiate-url="<?= e(base_url('api/initiate-payment.php')) ?>"
                data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
             <div data-state="idle">
-              <button class="btn btn-primary btn-block btn-lg" data-action="start">
+              <button class="btn btn-gold btn-block btn-lg shine" data-action="start">
                 <span class="pay-logo-pair">
                   <span class="pay-logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN"></span>
                   <span class="pay-logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel"></span>
@@ -106,7 +106,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           <form method="post" action="<?= e(base_url('api/enroll-redirect.php')) ?>" style="margin-top:20px;">
             <input type="hidden" name="courseId" value="<?= (int) $course['id'] ?>">
             <?= csrf_field() ?>
-            <button type="submit" class="btn btn-primary btn-block btn-lg">Enroll Now</button>
+            <button type="submit" class="btn btn-gold btn-block btn-lg shine">Enroll Now</button>
           </form>
         <?php endif; ?>
 

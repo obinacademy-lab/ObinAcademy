@@ -1593,71 +1593,56 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    same as this file's existing pattern for superseded page designs
    (see .timeline/.tmod-* and .reviews-grid/.rsummary/.rcard further
    down, both from earlier redesigns of this same page). */
-.course-flat-crumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
-.course-flat-crumb a { color: var(--muted); text-decoration: none; }
-.course-flat-crumb a:hover { color: var(--ink); }
+.course-hero2 { position: relative; isolation: isolate; overflow: hidden; background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800)); color: #fff; padding: 44px 0 40px; }
+.course-hero2-grid { position: absolute; inset: 0; z-index: 0; opacity: 0.5;
+  background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse 70% 65% at 50% 20%, #000 40%, transparent 90%);
+}
+.course-hero2-glow { position: absolute; z-index: 0; top: -120px; right: -100px; width: 420px; height: 420px; border-radius: 50%; background: var(--gold); opacity: 0.16; filter: blur(110px); animation: footer-glow-breathe 12s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .course-hero2-glow { animation: none; } }
+.course-hero2-inner { position: relative; z-index: 1; }
 
-.course-flat-title { margin: 14px 0 0; font-size: clamp(24px, 3.6vw, 34px); font-weight: 800; letter-spacing: -0.01em; line-height: 1.25; color: var(--ink); }
+.course-hero2-crumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: rgba(255,255,255,0.5); flex-wrap: wrap; }
+.course-hero2-crumb a { color: rgba(255,255,255,0.5); text-decoration: none; }
+.course-hero2-crumb a:hover { color: #fff; }
 
-.course-flat-rating { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
-.course-flat-rating .stars { color: var(--gold); font-size: 15px; letter-spacing: 1px; }
-.course-flat-rating .num { font-weight: 700; font-size: 14px; color: var(--ink); }
-.course-flat-rating .count { color: var(--muted); font-size: 13.5px; }
+.course-hero2-pill { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; background: rgba(255,255,255,0.1); color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 7px 14px; border-radius: var(--radius-full); }
 
-.course-flat-thumb { margin-top: 18px; border-radius: 10px; overflow: hidden; background: var(--border); aspect-ratio: 16/9; }
+.course-hero2-inner h1 { margin: 16px 0 0; font-size: clamp(26px, 4vw, 38px); font-weight: 800; line-height: 1.2; max-width: 720px; }
+.course-hero2-sub { margin: 12px 0 0; font-size: 15.5px; color: rgba(255,255,255,0.68); max-width: 620px; line-height: 1.6; }
+
+.course-hero2-rating { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+.course-hero2-rating .stars { color: var(--gold); font-size: 16px; letter-spacing: 1px; }
+.course-hero2-rating .num { font-weight: 800; font-size: 14px; }
+.course-hero2-rating .count { color: rgba(255,255,255,0.5); font-size: 13.5px; }
+
+.course-hero2-meta { margin-top: 22px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.course-hero2-meta .item { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: rgba(255,255,255,0.7); }
+.course-hero2-meta svg { width: 15px; height: 15px; flex-shrink: 0; }
+.course-hero2-instructor { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); padding: 6px 16px 6px 6px; border-radius: var(--radius-full); text-decoration: none; transition: background-color 0.2s ease, border-color 0.2s ease; }
+.course-hero2-instructor:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.25); }
+.course-hero2-instructor .av { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: var(--gold); color: #241900; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
+.course-hero2-instructor .av img { width: 100%; height: 100%; object-fit: cover; }
+.course-hero2-instructor .name { display: block; color: #fff; font-weight: 700; font-size: 13.5px; }
+.course-hero2-instructor .role { display: block; color: rgba(255,255,255,0.55); font-size: 11.5px; }
+
+.course-flat-thumb { margin-top: 0; border-radius: 10px; overflow: hidden; background: var(--border); aspect-ratio: 16/9; }
 .course-flat-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .course-flat-thumb .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 700; }
-
-.course-flat-meta { margin-top: 16px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
-.course-flat-meta .item { display: inline-flex; align-items: center; gap: 6px; }
-.course-flat-meta svg { width: 16px; height: 16px; flex-shrink: 0; }
-.course-flat-meta .creator { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); font-weight: 600; text-decoration: none; transition: color 0.15s ease; }
-.course-flat-meta .creator:hover { color: var(--accent); }
-.course-flat-meta .creator .av { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; overflow: hidden; flex-shrink: 0; }
-.course-flat-meta .creator .av img { width: 100%; height: 100%; object-fit: cover; }
+.course-flat-thumb-lg { box-shadow: 0 30px 60px -30px rgba(20,24,27,0.35); }
 
 .course-flat-sec { margin-top: 40px; }
-.course-flat-sec h2 { font-size: 18px; font-weight: 700; margin: 0 0 12px; color: var(--ink); }
+.course-flat-sec h2 { font-size: 18px; font-weight: 700; margin: 0; color: var(--ink); }
+.course-flat-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.course-flat-sec-head .dash { width: 20px; height: 3px; border-radius: 2px; background: var(--gold); flex-shrink: 0; }
 
-.course-flat-curr-stat { color: var(--muted); font-size: 13.5px; font-weight: 500; margin-bottom: 14px; }
-.course-flat-curr-stat strong { color: var(--ink); }
-
-.course-flat-mod { border: 1px solid var(--border); border-radius: 10px; background: #fff; margin-bottom: 10px; overflow: hidden; }
-.course-flat-mod summary { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; list-style: none; font-weight: 700; font-size: 14.5px; color: var(--ink); }
-.course-flat-mod summary::-webkit-details-marker { display: none; }
-.course-flat-mod summary .n { color: var(--muted); font-weight: 500; }
-.course-flat-mod summary .count { margin-left: auto; color: var(--muted); font-weight: 500; font-size: 13px; }
-.course-flat-mod summary .chevron { width: 15px; height: 15px; color: var(--muted); flex-shrink: 0; transition: transform 0.25s ease; }
-.course-flat-mod[open] summary .chevron { transform: rotate(180deg); }
-.course-flat-mod-body { border-top: 1px solid var(--border); padding: 4px 16px; }
-.course-flat-lesson { display: flex; align-items: center; gap: 10px; padding: 10px 0; font-size: 14px; color: #3d3d3d; }
-.course-flat-lesson:not(:last-child) { border-bottom: 1px solid #f1f0ec; }
-.course-flat-lesson svg { width: 15px; height: 15px; color: var(--muted); flex-shrink: 0; }
-.course-flat-lesson .dur { margin-left: auto; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-.course-flat-reviews { border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: 20px; }
-.course-flat-review { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; padding: 14px 16px; }
-.course-flat-review + .course-flat-review { margin-top: 10px; }
-.course-flat-review .top { display: flex; align-items: center; gap: 10px; }
-.course-flat-review .av { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
-.course-flat-review .av img { width: 100%; height: 100%; object-fit: cover; }
-.course-flat-review .name { font-weight: 700; font-size: 14px; color: var(--ink); }
-.course-flat-review .stars { color: var(--gold); font-size: 13px; margin-left: 6px; }
-.course-flat-review .comment { margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: #3d3d3d; }
-.course-flat-review .time { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
-.course-flat-no-reviews { color: var(--muted); font-size: 14px; }
-
-/* enroll_panel.php's sidebar card, flattened to match — used only on
-   this page, so this edits its one existing rule rather than adding a
-   scoped override. */
-.enroll-panel { background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); box-shadow: none; }
-.enroll-panel .thumb .placeholder { background: var(--surface); color: var(--muted); }
-.enroll-panel .price { font-size: 28px; font-weight: 800; letter-spacing: -0.01em; color: var(--ink); }
-.enroll-panel .btn { border-radius: 6px; }
-.enroll-panel .btn:hover {
-  box-shadow: 0 1px 2px rgba(60,64,67,.32), 0 2px 6px rgba(60,64,67,.15), 0 1px 8px rgba(0,0,0,.1);
-  transform: none;
-}
+/* enroll_panel.php's sidebar card, restored to its premium look — used
+   only on this page, so this edits its one existing rule rather than
+   adding a scoped override. */
+.enroll-panel { position: relative; background: #fff; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(20,24,27,0.05), 0 24px 48px -24px rgba(20,24,27,0.25); }
+.enroll-panel::before { content: ""; display: block; height: 4px; background: linear-gradient(90deg, var(--brand-700), var(--accent) 45%, var(--gold)); position: relative; z-index: 1; }
+.enroll-panel .thumb .placeholder { background: linear-gradient(135deg, var(--brand-800), var(--brand-950)); color: rgba(255,255,255,0.75); }
+.enroll-panel ul.perks li svg { color: var(--gold-dark); }
 
 /* Course detail page body copy, bumped up from the site's normal small
    utility sizes (14-14.5px) for easier reading of the actual course
@@ -2330,15 +2315,15 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .timeline { position: relative; margin-top: 16px; }
 .timeline::before {
   content: ""; position: absolute; left: 21px; top: 8px; bottom: 8px; width: 2px;
-  background: linear-gradient(var(--border-strong), var(--border));
+  background: linear-gradient(var(--gold), var(--border));
 }
 .tmod { position: relative; padding-left: 58px; }
 .tmod:not(:last-child) { margin-bottom: 14px; }
 .tmod-num {
   position: absolute; left: 0; top: 4px; width: 44px; height: 44px; border-radius: 50%;
-  background: linear-gradient(145deg, var(--brand-700), var(--brand-950));
-  color: #fff; display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 16px; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--brand-900) 60%, transparent);
+  background: linear-gradient(145deg, var(--gold), var(--gold-dark));
+  color: #241900; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--gold) 60%, transparent);
   z-index: 1;
 }
 .tmod-card {
