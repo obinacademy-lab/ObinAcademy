@@ -1149,20 +1149,20 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .badge-new { background: var(--accent); color: #fff; }
 .badge-sale { background: linear-gradient(135deg, #ff8a65, var(--danger)); color: #fff; }
 
-.course-card .body { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 16px; flex: 1; }
+.course-card .body { display: flex; flex-direction: column; gap: 9px; padding: 18px 18px 18px; flex: 1; }
 .course-card .creator-row { display: flex; align-items: center; gap: 8px; }
-.course-card .creator-row .avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; color: var(--muted); overflow: hidden; flex-shrink: 0; }
+.course-card .creator-row .avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--muted); overflow: hidden; flex-shrink: 0; }
 .course-card .creator-row .avatar img { width: 100%; height: 100%; object-fit: cover; }
-.course-card .creator-row span { font-size: 12.5px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.course-card h3 { font-size: 15px; line-height: 1.3; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.course-card .desc { font-size: 13px; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.course-card .stats-row { display: flex; gap: 12px; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.course-card .creator-row span { font-size: 13px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.course-card h3 { font-size: 17px; line-height: 1.3; font-weight: 800; letter-spacing: -0.005em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.course-card .desc { font-size: 14px; line-height: 1.55; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.course-card .stats-row { display: flex; gap: 12px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .course-card .stats-row span { display: flex; align-items: center; gap: 4px; }
-.course-card .stats-row svg { width: 12px; height: 12px; flex-shrink: 0; }
-.course-card .price-row { margin-top: 2px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; }
-.course-card .price { font-weight: 800; font-size: 14.5px; color: var(--ink); white-space: nowrap; margin-left: auto; }
-.course-card .price .currency { font-size: 10.5px; font-weight: 700; color: var(--muted); margin-right: 3px; vertical-align: 1px; }
-.course-card .posted-date { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.course-card .stats-row svg { width: 13px; height: 13px; flex-shrink: 0; }
+.course-card .price-row { margin-top: 3px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; }
+.course-card .price { font-weight: 800; font-size: 16px; color: var(--ink); white-space: nowrap; margin-left: auto; }
+.course-card .price .currency { font-size: 11px; font-weight: 700; color: var(--muted); margin-right: 3px; vertical-align: 1px; }
+.course-card .posted-date { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
 .course-card .posted-date svg { width: 11px; height: 11px; flex-shrink: 0; }
 
 /* ---------- creator community card (Communities directory) ---------- */
