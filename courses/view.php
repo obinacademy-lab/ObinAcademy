@@ -50,6 +50,9 @@ if ($refToken && preg_match('/^[a-f0-9]{12}$/', $refToken)) {
 $totalLessons = 0;
 foreach ($course['modules'] as $m) $totalLessons += count($m['lessons']);
 
+$reviewCount = count($course['reviews']);
+$avgRating = $reviewCount ? array_sum(array_column($course['reviews'], 'rating')) / $reviewCount : 0;
+
 $statusLabel = ['DRAFT' => 'a draft', 'PENDING_REVIEW' => 'pending admin review', 'REJECTED' => 'rejected and needs changes'];
 
 $pageTitle = $course['title'] . ' — Obin Academy';
@@ -86,8 +89,6 @@ if (!empty($course['creator_name'])) {
     ];
 }
 
-$stats = get_platform_stats();
-
 require __DIR__ . '/../includes/header.php';
 ?>
 
@@ -97,92 +98,105 @@ require __DIR__ . '/../includes/header.php';
   </div>
 <?php endif; ?>
 
-<section class="section" style="padding-bottom:28px;">
-  <div class="container">
-    <div class="course-detail-hero reveal">
-      <div class="course-detail-hero-eyebrow-row">
-        <span class="dash" aria-hidden="true"></span>
-        <span class="txt"><?= e($course['category_name']) ?> Course</span>
-      </div>
-      <nav class="course-detail-hero-crumb">
-        <a href="<?= e(base_url('/')) ?>">Home</a><span class="sep">/</span>
-        <a href="<?= e(base_url('courses/index.php')) ?>">Courses</a><span class="sep">/</span>
-        <a href="<?= e(base_url('courses/index.php?category=' . $course['category_slug'])) ?>"><?= e($course['category_name']) ?></a>
+<section class="section" style="padding-bottom:0;">
+  <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
+    <div style="grid-column: span 2;" class="reveal">
+      <nav class="course-flat-crumb">
+        <a href="<?= e(base_url('/')) ?>">Home</a> / <a href="<?= e(base_url('courses/index.php')) ?>">Courses</a> / <a href="<?= e(base_url('courses/index.php?category=' . $course['category_slug'])) ?>"><?= e($course['category_name']) ?></a>
       </nav>
 
-      <div class="course-detail-hero-title-wrap"><h1><?= e($course['title']) ?></h1></div>
-      <div class="course-detail-hero-rule" aria-hidden="true"></div>
-      <p class="course-detail-hero-summary"><?= e($course['summary']) ?></p>
+      <h1 class="course-flat-title"><?= e($course['title']) ?></h1>
 
-      <div class="course-detail-hero-byline">
-        <span class="stat"><span class="num"><?= (int) $course['student_count'] ?></span><span class="lbl">student<?= (int) $course['student_count'] === 1 ? '' : 's' ?></span></span>
-        <span class="stat"><span class="num"><?= number_format((int) $course['view_count']) ?></span><span class="lbl">view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span></span>
-        <span class="stat"><span class="num"><?= $totalLessons ?></span><span class="lbl">lesson<?= $totalLessons === 1 ? '' : 's' ?></span></span>
-        <?php if (!empty($course['reviewed_at'])): ?>
-          <span class="pub">Published <?= e(format_date($course['reviewed_at'])) ?> at <?= e(date('g:i A', strtotime($course['reviewed_at']))) ?></span>
+      <?php if ($reviewCount > 0): ?>
+        <div class="course-flat-rating">
+          <span class="stars"><?= str_repeat('★', (int) round($avgRating)) . str_repeat('☆', 5 - (int) round($avgRating)) ?></span>
+          <span class="num"><?= number_format($avgRating, 1) ?></span>
+          <span class="count">&middot; <?= $reviewCount ?> review<?= $reviewCount === 1 ? '' : 's' ?></span>
+        </div>
+      <?php endif; ?>
+
+      <div class="course-flat-thumb">
+        <?php if (!empty($course['thumbnail_url'])): ?>
+          <img src="<?= e(asset_src($course['thumbnail_url'])) ?>" alt="">
+        <?php else: ?>
+          <div class="placeholder">Obin Academy</div>
         <?php endif; ?>
       </div>
 
-      <div class="course-detail-hero-foot">
-        <a href="<?= e(base_url('profile.php?id=' . $course['creator_user_id'])) ?>" class="course-detail-hero-instructor">
-          <div class="avatar">
+      <div class="course-flat-meta">
+        <span class="item"><?php dash_icon('users'); ?><?= (int) $course['student_count'] ?> student<?= (int) $course['student_count'] === 1 ? '' : 's' ?></span>
+        <span class="item"><?php dash_icon('eye'); ?><?= number_format((int) $course['view_count']) ?> view<?= (int) $course['view_count'] === 1 ? '' : 's' ?></span>
+        <span class="item"><?php dash_icon('tag'); ?><?= (float) $course['price'] > 0 ? e(format_money((float) $course['price'])) : 'Free' ?></span>
+        <a href="<?= e(base_url('profile.php?id=' . $course['creator_user_id'])) ?>" class="creator">
+          <span class="av">
             <?php if (!empty($course['creator_avatar_url'])): ?>
               <img src="<?= e(asset_src($course['creator_avatar_url'])) ?>" alt="">
             <?php else: ?><?= e(mb_substr($course['creator_name'], 0, 1)) ?><?php endif; ?>
-          </div>
-          <div>
-            <div class="name"><?= e($course['creator_name']) ?></div>
-            <div class="headline"><?= e($course['creator_headline'] ?: 'Instructor') ?></div>
-          </div>
+          </span>
+          By <?= e($course['creator_name']) ?>
         </a>
-        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'dark', (int) $course['id'], 'Share this course'); ?>
+        <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light', (int) $course['id'], 'Share this course'); ?>
       </div>
-    </div>
-  </div>
-</section>
 
-<?php render_stat_strip($stats); ?>
-
-<section class="section">
-  <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
-    <div style="grid-column: span 2;" class="reveal reveal-delay-1 course-content">
-      <h2 class="h3">About This Course</h2>
-      <div class="muted course-description"><?= format_rich_text($course['description']) ?></div>
-
-      <div class="row between wrap gap-2" style="margin-top:48px; align-items:baseline;">
-        <h2 class="h3">Curriculum</h2>
-        <div class="curriculum-stat"><strong><?= count($course['modules']) ?></strong> module<?= count($course['modules']) === 1 ? '' : 's' ?> &middot; <strong><?= $totalLessons ?></strong> lesson<?= $totalLessons === 1 ? '' : 's' ?></div>
+      <div class="course-flat-sec">
+        <h2>About This Course</h2>
+        <div class="muted course-description"><?= format_rich_text($course['description']) ?></div>
       </div>
-      <div class="timeline">
+
+      <div class="course-flat-sec">
+        <h2>Curriculum</h2>
+        <div class="course-flat-curr-stat"><strong><?= count($course['modules']) ?></strong> module<?= count($course['modules']) === 1 ? '' : 's' ?> &middot; <strong><?= $totalLessons ?></strong> lesson<?= $totalLessons === 1 ? '' : 's' ?></div>
         <?php foreach ($course['modules'] as $mi => $module): ?>
-          <div class="tmod reveal reveal-delay-<?= min($mi + 1, 5) ?>">
-            <div class="tmod-num"><?= $mi + 1 ?></div>
-            <details class="tmod-card" <?= $mi === 0 ? 'open' : '' ?>>
-              <summary class="tmod-summary">
-                <span class="tmod-title"><?= e($module['title']) ?></span>
-                <span class="tmod-count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
-                <?php dash_icon('chevron-down', 'tmod-chevron'); ?>
-              </summary>
-              <div class="tmod-body-outer"><div class="tmod-body-inner">
-                <?php foreach ($module['lessons'] as $lesson): ?>
-                  <div class="tlesson">
-                    <span class="tlesson-icon"><?php dash_icon($lesson['type'] === 'VIDEO' ? 'play' : 'file-text'); ?></span>
-                    <span><?= e($lesson['title']) ?></span>
-                    <span class="tlesson-dur">
-                      <?php if (!empty($lesson['duration'])): $d = (int) $lesson['duration']; ?>
-                        <?= sprintf('%d:%02d', intdiv($d, 60), $d % 60) ?>
-                      <?php else: ?>
-                        <?= $lesson['type'] === 'VIDEO' ? 'Video' : 'PDF' ?>
-                      <?php endif; ?>
-                    </span>
-                  </div>
-                <?php endforeach; ?>
-              </div></div>
-            </details>
-          </div>
+          <details class="course-flat-mod" <?= $mi === 0 ? 'open' : '' ?>>
+            <summary>
+              <span class="n"><?= $mi + 1 ?></span>
+              <span><?= e($module['title']) ?></span>
+              <span class="count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
+              <?php dash_icon('chevron-down', 'chevron'); ?>
+            </summary>
+            <div class="course-flat-mod-body">
+              <?php foreach ($module['lessons'] as $lesson): ?>
+                <div class="course-flat-lesson">
+                  <?php dash_icon($lesson['type'] === 'VIDEO' ? 'play' : 'file-text'); ?>
+                  <span><?= e($lesson['title']) ?></span>
+                  <span class="dur">
+                    <?php if (!empty($lesson['duration'])): $d = (int) $lesson['duration']; ?>
+                      <?= sprintf('%d:%02d', intdiv($d, 60), $d % 60) ?>
+                    <?php else: ?>
+                      <?= $lesson['type'] === 'VIDEO' ? 'Video' : 'PDF' ?>
+                    <?php endif; ?>
+                  </span>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </details>
         <?php endforeach; ?>
       </div>
 
+      <div class="course-flat-sec">
+        <h2>Reviews</h2>
+        <?php if ($reviewCount > 0): ?>
+          <div class="course-flat-reviews">
+            <?php foreach ($course['reviews'] as $review): ?>
+              <div class="course-flat-review">
+                <div class="top">
+                  <span class="av">
+                    <?php if (!empty($review['author_avatar_url'])): ?>
+                      <img src="<?= e(asset_src($review['author_avatar_url'])) ?>" alt="">
+                    <?php else: ?><?= e(mb_substr($review['author_name'], 0, 1)) ?><?php endif; ?>
+                  </span>
+                  <span class="name"><?= e($review['author_name']) ?></span>
+                  <span class="stars"><?= str_repeat('★', (int) $review['rating']) . str_repeat('☆', 5 - (int) $review['rating']) ?></span>
+                </div>
+                <?php if (!empty($review['comment'])): ?><p class="comment"><?= e($review['comment']) ?></p><?php endif; ?>
+                <p class="time"><?= e(format_date($review['created_at'])) ?></p>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php else: ?>
+          <p class="course-flat-no-reviews">No reviews yet — be the first to finish this course and leave one.</p>
+        <?php endif; ?>
+      </div>
     </div>
 
     <aside class="course-sidebar">
