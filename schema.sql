@@ -14,8 +14,19 @@ CREATE TABLE users (
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('LEARNER','CREATOR','ADMIN') NOT NULL DEFAULT 'LEARNER',
   headline VARCHAR(191) NULL,
+  -- Creator-only "school" branding (public/profile.php renders a creator's
+  -- page as their own school rather than a generic member profile) — set
+  -- from dashboard/settings.php. school_name falls back to "{name}'s
+  -- School" when unset.
+  school_name VARCHAR(160) NULL,
   bio TEXT NULL,
   avatar_url VARCHAR(500) NULL,
+  school_cover_url VARCHAR(500) NULL,
+  -- Whether this creator's school sells each course one at a time (the
+  -- platform default) or a single monthly subscription that unlocks every
+  -- course they publish, now and later — see includes/school_subscriptions.php.
+  pricing_model ENUM('PER_COURSE','MONTHLY_SUBSCRIPTION') NOT NULL DEFAULT 'PER_COURSE',
+  school_monthly_price DECIMAL(12,2) NULL,
   facebook_url VARCHAR(500) NULL,
   instagram_url VARCHAR(500) NULL,
   youtube_url VARCHAR(500) NULL,
@@ -168,7 +179,7 @@ CREATE TABLE payments (
   amount DECIMAL(12,2) NOT NULL,
   original_amount DECIMAL(12,2) NULL,
   phone VARCHAR(32) NOT NULL,
-  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION') NOT NULL DEFAULT 'COURSE_PURCHASE',
+  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION','SCHOOL_SUBSCRIPTION') NOT NULL DEFAULT 'COURSE_PURCHASE',
   status ENUM('PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'PENDING',
   status_message VARCHAR(500) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -185,6 +196,13 @@ CREATE TABLE payments (
   -- which already has subscription_id.
   subscription_id INT NULL,
   subscription_tier ENUM('GO','PRO') NULL,
+  -- Set only on a first-ever SCHOOL_SUBSCRIPTION payment, before a
+  -- school_subscriptions row exists to hang this off of (see
+  -- includes/school_subscriptions.php apply_school_subscription_payment_success()).
+  -- NULL on every renewal, which already has school_subscription_id. Unlike
+  -- the old platform-wide subscription_id/subscription_tier above (kept only
+  -- for historical display), this is the live, per-creator subscription.
+  school_subscription_id INT NULL,
   -- Captured at initiate_payment() time from the oa_aff attribution cookie
   -- (see includes/affiliates.php), not re-resolved later — so a payment
   -- keeps the affiliate who was actually credited at checkout even if that
@@ -196,6 +214,7 @@ CREATE TABLE payments (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL,
+  FOREIGN KEY (school_subscription_id) REFERENCES school_subscriptions(id) ON DELETE SET NULL,
   FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE SET NULL,
   INDEX idx_payments_user_course_status (user_id, course_id, status),
   UNIQUE KEY uniq_access_token_hash (access_token_hash)
@@ -310,6 +329,36 @@ CREATE TABLE subscriptions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (referred_by_affiliate_id) REFERENCES affiliates(id) ON DELETE SET NULL,
   INDEX idx_subscriptions_status_period (status, current_period_ends_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Per-school subscription model: one row per (learner, creator) pair — a
+-- learner can hold an active subscription to several different creators'
+-- schools at once, unlike the old platform-wide `subscriptions` table above
+-- (which is UNIQUE per user and kept only for historical display). Renewal
+-- is prompt-driven, not silent: mobile money can't auto-charge a saved
+-- token, so cron/track-maintenance.php emails a "Renew Now" reminder near
+-- current_period_ends_at and walks ACTIVE -> GRACE -> EXPIRED if the
+-- learner doesn't act. See includes/school_subscriptions.php.
+CREATE TABLE school_subscriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  status ENUM('ACTIVE','GRACE','EXPIRED','CANCELED') NOT NULL DEFAULT 'ACTIVE',
+  price DECIMAL(12,2) NOT NULL,
+  phone VARCHAR(32) NOT NULL,
+  current_period_ends_at DATETIME NOT NULL,
+  grace_ends_at DATETIME NULL,
+  renewal_attempts_made TINYINT NOT NULL DEFAULT 0,
+  last_charge_attempt_at DATETIME NULL,
+  started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  canceled_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  learner_id INT NOT NULL,
+  creator_id INT NOT NULL,
+  FOREIGN KEY (learner_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_learner_creator (learner_id, creator_id),
+  INDEX idx_school_subs_status_period (status, current_period_ends_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Append-only. One row per ~20s of actual video playback the client
