@@ -34,6 +34,13 @@ require __DIR__ . '/includes/header.php';
   <div class="container" style="text-align:center;">
     <h1><span class="hero-shine">Stories From Our Community</span></h1>
     <p class="summary" style="margin-left:auto; margin-right:auto;">Hear from learners and creators building real skills and real income on Obin Academy.</p>
+
+    <?php if ($testimonials): ?>
+      <div class="hero-trust-stat" style="justify-content:center; color:var(--ink); background:color-mix(in srgb, var(--gold) 12%, white); border:1px solid color-mix(in srgb, var(--gold) 30%, var(--border));">
+        <?php dash_icon('check-circle'); ?>
+        <span style="color:#92660a;"><?= count($testimonials) ?></span> verified <?= count($testimonials) === 1 ? 'story' : 'stories' ?> from real learners and creators
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 
@@ -53,7 +60,11 @@ require __DIR__ . '/includes/header.php';
               </div>
               <p class="quote"><?= e($t['quote']) ?></p>
               <div class="author">
-                <div class="avatar"><?= e(mb_substr($t['author_name'], 0, 1)) ?></div>
+                <div class="avatar">
+                  <?php if (!empty($t['author_avatar_url'])): ?>
+                    <img src="<?= e(asset_src($t['author_avatar_url'])) ?>" alt="">
+                  <?php else: ?><?= e(mb_substr($t['author_name'], 0, 1)) ?><?php endif; ?>
+                </div>
                 <div>
                   <div class="name"><?= e($t['author_name']) ?></div>
                   <?php if (!empty($t['author_headline'])): ?><div class="role"><?= e($t['author_headline']) ?></div><?php endif; ?>
@@ -82,16 +93,37 @@ require __DIR__ . '/includes/header.php';
   </div>
 </div>
 
-<div class="container" style="max-width:520px; padding-bottom:72px;">
-  <h2 class="h3 text-center">Share Your Story</h2>
-  <?php if ($submitted): ?>
-    <div class="alert alert-success" style="margin-top:16px;">Thanks for sharing! Your story is pending review.</div>
-  <?php else: ?>
-    <?php if ($errors): ?><div class="alert alert-error" style="margin-top:16px;"><?= e(implode(' ', $errors)) ?></div><?php endif; ?>
-    <?php if (!$user): ?>
-      <p class="muted text-center card card-pad" style="margin-top:16px;"><a href="<?= e(base_url('login.php?redirect=/stories.php')) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to share your story.</p>
-    <?php else: ?>
-      <form method="post" class="card card-pad" style="margin-top:16px;">
+<div class="section" style="background:var(--surface);">
+  <div class="container">
+    <div class="grid lg:grid-2" style="gap:48px; align-items:center; max-width:960px; margin:0 auto;">
+      <div class="reveal">
+        <span class="eyebrow">Join the Community</span>
+        <h2 class="h2" style="margin-top:14px;">Share Your Story</h2>
+        <p class="lede" style="margin-top:14px; max-width:none; font-size:16px; line-height:1.75; color:var(--muted);">
+          Finished a course, landed a client, or grew your income with a skill you learned here? Your story could be the reason someone else takes the leap.
+        </p>
+        <ul class="check-list" style="margin-top:26px;">
+          <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span class="label-text">Takes less than a minute to submit</span></li>
+          <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span class="label-text">Featured right here on the Stories page</span></li>
+          <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span class="label-text">Reviewed before it goes live — no spam, ever</span></li>
+        </ul>
+      </div>
+
+      <div class="reveal reveal-delay-2">
+        <?php if ($submitted): ?>
+          <div class="alert alert-success">Thanks for sharing! Your story is pending review.</div>
+        <?php else: ?>
+          <?php if ($errors): ?><div class="alert alert-error" style="margin-bottom:16px;"><?= e(implode(' ', $errors)) ?></div><?php endif; ?>
+          <?php if (!$user): ?>
+            <div class="card card-pad" style="text-align:center;">
+              <p class="muted">Log in or create an account first to share your story.</p>
+              <div class="row gap-2 center" style="margin-top:14px;">
+                <a href="<?= e(base_url('login.php?redirect=/stories.php')) ?>" class="btn btn-outline">Log In</a>
+                <a href="<?= e(base_url('signup.php?redirect=/stories.php')) ?>" class="btn btn-primary">Sign Up</a>
+              </div>
+            </div>
+          <?php else: ?>
+      <form method="post" class="card card-pad">
         <?= csrf_field() ?>
         <div class="field">
           <label>Your Rating</label>
@@ -119,5 +151,8 @@ require __DIR__ . '/includes/header.php';
       </script>
     <?php endif; ?>
   <?php endif; ?>
+      </div>
+    </div>
+  </div>
 </div>
 <?php require __DIR__ . '/includes/footer.php'; ?>
