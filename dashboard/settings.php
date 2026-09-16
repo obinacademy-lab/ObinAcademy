@@ -77,6 +77,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $params[] = $user['id'];
         db_run($sql, $params);
 
+        // Switching a school into subscription mode makes every course's own
+        // price meaningless (and actively misleading — a stale price would
+        // wrongly show as "Free" once it's 0, or as a per-course buy price
+        // that no longer applies) — see includes/course_card.php and
+        // includes/enroll_panel.php, both of which now hide the course's own
+        // price for a subscription school. Clearing it here keeps the
+        // creator's own course-manage forms honest too, and only fires on
+        // the transition INTO subscription mode — switching back to
+        // per-course never touches price data, since the creator would then
+        // need to re-enter it themselves.
+        if ($isCreator && $pricingModel === 'MONTHLY_SUBSCRIPTION' && $user['pricing_model'] !== 'MONTHLY_SUBSCRIPTION') {
+            db_run("UPDATE courses SET price = 0, sale_price = NULL, sale_ends_at = NULL WHERE creator_id = ?", [$user['id']]);
+        }
+
         flash_set('success', 'Your settings have been saved.');
         redirect('/dashboard/settings.php');
     }

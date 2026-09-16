@@ -8,6 +8,7 @@ function get_categories(): array {
 function get_course_cards(string $whereSql = '', array $params = [], string $orderBy = 'c.created_at DESC', ?int $limit = null, ?int $offset = null): array {
     $sql = "
         SELECT c.*, cat.name AS category_name, u.name AS creator_name, u.avatar_url AS creator_avatar_url,
+          u.pricing_model AS creator_pricing_model, u.school_monthly_price AS creator_school_monthly_price,
           (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id) AS student_count,
           (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.course_id = c.id) AS avg_rating,
           (SELECT COUNT(*) FROM reviews r WHERE r.course_id = c.id) AS review_count
