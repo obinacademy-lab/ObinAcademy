@@ -1804,6 +1804,15 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .step-row h4 { font-size: 14.5px; font-weight: 700; color: var(--ink); }
 .step-row p { margin-top: 4px; font-size: 13px; line-height: 1.55; color: var(--muted); }
 
+/* ---------- earnings example (become-creator page) — a small receipt-style
+   breakdown inside a .how-panel, reusing its existing card chrome. ---------- */
+.earnings-example { position: relative; z-index: 1; margin-top: 18px; background: rgba(255,255,255,0.6); border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--border)); border-radius: var(--radius); padding: 4px 18px; }
+.earnings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; font-size: 13.5px; color: var(--muted); }
+.earnings-row:not(:last-child) { border-bottom: 1px dashed var(--border); }
+.earnings-row strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.earnings-row.earnings-total { color: var(--ink); font-weight: 700; }
+.earnings-row.earnings-total strong { color: #92660a; font-size: 16px; }
+
 /* ---------- premium closing CTA (about page) ---------- */
 .cta-panel-premium { max-width: 620px; margin: 0 auto; text-align: center; padding: 64px 0; }
 
