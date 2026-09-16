@@ -1,4 +1,8 @@
 <?php
+// TEMPORARY DEBUG — remove after diagnosing the profile.php 500 error.
+ini_set('display_errors', '1');
+error_reporting(E_ALL);
+
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/course_card.php';
