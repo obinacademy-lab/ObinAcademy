@@ -54,6 +54,22 @@
   --container: 1180px;
 }
 
+/* Brand-hue rotation: a tiny inline script in header.php stamps
+   data-brand-hue="purple" on <html> for 30 minutes out of every 60,
+   flipping just these brand/accent tokens to a violet family with the
+   same relative lightness steps as their blue defaults above — content
+   colors (--ink/--muted/--border), --gold, and every font-size token
+   are untouched. */
+:root[data-brand-hue="purple"] {
+  --brand-950: #4c1d95;
+  --brand-900: #5b21b6;
+  --brand-800: #6d28d9;
+  --brand-700: #7c3aed;
+  --brand-600: #8b5cf6;
+  --accent: #7c3aed;
+  --accent-dark: #6d28d9;
+}
+
 * { box-sizing: border-box; }
 /* Matches the footer's own background as a fallback — but the real fix
    for the blank space a phone's rubber-band bounce reveals past the very

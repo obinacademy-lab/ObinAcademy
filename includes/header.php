@@ -22,6 +22,24 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    // Brand color rotation: every visitor sees the same blue/purple slot at
+    // the same wall-clock time (no per-visitor state, nothing server-side).
+    // Runs before the stylesheet paints so there's no flash of the wrong hue,
+    // and rechecks periodically so a tab left open switches live at the
+    // 30-minute mark instead of only on the next page load.
+    (function () {
+      var SLOT_MS = 30 * 60 * 1000;
+      function apply() {
+        var hue = Math.floor(Date.now() / SLOT_MS) % 2 === 0 ? 'blue' : 'purple';
+        if (document.documentElement.getAttribute('data-brand-hue') !== hue) {
+          document.documentElement.setAttribute('data-brand-hue', hue);
+        }
+      }
+      apply();
+      setInterval(apply, 30000);
+    })();
+  </script>
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
   <title><?= e($seoTitle) ?></title>
   <meta name="description" content="<?= e($seoDescription) ?>">
