@@ -2057,17 +2057,47 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 .home-discover-card {
   background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
-  text-decoration: none; color: inherit; display: block; transition: border-color 0.15s ease;
+  text-decoration: none; color: inherit; display: block;
 }
-.home-discover-card:hover { border-color: #c8c8c8; }
+/* .reveal is always present (see index.php) — a plain `transition` here and
+   .reveal's own `transition` would fight over the same property (only the
+   higher-specificity one applies, they don't merge), so this combined
+   selector owns the full list: .reveal's fade/slide-in plus the hover
+   lift/shadow/border, mirroring the same pattern .course-card.reveal uses
+   below. transition-delay lists 4 values in the same order (opacity,
+   transform, box-shadow, border-color) so the nth-child stagger only ever
+   delays the entrance, never the hover. */
+.home-discover-card.reveal {
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.45s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.35s ease;
+}
+.home-discover-card.reveal:hover { border-color: var(--border-strong); box-shadow: var(--shadow-pop-lg); transform: translateY(-6px); }
 .home-discover-card .thumb { position: relative; aspect-ratio: 16/10; background: var(--border); overflow: hidden; }
-.home-discover-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-discover-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s cubic-bezier(0.16,1,0.3,1); }
+.home-discover-card:hover .thumb img { transform: scale(1.08); }
+.home-discover-card .thumb::after {
+  content: ""; position: absolute; inset: 0; opacity: 0; pointer-events: none;
+  background: linear-gradient(to top, rgba(0,0,0,0.28), transparent 55%);
+  transition: opacity 0.35s ease;
+}
+.home-discover-card:hover .thumb::after { opacity: 1; }
 .home-discover-card .thumb .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 700; font-size: 13px; }
 .home-discover-card .avatar {
   position: absolute; left: 14px; bottom: -18px; width: 42px; height: 42px; border-radius: 10px;
   background: #fff; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.15); overflow: hidden;
   display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: var(--accent);
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1);
 }
+.home-discover-card:hover .avatar { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+@media (prefers-reduced-motion: reduce) {
+  .home-discover-card.reveal, .home-discover-card .thumb img, .home-discover-card .thumb::after, .home-discover-card .avatar { transition: none; }
+  .home-discover-card.reveal:hover { transform: none; }
+}
+.home-discover-card.reveal:nth-child(1) { transition-delay: 0s, 0s, 0s, 0s; }
+.home-discover-card.reveal:nth-child(2) { transition-delay: 0.08s, 0.08s, 0s, 0s; }
+.home-discover-card.reveal:nth-child(3) { transition-delay: 0.16s, 0.16s, 0s, 0s; }
+.home-discover-card.reveal:nth-child(4) { transition-delay: 0.24s, 0.24s, 0s, 0s; }
+.home-discover-card.reveal:nth-child(5) { transition-delay: 0.32s, 0.32s, 0s, 0s; }
+.home-discover-card.reveal:nth-child(6) { transition-delay: 0.4s, 0.4s, 0s, 0s; }
 .home-discover-card .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .home-discover-card .body { padding: 30px 16px 16px; }
 .home-discover-card h3 { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.3; color: var(--ink); }

@@ -60,7 +60,7 @@ require __DIR__ . '/includes/header.php';
     <div class="home-discover-grid-wrap">
       <div class="home-discover-grid">
         <?php foreach ($catalogPreview as $c): ?>
-          <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="home-discover-card">
+          <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" class="home-discover-card reveal">
             <div class="thumb">
               <?php if (!empty($c['thumbnail_url'])): ?>
                 <img src="<?= e(asset_src($c['thumbnail_url'])) ?>" alt="" loading="lazy">
