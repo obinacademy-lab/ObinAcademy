@@ -193,7 +193,7 @@ CREATE TABLE payments (
   amount DECIMAL(12,2) NOT NULL,
   original_amount DECIMAL(12,2) NULL,
   phone VARCHAR(32) NOT NULL,
-  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION','SCHOOL_SUBSCRIPTION') NOT NULL DEFAULT 'COURSE_PURCHASE',
+  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION','SCHOOL_SUBSCRIPTION','BUNDLE_PURCHASE') NOT NULL DEFAULT 'COURSE_PURCHASE',
   status ENUM('PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'PENDING',
   status_message VARCHAR(500) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -234,6 +234,9 @@ CREATE TABLE payments (
   -- Which coupon (if any) was applied at checkout — see coupons/
   -- coupon_redemptions below. NULL on the vast majority of payments.
   coupon_id INT NULL,
+  -- Set for a BUNDLE_PURCHASE payment — which bundle this was. NULL for
+  -- every other payment type. See bundles/bundle_courses below.
+  bundle_id INT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL,
@@ -241,8 +244,36 @@ CREATE TABLE payments (
   FOREIGN KEY (school_subscription_creator_id) REFERENCES users(id) ON DELETE SET NULL,
   FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE SET NULL,
   FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE SET NULL,
+  FOREIGN KEY (bundle_id) REFERENCES bundles(id) ON DELETE SET NULL,
   INDEX idx_payments_user_course_status (user_id, course_id, status),
   UNIQUE KEY uniq_access_token_hash (access_token_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Lets a creator package 2+ of their own published courses together for one
+-- discounted one-time price. Buying a bundle grants the same kind of
+-- PURCHASE-sourced enrollment as buying each course individually would
+-- (each course's own access_duration_days still applies) — a bundle is
+-- just a bulk checkout, not a new access model. See includes/bundles.php.
+CREATE TABLE bundles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  slug VARCHAR(220) NOT NULL,
+  description TEXT NULL,
+  price DECIMAL(12,2) NOT NULL,
+  status ENUM('DRAFT','PUBLISHED') NOT NULL DEFAULT 'DRAFT',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  creator_id INT NOT NULL,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_slug (slug),
+  INDEX idx_bundles_creator_status (creator_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE bundle_courses (
+  bundle_id INT NOT NULL,
+  course_id INT NOT NULL,
+  PRIMARY KEY (bundle_id, course_id),
+  FOREIGN KEY (bundle_id) REFERENCES bundles(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Coupon codes a creator can run for their own courses — a percentage or

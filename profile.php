@@ -3,6 +3,7 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/course_card.php';
 require __DIR__ . '/includes/follows.php';
+require __DIR__ . '/includes/bundles.php';
 
 $profileId = (int) query_param('id');
 $profile = $profileId ? get_profile($profileId) : null;
@@ -28,6 +29,7 @@ $stats = [
 // not just subscribers. Watching still requires a subscription, checked
 // independently on learn.php/stream.php.
 $teaching = $isCreator ? get_course_cards('c.creator_id = ?', [$profileId], 'c.created_at DESC', 6) : [];
+$publishedBundles = $isCreator ? array_values(array_filter(get_bundles_for_creator($profileId), fn($b) => $b['status'] === 'PUBLISHED')) : [];
 // No school_cover_url of their own yet — borrow a thumbnail from one of
 // their own published courses instead of showing a bare flat hero.
 $schoolCoverUrl = $isCreator ? ($profile['school_cover_url'] ?: get_creator_fallback_thumbnail($profileId)) : null;
@@ -94,8 +96,27 @@ require __DIR__ . '/includes/header.php';
   <?php endif; ?>
 
   <div class="container" style="max-width:900px; padding-top:40px; padding-bottom:80px;">
-    <?php if ($stats['teaching'] > 0): ?>
+    <?php if ($publishedBundles): ?>
       <div class="profile-section" style="margin-top:0;">
+        <div class="profile-section-head">
+          <h2>Bundles</h2>
+          <span class="count"><?= count($publishedBundles) ?> bundle<?= count($publishedBundles) === 1 ? '' : 's' ?></span>
+        </div>
+        <div class="stack gap-2">
+          <?php foreach ($publishedBundles as $b): ?>
+            <a href="<?= e(base_url('bundle.php?slug=' . $b['slug'])) ?>" class="card card-pad row between wrap gap-2" style="text-decoration:none; align-items:center;">
+              <div>
+                <div style="font-weight:700; color:var(--ink);"><?= e($b['title']) ?></div>
+                <div class="small muted"><?= (int) $b['course_count'] ?> courses</div>
+              </div>
+              <div style="font-weight:800; color:var(--ink);"><?= e(format_money((float) $b['price'])) ?></div>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    <?php endif; ?>
+    <?php if ($stats['teaching'] > 0): ?>
+      <div class="profile-section" style="margin-top:<?= $publishedBundles ? '44px' : '0' ?>;">
         <div class="profile-section-head">
           <h2><?= e($profile['name']) ?>'s Courses</h2>
           <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>

@@ -14,6 +14,7 @@
     const courseId = root.dataset.courseId;
     const tier = root.dataset.tier;
     const creatorId = root.dataset.creatorId;
+    const bundleId = root.dataset.bundleId;
     const initiateUrl = root.dataset.initiateUrl;
     // Poll lives in the same api/ folder as initiate — derive it from that
     // URL rather than hardcoding a root-relative path, since the app isn't
@@ -128,7 +129,7 @@
         if (statusText) statusText.textContent = "Starting payment...";
 
         try {
-          const body = { courseId, tier, creatorId, phone, csrf_token: csrfToken() };
+          const body = { courseId, tier, creatorId, bundleId, phone, csrf_token: csrfToken() };
           if (isGuest) { body.name = name; body.email = email; }
           if (appliedCoupon) body.couponCode = appliedCoupon;
           const res = await fetch(initiateUrl, {

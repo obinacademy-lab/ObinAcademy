@@ -4,6 +4,7 @@ require_once __DIR__ . '/email.php';
 require_once __DIR__ . '/subscriptions.php'; // gutted to just historical SUBSCRIPTION-payment read helpers — see includes/subscriptions.php
 require_once __DIR__ . '/school_subscriptions.php'; // the live, per-creator subscription system — see includes/school_subscriptions.php
 require_once __DIR__ . '/coupons.php';
+require_once __DIR__ . '/bundles.php';
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -34,6 +35,7 @@ function fetch_payment_by_id(int $paymentId): ?array {
     if (!$type) return null;
     if ($type['type'] === 'SUBSCRIPTION') return fetch_payment_with_subscription($paymentId);
     if ($type['type'] === 'SCHOOL_SUBSCRIPTION') return fetch_payment_with_school_subscription($paymentId);
+    if ($type['type'] === 'BUNDLE_PURCHASE') return fetch_payment_with_bundle($paymentId);
     return fetch_payment_with_course($paymentId);
 }
 
@@ -72,6 +74,13 @@ function resolve_payment_with_iotec(array $payment): array {
         if ($payment['type'] === 'SCHOOL_SUBSCRIPTION') {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
             apply_school_subscription_payment_success($payment);
+            return ['status' => 'SUCCESS'];
+        }
+
+        if ($payment['type'] === 'BUNDLE_PURCHASE') {
+            db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
+            apply_bundle_payment_success($payment);
+            send_bundle_receipt_email($payment, $isGuestPayment, 'Course Bundle');
             return ['status' => 'SUCCESS'];
         }
 

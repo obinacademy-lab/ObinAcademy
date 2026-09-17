@@ -180,6 +180,60 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
         HTML);
 }
 
+/** Same receipt template as send_payment_receipt_email(), pointed at a
+ * bundle's title/slug instead of a single course's — payments.type
+ * BUNDLE_PURCHASE joins bundle_title/bundle_slug (see
+ * includes/bundles.php's fetch_payment_with_bundle()), not
+ * course_title/course_slug, so it can't reuse that function as-is. */
+function send_bundle_receipt_email(array $payment, bool $isGuestPayment, string $itemLabel): void {
+    $to = $isGuestPayment ? $payment['guest_email'] : $payment['learner_email'];
+    if (!$to) return;
+
+    $name = $isGuestPayment ? $payment['guest_name'] : $payment['learner_name'];
+    $amount = format_money((float) $payment['amount']);
+    $bundleTitle = $payment['bundle_title'];
+    $receiptNo = 'OA-' . str_pad((string) $payment['id'], 6, '0', STR_PAD_LEFT);
+    $date = date('F j, Y \a\t g:i A');
+    $bundleUrl = base_url('bundle.php?slug=' . $payment['bundle_slug']);
+    $ctaLabel = 'View Your Courses';
+
+    resend_send($to, "Receipt for \"{$bundleTitle}\" — Obin Academy", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #2563eb;">
+            <table role="presentation" style="margin: 0 auto;"><tr>
+              <td style="vertical-align: middle; padding-right: 8px;">
+                <div style="width: 34px; height: 34px; border-radius: 9px; background: #1e3a8a; display: flex; align-items: center; justify-content: center;">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"></path></svg>
+                </div>
+              </td>
+              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #2563eb;">Academy</span></span></td>
+            </tr></table>
+          </div>
+
+          <h2 style="color: #1e3a8a; text-align: center; margin-top: 24px;">Payment Receipt</h2>
+          <p style="text-align: center; color: #5b6670;">Thanks, {$name} — here's your receipt for this purchase.</p>
+
+          <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Receipt No.</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$receiptNo}</td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Date</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$date}</td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$bundleTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">{$itemLabel}</span></td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Payment Method</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">Mobile Money</td></tr>
+            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #1e3a8a; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
+          </table>
+
+          <p style="text-align: center; margin-top: 28px;">
+            <a href="{$bundleUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              {$ctaLabel}
+            </a>
+          </p>
+
+          <p style="color: #5b6670; font-size: 12.5px; text-align: center; margin-top: 28px;">
+            Keep this receipt for your records. Questions about this payment? Reply to this email or reach us at info@obinacademy.site.
+          </p>
+        </div>
+        HTML);
+}
+
 /** Sent the moment a course is completed (100% progress) — a proactive copy of the certificate.php link. */
 function send_certificate_email(string $to, string $name, string $courseTitle, string $certificateUrl): void {
     resend_send($to, "You Earned a Certificate for \"{$courseTitle}\"! — Obin Academy", <<<HTML
