@@ -85,6 +85,12 @@ CREATE TABLE courses (
   -- clears sale_price/sale_ends_at, the timestamp itself is the source of truth.
   sale_ends_at DATETIME NULL,
   access_duration_days INT NULL,
+  -- Lets a learner split this course's price into installment_count fixed
+  -- payments instead of paying it all at once — see installment_plans below
+  -- and includes/installments.php. Ignored while price is 0 or the course
+  -- is subscription_included.
+  installments_enabled TINYINT(1) NOT NULL DEFAULT 0,
+  installment_count TINYINT NULL,
   premium_price DECIMAL(12,2) NULL,
   -- Only meaningful when the creator's school (users.pricing_model) is
   -- MONTHLY_SUBSCRIPTION: 1 (default) means this course is covered by the
@@ -193,7 +199,7 @@ CREATE TABLE payments (
   amount DECIMAL(12,2) NOT NULL,
   original_amount DECIMAL(12,2) NULL,
   phone VARCHAR(32) NOT NULL,
-  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION','SCHOOL_SUBSCRIPTION','BUNDLE_PURCHASE') NOT NULL DEFAULT 'COURSE_PURCHASE',
+  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION','SCHOOL_SUBSCRIPTION','BUNDLE_PURCHASE','INSTALLMENT_PAYMENT') NOT NULL DEFAULT 'COURSE_PURCHASE',
   status ENUM('PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'PENDING',
   status_message VARCHAR(500) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -237,6 +243,10 @@ CREATE TABLE payments (
   -- Set for a BUNDLE_PURCHASE payment — which bundle this was. NULL for
   -- every other payment type. See bundles/bundle_courses below.
   bundle_id INT NULL,
+  -- Set for an INSTALLMENT_PAYMENT — which installment_plans row this
+  -- payment is a part of (the first payment AND every later one). NULL for
+  -- every other payment type. See installment_plans below.
+  installment_plan_id INT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL,
@@ -245,6 +255,7 @@ CREATE TABLE payments (
   FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE SET NULL,
   FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE SET NULL,
   FOREIGN KEY (bundle_id) REFERENCES bundles(id) ON DELETE SET NULL,
+  FOREIGN KEY (installment_plan_id) REFERENCES installment_plans(id) ON DELETE SET NULL,
   INDEX idx_payments_user_course_status (user_id, course_id, status),
   UNIQUE KEY uniq_access_token_hash (access_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -274,6 +285,38 @@ CREATE TABLE bundle_courses (
   PRIMARY KEY (bundle_id, course_id),
   FOREIGN KEY (bundle_id) REFERENCES bundles(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Splits one course's price into a fixed number of payments. Mobile money
+-- has no saved-token recurring charge — every installment needs a fresh
+-- collection prompt the learner approves, same as a school subscription
+-- renewal. Full access unlocks after the first installment and stays up
+-- while status is ACTIVE/GRACE/COMPLETED; a missed payment walks
+-- ACTIVE -> GRACE -> DEFAULTED (access paused) via
+-- cron/track-maintenance.php, driven by includes/installments.php.
+CREATE TABLE installment_plans (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  status ENUM('ACTIVE','GRACE','COMPLETED','DEFAULTED') NOT NULL DEFAULT 'ACTIVE',
+  total_amount DECIMAL(12,2) NOT NULL,
+  installment_count TINYINT NOT NULL,
+  installment_amount DECIMAL(12,2) NOT NULL,
+  installments_paid TINYINT NOT NULL DEFAULT 0,
+  phone VARCHAR(32) NOT NULL,
+  next_due_at DATETIME NOT NULL,
+  grace_ends_at DATETIME NULL,
+  reminder_sent_at DATETIME NULL,
+  started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  completed_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  learner_id INT NOT NULL,
+  creator_id INT NOT NULL,
+  course_id INT NOT NULL,
+  FOREIGN KEY (learner_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_learner_course_plan (learner_id, course_id),
+  INDEX idx_installment_plans_status_due (status, next_due_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Coupon codes a creator can run for their own courses — a percentage or

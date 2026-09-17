@@ -4,6 +4,7 @@ require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/enroll_panel.php';
 require __DIR__ . '/includes/enrollment.php';
 require_once __DIR__ . '/includes/school_subscriptions.php';
+require_once __DIR__ . '/includes/installments.php';
 
 $user = current_user();
 $slug = query_param('slug');
@@ -41,28 +42,38 @@ $isGuest = !$user && !$isOwner;
 // expiry is whether the subscription itself is still active, re-checked
 // live above rather than trusted from whenever this row was created.
 $subscriptionLapsed = $enrollment && $enrollment['source'] === 'SUBSCRIPTION' && !$isSubscribed;
+// A payment-plan enrollment stays a normal PURCHASE row even once the plan
+// defaults — access is gated live here instead of deleting that row, so
+// paying the next installment later just resumes it. Checked independently
+// of the plain PURCHASE expiry below, which still applies once fully paid.
+$installmentPlan = $user ? get_installment_plan((int) $user['id'], (int) $course['id']) : null;
+$installmentDefaulted = $installmentPlan && !learner_has_installment_access($installmentPlan);
 $isExpired = !$isOwner && $enrollment && (
     $subscriptionLapsed
+    || $installmentDefaulted
     || ($enrollment['source'] === 'PURCHASE' && $enrollment['expires_at'] !== null && strtotime($enrollment['expires_at']) < time())
 );
 
 if ($isExpired) {
-    $pageTitle = ($subscriptionLapsed ? 'Subscription Ended' : 'Access Expired') . ' — Obin Academy';
+    $pageTitle = ($subscriptionLapsed ? 'Subscription Ended' : ($installmentDefaulted ? 'Payment Plan Paused' : 'Access Expired')) . ' — Obin Academy';
     require __DIR__ . '/includes/header.php';
     ?>
     <div class="container" style="max-width:440px; padding: 90px 20px; text-align:center;">
       <div style="font-size:40px;">🔒</div>
-      <h1 class="h3" style="margin-top:16px;"><?= $subscriptionLapsed ? 'Subscription Ended' : 'Access Expired' ?></h1>
+      <h1 class="h3" style="margin-top:16px;"><?= $subscriptionLapsed ? 'Subscription Ended' : ($installmentDefaulted ? 'Payment Plan Paused' : 'Access Expired') ?></h1>
       <p class="muted" style="margin-top:10px;">
         <?php if ($subscriptionLapsed): ?>
           Your subscription to <?= e($course['creator_school_name'] ?: $course['creator_name']) ?> has ended.
           Resubscribe to keep learning.
+        <?php elseif ($installmentDefaulted): ?>
+          A payment plan installment for "<?= e($course['title']) ?>" was missed, so access is paused.
+          Pay your next installment to pick up right where you left off.
         <?php else: ?>
           Your access to "<?= e($course['title']) ?>" expired on <?= e(format_date($enrollment['expires_at'])) ?>.
           Purchase the course again to keep learning.
         <?php endif; ?>
       </p>
-      <a href="<?= e(base_url('courses/view.php?slug=' . $slug)) ?>" class="btn btn-primary" style="margin-top:20px;">View Course</a>
+      <a href="<?= e(base_url($installmentDefaulted ? 'dashboard/learner/payment-plans.php' : ('courses/view.php?slug=' . $slug))) ?>" class="btn btn-primary" style="margin-top:20px;"><?= $installmentDefaulted ? 'Pay Next Installment' : 'View Course' ?></a>
     </div>
     <?php
     require __DIR__ . '/includes/footer.php';

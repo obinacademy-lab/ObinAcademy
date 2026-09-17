@@ -6,6 +6,7 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/enrollment.php';
 require_once __DIR__ . '/includes/school_subscriptions.php';
+require_once __DIR__ . '/includes/installments.php';
 
 $user = current_user();
 
@@ -29,6 +30,14 @@ if (!$isOwner && !$isAdmin) {
         : guest_enrollment_for_course((int) $lesson['course_id']);
 
     if (!$enrollment) { http_response_code(403); exit('Forbidden'); }
+    // A payment-plan enrollment stays a normal PURCHASE row even once the
+    // plan defaults — checked independently of the source-based branches
+    // below, which still apply once a plan is fully paid off.
+    $installmentPlan = $user ? get_installment_plan((int) $user['id'], (int) $lesson['course_id']) : null;
+    if ($installmentPlan && !learner_has_installment_access($installmentPlan)) {
+        http_response_code(403);
+        exit('Access expired');
+    }
     // A SUBSCRIPTION-sourced row (see learn.php) never has its own
     // expires_at — its real expiry is whether the subscription itself is
     // still active, re-checked live here rather than trusted from whenever

@@ -3,6 +3,7 @@ require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/storage.php';
 require __DIR__ . '/../../includes/data.php';
 require __DIR__ . '/../../includes/audit.php';
+require __DIR__ . '/../../includes/installments.php';
 $user = require_login();
 
 $courseId = (int) query_param('id');
@@ -74,12 +75,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $accessDurationDays = $accessDurationRaw === 'lifetime' ? null : (int) $accessDurationRaw;
         $premiumPriceRaw = post('premiumPrice');
         $premiumPrice = $premiumPriceRaw === '' ? null : (float) $premiumPriceRaw;
+        $installmentsEnabled = post('installmentsEnabled') === '1' ? 1 : 0;
+        $installmentCount = in_array(post('installmentCount'), ['2', '3', '4'], true) ? (int) post('installmentCount') : 2;
 
         if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
         if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
         if (strlen($description) < 20) $errors[] = 'Description must be at least 20 characters.';
         if ($creatorHasSubscription && $subscriptionIncluded === 0 && $price <= 0) {
             $errors[] = 'Set a price for this course, since you\'re selling it separately from your subscription.';
+        }
+        if ($installmentsEnabled && $price <= 0) {
+            $errors[] = 'Set a price above 0 before offering a payment plan.';
+        }
+        if ($creatorHasSubscription && $subscriptionIncluded === 1) {
+            $installmentsEnabled = 0;
         }
         if ($salePrice !== null && ($salePrice <= 0 || $salePrice >= $price)) {
             $errors[] = 'Sale price must be greater than 0 and less than the regular price.';
@@ -98,8 +107,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?, subscription_included=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
-            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice, $subscriptionIncluded];
+            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?, subscription_included=?, installments_enabled=?, installment_count=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
+            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice, $subscriptionIncluded, $installmentsEnabled, $installmentCount];
             if ($thumbnailUrl) $params[] = $thumbnailUrl;
             $params[] = $courseId;
             db_run($sql, $params);
@@ -359,6 +368,20 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       </div>
       <div class="field"><label>Premium Download Price (UGX, optional)</label><input name="premiumPrice" type="number" min="0" step="1" value="<?= e($course['premium_price'] !== null ? (string) $course['premium_price'] : '') ?>" placeholder="Leave blank to disable downloads"></div>
     </div>
+    <div class="field" data-installment-field style="<?= $creatorHasSubscription && !$soldSeparately ? 'display:none;' : '' ?>">
+      <label class="row gap-2" style="align-items:center; font-weight:600; cursor:pointer;">
+        <input type="checkbox" name="installmentsEnabled" value="1" data-installments-toggle <?= (int) $course['installments_enabled'] === 1 ? 'checked' : '' ?>>
+        <span>Let learners pay in installments</span>
+      </label>
+      <div data-installments-count-row style="margin-top:10px; <?= (int) $course['installments_enabled'] === 1 ? '' : 'display:none;' ?>">
+        <select name="installmentCount">
+          <?php foreach ([2, 3, 4] as $n): ?>
+            <option value="<?= $n ?>" <?= (int) $course['installment_count'] === $n ? 'selected' : '' ?>><?= $n ?> payments</option>
+          <?php endforeach; ?>
+        </select>
+        <p class="help">Full access unlocks after the first payment. The rest are collected every <?= INSTALLMENT_INTERVAL_DAYS ?> days, with a short grace period before access pauses if one is missed.</p>
+      </div>
+    </div>
     <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
     <button type="submit" class="btn btn-primary">Save Changes</button>
   </form>
@@ -369,17 +392,27 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       const radios = document.querySelectorAll('[data-sub-included-radio]');
       const priceField = document.querySelector('[data-price-field]');
       const saleFields = document.querySelector('[data-sale-fields]');
+      const installmentField = document.querySelector('[data-installment-field]');
       const priceInput = priceField ? priceField.querySelector('input[name="price"]') : null;
       if (!radios.length || !priceField || !saleFields) return;
       radios.forEach((r) => r.addEventListener('change', () => {
         const soldSeparately = document.querySelector('[data-sub-included-radio]:checked').value === '0';
         priceField.style.display = soldSeparately ? '' : 'none';
         saleFields.style.display = soldSeparately ? '' : 'none';
+        if (installmentField) installmentField.style.display = soldSeparately ? '' : 'none';
         if (priceInput) priceInput.required = soldSeparately;
       }));
     })();
   </script>
 <?php endif; ?>
+<script>
+  (() => {
+    const toggle = document.querySelector('[data-installments-toggle]');
+    const countRow = document.querySelector('[data-installments-count-row]');
+    if (!toggle || !countRow) return;
+    toggle.addEventListener('change', () => { countRow.style.display = toggle.checked ? '' : 'none'; });
+  })();
+</script>
 
 <h2 class="h3" style="margin-top:36px;">Views &amp; Interest</h2>
 <p class="muted small" style="margin-top:6px;">Aggregate numbers only — no visitor is ever identified from views alone. The list below is only learners who opted in themselves.</p>

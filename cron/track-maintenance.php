@@ -20,6 +20,7 @@ require_once __DIR__ . '/../includes/notifications.php';
 require_once __DIR__ . '/../includes/retention.php';
 require_once __DIR__ . '/../includes/email.php';
 require_once __DIR__ . '/../includes/school_subscriptions.php';
+require_once __DIR__ . '/../includes/installments.php';
 
 function cron_section(string $label, callable $fn): void {
     try {
@@ -63,4 +64,14 @@ cron_section('school_subscription_renewal_reminders', function () {
 cron_section('school_subscription_expiry_sweep', function () {
     $swept = sweep_school_subscription_expirations();
     echo '[' . date('Y-m-d H:i:s') . "] school subscription expiry sweep: to_grace={$swept['to_grace']} to_expired={$swept['to_expired']}\n";
+});
+
+cron_section('installment_reminders', function () {
+    $reminded = send_due_installment_reminders();
+    echo '[' . date('Y-m-d H:i:s') . "] installment reminders: {$reminded} sent\n";
+});
+
+cron_section('installment_expiry_sweep', function () {
+    $swept = sweep_installment_expirations();
+    echo '[' . date('Y-m-d H:i:s') . "] installment expiry sweep: to_grace={$swept['to_grace']} to_defaulted={$swept['to_defaulted']}\n";
 });

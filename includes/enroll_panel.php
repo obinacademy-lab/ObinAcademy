@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/school_subscriptions.php';
+require_once __DIR__ . '/installments.php';
 
 /**
  * Renders the enroll / continue-learning / pay / subscribe panel for a
@@ -30,6 +31,14 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $isSubscriptionIncluded = $schoolHasSubscription && (int) ($course['subscription_included'] ?? 1) === 1;
     $isSubscribed = $user && $isSubscriptionIncluded && learner_has_active_school_subscription((int) $user['id'], (int) $course['creator_user_id'], (int) $course['id']);
     $hasAccess = $isEnrolled || $isSubscribed;
+    // An enrollment created by an installment plan's first payment still
+    // exists as a normal row once the plan defaults — access itself is
+    // gated live here, not by deleting that row, so paying again later just
+    // picks back up. Never touches an enrollment created any other way.
+    $installmentPlan = $user ? get_installment_plan((int) $user['id'], (int) $course['id']) : null;
+    $installmentAccessBlocked = $installmentPlan && !learner_has_installment_access($installmentPlan);
+    if ($installmentAccessBlocked) $hasAccess = false;
+    $courseSupportsInstallments = (int) ($course['installments_enabled'] ?? 0) === 1 && (int) ($course['installment_count'] ?? 0) >= 2;
     $schoolLabel = $course['creator_school_name'] ?: $course['creator_name'];
     $monthlyPrice = (float) ($course['creator_school_monthly_price'] ?? 0);
     // A subscription unlocks only ONE course at a time per creator — if this
@@ -160,6 +169,37 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php elseif (!$user): ?>
           <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-gold btn-block btn-lg shine" style="margin-top:20px;">Sign Up to Enroll</a>
           <p class="guest-note">Paid courses need a free account first — that's where your receipt, access, and certificate live. <a href="<?= e($loginUrl) ?>">Already have an account? Log in</a></p>
+        <?php elseif ($installmentAccessBlocked): ?>
+          <div class="alert alert-error" style="margin-top:20px;">Access paused — a payment plan installment was missed.</div>
+          <div style="margin-top:14px;" data-payment-widget
+               data-course-id="<?= (int) $course['id'] ?>"
+               data-initiate-url="<?= e(base_url('api/initiate-installment-payment.php')) ?>"
+               data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
+            <div data-state="idle">
+              <button class="btn btn-gold btn-block btn-lg shine" data-action="start">Pay Next Installment to Resume</button>
+            </div>
+            <div data-state="phone" class="hidden guest-form">
+              <div class="field-icon">
+                <?php dash_icon('wallet'); ?>
+                <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
+              </div>
+              <button class="btn btn-primary btn-block" data-action="pay">Pay <?= e(format_money((float) $installmentPlan['installment_amount'])) ?></button>
+            </div>
+            <div data-state="waiting" class="hidden pay-waiting">
+              <div class="spinner"></div>
+              <p style="font-weight:700;">Waiting for approval...</p>
+              <p class="small muted" data-status-text></p>
+            </div>
+            <div data-state="success" class="hidden pay-success">
+              <p style="font-weight:700;">✓ Access restored!</p>
+            </div>
+            <div data-state="failed" class="hidden pay-failed">
+              <p style="font-weight:700;">Payment not completed</p>
+              <p class="small muted" data-fail-text></p>
+              <button class="btn btn-primary btn-sm" data-action="retry">Try Again</button>
+            </div>
+            <p class="error-text hidden" data-error></p>
+          </div>
         <?php elseif ($showPaidFlow): ?>
           <div class="coupon-box" data-coupon-box data-preview-url="<?= e(base_url('api/preview-coupon.php')) ?>" data-course-id="<?= (int) $course['id'] ?>" style="margin-top:14px;">
             <button type="button" class="coupon-toggle" data-coupon-toggle>Have a coupon code?</button>
@@ -204,6 +244,43 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
             </div>
             <p class="error-text hidden" data-error></p>
           </div>
+          <?php if ($courseSupportsInstallments && !$installmentPlan):
+            // Installments always split the regular price, same as
+            // initiate_installment_payment() — not the current sale price,
+            // which could change or expire between installments.
+            $installmentAmount = round($price / (int) $course['installment_count'], 2);
+          ?>
+            <div style="margin-top:14px;" data-payment-widget
+                 data-course-id="<?= (int) $course['id'] ?>"
+                 data-initiate-url="<?= e(base_url('api/initiate-installment-payment.php')) ?>"
+                 data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
+              <div data-state="idle">
+                <button class="btn btn-outline btn-block" data-action="start">Or pay in <?= (int) $course['installment_count'] ?> installments of <?= e(format_money($installmentAmount)) ?></button>
+              </div>
+              <div data-state="phone" class="hidden guest-form">
+                <div class="field-icon">
+                  <?php dash_icon('wallet'); ?>
+                  <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
+                </div>
+                <button class="btn btn-primary btn-block" data-action="pay">Pay First Installment: <?= e(format_money($installmentAmount)) ?></button>
+              </div>
+              <div data-state="waiting" class="hidden pay-waiting">
+                <div class="spinner"></div>
+                <p style="font-weight:700;">Waiting for approval...</p>
+                <p class="small muted" data-status-text></p>
+              </div>
+              <div data-state="success" class="hidden pay-success">
+                <p style="font-weight:700;">✓ First installment paid — you're in!</p>
+              </div>
+              <div data-state="failed" class="hidden pay-failed">
+                <p style="font-weight:700;">Payment not completed</p>
+                <p class="small muted" data-fail-text></p>
+                <button class="btn btn-primary btn-sm" data-action="retry">Try Again</button>
+              </div>
+              <p class="error-text hidden" data-error></p>
+            </div>
+            <p class="small muted" style="margin-top:8px;">Full access unlocks after the first payment. Remaining installments are collected every <?= INSTALLMENT_INTERVAL_DAYS ?> days.</p>
+          <?php endif; ?>
         <?php else: ?>
           <form method="post" action="<?= e(base_url('api/enroll-redirect.php')) ?>" style="margin-top:20px;">
             <input type="hidden" name="courseId" value="<?= (int) $course['id'] ?>">
