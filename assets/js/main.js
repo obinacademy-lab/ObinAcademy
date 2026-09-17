@@ -375,31 +375,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Block the page's rubber-band overscroll at the very top/bottom edge.
-// overscroll-behavior-y:none (in style.css) covers Chrome/Android/Firefox,
-// but Safari (iOS and desktop) has never honored it for the document's own
-// bounce — this is the standard touch-event fallback for that gap. Only
-// intervenes right at an edge, on a clearly-vertical drag, so it doesn't
-// interfere with horizontal chip-scroll rows or a modal's own inner scroll.
-(() => {
-  let startX = 0;
-  let startY = 0;
-  document.addEventListener("touchstart", (e) => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-  }, { passive: true });
-
-  document.addEventListener("touchmove", (e) => {
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startX;
-    const deltaY = touch.clientY - startY;
-    if (Math.abs(deltaY) <= Math.abs(deltaX)) return; // horizontal drag — leave it alone
-
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    const atTop = window.scrollY <= 0;
-    const atBottom = window.scrollY >= maxScroll - 1;
-    const pullingDownAtTop = atTop && deltaY > 0;
-    const pullingUpAtBottom = atBottom && deltaY < 0;
-    if (pullingDownAtTop || pullingUpAtBottom) e.preventDefault();
-  }, { passive: false });
-})();
+// The page's rubber-band overscroll at the very top/bottom edge is blocked
+// by overscroll-behavior: none on html and body (style.css) — that's the
+// only mechanism that actually works here. A touchmove-based JS fallback
+// used to live in this spot, but Chrome's own devtools proved it inert: by
+// the time a touchmove reaches the scroll boundary partway through a drag,
+// the browser has already committed the gesture to native (non-cancelable)
+// scrolling, so preventDefault() on it is silently ignored — confirmed by
+// a "cannot be interrupted" console warning from this exact code. A touch
+// listener can only cancel a gesture that starts already at the boundary,
+// not one that scrolls into it, so it was removed rather than kept as
+// dead weight.
