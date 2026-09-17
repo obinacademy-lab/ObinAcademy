@@ -89,10 +89,11 @@ if (!empty($course['creator_name'])) {
     ];
 }
 
-// A lightweight, non-payment "where do I click" CTA shown in the hero and
-// (on mobile) the sticky bottom bar — both just jump to the real enroll
-// panel's full multi-step payment widget rather than duplicating it, so
-// there's only ever one place that actually talks to iotec.
+// A lightweight, non-payment "where do I click" CTA shown in the hero
+// (desktop only) and the mobile/tablet sticky bar — both just jump to the
+// real enroll panel's full multi-step payment widget rather than
+// duplicating it, so there's only ever one place that actually talks to
+// iotec.
 $heroSchoolHasSubscription = ($course['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
     && (float) ($course['creator_school_monthly_price'] ?? 0) > 0;
 $heroIsSubscriptionIncluded = $heroSchoolHasSubscription && (int) ($course['subscription_included'] ?? 1) === 1;
@@ -111,6 +112,8 @@ if ($isOwner) {
 
 require __DIR__ . '/../includes/header.php';
 ?>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
 
 <?php if ($course['status'] !== 'PUBLISHED'): ?>
   <div style="background:#fbbf24; color:#78350f; text-align:center; font-size:12.5px; font-weight:700; padding:10px 20px;">
@@ -149,21 +152,12 @@ require __DIR__ . '/../includes/header.php';
           <span class="role"><?= e($course['creator_headline'] ?: 'Instructor') ?></span>
         </span>
       </a>
-      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'dark', (int) $course['id'], 'Share this course'); ?>
+      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light', (int) $course['id'], 'Share this course'); ?>
     </div>
 
     <a href="<?= e($heroCtaUrl) ?>" class="course-hero2-cta"><?= e($heroCtaLabel) ?></a>
   </div>
 </section>
-
-<div class="container">
-  <div class="course-float-stats">
-    <div class="cell"><div class="n"><?= count($course['modules']) ?></div><div class="l">Module<?= count($course['modules']) === 1 ? '' : 's' ?></div></div>
-    <div class="cell"><div class="n"><?= $totalLessons ?></div><div class="l">Lesson<?= $totalLessons === 1 ? '' : 's' ?></div></div>
-    <div class="cell"><div class="n"><?= (int) $course['student_count'] ?></div><div class="l">Student<?= (int) $course['student_count'] === 1 ? '' : 's' ?></div></div>
-    <div class="cell"><div class="n"><?= number_format((int) $course['view_count']) ?></div><div class="l">View<?= (int) $course['view_count'] === 1 ? '' : 's' ?></div></div>
-  </div>
-</div>
 
 <section class="section" style="background:var(--surface);">
   <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
@@ -188,7 +182,7 @@ require __DIR__ . '/../includes/header.php';
           <?php foreach ($course['modules'] as $mi => $module): ?>
             <details class="tmod-card reveal reveal-delay-<?= min($mi + 1, 5) ?>" <?= $mi === 0 ? 'open' : '' ?>>
               <summary class="tmod-summary">
-                <span class="tmod-num"><?= $mi + 1 ?></span>
+                <span class="tmod-num"><?= sprintf('%02d', $mi + 1) ?></span>
                 <span class="tmod-title"><?= e($module['title']) ?></span>
                 <span class="tmod-count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
                 <?php dash_icon('chevron-down', 'tmod-chevron'); ?>
