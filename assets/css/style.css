@@ -3060,6 +3060,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .school-hero-stats { display: flex; justify-content: center; gap: 36px; margin-top: 28px; }
 .school-hero-stats .value { display: block; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); }
 .school-hero-stats .label { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 4px; }
+.school-hero-stats a.stat-link { text-decoration: none; color: inherit; transition: opacity 0.15s ease; }
+.school-hero-stats a.stat-link:hover { opacity: 0.7; }
+.school-hero-stats a.stat-link:hover .label { text-decoration: underline; text-underline-offset: 2px; }
 .school-hero-actions { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
 .school-hero-follow-btn {
   display: inline-flex; align-items: center; border: none; cursor: pointer;

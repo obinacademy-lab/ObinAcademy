@@ -32,10 +32,22 @@ function get_followed_schools_for_learner(int $learnerId): array {
     );
 }
 
-/** Every learner following $creatorId with an email on file — the recipient list for a broadcast composer. */
+/** Every learner following $creatorId with an email on file — the recipient list for a broadcast composer. Contact info, so this is for the creator's own eyes only, never rendered on a public page. */
 function get_school_followers(int $creatorId): array {
     return db_all(
         "SELECT u.id, u.name, u.email, u.phone
+         FROM school_follows sf JOIN users u ON u.id = sf.learner_id
+         WHERE sf.creator_id = ? ORDER BY sf.created_at DESC",
+        [$creatorId]
+    );
+}
+
+/** Public-safe version of the above — name/avatar/follow-date only, no
+ * contact info — for the public "who follows this school" list linked from
+ * profile.php's follower count. */
+function get_school_followers_public(int $creatorId): array {
+    return db_all(
+        "SELECT u.id, u.name, u.avatar_url, sf.created_at
          FROM school_follows sf JOIN users u ON u.id = sf.learner_id
          WHERE sf.creator_id = ? ORDER BY sf.created_at DESC",
         [$creatorId]

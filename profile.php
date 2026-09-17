@@ -64,7 +64,7 @@ require __DIR__ . '/includes/header.php';
       <div class="school-hero-stats">
         <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Course<?= $stats['teaching'] === 1 ? '' : 's' ?></span></div>
         <div class="stat"><span class="value"><?= number_format($stats['students']) ?></span><span class="label">Student<?= $stats['students'] === 1 ? '' : 's' ?></span></div>
-        <div class="stat"><span class="value" data-follower-count><?= number_format($followerCount) ?></span><span class="label">Follower<?= $followerCount === 1 ? '' : 's' ?></span></div>
+        <a href="<?= e(base_url('school-followers.php?id=' . $profileId)) ?>" class="stat stat-link"><span class="value" data-follower-count><?= number_format($followerCount) ?></span><span class="label">Follower<?= $followerCount === 1 ? '' : 's' ?></span></a>
       </div>
       <div class="school-hero-actions">
         <?php if (!$isMe): ?>
