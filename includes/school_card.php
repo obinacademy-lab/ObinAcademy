@@ -36,19 +36,17 @@ function render_school_card(array $school): void {
       <div class="body">
         <h3><?= e($schoolLabel) ?></h3>
         <p class="creator">by <?= e($school['name']) ?></p>
-        <p class="meta">
-          <strong><?= number_format($courseCount) ?></strong> course<?= $courseCount === 1 ? '' : 's' ?>
-          <span class="dot"></span>
-          <strong><?= number_format($studentCount) ?></strong> student<?= $studentCount === 1 ? '' : 's' ?>
-          <span class="dot"></span>
-          <strong><?= number_format($viewCount) ?></strong> view<?= $viewCount === 1 ? '' : 's' ?>
-          <span class="dot"></span>
-          <strong><?= number_format($followerCount) ?></strong> follower<?= $followerCount === 1 ? '' : 's' ?>
-          <span class="dot"></span>
+        <div class="school-stats-row">
+          <span title="<?= (int) $courseCount ?> course<?= $courseCount === 1 ? '' : 's' ?>"><?php dash_icon('book-open'); ?><?= number_format($courseCount) ?></span>
+          <span title="<?= (int) $studentCount ?> student<?= $studentCount === 1 ? '' : 's' ?>"><?php dash_icon('users'); ?><?= number_format($studentCount) ?></span>
+          <span title="<?= (int) $viewCount ?> view<?= $viewCount === 1 ? '' : 's' ?>"><?php dash_icon('eye'); ?><?= number_format($viewCount) ?></span>
+          <span title="<?= (int) $followerCount ?> follower<?= $followerCount === 1 ? '' : 's' ?>"><?php dash_icon('heart'); ?><?= number_format($followerCount) ?></span>
+        </div>
+        <p class="school-price-row">
           <?php if ($isSubscription): ?>
-            <?= e(format_money((float) $school['school_monthly_price'])) ?>/mo
+            <strong><?= e(format_money((float) $school['school_monthly_price'])) ?></strong>/mo
           <?php elseif (!empty($school['min_price']) && (float) $school['min_price'] > 0): ?>
-            From <?= e(format_money((float) $school['min_price'])) ?>
+            From <strong><?= e(format_money((float) $school['min_price'])) ?></strong>
           <?php else: ?>
             Free
           <?php endif; ?>
