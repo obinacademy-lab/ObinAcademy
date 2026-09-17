@@ -2544,11 +2544,23 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 .tmod-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: 0 16px 32px -16px rgba(20,24,27,0.18); }
-.tmod-summary { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; list-style: none; }
+.tmod-summary { display: flex; align-items: center; gap: 10px 14px; padding: 16px 20px; cursor: pointer; list-style: none; }
 .tmod-summary::-webkit-details-marker { display: none; }
 .tmod-title { flex: 1; font-weight: 700; font-size: 15.5px; }
 .tmod-count { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: var(--radius-full); white-space: nowrap; }
 .tmod-chevron { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; transition: transform 0.3s cubic-bezier(.16,1,.3,1); }
+/* On a narrow phone a long module title (there are several 6-8 word ones
+   in real courses) wraps to 4-5 lines while the lesson-count badge and
+   chevron stay centered against that whole tall block, floating in
+   mid-air next to wrapped text with dead space beside every line after
+   the first. Below 600px the title claims its own full-width row so it
+   wraps using the whole card width (far fewer lines), and the badge +
+   chevron drop to a second, compact row underneath instead. */
+@media (max-width: 600px) {
+  .tmod-summary { flex-wrap: wrap; align-items: flex-start; }
+  .tmod-title { flex: 1 1 100%; }
+  .tmod-count { margin-left: auto; }
+}
 .tmod-card[open] .tmod-chevron { transform: rotate(180deg); }
 /* Native <details> jumps open/closed with no transition support of its own
    — this grid-template-rows 0fr->1fr trick is the standard workaround for
