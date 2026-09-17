@@ -1360,6 +1360,31 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .month-pill.selected { background: color-mix(in srgb, var(--gold) 14%, white); border-color: var(--gold-dark); }
 .month-pill.selected .m, .month-pill.selected .p { color: var(--gold-dark); }
 
+/* Collapsed entry point into the gift card above — a proper bordered row
+   with the same icon-chip language, not a plain underlined text link, so
+   gifting reads as a real feature before it's even expanded. */
+.gift-teaser { width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 15px 17px; cursor: pointer; font-family: inherit; }
+.gift-teaser:hover { border-color: var(--border-strong); box-shadow: 0 4px 14px -6px rgba(20,24,27,0.12); }
+.gift-teaser-text { flex: 1; min-width: 0; }
+.gift-teaser-text strong { display: block; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.gift-teaser-text span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.gift-teaser .chev { color: #a8a49a; flex-shrink: 0; display: flex; }
+.gift-teaser .chev svg { width: 16px; height: 16px; }
+.gift-teaser[aria-expanded="true"] .chev svg { transform: rotate(90deg); }
+
+/* Gift-widget success state — names the recipient and what they got,
+   instead of a plain "sent!" line. Recipient name / month count are filled
+   in by payment.js from what the buyer actually entered, since neither is
+   known at render time. */
+.gift-success { text-align: center; padding: 36px 22px; }
+.gift-success .gift-icon-chip { width: 52px; height: 52px; margin: 0 auto 16px; background: var(--success-bg); color: var(--success); }
+.gift-success .gift-icon-chip svg { width: 24px; height: 24px; }
+.gift-success h4 { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+.gift-success p { font-size: 13.5px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+.gift-success p strong { color: var(--ink); font-weight: 700; }
+.gift-success a { display: inline-flex; align-items: center; gap: 5px; margin-top: 16px; font-size: 13px; font-weight: 700; color: var(--accent); text-decoration: none; }
+.gift-success a svg { width: 13px; height: 13px; }
+
 .enroll-trust { margin-top: 22px; padding-top:20px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:12px; }
 .enroll-trust .pay-badges { margin-top:0; }
 .enroll-trust .pay-badge { border-color: var(--border); color: var(--muted); }

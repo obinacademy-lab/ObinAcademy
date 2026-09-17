@@ -310,7 +310,14 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         ?>
         <?php if ($user && !$isOwner && $isPublished && ($canGiftCourse || $canGiftSubscription)): ?>
           <div class="gift-box" style="margin-top:16px;">
-            <button type="button" class="coupon-toggle" data-gift-toggle><?php dash_icon('gift'); ?> Gift this course to someone</button>
+            <button type="button" class="gift-teaser" data-gift-toggle aria-expanded="false">
+              <span class="gift-icon-chip"><?php dash_icon('gift'); ?></span>
+              <span class="gift-teaser-text">
+                <strong>Gift this course</strong>
+                <span>Pay once — they get instant access</span>
+              </span>
+              <span class="chev"><?php dash_icon('chevron-right'); ?></span>
+            </button>
             <div class="hidden gift-card" data-gift-row style="margin-top:12px;" data-payment-widget
                  data-course-id="<?= (int) $course['id'] ?>"
                  data-initiate-url="<?= e(base_url('api/initiate-gift-payment.php')) ?>"
@@ -363,8 +370,11 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                   <p style="font-weight:700;">Waiting for approval...</p>
                   <p class="small muted" data-status-text></p>
                 </div>
-                <div data-state="success" class="hidden pay-success">
-                  <p style="font-weight:700;">✓ Gift sent! We emailed them a claim link.</p>
+                <div data-state="success" class="hidden gift-success">
+                  <span class="gift-icon-chip"><?php dash_icon('check-circle'); ?></span>
+                  <h4>Gift sent</h4>
+                  <p>We've emailed <strong data-success-recipient-name>them</strong> a link to claim<br><strong data-success-item-label data-base-label="<?= e($course['title']) ?>"><?= e($course['title']) ?></strong>.</p>
+                  <a href="<?= e(base_url('dashboard/gifts.php')) ?>">View your gifts sent <?php dash_icon('arrow-right'); ?></a>
                 </div>
                 <div data-state="failed" class="hidden pay-failed">
                   <p style="font-weight:700;">Payment not completed</p>
@@ -381,7 +391,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
               const toggle = box.querySelector('[data-gift-toggle]');
               const row = box.querySelector('[data-gift-row]');
               if (!toggle || !row) return;
-              toggle.addEventListener('click', () => row.classList.toggle('hidden'));
+              toggle.addEventListener('click', () => {
+                const nowHidden = row.classList.toggle('hidden');
+                toggle.setAttribute('aria-expanded', nowHidden ? 'false' : 'true');
+              });
               row.querySelectorAll('[data-month-pills] .month-pill').forEach((pill) =>
                 pill.addEventListener('click', () => {
                   row.querySelectorAll('[data-month-pills] .month-pill').forEach((p) => p.classList.remove('selected'));

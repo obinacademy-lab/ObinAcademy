@@ -194,6 +194,17 @@
 
         if (data.status === "SUCCESS") {
           clearInterval(pollTimer);
+          // Gift widget only — fills in who it went to and how many months,
+          // since neither is known server-side at render time.
+          if (recipientNameInput) {
+            const nameEl = root.querySelector("[data-success-recipient-name]");
+            if (nameEl && recipientNameInput.value.trim()) nameEl.textContent = recipientNameInput.value.trim();
+            const itemEl = root.querySelector("[data-success-item-label]");
+            if (itemEl && selectedMonths) {
+              const n = parseInt(selectedMonths, 10);
+              itemEl.textContent = `${n} month${n > 1 ? "s" : ""} of ${itemEl.dataset.baseLabel}`;
+            }
+          }
           show("success");
           const goTo = data.accessUrl || successRedirect;
           if (goTo) {
