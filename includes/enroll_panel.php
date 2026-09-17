@@ -311,55 +311,83 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php if ($user && !$isOwner && $isPublished && ($canGiftCourse || $canGiftSubscription)): ?>
           <div class="gift-box" style="margin-top:16px;">
             <button type="button" class="coupon-toggle" data-gift-toggle><?php dash_icon('gift'); ?> Gift this course to someone</button>
-            <div class="hidden" data-gift-row style="margin-top:10px;" data-payment-widget
+            <div class="hidden gift-card" data-gift-row style="margin-top:12px;" data-payment-widget
                  data-course-id="<?= (int) $course['id'] ?>"
                  data-initiate-url="<?= e(base_url('api/initiate-gift-payment.php')) ?>"
                  data-success-redirect="<?= e(base_url('dashboard/gifts.php')) ?>">
-              <div data-state="idle">
-                <div class="field-icon"><input data-recipient-name-input placeholder="Recipient's name"></div>
-                <div class="field-icon" style="margin-top:8px;"><input data-recipient-email-input type="email" placeholder="Recipient's email"></div>
-                <?php if ($canGiftSubscription): ?>
-                  <p class="small muted" style="margin-top:10px;">This school is subscription-based — choose how many months to gift:</p>
-                  <div class="stack gap-2" style="margin-top:8px;">
-                    <?php foreach (GIFT_SUBSCRIPTION_MONTH_OPTIONS as $m): ?>
-                      <button class="btn btn-outline btn-block" data-action="start" data-months="<?= $m ?>" data-amount="<?= e(format_money($monthlyPrice * $m)) ?>">
-                        <?= $m ?> Month<?= $m > 1 ? 's' : '' ?> — <?= e(format_money($monthlyPrice * $m)) ?>
-                      </button>
-                    <?php endforeach; ?>
+              <div class="gift-card-top"></div>
+              <div class="gift-card-body">
+                <div data-state="idle">
+                  <div class="gift-card-head">
+                    <span class="gift-icon-chip"><?php dash_icon('gift'); ?></span>
+                    <div>
+                      <h4>Give the gift of learning</h4>
+                      <p><?= $canGiftSubscription ? 'This school is subscription-based — choose how many months.' : "They get instant access. You cover the cost." ?></p>
+                    </div>
                   </div>
-                <?php else: ?>
-                  <button class="btn btn-primary btn-block" style="margin-top:10px;" data-action="start">Continue</button>
-                <?php endif; ?>
-              </div>
-              <div data-state="phone" class="hidden guest-form">
-                <div class="field-icon">
-                  <?php dash_icon('wallet'); ?>
-                  <input type="tel" placeholder="Your mobile money phone e.g. 0772 123 456" data-phone-input>
+
+                  <div class="gift-field">
+                    <label class="gift-label">Recipient's name</label>
+                    <div class="field-icon"><?php dash_icon('user-plus'); ?><input data-recipient-name-input placeholder="Jane Auma"></div>
+                  </div>
+                  <div class="gift-field">
+                    <label class="gift-label">Recipient's email</label>
+                    <div class="field-icon"><?php dash_icon('mail'); ?><input data-recipient-email-input type="email" placeholder="jane@email.com"></div>
+                  </div>
+
+                  <?php if ($canGiftSubscription): ?>
+                    <div class="gift-field">
+                      <label class="gift-label">Months to gift</label>
+                      <div class="month-pills" data-month-pills>
+                        <?php foreach (GIFT_SUBSCRIPTION_MONTH_OPTIONS as $m): ?>
+                          <button type="button" class="month-pill" data-action="start" data-months="<?= $m ?>" data-amount="<?= e(format_money($monthlyPrice * $m)) ?>">
+                            <span class="m"><?= $m ?> Month<?= $m > 1 ? 's' : '' ?></span>
+                            <span class="p"><?= e(format_money($monthlyPrice * $m)) ?></span>
+                          </button>
+                        <?php endforeach; ?>
+                      </div>
+                    </div>
+                  <?php else: ?>
+                    <button class="btn btn-gold btn-block btn-lg" style="margin-top:18px;" data-action="start">Continue</button>
+                  <?php endif; ?>
                 </div>
-                <button class="btn btn-gold btn-block" data-action="pay">Pay <span data-pay-amount><?= $canGiftSubscription ? e(format_money($monthlyPrice * GIFT_SUBSCRIPTION_MONTH_OPTIONS[0])) : e(format_money($price)) ?></span> as a Gift</button>
+                <div data-state="phone" class="hidden guest-form">
+                  <div class="field-icon">
+                    <?php dash_icon('wallet'); ?>
+                    <input type="tel" placeholder="Your mobile money phone e.g. 0772 123 456" data-phone-input>
+                  </div>
+                  <button class="btn btn-gold btn-block" data-action="pay">Pay <span data-pay-amount><?= $canGiftSubscription ? e(format_money($monthlyPrice * GIFT_SUBSCRIPTION_MONTH_OPTIONS[0])) : e(format_money($price)) ?></span> as a Gift</button>
+                </div>
+                <div data-state="waiting" class="hidden pay-waiting">
+                  <div class="spinner"></div>
+                  <p style="font-weight:700;">Waiting for approval...</p>
+                  <p class="small muted" data-status-text></p>
+                </div>
+                <div data-state="success" class="hidden pay-success">
+                  <p style="font-weight:700;">✓ Gift sent! We emailed them a claim link.</p>
+                </div>
+                <div data-state="failed" class="hidden pay-failed">
+                  <p style="font-weight:700;">Payment not completed</p>
+                  <p class="small muted" data-fail-text></p>
+                  <button class="btn btn-primary btn-sm" data-action="retry">Try Again</button>
+                </div>
+                <p class="error-text hidden" data-error></p>
               </div>
-              <div data-state="waiting" class="hidden pay-waiting">
-                <div class="spinner"></div>
-                <p style="font-weight:700;">Waiting for approval...</p>
-                <p class="small muted" data-status-text></p>
-              </div>
-              <div data-state="success" class="hidden pay-success">
-                <p style="font-weight:700;">✓ Gift sent! We emailed them a claim link.</p>
-              </div>
-              <div data-state="failed" class="hidden pay-failed">
-                <p style="font-weight:700;">Payment not completed</p>
-                <p class="small muted" data-fail-text></p>
-                <button class="btn btn-primary btn-sm" data-action="retry">Try Again</button>
-              </div>
-              <p class="error-text hidden" data-error></p>
             </div>
           </div>
           <script>
             (() => {
-              const toggle = document.currentScript.previousElementSibling.querySelector('[data-gift-toggle]');
-              const row = document.currentScript.previousElementSibling.querySelector('[data-gift-row]');
+              const box = document.currentScript.previousElementSibling;
+              const toggle = box.querySelector('[data-gift-toggle]');
+              const row = box.querySelector('[data-gift-row]');
               if (!toggle || !row) return;
               toggle.addEventListener('click', () => row.classList.toggle('hidden'));
+              row.querySelectorAll('[data-month-pills] .month-pill').forEach((pill) =>
+                pill.addEventListener('click', () => {
+                  row.querySelectorAll('[data-month-pills] .month-pill').forEach((p) => p.classList.remove('selected'));
+                  pill.classList.add('selected');
+                })
+              );
             })();
           </script>
         <?php endif; ?>
