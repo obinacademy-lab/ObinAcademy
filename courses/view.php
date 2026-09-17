@@ -136,7 +136,7 @@ require __DIR__ . '/../includes/header.php';
 
 <section class="section" style="background:var(--surface);">
   <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
-    <div style="grid-column: span 2;" class="reveal reveal-delay-1">
+    <div class="course-detail-main reveal reveal-delay-1">
       <div class="course-flat-thumb course-flat-thumb-lg">
         <?php if (!empty($course['thumbnail_url'])): ?>
           <img src="<?= e(asset_src($course['thumbnail_url'])) ?>" alt="">

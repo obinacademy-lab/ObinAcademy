@@ -139,6 +139,15 @@ p { margin: 0; }
   .lg\:grid-3 { grid-template-columns: repeat(3, 1fr); }
   .lg\:grid-4 { grid-template-columns: repeat(4, 1fr); }
   .lg\:grid-6 { grid-template-columns: repeat(6, 1fr); }
+  /* Course detail page's content column, spanning 2 of the 3 columns
+     .lg:grid-3 defines here. Scoped to this same breakpoint on purpose —
+     below 1024px the grid only has 1 real column, and an unconditional
+     "span 2" there forces CSS Grid to invent a second, auto-sized column
+     to satisfy the span. That phantom column had no content of its own
+     to size against, so the browser was blowing the whole row (and the
+     page) out past the viewport width on narrow phones — exactly the
+     "have to drag sideways to read it" bug this fixes. */
+  .course-detail-main { grid-column: span 2; }
 }
 
 .section { padding: 56px 0; }
@@ -2472,7 +2481,14 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .hero-trust-row svg { width: 16px; height: 16px; color: var(--gold); flex-shrink: 0; }
 
 /* ---------- sticky sidebar (enroll panel + instructor card) ---------- */
-.course-sidebar { display:flex; flex-direction:column; gap:20px; }
+/* min-width:0 overrides the grid item's implicit min-width:auto (which
+   floors at its content's min-content size) — without it, one wide,
+   hard-to-shrink line anywhere inside (a price row, a badge, a button
+   label) can force this whole column, and the single-column mobile grid
+   it sits in, wider than the viewport. Same reasoning applies to the
+   content column (.course-detail-main, courses/view.php) it sits beside. */
+.course-sidebar { display:flex; flex-direction:column; gap:20px; min-width: 0; }
+.course-detail-main { min-width: 0; }
 @media (min-width:1024px) { .course-sidebar { position:sticky; top:88px; align-self:start; } }
 
 /* ---------- curriculum accordion ---------- */
