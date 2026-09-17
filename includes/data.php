@@ -1,5 +1,28 @@
 <?php
 
+/**
+ * Every learner enrolled in one of $creatorId's own courses — creator-only,
+ * never rendered on a public page (unlike school_follows, enrolling/paying
+ * is private the way it is on every other course platform: Udemy, Coursera,
+ * Skool included). A guest enrollment (no account) shows its captured
+ * guest_name/guest_email instead of a joined user row.
+ */
+function get_students_for_creator(int $creatorId): array {
+    return db_all(
+        "SELECT e.id, e.progress, e.enrolled_at, e.expires_at, e.source, e.is_premium,
+                c.id AS course_id, c.title AS course_title,
+                COALESCE(u.name, e.guest_name) AS learner_name,
+                COALESCE(u.email, e.guest_email) AS learner_email,
+                u.id AS learner_user_id, u.avatar_url AS learner_avatar_url
+         FROM enrollments e
+         JOIN courses c ON c.id = e.course_id
+         LEFT JOIN users u ON u.id = e.user_id
+         WHERE c.creator_id = ?
+         ORDER BY e.enrolled_at DESC",
+        [$creatorId]
+    );
+}
+
 function get_categories(): array {
     return db_all('SELECT * FROM categories ORDER BY name ASC');
 }
