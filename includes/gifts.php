@@ -17,6 +17,158 @@ require_once __DIR__ . '/school_subscriptions.php';
 // subscribed and paid for those months themselves.
 const GIFT_SUBSCRIPTION_MONTH_OPTIONS = [1, 3, 6, 12];
 
+/**
+ * Whether $course (a get_course_by_slug()-shaped row, with the
+ * creator_pricing_model/creator_school_monthly_price/subscription_included
+ * columns that join adds) can be gifted at all, and which kind. Shared by
+ * enroll_panel.php (gifting the one course already on screen) and
+ * gift.php (gifting any course picked from a platform-wide browser) so
+ * both gate on the exact same rule.
+ */
+function gift_eligibility_for_course(array $course): array {
+    $schoolHasSubscription = ($course['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
+        && (float) ($course['creator_school_monthly_price'] ?? 0) > 0;
+    $isSubscriptionIncluded = $schoolHasSubscription && (int) ($course['subscription_included'] ?? 1) === 1;
+    $monthlyPrice = (float) ($course['creator_school_monthly_price'] ?? 0);
+    $price = (float) $course['price'];
+    $canGiftSubscription = $isSubscriptionIncluded && $monthlyPrice > 0;
+    $canGiftCourse = !$isSubscriptionIncluded && $price > 0;
+    return [
+        'available' => $canGiftCourse || $canGiftSubscription,
+        'isSubscription' => $canGiftSubscription,
+        'monthlyPrice' => $monthlyPrice,
+        'price' => $price,
+    ];
+}
+
+/**
+ * Renders the gift-a-course card (recipient fields, personal message,
+ * month picker or Continue button, phone step, success/failed states) —
+ * the same premium component either way. $collapsed = true wraps it behind
+ * the "Gift this course" teaser toggle used inline on a course's own
+ * enroll panel; false renders it already open, for gift.php where the
+ * course was just explicitly picked, so there's nothing left to reveal.
+ */
+function render_gift_panel(array $course, bool $collapsed = true): void {
+    $eligibility = gift_eligibility_for_course($course);
+    if (!$eligibility['available']) return;
+    $canGiftSubscription = $eligibility['isSubscription'];
+    $monthlyPrice = $eligibility['monthlyPrice'];
+    $price = $eligibility['price'];
+    ?>
+    <div class="gift-box" style="margin-top:16px;">
+      <?php if ($collapsed): ?>
+        <button type="button" class="gift-teaser" data-gift-toggle aria-expanded="false">
+          <span class="gift-icon-chip"><?php dash_icon('gift'); ?></span>
+          <span class="gift-teaser-text">
+            <strong>Gift this course</strong>
+            <span>Pay once — they get instant access</span>
+          </span>
+          <span class="chev"><?php dash_icon('chevron-right'); ?></span>
+        </button>
+      <?php endif; ?>
+      <div class="<?= $collapsed ? 'hidden ' : '' ?>gift-card" data-gift-row style="margin-top:<?= $collapsed ? '12px' : '0' ?>;" data-payment-widget
+           data-course-id="<?= (int) $course['id'] ?>"
+           data-initiate-url="<?= e(base_url('api/initiate-gift-payment.php')) ?>"
+           data-success-redirect="<?= e(base_url('dashboard/gifts.php')) ?>">
+        <div class="gift-card-top"></div>
+        <div class="gift-card-body">
+          <div data-state="idle">
+            <div class="gift-card-head">
+              <span class="gift-icon-chip"><?php dash_icon('gift'); ?></span>
+              <div>
+                <h4>Give the gift of learning</h4>
+                <p><?= $canGiftSubscription ? 'This school is subscription-based — choose how many months.' : "They get instant access. You cover the cost." ?></p>
+              </div>
+            </div>
+
+            <div class="gift-field">
+              <label class="gift-label">Recipient's name</label>
+              <div class="field-icon"><?php dash_icon('user-plus'); ?><input data-recipient-name-input placeholder="Jane Auma"></div>
+            </div>
+            <div class="gift-field">
+              <label class="gift-label">Recipient's email</label>
+              <div class="field-icon"><?php dash_icon('mail'); ?><input data-recipient-email-input type="email" placeholder="jane@email.com"></div>
+            </div>
+            <div class="gift-field">
+              <label class="gift-label">Personal message <span class="opt">(optional)</span></label>
+              <div class="field-icon for-textarea"><?php dash_icon('message-square'); ?><textarea data-gift-message-input rows="2" placeholder="Happy birthday! Thought you'd love this one."></textarea></div>
+            </div>
+
+            <?php if ($canGiftSubscription): ?>
+              <div class="gift-field">
+                <label class="gift-label">Months to gift</label>
+                <div class="month-pills" data-month-pills>
+                  <?php foreach (GIFT_SUBSCRIPTION_MONTH_OPTIONS as $m): ?>
+                    <button type="button" class="month-pill" data-action="start" data-months="<?= $m ?>" data-amount="<?= e(format_money($monthlyPrice * $m)) ?>">
+                      <span class="m"><?= $m ?> Month<?= $m > 1 ? 's' : '' ?></span>
+                      <span class="p"><?= e(format_money($monthlyPrice * $m)) ?></span>
+                    </button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php else: ?>
+              <button class="btn btn-gold btn-block btn-lg" style="margin-top:18px;" data-action="start">Continue</button>
+            <?php endif; ?>
+          </div>
+          <div data-state="phone" class="hidden guest-form">
+            <div class="gift-recap">
+              <span class="gift-icon-chip sm"><?php dash_icon('gift'); ?></span>
+              <div>
+                <strong data-recap-item-label data-base-label="<?= e($course['title']) ?>"><?= e($course['title']) ?></strong>
+                <span data-recap-recipient>for someone</span>
+              </div>
+            </div>
+            <div class="field-icon">
+              <?php dash_icon('wallet'); ?>
+              <input type="tel" placeholder="Your mobile money phone e.g. 0772 123 456" data-phone-input>
+            </div>
+            <button class="btn btn-gold btn-block" data-action="pay">Pay <span data-pay-amount><?= $canGiftSubscription ? e(format_money($monthlyPrice * GIFT_SUBSCRIPTION_MONTH_OPTIONS[0])) : e(format_money($price)) ?></span> as a Gift</button>
+          </div>
+          <div data-state="waiting" class="hidden pay-waiting">
+            <div class="spinner"></div>
+            <p style="font-weight:700;">Waiting for approval...</p>
+            <p class="small muted" data-status-text></p>
+          </div>
+          <div data-state="success" class="hidden gift-success">
+            <span class="gift-icon-chip"><?php dash_icon('check-circle'); ?></span>
+            <h4>Gift sent</h4>
+            <p>We've emailed <strong data-success-recipient-name>them</strong> a link to claim<br><strong data-success-item-label data-base-label="<?= e($course['title']) ?>"><?= e($course['title']) ?></strong>.</p>
+            <a href="<?= e(base_url('dashboard/gifts.php')) ?>">View your gifts sent <?php dash_icon('arrow-right'); ?></a>
+          </div>
+          <div data-state="failed" class="hidden pay-failed">
+            <p style="font-weight:700;">Payment not completed</p>
+            <p class="small muted" data-fail-text></p>
+            <button class="btn btn-primary btn-sm" data-action="retry">Try Again</button>
+          </div>
+          <p class="error-text hidden" data-error></p>
+        </div>
+      </div>
+    </div>
+    <script>
+      (() => {
+        const box = document.currentScript.previousElementSibling;
+        <?php if ($collapsed): ?>
+        const toggle = box.querySelector('[data-gift-toggle]');
+        const row = box.querySelector('[data-gift-row]');
+        if (toggle && row) {
+          toggle.addEventListener('click', () => {
+            const nowHidden = row.classList.toggle('hidden');
+            toggle.setAttribute('aria-expanded', nowHidden ? 'false' : 'true');
+          });
+        }
+        <?php endif; ?>
+        box.querySelectorAll('[data-month-pills] .month-pill').forEach((pill) =>
+          pill.addEventListener('click', () => {
+            box.querySelectorAll('[data-month-pills] .month-pill').forEach((p) => p.classList.remove('selected'));
+            pill.classList.add('selected');
+          })
+        );
+      })();
+    </script>
+    <?php
+}
+
 function get_gift_by_token(string $token): ?array {
     return db_one(
         "SELECT cg.*, c.title AS course_title, c.slug AS course_slug, c.access_duration_days,
@@ -27,6 +179,53 @@ function get_gift_by_token(string $token): ?array {
          WHERE cg.claim_token_hash = ?",
         [hash('sha256', $token)]
     );
+}
+
+/**
+ * A course card for gift.php's browse grid — visually the same as
+ * render_course_card() (includes/course_card.php), but links to picking
+ * this course for a gift instead of the course's own detail page, and
+ * shows what the gift actually costs (a month's subscription price where
+ * that applies) instead of a plain course price. Expects $c in the same
+ * get_course_cards()-joined shape render_course_card() does.
+ */
+function render_gift_course_card(array $c): void {
+    $eligibility = gift_eligibility_for_course($c);
+    ?>
+    <a href="<?= e(base_url('gift.php?slug=' . $c['slug'])) ?>" class="course-card reveal">
+      <div class="thumb">
+        <?php if (!empty($c['thumbnail_url'])): ?>
+          <img src="<?= e(asset_src($c['thumbnail_url'])) ?>" alt="" loading="lazy">
+        <?php else: ?>
+          <div class="placeholder">Obin Academy</div>
+        <?php endif; ?>
+      </div>
+      <div class="body">
+        <div class="creator-row">
+          <div class="avatar">
+            <?php if (!empty($c['creator_avatar_url'])): ?>
+              <img src="<?= e(asset_src($c['creator_avatar_url'])) ?>" alt="">
+            <?php else: ?><?= e(mb_substr($c['creator_name'], 0, 1)) ?><?php endif; ?>
+          </div>
+          <span><?= e($c['creator_name']) ?></span>
+        </div>
+
+        <h3><?= e($c['title']) ?></h3>
+        <p class="desc"><?= e($c['summary']) ?></p>
+
+        <div class="price-row">
+          <span class="price">
+            <?php if ($eligibility['isSubscription']): ?>
+              <span class="currency">UGX</span><?= number_format($eligibility['monthlyPrice']) ?><span style="font-size:0.6em; font-weight:600;">/mo</span>
+            <?php else: ?>
+              <span class="currency">UGX</span><?= number_format($eligibility['price']) ?>
+            <?php endif; ?>
+          </span>
+          <span class="small" style="font-weight:700; color:var(--accent);"><?php dash_icon('gift'); ?> Gift this</span>
+        </div>
+      </div>
+    </a>
+    <?php
 }
 
 /** Every gift a buyer has sent, newest first, with the course title joined on. */
