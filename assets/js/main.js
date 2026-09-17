@@ -52,6 +52,37 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Follow/unfollow toggle on a school's profile.php hero.
+  const followBtn = document.querySelector("[data-follow-toggle]");
+  if (followBtn) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
+    const label = followBtn.querySelector("[data-follow-label]");
+    const countEl = document.querySelector("[data-follower-count]");
+    followBtn.addEventListener("click", async () => {
+      if (followBtn.dataset.loggedIn !== "1") {
+        window.location.href = followBtn.dataset.loginUrl;
+        return;
+      }
+      followBtn.disabled = true;
+      try {
+        const res = await fetch(followBtn.dataset.toggleUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ creatorId: followBtn.dataset.creatorId, csrf_token: csrfToken }),
+        });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        followBtn.classList.toggle("is-following", data.following);
+        if (label) label.textContent = data.following ? "Following" : "Follow";
+        if (countEl) countEl.textContent = data.followerCount.toLocaleString();
+      } catch {
+        alert("Something went wrong. Please try again.");
+      } finally {
+        followBtn.disabled = false;
+      }
+    });
+  }
+
   document.querySelectorAll("[data-flash]").forEach((el) => {
     setTimeout(() => el.remove(), 6000);
   });

@@ -12,6 +12,7 @@ $navByRole = [
         'Learning' => [
             ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
             ['/dashboard/learner/subscriptions.php', 'My Subscriptions', 'wallet'],
+            ['/dashboard/learner/following.php', 'Following', 'users'],
         ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],

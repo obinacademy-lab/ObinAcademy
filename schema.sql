@@ -509,6 +509,21 @@ CREATE TABLE course_interest (
   INDEX idx_course_interest_course (course_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Lets a learner follow a creator's school without buying anything yet —
+-- the soft-commitment audience a creator can reach later (WhatsApp
+-- broadcast, "new course" notifications), separate from course_interest
+-- above which is scoped to one specific course. See includes/follows.php.
+CREATE TABLE school_follows (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  learner_id INT NOT NULL,
+  creator_id INT NOT NULL,
+  FOREIGN KEY (learner_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_follow (learner_id, creator_id),
+  INDEX idx_follows_creator (creator_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ---------------------------------------------------------------------------
 -- One row per share-button click (not per page view — only actual shares).
 -- share_token is embedded in the URL that channel actually sends out, so a

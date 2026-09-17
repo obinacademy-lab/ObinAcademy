@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/course_card.php';
+require __DIR__ . '/includes/follows.php';
 
 $profileId = (int) query_param('id');
 $profile = $profileId ? get_profile($profileId) : null;
@@ -30,6 +31,8 @@ $teaching = $isCreator ? get_course_cards('c.creator_id = ?', [$profileId], 'c.c
 // their own published courses instead of showing a bare flat hero.
 $schoolCoverUrl = $isCreator ? ($profile['school_cover_url'] ?: get_creator_fallback_thumbnail($profileId)) : null;
 $schoolLabel = $profile['school_name'] ?: $profile['name'];
+$followerCount = $isCreator ? get_school_follower_count($profileId) : 0;
+$isFollowing = $isCreator && $user && !$isMe && is_following_school((int) $user['id'], $profileId);
 
 $socials = [
     'facebook' => $profile['facebook_url'],
@@ -61,8 +64,18 @@ require __DIR__ . '/includes/header.php';
       <div class="school-hero-stats">
         <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Course<?= $stats['teaching'] === 1 ? '' : 's' ?></span></div>
         <div class="stat"><span class="value"><?= number_format($stats['students']) ?></span><span class="label">Student<?= $stats['students'] === 1 ? '' : 's' ?></span></div>
+        <div class="stat"><span class="value" data-follower-count><?= number_format($followerCount) ?></span><span class="label">Follower<?= $followerCount === 1 ? '' : 's' ?></span></div>
       </div>
       <div class="school-hero-actions">
+        <?php if (!$isMe): ?>
+          <button type="button" class="school-hero-follow-btn<?= $isFollowing ? ' is-following' : '' ?>" data-follow-toggle
+                  data-creator-id="<?= (int) $profileId ?>"
+                  data-logged-in="<?= $user ? '1' : '0' ?>"
+                  data-toggle-url="<?= e(base_url('api/toggle-school-follow.php')) ?>"
+                  data-login-url="<?= e(base_url('login.php?redirect=' . urlencode('/profile.php?id=' . $profileId))) ?>">
+            <span data-follow-label><?= $isFollowing ? 'Following' : 'Follow' ?></span>
+          </button>
+        <?php endif; ?>
         <?php render_share_button(base_url('profile.php?id=' . $profile['id']), $schoolLabel, 'Share School', 'light', null, 'Share this school'); ?>
         <?php if ($isMe): ?>
           <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="school-hero-edit-btn">Edit Your School</a>
