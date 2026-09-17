@@ -22,6 +22,7 @@ $stats = [
     // here too so a creator's public profile reads as their own school:
     // their own courses, taught to their own students.
     'students' => array_sum(array_column($teachingSummary, 'student_count')),
+    'views' => array_sum(array_column($teachingSummary, 'view_count')),
 ];
 // The catalog is public now — anyone can browse a creator's course cards,
 // not just subscribers. Watching still requires a subscription, checked
@@ -64,6 +65,7 @@ require __DIR__ . '/includes/header.php';
       <div class="school-hero-stats">
         <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Course<?= $stats['teaching'] === 1 ? '' : 's' ?></span></div>
         <div class="stat"><span class="value"><?= number_format($stats['students']) ?></span><span class="label">Student<?= $stats['students'] === 1 ? '' : 's' ?></span></div>
+        <div class="stat"><span class="value"><?= number_format($stats['views']) ?></span><span class="label">View<?= $stats['views'] === 1 ? '' : 's' ?></span></div>
         <a href="<?= e(base_url('school-followers.php?id=' . $profileId)) ?>" class="stat stat-link"><span class="value" data-follower-count><?= number_format($followerCount) ?></span><span class="label">Follower<?= $followerCount === 1 ? '' : 's' ?></span></a>
       </div>
       <div class="school-hero-actions">

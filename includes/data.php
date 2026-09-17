@@ -90,6 +90,8 @@ function get_school_cards(string $whereSql = '', array $params = [], string $ord
           (SELECT COUNT(*) FROM enrollments e JOIN courses c2 ON c2.id = e.course_id WHERE c2.creator_id = u.id AND c2.status = 'PUBLISHED') AS student_count,
           (SELECT MIN(c3.price) FROM courses c3 WHERE c3.creator_id = u.id AND c3.status = 'PUBLISHED' AND c3.price > 0) AS min_price,
           (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN courses c4 ON c4.id = r.course_id WHERE c4.creator_id = u.id) AS avg_rating,
+          (SELECT COALESCE(SUM(c7.view_count), 0) FROM courses c7 WHERE c7.creator_id = u.id AND c7.status = 'PUBLISHED') AS view_count,
+          (SELECT COUNT(*) FROM school_follows sf WHERE sf.creator_id = u.id) AS follower_count,
           -- A school with no school_cover_url of its own borrows the
           -- thumbnail from its own most-recent published course instead of
           -- the card falling back to the plain placeholder box.

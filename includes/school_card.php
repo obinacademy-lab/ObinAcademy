@@ -13,6 +13,8 @@ function render_school_card(array $school): void {
     $isSubscription = ($school['pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION';
     $courseCount = (int) $school['course_count'];
     $studentCount = (int) $school['student_count'];
+    $viewCount = (int) ($school['view_count'] ?? 0);
+    $followerCount = (int) ($school['follower_count'] ?? 0);
     // No school_cover_url of its own yet — borrow a course thumbnail
     // (get_school_cards()'s fallback_thumbnail_url) rather than showing the
     // plain placeholder box.
@@ -38,6 +40,10 @@ function render_school_card(array $school): void {
           <strong><?= number_format($courseCount) ?></strong> course<?= $courseCount === 1 ? '' : 's' ?>
           <span class="dot"></span>
           <strong><?= number_format($studentCount) ?></strong> student<?= $studentCount === 1 ? '' : 's' ?>
+          <span class="dot"></span>
+          <strong><?= number_format($viewCount) ?></strong> view<?= $viewCount === 1 ? '' : 's' ?>
+          <span class="dot"></span>
+          <strong><?= number_format($followerCount) ?></strong> follower<?= $followerCount === 1 ? '' : 's' ?>
           <span class="dot"></span>
           <?php if ($isSubscription): ?>
             <?= e(format_money((float) $school['school_monthly_price'])) ?>/mo

@@ -196,7 +196,7 @@ function get_courses_completed_count(int $userId): int {
 function get_courses_teaching(int $userId, int $limit = 20): array {
     $limit = max(1, min(50, $limit));
     return db_all(
-        "SELECT c.id, c.title, c.slug, c.thumbnail_url,
+        "SELECT c.id, c.title, c.slug, c.thumbnail_url, c.view_count,
                 (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id) AS student_count
          FROM courses c
          WHERE c.creator_id = ? AND c.status = 'PUBLISHED'
