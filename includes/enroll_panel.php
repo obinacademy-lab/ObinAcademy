@@ -341,6 +341,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                     <label class="gift-label">Recipient's email</label>
                     <div class="field-icon"><?php dash_icon('mail'); ?><input data-recipient-email-input type="email" placeholder="jane@email.com"></div>
                   </div>
+                  <div class="gift-field">
+                    <label class="gift-label">Personal message <span class="opt">(optional)</span></label>
+                    <div class="field-icon for-textarea"><?php dash_icon('message-square'); ?><textarea data-gift-message-input rows="2" placeholder="Happy birthday! Thought you'd love this one."></textarea></div>
+                  </div>
 
                   <?php if ($canGiftSubscription): ?>
                     <div class="gift-field">
@@ -359,6 +363,13 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                   <?php endif; ?>
                 </div>
                 <div data-state="phone" class="hidden guest-form">
+                  <div class="gift-recap">
+                    <span class="gift-icon-chip sm"><?php dash_icon('gift'); ?></span>
+                    <div>
+                      <strong data-recap-item-label data-base-label="<?= e($course['title']) ?>"><?= e($course['title']) ?></strong>
+                      <span data-recap-recipient>for someone</span>
+                    </div>
+                  </div>
                   <div class="field-icon">
                     <?php dash_icon('wallet'); ?>
                     <input type="tel" placeholder="Your mobile money phone e.g. 0772 123 456" data-phone-input>

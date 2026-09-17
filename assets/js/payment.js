@@ -40,6 +40,7 @@
     // above, which is the guest-checkout buyer's own info.
     const recipientNameInput = root.querySelector('[data-recipient-name-input]');
     const recipientEmailInput = root.querySelector('[data-recipient-email-input]');
+    const giftMessageInput = root.querySelector('[data-gift-message-input]');
 
     // "Have a coupon code?" box — a sibling of this widget, not inside it,
     // since it needs to update the top-of-panel price display too, not just
@@ -127,6 +128,17 @@
           const payAmountEl = root.querySelector("[data-pay-amount]");
           if (payAmountEl && btn.dataset.amount) payAmountEl.textContent = btn.dataset.amount;
         }
+        // Gift widget only — recaps what's about to be paid for at the top
+        // of the phone step, from what's been entered/picked so far.
+        if (recipientNameInput) {
+          const recapNameEl = root.querySelector("[data-recap-recipient]");
+          if (recapNameEl) recapNameEl.textContent = "for " + (recipientNameInput.value.trim() || "someone");
+          const recapItemEl = root.querySelector("[data-recap-item-label]");
+          if (recapItemEl) {
+            const n = selectedMonths ? parseInt(selectedMonths, 10) : null;
+            recapItemEl.textContent = n ? `${n} month${n > 1 ? "s" : ""} of ${recapItemEl.dataset.baseLabel}` : recapItemEl.dataset.baseLabel;
+          }
+        }
         show("phone");
       })
     );
@@ -155,6 +167,7 @@
           const body = { courseId, tier, creatorId, bundleId, phone, csrf_token: csrfToken() };
           if (isGuest) { body.name = name; body.email = email; }
           if (recipientNameInput) { body.recipientName = recipientName; body.recipientEmail = recipientEmail; }
+          if (giftMessageInput && giftMessageInput.value.trim()) body.giftMessage = giftMessageInput.value.trim();
           if (selectedMonths) body.months = selectedMonths;
           if (appliedCoupon) body.couponCode = appliedCoupon;
           const res = await fetch(initiateUrl, {
