@@ -29,6 +29,7 @@ $teaching = $isCreator ? get_course_cards('c.creator_id = ?', [$profileId], 'c.c
 // No school_cover_url of their own yet — borrow a thumbnail from one of
 // their own published courses instead of showing a bare flat hero.
 $schoolCoverUrl = $isCreator ? ($profile['school_cover_url'] ?: get_creator_fallback_thumbnail($profileId)) : null;
+$schoolLabel = $profile['school_name'] ?: $profile['name'];
 
 $socials = [
     'facebook' => $profile['facebook_url'],
@@ -55,15 +56,18 @@ require __DIR__ . '/includes/header.php';
         </span>
         by <?= e($profile['name']) ?><?php if ($profile['role'] === 'ADMIN'): ?> · Admin<?php endif; ?>
       </span>
-      <h1><?= e($profile['school_name'] ?: $profile['name']) ?></h1>
+      <h1><?= e($schoolLabel) ?></h1>
       <?php if ($profile['headline']): ?><p class="school-hero-headline"><?= e($profile['headline']) ?></p><?php endif; ?>
       <div class="school-hero-stats">
         <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Course<?= $stats['teaching'] === 1 ? '' : 's' ?></span></div>
         <div class="stat"><span class="value"><?= number_format($stats['students']) ?></span><span class="label">Student<?= $stats['students'] === 1 ? '' : 's' ?></span></div>
       </div>
-      <?php if ($isMe): ?>
-        <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="school-hero-edit-btn">Edit Your School</a>
-      <?php endif; ?>
+      <div class="school-hero-actions">
+        <?php render_share_button(base_url('profile.php?id=' . $profile['id']), $schoolLabel, 'Share School', 'light', null, 'Share this school'); ?>
+        <?php if ($isMe): ?>
+          <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="school-hero-edit-btn">Edit Your School</a>
+        <?php endif; ?>
+      </div>
     </div>
   </section>
 
@@ -124,4 +128,5 @@ require __DIR__ . '/includes/header.php';
     </div>
   </div>
 <?php endif; ?>
+<?php if ($isCreator): ?><script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script><?php endif; ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>
