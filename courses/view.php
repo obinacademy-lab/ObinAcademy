@@ -89,6 +89,26 @@ if (!empty($course['creator_name'])) {
     ];
 }
 
+// A lightweight, non-payment "where do I click" CTA shown in the hero and
+// (on mobile) the sticky bottom bar — both just jump to the real enroll
+// panel's full multi-step payment widget rather than duplicating it, so
+// there's only ever one place that actually talks to iotec.
+$heroSchoolHasSubscription = ($course['creator_pricing_model'] ?? 'PER_COURSE') === 'MONTHLY_SUBSCRIPTION'
+    && (float) ($course['creator_school_monthly_price'] ?? 0) > 0;
+$heroIsSubscriptionIncluded = $heroSchoolHasSubscription && (int) ($course['subscription_included'] ?? 1) === 1;
+if ($isOwner) {
+    $heroCtaLabel = 'Manage Course';
+    $heroCtaUrl = base_url('dashboard/creator/course-manage.php?id=' . $course['id']);
+} elseif ($isEnrolled) {
+    $heroCtaLabel = 'Continue Learning';
+    $heroCtaUrl = base_url('learn.php?slug=' . $course['slug']);
+} else {
+    $heroPrice = $heroIsSubscriptionIncluded ? (float) $course['creator_school_monthly_price'] : (float) $course['price'];
+    $heroPriceLabel = $heroPrice > 0 ? format_money($heroPrice) . ($heroIsSubscriptionIncluded ? '/mo' : '') : 'Free';
+    $heroCtaLabel = ($heroIsSubscriptionIncluded ? 'Subscribe Now' : 'Enroll Now') . ' — ' . $heroPriceLabel;
+    $heroCtaUrl = '#enroll';
+}
+
 require __DIR__ . '/../includes/header.php';
 ?>
 
@@ -129,10 +149,21 @@ require __DIR__ . '/../includes/header.php';
           <span class="role"><?= e($course['creator_headline'] ?: 'Instructor') ?></span>
         </span>
       </a>
-      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light', (int) $course['id'], 'Share this course'); ?>
+      <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'dark', (int) $course['id'], 'Share this course'); ?>
     </div>
+
+    <a href="<?= e($heroCtaUrl) ?>" class="course-hero2-cta"><?= e($heroCtaLabel) ?></a>
   </div>
 </section>
+
+<div class="container">
+  <div class="course-float-stats">
+    <div class="cell"><div class="n"><?= count($course['modules']) ?></div><div class="l">Module<?= count($course['modules']) === 1 ? '' : 's' ?></div></div>
+    <div class="cell"><div class="n"><?= $totalLessons ?></div><div class="l">Lesson<?= $totalLessons === 1 ? '' : 's' ?></div></div>
+    <div class="cell"><div class="n"><?= (int) $course['student_count'] ?></div><div class="l">Student<?= (int) $course['student_count'] === 1 ? '' : 's' ?></div></div>
+    <div class="cell"><div class="n"><?= number_format((int) $course['view_count']) ?></div><div class="l">View<?= (int) $course['view_count'] === 1 ? '' : 's' ?></div></div>
+  </div>
+</div>
 
 <section class="section" style="background:var(--surface);">
   <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
@@ -155,31 +186,29 @@ require __DIR__ . '/../includes/header.php';
         <div class="curriculum-stat"><strong><?= count($course['modules']) ?></strong> module<?= count($course['modules']) === 1 ? '' : 's' ?> &middot; <strong><?= $totalLessons ?></strong> lesson<?= $totalLessons === 1 ? '' : 's' ?></div>
         <div class="timeline">
           <?php foreach ($course['modules'] as $mi => $module): ?>
-            <div class="tmod reveal reveal-delay-<?= min($mi + 1, 5) ?>">
-              <div class="tmod-num"><?= $mi + 1 ?></div>
-              <details class="tmod-card" <?= $mi === 0 ? 'open' : '' ?>>
-                <summary class="tmod-summary">
-                  <span class="tmod-title"><?= e($module['title']) ?></span>
-                  <span class="tmod-count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
-                  <?php dash_icon('chevron-down', 'tmod-chevron'); ?>
-                </summary>
-                <div class="tmod-body-outer"><div class="tmod-body-inner">
-                  <?php foreach ($module['lessons'] as $lesson): ?>
-                    <div class="tlesson">
-                      <span class="tlesson-icon"><?php dash_icon($lesson['type'] === 'VIDEO' ? 'play' : 'file-text'); ?></span>
-                      <span><?= e($lesson['title']) ?></span>
-                      <span class="tlesson-dur">
-                        <?php if (!empty($lesson['duration'])): $d = (int) $lesson['duration']; ?>
-                          <?= sprintf('%d:%02d', intdiv($d, 60), $d % 60) ?>
-                        <?php else: ?>
-                          <?= $lesson['type'] === 'VIDEO' ? 'Video' : 'PDF' ?>
-                        <?php endif; ?>
-                      </span>
-                    </div>
-                  <?php endforeach; ?>
-                </div></div>
-              </details>
-            </div>
+            <details class="tmod-card reveal reveal-delay-<?= min($mi + 1, 5) ?>" <?= $mi === 0 ? 'open' : '' ?>>
+              <summary class="tmod-summary">
+                <span class="tmod-num"><?= $mi + 1 ?></span>
+                <span class="tmod-title"><?= e($module['title']) ?></span>
+                <span class="tmod-count"><?= count($module['lessons']) ?> lesson<?= count($module['lessons']) === 1 ? '' : 's' ?></span>
+                <?php dash_icon('chevron-down', 'tmod-chevron'); ?>
+              </summary>
+              <div class="tmod-body-outer"><div class="tmod-body-inner">
+                <?php foreach ($module['lessons'] as $lesson): ?>
+                  <div class="tlesson">
+                    <span class="tlesson-icon"><?php dash_icon($lesson['type'] === 'VIDEO' ? 'play' : 'file-text'); ?></span>
+                    <span><?= e($lesson['title']) ?></span>
+                    <span class="tlesson-dur">
+                      <?php if (!empty($lesson['duration'])): $d = (int) $lesson['duration']; ?>
+                        <?= sprintf('%d:%02d', intdiv($d, 60), $d % 60) ?>
+                      <?php else: ?>
+                        <?= $lesson['type'] === 'VIDEO' ? 'Video' : 'PDF' ?>
+                      <?php endif; ?>
+                    </span>
+                  </div>
+                <?php endforeach; ?>
+              </div></div>
+            </details>
           <?php endforeach; ?>
         </div>
       </div>
@@ -213,11 +242,27 @@ require __DIR__ . '/../includes/header.php';
       </div>
     </div>
 
-    <aside class="course-sidebar">
+    <aside class="course-sidebar" id="enroll">
       <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled, $isInterested); ?>
     </aside>
   </div>
 </section>
+
+<div class="course-sticky-cta" data-course-sticky-cta>
+  <div class="price-note"><?= e($course['title']) ?></div>
+  <a href="<?= e($heroCtaUrl) ?>" class="btn btn-gold btn-sm"><?= e($heroCtaLabel) ?></a>
+</div>
+<script>
+  (() => {
+    const bar = document.querySelector('[data-course-sticky-cta]');
+    const target = document.getElementById('enroll');
+    if (!bar || !target || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => bar.classList.toggle('is-visible', !entry.isIntersecting));
+    }, { threshold: 0.05 });
+    observer.observe(target);
+  })();
+</script>
 
 <?php if (!$user && $course['status'] === 'PUBLISHED'): ?>
   <?php

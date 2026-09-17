@@ -1734,40 +1734,80 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    same as this file's existing pattern for superseded page designs
    (see .timeline/.tmod-* and .reviews-grid/.rsummary/.rcard further
    down, both from earlier redesigns of this same page). */
-.course-hero2 { background: var(--surface); padding: 36px 0 40px; }
+/* A flat dark hero (not a gradient) — the same confident dark-hero
+   language the homepage already uses, applied here so the page's primary
+   action (price + CTA) is visible immediately instead of only appearing
+   in the sidebar hundreds of pixels down. Bottom padding is generous to
+   leave room for .course-float-stats to overlap the seam below. */
+.course-hero2 { background: var(--ink); padding: 56px 0 86px; }
 .course-hero2-inner { }
 
-.course-hero2-crumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
-.course-hero2-crumb a { color: var(--muted); text-decoration: none; }
-.course-hero2-crumb a:hover { color: var(--ink); }
+.course-hero2-crumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,0.45); flex-wrap: wrap; font-weight: 600; }
+.course-hero2-crumb a { color: rgba(255,255,255,0.45); text-decoration: none; }
+.course-hero2-crumb a:hover { color: #fff; }
 
 .course-hero2-pill {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 7px 14px; border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--gold) 14%, white); color: #92660a; border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--border));
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--gold);
 }
+.course-hero2-pill::before { content: ""; display: inline-block; width: 22px; height: 2px; background: var(--gold); margin-right: 4px; }
 
-.course-hero2-inner h1 { margin: 16px 0 0; font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; max-width: 760px; color: var(--ink); }
-.course-hero2-sub { margin: 12px 0 0; font-size: 16px; color: var(--muted); max-width: 620px; line-height: 1.6; }
+.course-hero2-inner h1 { margin: 16px 0 0; font-size: clamp(28px, 4.6vw, 44px); font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; max-width: 740px; color: #fff; }
+.course-hero2-sub { margin: 14px 0 0; font-size: 15.5px; color: rgba(255,255,255,0.68); max-width: 600px; line-height: 1.6; }
 
 .course-hero2-rating { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
 .course-hero2-rating .stars { color: var(--gold); font-size: 16px; letter-spacing: 1px; }
-.course-hero2-rating .num { font-weight: 800; font-size: 14px; color: var(--ink); }
-.course-hero2-rating .count { color: var(--muted); font-size: 13.5px; }
+.course-hero2-rating .num { font-weight: 800; font-size: 14px; color: #fff; }
+.course-hero2-rating .count { color: rgba(255,255,255,0.55); font-size: 13.5px; }
 
-.course-hero2-meta { margin-top: 22px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.course-hero2-meta .item { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--muted); }
+.course-hero2-meta { margin-top: 26px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.course-hero2-meta .item { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: rgba(255,255,255,0.6); }
 .course-hero2-meta svg { width: 15px; height: 15px; flex-shrink: 0; }
-.course-hero2-instructor { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--border); padding: 6px 16px 6px 6px; border-radius: var(--radius-full); text-decoration: none; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-.course-hero2-instructor:hover { border-color: var(--border-strong); box-shadow: var(--shadow-pop-ink); }
+.course-hero2-instructor { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); padding: 6px 16px 6px 6px; border-radius: var(--radius-full); text-decoration: none; transition: border-color 0.2s ease, background-color 0.2s ease; }
+.course-hero2-instructor:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); }
 .course-hero2-instructor .av { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: var(--gold); color: #241900; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
 .course-hero2-instructor .av img { width: 100%; height: 100%; object-fit: cover; }
-.course-hero2-instructor .name { display: block; color: var(--ink); font-weight: 700; font-size: 13.5px; }
-.course-hero2-instructor .role { display: block; color: var(--muted); font-size: 11.5px; }
+.course-hero2-instructor .name { display: block; color: #fff; font-weight: 700; font-size: 13.5px; }
+.course-hero2-instructor .role { display: block; color: rgba(255,255,255,0.55); font-size: 11.5px; }
+
+.course-hero2-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 28px; background: var(--gold); color: #241900; font-weight: 700; font-size: 14px; padding: 13px 24px; border-radius: var(--radius-full); text-decoration: none; }
+.course-hero2-cta:hover { background: #ffc93d; }
+
+/* Floats a white stat strip over the dark hero's bottom edge, bridging
+   dark to light and putting scope (modules/lessons/students/views) front
+   and center before any scrolling. */
+.course-float-stats {
+  max-width: calc(100% - 40px); margin: -50px auto 0; position: relative; z-index: 2;
+  background: #fff; border-radius: var(--radius-lg); box-shadow: 0 20px 44px -20px rgba(20,24,27,0.35);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+}
+.course-float-stats .cell { padding: 18px 12px; text-align: center; border-right: 1px solid var(--border); }
+.course-float-stats .cell:last-child { border-right: none; }
+.course-float-stats .n { font-size: 19px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.course-float-stats .l { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+@media (max-width: 560px) { .course-float-stats { grid-template-columns: repeat(2, 1fr); } .course-float-stats .cell:nth-child(2) { border-right: none; } .course-float-stats .cell:nth-child(3) { border-top: 1px solid var(--border); } .course-float-stats .cell:nth-child(4) { border-top: 1px solid var(--border); } }
 
 .course-flat-thumb { margin-top: 0; border-radius: 10px; overflow: hidden; background: var(--border); aspect-ratio: 16/9; }
 .course-flat-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .course-flat-thumb .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 700; }
 .course-flat-thumb-lg { box-shadow: 0 30px 60px -30px rgba(20,24,27,0.35); }
+
+/* Mobile/tablet only (desktop already has the sticky sidebar) — appears
+   once .course-sidebar scrolls out of view (see the IntersectionObserver
+   in courses/view.php) so the price + primary action stay reachable
+   without scrolling all the way back down. */
+.course-sticky-cta {
+  position: fixed; left: 0; right: 0; bottom: -100px; z-index: 40;
+  background: #fff; border-top: 1px solid var(--border); padding: 12px 20px;
+  display: flex; align-items: center; gap: 14px; box-shadow: 0 -8px 20px -12px rgba(20,24,27,0.15);
+  transition: bottom 0.25s cubic-bezier(.16,1,.3,1);
+}
+.course-sticky-cta.is-visible { bottom: 0; }
+.course-sticky-cta .price { font-size: 16px; font-weight: 800; color: var(--ink); }
+.course-sticky-cta .price-note { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.course-sticky-cta a.btn { flex-shrink: 0; }
+@media (min-width: 1024px) { .course-sticky-cta { display: none; } }
+@media (prefers-reduced-motion: reduce) { .course-sticky-cta { transition: none; } }
 
 .course-flat-sec { margin-top: 40px; }
 .course-flat-sec h2 { font-size: 18px; font-weight: 700; margin: 0; color: var(--ink); }
@@ -2522,21 +2562,20 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    restyling .curriculum-list/.module-block in place — those are still used
    as-is by dashboard/admin/course-review.php's plainer curriculum view,
    so leaving them untouched keeps that page's look unaffected. */
-.curriculum-stat { font-size: 13px; font-weight: 700; color: var(--muted); }
+.curriculum-stat { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 16px; }
 .curriculum-stat strong { color: var(--ink); font-variant-numeric: tabular-nums; }
-.timeline { position: relative; margin-top: 16px; }
-.timeline::before {
-  content: ""; position: absolute; left: 21px; top: 8px; bottom: 8px; width: 2px;
-  background: linear-gradient(var(--gold), var(--border));
-}
-.tmod { position: relative; padding-left: 58px; }
-.tmod:not(:last-child) { margin-bottom: 14px; }
+/* A 2-column grid of module cards instead of a single-column connected
+   timeline — more visual weight without more vertical scroll. Each card
+   stays a real <details>/<summary> so the per-lesson list underneath still
+   expands in place; only the outer arrangement (and where the module
+   number sits) changed. */
+.timeline { margin-top: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .timeline { grid-template-columns: 1fr; } }
 .tmod-num {
-  position: absolute; left: 0; top: 4px; width: 44px; height: 44px; border-radius: 50%;
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(145deg, var(--gold), var(--gold-dark));
   color: #241900; display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 16px; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--gold) 60%, transparent);
-  z-index: 1;
+  font-weight: 800; font-size: 12.5px;
 }
 .tmod-card {
   border: 1px solid var(--border); border-radius: var(--radius-lg); background: #fff;
@@ -2544,9 +2583,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 .tmod-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: 0 16px 32px -16px rgba(20,24,27,0.18); }
-.tmod-summary { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; list-style: none; }
+.tmod-summary { display: flex; align-items: center; gap: 12px; padding: 16px 18px; cursor: pointer; list-style: none; }
 .tmod-summary::-webkit-details-marker { display: none; }
-.tmod-title { flex: 1; font-weight: 700; font-size: 15.5px; }
+.tmod-title { flex: 1; font-weight: 700; font-size: 14.5px; line-height: 1.35; }
 .tmod-count { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: var(--radius-full); white-space: nowrap; }
 .tmod-chevron { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; transition: transform 0.3s cubic-bezier(.16,1,.3,1); }
 .tmod-card[open] .tmod-chevron { transform: rotate(180deg); }
