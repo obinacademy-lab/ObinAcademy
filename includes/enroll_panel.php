@@ -161,7 +161,15 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-gold btn-block btn-lg shine" style="margin-top:20px;">Sign Up to Enroll</a>
           <p class="guest-note">Paid courses need a free account first — that's where your receipt, access, and certificate live. <a href="<?= e($loginUrl) ?>">Already have an account? Log in</a></p>
         <?php elseif ($showPaidFlow): ?>
-          <div style="margin-top:20px;" data-payment-widget
+          <div class="coupon-box" data-coupon-box data-preview-url="<?= e(base_url('api/preview-coupon.php')) ?>" data-course-id="<?= (int) $course['id'] ?>" style="margin-top:14px;">
+            <button type="button" class="coupon-toggle" data-coupon-toggle>Have a coupon code?</button>
+            <div class="coupon-apply-row hidden" data-coupon-row>
+              <input type="text" placeholder="Coupon code" data-coupon-input>
+              <button type="button" class="btn btn-outline btn-sm" data-coupon-apply>Apply</button>
+            </div>
+            <p class="coupon-msg" data-coupon-msg hidden></p>
+          </div>
+          <div style="margin-top:14px;" data-payment-widget
                data-course-id="<?= (int) $course['id'] ?>"
                data-initiate-url="<?= e(base_url('api/initiate-payment.php')) ?>"
                data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">

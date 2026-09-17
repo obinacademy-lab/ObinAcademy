@@ -20,6 +20,7 @@ if (!$user) {
 
 $courseId = (int) ($body['courseId'] ?? 0);
 $phone = trim((string) ($body['phone'] ?? ''));
+$couponCode = trim((string) ($body['couponCode'] ?? '')) ?: null;
 
-$result = initiate_payment((int) $user['id'], $courseId, $phone);
+$result = initiate_payment((int) $user['id'], $courseId, $phone, null, null, $couponCode);
 json_response($result, isset($result['error']) ? 400 : 200);

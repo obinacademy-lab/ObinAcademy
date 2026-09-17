@@ -35,6 +35,64 @@
     const nameInput = root.querySelector('[data-name-input]');
     const emailInput = root.querySelector('[data-email-input]');
 
+    // "Have a coupon code?" box — a sibling of this widget, not inside it,
+    // since it needs to update the top-of-panel price display too, not just
+    // the pay button's own price span. Applying a coupon here doesn't touch
+    // the server beyond a read-only preview (api/preview-coupon.php); the
+    // code itself is only actually redeemed once the payment succeeds.
+    let appliedCoupon = null;
+    const couponBox = root.parentElement?.querySelector("[data-coupon-box]");
+    if (couponBox) {
+      const couponToggle = couponBox.querySelector("[data-coupon-toggle]");
+      const couponRow = couponBox.querySelector("[data-coupon-row]");
+      const couponInput = couponBox.querySelector("[data-coupon-input]");
+      const couponApplyBtn = couponBox.querySelector("[data-coupon-apply]");
+      const couponMsg = couponBox.querySelector("[data-coupon-msg]");
+      const csrfToken2 = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
+
+      couponToggle?.addEventListener("click", () => {
+        couponRow.classList.toggle("hidden");
+        if (!couponRow.classList.contains("hidden")) couponInput?.focus();
+      });
+
+      couponApplyBtn?.addEventListener("click", async () => {
+        const code = couponInput?.value.trim() || "";
+        if (!code) return;
+        couponApplyBtn.disabled = true;
+        try {
+          const res = await fetch(couponBox.dataset.previewUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ courseId: couponBox.dataset.courseId, code, csrf_token: csrfToken2 }),
+          });
+          const data = await res.json();
+          couponMsg.hidden = false;
+          if (data.error) {
+            couponMsg.textContent = data.error;
+            couponMsg.classList.remove("is-success");
+            couponMsg.classList.add("is-error");
+            appliedCoupon = null;
+            return;
+          }
+          appliedCoupon = code;
+          couponMsg.textContent = `Coupon applied — new price ${data.finalPriceFormatted}`;
+          couponMsg.classList.remove("is-error");
+          couponMsg.classList.add("is-success");
+          const payAmountEl = root.querySelector("[data-pay-amount]");
+          const topPriceEl = document.querySelector("[data-top-price-amount]");
+          if (payAmountEl) payAmountEl.textContent = data.finalPriceFormatted;
+          if (topPriceEl) topPriceEl.textContent = data.finalPriceFormatted;
+          couponInput.disabled = true;
+          couponApplyBtn.textContent = "Applied";
+        } catch {
+          couponMsg.hidden = false;
+          couponMsg.textContent = "Something went wrong. Please try again.";
+        } finally {
+          couponApplyBtn.disabled = appliedCoupon !== null;
+        }
+      });
+    }
+
     let pollCount = 0;
     let pollTimer = null;
     let pollToken = null;
@@ -72,6 +130,7 @@
         try {
           const body = { courseId, tier, creatorId, phone, csrf_token: csrfToken() };
           if (isGuest) { body.name = name; body.email = email; }
+          if (appliedCoupon) body.couponCode = appliedCoupon;
           const res = await fetch(initiateUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

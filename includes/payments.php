@@ -3,6 +3,7 @@ require_once __DIR__ . '/iotec.php';
 require_once __DIR__ . '/email.php';
 require_once __DIR__ . '/subscriptions.php'; // gutted to just historical SUBSCRIPTION-payment read helpers — see includes/subscriptions.php
 require_once __DIR__ . '/school_subscriptions.php'; // the live, per-creator subscription system — see includes/school_subscriptions.php
+require_once __DIR__ . '/coupons.php';
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -132,6 +133,9 @@ function resolve_payment_with_iotec(array $payment): array {
                         [$split['affiliate_cut'], $payment['affiliate_id'], $payment['course_id'], $paymentId]
                     );
                 }
+                if (!empty($payment['coupon_id'])) {
+                    record_coupon_redemption((int) $payment['coupon_id'], $payment['user_id'] !== null ? (int) $payment['user_id'] : null, $paymentId);
+                }
                 db()->commit();
             } catch (Throwable $e) {
                 db()->rollBack();
@@ -162,7 +166,7 @@ function resolve_payment_with_iotec(array $payment): array {
  * poll_payment_status() without a session identity.
  * @return array{paymentId?: int, pollToken?: string, error?: string}
  */
-function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null): array {
+function initiate_payment(?int $userId, int $courseId, string $phone, ?string $guestName = null, ?string $guestEmail = null, ?string $couponCode = null): array {
     if (!validate_phone($phone)) return ['error' => 'Enter a valid phone number.'];
 
     $isGuest = $userId === null;
@@ -190,6 +194,20 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
         $unitPrice = (float) $course['sale_price'];
     }
     $finalPrice = $unitPrice;
+
+    // A coupon applies on top of whatever price is already in effect (the
+    // sale price if one is active) — originalAmount, if not already set by
+    // a sale, is set here too so the payment record always shows the true
+    // pre-discount price regardless of which discount(s) produced the final
+    // charge.
+    $couponId = null;
+    if ($couponCode !== null && trim($couponCode) !== '') {
+        $couponResult = validate_coupon($couponCode, (int) $course['creator_id'], $courseId, $userId, $unitPrice);
+        if (isset($couponResult['error'])) return ['error' => $couponResult['error']];
+        if ($originalAmount === null) $originalAmount = $unitPrice;
+        $finalPrice = $couponResult['finalPrice'];
+        $couponId = $couponResult['couponId'];
+    }
 
     $existingEnrollment = $isGuest
         ? db_one('SELECT id FROM enrollments WHERE course_id = ? AND guest_email = ? AND user_id IS NULL', [$courseId, $guestEmail])
@@ -230,13 +248,13 @@ function initiate_payment(?int $userId, int $courseId, string $phone, ?string $g
     if ($isGuest) {
         [$pollToken, $pollTokenHash] = make_access_token();
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, affiliate_id, amount, original_amount, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$guestName, $guestEmail, $pollTokenHash, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone]
+            "INSERT INTO payments (user_id, guest_name, guest_email, access_token_hash, course_id, affiliate_id, coupon_id, amount, original_amount, phone, type, status) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$guestName, $guestEmail, $pollTokenHash, $courseId, $affiliateId, $couponId, $finalPrice, $originalAmount, $phone]
         );
     } else {
         $paymentId = db_insert(
-            "INSERT INTO payments (user_id, course_id, affiliate_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
-            [$userId, $courseId, $affiliateId, $finalPrice, $originalAmount, $phone]
+            "INSERT INTO payments (user_id, course_id, affiliate_id, coupon_id, amount, original_amount, phone, type, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'COURSE_PURCHASE', 'PENDING')",
+            [$userId, $courseId, $affiliateId, $couponId, $finalPrice, $originalAmount, $phone]
         );
     }
 
