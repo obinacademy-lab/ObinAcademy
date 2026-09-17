@@ -17,6 +17,7 @@ $phone = trim((string) ($body['phone'] ?? ''));
 $recipientName = trim((string) ($body['recipientName'] ?? ''));
 $recipientEmail = trim((string) ($body['recipientEmail'] ?? ''));
 $message = trim((string) ($body['giftMessage'] ?? ''));
+$months = isset($body['months']) ? (int) $body['months'] : null;
 
-$result = initiate_course_gift((int) $user['id'], $courseId, $recipientName, $recipientEmail, $message, $phone);
+$result = initiate_course_gift((int) $user['id'], $courseId, $recipientName, $recipientEmail, $message, $phone, $months);
 json_response($result, isset($result['error']) ? 400 : 200);

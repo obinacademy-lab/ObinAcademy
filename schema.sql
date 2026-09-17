@@ -257,6 +257,10 @@ CREATE TABLE payments (
   gift_recipient_name VARCHAR(191) NULL,
   gift_recipient_email VARCHAR(191) NULL,
   gift_message TEXT NULL,
+  -- Set only for a COURSE_GIFT payment against a MONTHLY_SUBSCRIPTION
+  -- school's course — how many months of access this gift buys. NULL for
+  -- every other payment, including a COURSE_GIFT of a plain per-course sale.
+  gift_subscription_months TINYINT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL,
@@ -346,6 +350,16 @@ CREATE TABLE course_gifts (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   buyer_id INT NOT NULL,
   course_id INT NOT NULL,
+  -- COURSE = a normal one-time course purchase gifted to someone else.
+  -- SUBSCRIPTION = a fixed number of months of access to one course from a
+  -- MONTHLY_SUBSCRIPTION school, gifted the same way. See includes/gifts.php.
+  kind ENUM('COURSE','SUBSCRIPTION') NOT NULL DEFAULT 'COURSE',
+  subscription_months TINYINT NULL,
+  -- The phone the buyer paid with — school_subscriptions.phone is NOT NULL,
+  -- so claiming a SUBSCRIPTION-kind gift needs something to seed that
+  -- column with; it's overwritten the moment the recipient renews with
+  -- their own number. NULL for a COURSE-kind gift, which needs no phone.
+  phone VARCHAR(32) NULL,
   FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (claimed_by_user_id) REFERENCES users(id) ON DELETE SET NULL,

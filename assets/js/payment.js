@@ -102,6 +102,10 @@
     let pollCount = 0;
     let pollTimer = null;
     let pollToken = null;
+    // Gift-a-subscription widget only — set when a [data-action="start"]
+    // button carries data-months (one of several duration choices), so the
+    // later "pay" click knows which one was picked. Unused otherwise.
+    let selectedMonths = null;
 
     function show(state) {
       Object.values(states).forEach((el) => el && el.classList.add("hidden"));
@@ -116,7 +120,15 @@
     }
 
     root.querySelectorAll('[data-action="start"]').forEach((btn) =>
-      btn.addEventListener("click", () => { setError(""); show("phone"); })
+      btn.addEventListener("click", () => {
+        setError("");
+        if (btn.dataset.months) {
+          selectedMonths = btn.dataset.months;
+          const payAmountEl = root.querySelector("[data-pay-amount]");
+          if (payAmountEl && btn.dataset.amount) payAmountEl.textContent = btn.dataset.amount;
+        }
+        show("phone");
+      })
     );
 
     root.querySelectorAll('[data-action="pay"]').forEach((btn) =>
@@ -143,6 +155,7 @@
           const body = { courseId, tier, creatorId, bundleId, phone, csrf_token: csrfToken() };
           if (isGuest) { body.name = name; body.email = email; }
           if (recipientNameInput) { body.recipientName = recipientName; body.recipientEmail = recipientEmail; }
+          if (selectedMonths) body.months = selectedMonths;
           if (appliedCoupon) body.couponCode = appliedCoupon;
           const res = await fetch(initiateUrl, {
             method: "POST",

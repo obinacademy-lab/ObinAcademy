@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/school_subscriptions.php';
 require_once __DIR__ . '/installments.php';
+require_once __DIR__ . '/gifts.php';
 
 /**
  * Renders the enroll / continue-learning / pay / subscribe panel for a
@@ -303,7 +304,11 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           <li><?php dash_icon('check-circle'); ?>Learn on any device</li>
         </ul>
 
-        <?php if ($user && !$isOwner && $isPublished && !$isSubscriptionIncluded && $price > 0): ?>
+        <?php
+          $canGiftSubscription = $isSubscriptionIncluded && $monthlyPrice > 0;
+          $canGiftCourse = !$isSubscriptionIncluded && $price > 0;
+        ?>
+        <?php if ($user && !$isOwner && $isPublished && ($canGiftCourse || $canGiftSubscription)): ?>
           <div class="gift-box" style="margin-top:16px;">
             <button type="button" class="coupon-toggle" data-gift-toggle><?php dash_icon('gift'); ?> Gift this course to someone</button>
             <div class="hidden" data-gift-row style="margin-top:10px;" data-payment-widget
@@ -313,14 +318,25 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
               <div data-state="idle">
                 <div class="field-icon"><input data-recipient-name-input placeholder="Recipient's name"></div>
                 <div class="field-icon" style="margin-top:8px;"><input data-recipient-email-input type="email" placeholder="Recipient's email"></div>
-                <button class="btn btn-primary btn-block" style="margin-top:10px;" data-action="start">Continue</button>
+                <?php if ($canGiftSubscription): ?>
+                  <p class="small muted" style="margin-top:10px;">This school is subscription-based — choose how many months to gift:</p>
+                  <div class="stack gap-2" style="margin-top:8px;">
+                    <?php foreach (GIFT_SUBSCRIPTION_MONTH_OPTIONS as $m): ?>
+                      <button class="btn btn-outline btn-block" data-action="start" data-months="<?= $m ?>" data-amount="<?= e(format_money($monthlyPrice * $m)) ?>">
+                        <?= $m ?> Month<?= $m > 1 ? 's' : '' ?> — <?= e(format_money($monthlyPrice * $m)) ?>
+                      </button>
+                    <?php endforeach; ?>
+                  </div>
+                <?php else: ?>
+                  <button class="btn btn-primary btn-block" style="margin-top:10px;" data-action="start">Continue</button>
+                <?php endif; ?>
               </div>
               <div data-state="phone" class="hidden guest-form">
                 <div class="field-icon">
                   <?php dash_icon('wallet'); ?>
                   <input type="tel" placeholder="Your mobile money phone e.g. 0772 123 456" data-phone-input>
                 </div>
-                <button class="btn btn-gold btn-block" data-action="pay">Pay <?= e(format_money($price)) ?> as a Gift</button>
+                <button class="btn btn-gold btn-block" data-action="pay">Pay <span data-pay-amount><?= $canGiftSubscription ? e(format_money($monthlyPrice * GIFT_SUBSCRIPTION_MONTH_OPTIONS[0])) : e(format_money($price)) ?></span> as a Gift</button>
               </div>
               <div data-state="waiting" class="hidden pay-waiting">
                 <div class="spinner"></div>

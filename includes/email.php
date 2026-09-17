@@ -338,17 +338,20 @@ function send_installment_reminder_email(string $to, string $name, string $cours
  * buyer gets their own receipt separately, see send_gift_purchase_receipt_email()).
  * No account is assumed to exist yet; claim-gift.php handles sign-up/login.
  */
-function send_gift_claim_email(string $to, string $recipientName, string $buyerName, string $courseTitle, ?string $message, string $claimUrl): void {
+function send_gift_claim_email(string $to, string $recipientName, string $buyerName, string $courseTitle, ?string $message, string $claimUrl, ?int $subscriptionMonths = null): void {
     $messageBlock = $message
         ? '<div style="background:#f3f4f6; border-radius:10px; padding:14px 16px; margin-top:16px; font-size:14px; color:#374151;">"' . e($message) . '"</div>'
         : '';
+    $accessLine = $subscriptionMonths
+        ? "paid for {$subscriptionMonths} month" . ($subscriptionMonths === 1 ? '' : 's') . " of your access to <strong>{$courseTitle}</strong> on Obin Academy"
+        : "paid for you to take <strong>{$courseTitle}</strong> on Obin Academy";
 
     resend_send($to, "{$buyerName} gifted you a course on Obin Academy!", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
           <div style="font-size: 40px;">🎁</div>
           <h2 style="color: #1e3a8a; margin-top: 10px;">Hi {$recipientName}, you've been gifted a course!</h2>
           <p>
-            <strong>{$buyerName}</strong> paid for you to take <strong>{$courseTitle}</strong> on Obin Academy.
+            <strong>{$buyerName}</strong> {$accessLine}.
             Claim it below to start learning — you'll need a free account first if you don't already have one.
           </p>
           {$messageBlock}
@@ -380,6 +383,9 @@ function send_gift_purchase_receipt_email(array $payment): void {
     $recipientName = $payment['gift_recipient_name'];
     $receiptNo = 'OA-' . str_pad((string) $payment['id'], 6, '0', STR_PAD_LEFT);
     $date = date('F j, Y \a\t g:i A');
+    $itemLabel = $payment['gift_subscription_months']
+        ? 'Gift for ' . $recipientName . ' — ' . (int) $payment['gift_subscription_months'] . ' month' . ((int) $payment['gift_subscription_months'] === 1 ? '' : 's')
+        : 'Gift for ' . $recipientName;
 
     resend_send($to, "Receipt for your gift of \"{$courseTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
@@ -400,7 +406,7 @@ function send_gift_purchase_receipt_email(array $payment): void {
           <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Receipt No.</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$receiptNo}</td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Date</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$date}</td></tr>
-            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$courseTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">Gift for {$recipientName}</span></td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$courseTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">{$itemLabel}</span></td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Payment Method</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">Mobile Money</td></tr>
             <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #1e3a8a; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
           </table>
