@@ -199,7 +199,7 @@ CREATE TABLE payments (
   amount DECIMAL(12,2) NOT NULL,
   original_amount DECIMAL(12,2) NULL,
   phone VARCHAR(32) NOT NULL,
-  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION','SCHOOL_SUBSCRIPTION','BUNDLE_PURCHASE','INSTALLMENT_PAYMENT') NOT NULL DEFAULT 'COURSE_PURCHASE',
+  type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION','SCHOOL_SUBSCRIPTION','BUNDLE_PURCHASE','INSTALLMENT_PAYMENT','COURSE_GIFT') NOT NULL DEFAULT 'COURSE_PURCHASE',
   status ENUM('PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'PENDING',
   status_message VARCHAR(500) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -247,6 +247,16 @@ CREATE TABLE payments (
   -- payment is a part of (the first payment AND every later one). NULL for
   -- every other payment type. See installment_plans below.
   installment_plan_id INT NULL,
+  -- Set for a COURSE_GIFT payment — which course_gifts row this became once
+  -- it succeeded (course_gifts doesn't exist yet while PENDING, see the
+  -- gift_recipient_* columns below). NULL for every other payment type.
+  gift_id INT NULL,
+  -- Carried on the payment itself while PENDING, same convention as
+  -- guest_name/guest_email above — who a COURSE_GIFT payment is for. NULL
+  -- for every other payment type. See course_gifts below.
+  gift_recipient_name VARCHAR(191) NULL,
+  gift_recipient_email VARCHAR(191) NULL,
+  gift_message TEXT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL,
@@ -256,6 +266,7 @@ CREATE TABLE payments (
   FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE SET NULL,
   FOREIGN KEY (bundle_id) REFERENCES bundles(id) ON DELETE SET NULL,
   FOREIGN KEY (installment_plan_id) REFERENCES installment_plans(id) ON DELETE SET NULL,
+  FOREIGN KEY (gift_id) REFERENCES course_gifts(id) ON DELETE SET NULL,
   INDEX idx_payments_user_course_status (user_id, course_id, status),
   UNIQUE KEY uniq_access_token_hash (access_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -317,6 +328,29 @@ CREATE TABLE installment_plans (
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_learner_course_plan (learner_id, course_id),
   INDEX idx_installment_plans_status_due (status, next_due_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Lets a logged-in buyer pay for one course as a gift for someone else by
+-- email — the buyer's own account never gets access; the recipient claims
+-- it via an emailed link, creating or logging into their own account first
+-- if they don't have one yet. See includes/gifts.php.
+CREATE TABLE course_gifts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  status ENUM('PENDING','CLAIMED') NOT NULL DEFAULT 'PENDING',
+  recipient_name VARCHAR(191) NOT NULL,
+  recipient_email VARCHAR(191) NOT NULL,
+  message TEXT NULL,
+  claim_token_hash VARCHAR(64) NOT NULL,
+  claimed_by_user_id INT NULL,
+  claimed_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  buyer_id INT NOT NULL,
+  course_id INT NOT NULL,
+  FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (claimed_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
+  UNIQUE KEY uniq_claim_token_hash (claim_token_hash),
+  INDEX idx_course_gifts_buyer (buyer_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Coupon codes a creator can run for their own courses — a percentage or

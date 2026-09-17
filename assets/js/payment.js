@@ -35,6 +35,11 @@
     const phoneInput = root.querySelector('[data-phone-input]');
     const nameInput = root.querySelector('[data-name-input]');
     const emailInput = root.querySelector('[data-email-input]');
+    // Gift-a-course widget only — who the course is FOR, not the (already
+    // logged-in) buyer paying for it. Distinct from nameInput/emailInput
+    // above, which is the guest-checkout buyer's own info.
+    const recipientNameInput = root.querySelector('[data-recipient-name-input]');
+    const recipientEmailInput = root.querySelector('[data-recipient-email-input]');
 
     // "Have a coupon code?" box — a sibling of this widget, not inside it,
     // since it needs to update the top-of-panel price display too, not just
@@ -124,6 +129,12 @@
           setError("Enter your name and email address.");
           return;
         }
+        const recipientName = recipientNameInput?.value.trim() || "";
+        const recipientEmail = recipientEmailInput?.value.trim() || "";
+        if (recipientNameInput && (!recipientName || !recipientEmail)) {
+          setError("Enter the recipient's name and email address.");
+          return;
+        }
         setError("");
         show("waiting");
         if (statusText) statusText.textContent = "Starting payment...";
@@ -131,6 +142,7 @@
         try {
           const body = { courseId, tier, creatorId, bundleId, phone, csrf_token: csrfToken() };
           if (isGuest) { body.name = name; body.email = email; }
+          if (recipientNameInput) { body.recipientName = recipientName; body.recipientEmail = recipientEmail; }
           if (appliedCoupon) body.couponCode = appliedCoupon;
           const res = await fetch(initiateUrl, {
             method: "POST",

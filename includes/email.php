@@ -332,6 +332,88 @@ function send_installment_reminder_email(string $to, string $name, string $cours
         HTML);
 }
 
+/**
+ * Emailed to the RECIPIENT of a gifted course, right after the buyer's
+ * payment succeeds — this is the claim link itself, not a receipt (the
+ * buyer gets their own receipt separately, see send_gift_purchase_receipt_email()).
+ * No account is assumed to exist yet; claim-gift.php handles sign-up/login.
+ */
+function send_gift_claim_email(string $to, string $recipientName, string $buyerName, string $courseTitle, ?string $message, string $claimUrl): void {
+    $messageBlock = $message
+        ? '<div style="background:#f3f4f6; border-radius:10px; padding:14px 16px; margin-top:16px; font-size:14px; color:#374151;">"' . e($message) . '"</div>'
+        : '';
+
+    resend_send($to, "{$buyerName} gifted you a course on Obin Academy!", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
+          <div style="font-size: 40px;">🎁</div>
+          <h2 style="color: #1e3a8a; margin-top: 10px;">Hi {$recipientName}, you've been gifted a course!</h2>
+          <p>
+            <strong>{$buyerName}</strong> paid for you to take <strong>{$courseTitle}</strong> on Obin Academy.
+            Claim it below to start learning — you'll need a free account first if you don't already have one.
+          </p>
+          {$messageBlock}
+          <p style="margin-top: 24px;">
+            <a href="{$claimUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              Claim Your Course
+            </a>
+          </p>
+          <p style="color: #5b6670; font-size: 12.5px; margin-top: 28px;">
+            This link is yours alone — don't share it. Questions? Reply to this email or reach us at info@obinacademy.site.
+          </p>
+        </div>
+        HTML);
+}
+
+/**
+ * Emailed to the BUYER right after a gift payment succeeds — proof of
+ * payment, since they'll never see the course in their own dashboard (the
+ * recipient claims it instead). Not a reuse of send_payment_receipt_email(),
+ * which points its CTA at the buyer's own course access.
+ */
+function send_gift_purchase_receipt_email(array $payment): void {
+    $to = $payment['buyer_email'];
+    if (!$to) return;
+
+    $name = $payment['buyer_name'];
+    $amount = format_money((float) $payment['amount']);
+    $courseTitle = $payment['course_title'];
+    $recipientName = $payment['gift_recipient_name'];
+    $receiptNo = 'OA-' . str_pad((string) $payment['id'], 6, '0', STR_PAD_LEFT);
+    $date = date('F j, Y \a\t g:i A');
+
+    resend_send($to, "Receipt for your gift of \"{$courseTitle}\" — Obin Academy", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #2563eb;">
+            <table role="presentation" style="margin: 0 auto;"><tr>
+              <td style="vertical-align: middle; padding-right: 8px;">
+                <div style="width: 34px; height: 34px; border-radius: 9px; background: #1e3a8a; display: flex; align-items: center; justify-content: center;">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"></path></svg>
+                </div>
+              </td>
+              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #2563eb;">Academy</span></span></td>
+            </tr></table>
+          </div>
+
+          <h2 style="color: #1e3a8a; text-align: center; margin-top: 24px;">Gift Receipt</h2>
+          <p style="text-align: center; color: #5b6670;">Thanks, {$name} — here's your receipt for this gift.</p>
+
+          <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Receipt No.</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$receiptNo}</td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Date</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$date}</td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$courseTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">Gift for {$recipientName}</span></td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Payment Method</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">Mobile Money</td></tr>
+            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #1e3a8a; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
+          </table>
+
+          <p style="text-align: center; color: #5b6670; margin-top: 20px; font-size: 14px;">We've emailed {$recipientName} their claim link.</p>
+
+          <p style="color: #5b6670; font-size: 12.5px; text-align: center; margin-top: 28px;">
+            Keep this receipt for your records. Questions about this payment? Reply to this email or reach us at info@obinacademy.site.
+          </p>
+        </div>
+        HTML);
+}
+
 /** Sent the moment a course is completed (100% progress) — a proactive copy of the certificate.php link. */
 function send_certificate_email(string $to, string $name, string $courseTitle, string $certificateUrl): void {
     resend_send($to, "You Earned a Certificate for \"{$courseTitle}\"! — Obin Academy", <<<HTML

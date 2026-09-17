@@ -13,6 +13,7 @@ $navByRole = [
             ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
             ['/dashboard/learner/subscriptions.php', 'My Subscriptions', 'wallet'],
             ['/dashboard/learner/payment-plans.php', 'Payment Plans', 'tag'],
+            ['/dashboard/gifts.php', 'Gifts Sent', 'gift'],
             ['/dashboard/learner/following.php', 'Following', 'users'],
         ],
         'Account' => [
@@ -26,6 +27,7 @@ $navByRole = [
             ['/dashboard/creator/students.php', 'My Students', 'users'],
             ['/dashboard/creator/bundles.php', 'Bundles', 'layout-dashboard'],
             ['/dashboard/creator/coupons.php', 'Coupons', 'tag'],
+            ['/dashboard/gifts.php', 'Gifts Sent', 'gift'],
             ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
             ['/dashboard/creator/shares.php', 'Course Shares', 'share'],
         ],

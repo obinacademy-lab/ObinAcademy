@@ -303,6 +303,51 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           <li><?php dash_icon('check-circle'); ?>Learn on any device</li>
         </ul>
 
+        <?php if ($user && !$isOwner && $isPublished && !$isSubscriptionIncluded && $price > 0): ?>
+          <div class="gift-box" style="margin-top:16px;">
+            <button type="button" class="coupon-toggle" data-gift-toggle><?php dash_icon('gift'); ?> Gift this course to someone</button>
+            <div class="hidden" data-gift-row style="margin-top:10px;" data-payment-widget
+                 data-course-id="<?= (int) $course['id'] ?>"
+                 data-initiate-url="<?= e(base_url('api/initiate-gift-payment.php')) ?>"
+                 data-success-redirect="<?= e(base_url('dashboard/gifts.php')) ?>">
+              <div data-state="idle">
+                <div class="field-icon"><input data-recipient-name-input placeholder="Recipient's name"></div>
+                <div class="field-icon" style="margin-top:8px;"><input data-recipient-email-input type="email" placeholder="Recipient's email"></div>
+                <button class="btn btn-primary btn-block" style="margin-top:10px;" data-action="start">Continue</button>
+              </div>
+              <div data-state="phone" class="hidden guest-form">
+                <div class="field-icon">
+                  <?php dash_icon('wallet'); ?>
+                  <input type="tel" placeholder="Your mobile money phone e.g. 0772 123 456" data-phone-input>
+                </div>
+                <button class="btn btn-gold btn-block" data-action="pay">Pay <?= e(format_money($price)) ?> as a Gift</button>
+              </div>
+              <div data-state="waiting" class="hidden pay-waiting">
+                <div class="spinner"></div>
+                <p style="font-weight:700;">Waiting for approval...</p>
+                <p class="small muted" data-status-text></p>
+              </div>
+              <div data-state="success" class="hidden pay-success">
+                <p style="font-weight:700;">✓ Gift sent! We emailed them a claim link.</p>
+              </div>
+              <div data-state="failed" class="hidden pay-failed">
+                <p style="font-weight:700;">Payment not completed</p>
+                <p class="small muted" data-fail-text></p>
+                <button class="btn btn-primary btn-sm" data-action="retry">Try Again</button>
+              </div>
+              <p class="error-text hidden" data-error></p>
+            </div>
+          </div>
+          <script>
+            (() => {
+              const toggle = document.currentScript.previousElementSibling.querySelector('[data-gift-toggle]');
+              const row = document.currentScript.previousElementSibling.querySelector('[data-gift-row]');
+              if (!toggle || !row) return;
+              toggle.addEventListener('click', () => row.classList.toggle('hidden'));
+            })();
+          </script>
+        <?php endif; ?>
+
         <div class="enroll-trust">
           <div class="pay-badges">
             <span class="pay-badge pay-badge-mtn"><span class="logo-chip"><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN"></span>MTN Mobile Money</span>
