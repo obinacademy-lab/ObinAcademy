@@ -28,7 +28,6 @@ $navByRole = [
             ['/dashboard/creator/bundles.php', 'Bundles', 'layout-dashboard'],
             ['/dashboard/creator/coupons.php', 'Coupons', 'tag'],
             ['/dashboard/gifts.php', 'Gifts Sent', 'gift'],
-            ['/dashboard/creator/broadcast.php', 'WhatsApp Broadcast', 'message-square'],
             ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
             ['/dashboard/creator/shares.php', 'Course Shares', 'share'],
         ],
