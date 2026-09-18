@@ -39,3 +39,17 @@ function get_broadcasts_for_creator(int $creatorId, int $limit = 20): array {
     $limit = max(1, min(50, $limit));
     return db_all("SELECT * FROM broadcasts WHERE creator_id = ? ORDER BY created_at DESC LIMIT $limit", [$creatorId]);
 }
+
+/** Header stats for the broadcast page — reach across ALL broadcasts, not just the capped history list above. */
+function get_broadcast_stats_for_creator(int $creatorId): array {
+    $row = db_one(
+        "SELECT COALESCE(SUM(recipient_count), 0) AS total_reach,
+                COALESCE(SUM(CASE WHEN MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE()) THEN 1 ELSE 0 END), 0) AS sent_this_month
+         FROM broadcasts WHERE creator_id = ?",
+        [$creatorId]
+    );
+    return [
+        'totalReach' => (int) $row['total_reach'],
+        'sentThisMonth' => (int) $row['sent_this_month'],
+    ];
+}

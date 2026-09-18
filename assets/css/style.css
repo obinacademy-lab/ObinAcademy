@@ -148,6 +148,10 @@ p { margin: 0; }
      page) out past the viewport width on narrow phones — exactly the
      "have to drag sideways to read it" bug this fixes. */
   .course-detail-main { grid-column: span 2; }
+  /* Same pattern, same reason: the WhatsApp Broadcast compose card spans 2
+     of the 3 columns .lg:grid-3 defines here, scoped to this breakpoint so
+     it doesn't force a phantom column below 1024px. */
+  .broadcast-compose { grid-column: span 2; }
 }
 
 .section { padding: 56px 0; }
