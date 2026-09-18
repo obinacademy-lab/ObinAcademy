@@ -259,7 +259,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                  data-initiate-url="<?= e(base_url('api/initiate-installment-payment.php')) ?>"
                  data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
               <div data-state="idle">
-                <button class="btn btn-outline btn-block" data-action="start">Or pay in 2 installments — <?= e(format_money($firstInstallmentAmount)) ?> now, <?= e(format_money($secondInstallmentAmount)) ?> later</button>
+                <button class="btn btn-outline btn-block btn-installments" data-action="start">
+                  <span class="btn-installments-title">Or pay in 2 installments</span>
+                  <span class="btn-installments-detail"><?= e(format_money($firstInstallmentAmount)) ?> now &middot; <?= e(format_money($secondInstallmentAmount)) ?> later</span>
+                </button>
               </div>
               <div data-state="phone" class="hidden guest-form">
                 <div class="field-icon">

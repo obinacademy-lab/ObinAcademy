@@ -417,6 +417,21 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 .btn-lg { padding: 16px 32px; font-size: 16px; }
 .btn-block { width: 100%; }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+/* The installment offer's copy runs long ("Or pay in 2 installments — UGX
+   X now, UGX Y later") — .btn's normal single-line nowrap either overflows
+   the pill shape or wraps mid-word depending on amount lengths. Two
+   deliberate lines (bold label, smaller detail row) read as one designed
+   unit instead, at any width. */
+.btn-installments {
+  white-space: normal;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 24px;
+  line-height: 1.3;
+  text-align: center;
+}
+.btn-installments-title { font-weight: 800; font-size: 14.5px; }
+.btn-installments-detail { font-weight: 600; font-size: 12.5px; opacity: 0.72; }
 
 /* ---------- cards ---------- */
 .card {
