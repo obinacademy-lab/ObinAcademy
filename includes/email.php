@@ -249,7 +249,7 @@ function send_installment_receipt_email(array $payment): void {
     // Re-read the plan rather than trust the columns fetch_payment_with_installment()
     // joined onto $payment — those were read before apply_installment_payment_success()
     // incremented installments_paid, so they'd otherwise show last installment's count.
-    $plan = db_one('SELECT installments_paid, installment_count FROM installment_plans WHERE id = ?', [$payment['installment_plan_id']]);
+    $plan = db_one('SELECT installments_paid, installment_count, installment_interval_days FROM installment_plans WHERE id = ?', [$payment['installment_plan_id']]);
     $name = $payment['learner_name'];
     $amount = format_money((float) $payment['amount']);
     $courseTitle = $payment['course_title'];
@@ -263,7 +263,7 @@ function send_installment_receipt_email(array $payment): void {
 
     $progressNote = $isFinal
         ? 'This was your last installment — the course is fully paid off.'
-        : "Installment {$installmentNumber} of {$installmentCount} paid. Your next one is due in " . INSTALLMENT_INTERVAL_DAYS . ' days.';
+        : "Installment {$installmentNumber} of {$installmentCount} paid. Your next one is due in " . (int) $plan['installment_interval_days'] . ' days.';
 
     resend_send($to, "Receipt for \"{$courseTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">

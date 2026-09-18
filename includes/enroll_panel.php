@@ -280,7 +280,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
               </div>
               <p class="error-text hidden" data-error></p>
             </div>
-            <p class="small muted" style="margin-top:8px;">Full access unlocks after the first payment. Remaining installments are collected every <?= INSTALLMENT_INTERVAL_DAYS ?> days.</p>
+            <p class="small muted" style="margin-top:8px;">Full access unlocks after the first payment. Remaining installments are collected every <?= (int) $course['installment_interval_days'] ?> days.</p>
           <?php endif; ?>
         <?php else: ?>
           <form method="post" action="<?= e(base_url('api/enroll-redirect.php')) ?>" style="margin-top:20px;">

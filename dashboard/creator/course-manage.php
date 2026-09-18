@@ -77,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $premiumPrice = $premiumPriceRaw === '' ? null : (float) $premiumPriceRaw;
         $installmentsEnabled = post('installmentsEnabled') === '1' ? 1 : 0;
         $installmentCount = in_array(post('installmentCount'), ['2', '3', '4'], true) ? (int) post('installmentCount') : 2;
+        $installmentIntervalDays = in_array(post('installmentIntervalDays'), ['7', '14', '30'], true) ? (int) post('installmentIntervalDays') : 14;
 
         if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
         if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
@@ -107,8 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?, subscription_included=?, installments_enabled=?, installment_count=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
-            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice, $subscriptionIncluded, $installmentsEnabled, $installmentCount];
+            $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?, subscription_included=?, installments_enabled=?, installment_count=?, installment_interval_days=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
+            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice, $subscriptionIncluded, $installmentsEnabled, $installmentCount, $installmentIntervalDays];
             if ($thumbnailUrl) $params[] = $thumbnailUrl;
             $params[] = $courseId;
             db_run($sql, $params);
@@ -374,12 +375,20 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <span>Let learners pay in installments</span>
       </label>
       <div data-installments-count-row style="margin-top:10px; <?= (int) $course['installments_enabled'] === 1 ? '' : 'display:none;' ?>">
-        <select name="installmentCount">
-          <?php foreach ([2, 3, 4] as $n): ?>
-            <option value="<?= $n ?>" <?= (int) $course['installment_count'] === $n ? 'selected' : '' ?>><?= $n ?> payments</option>
-          <?php endforeach; ?>
-        </select>
-        <p class="help">Full access unlocks after the first payment. The rest are collected every <?= INSTALLMENT_INTERVAL_DAYS ?> days, with a short grace period before access pauses if one is missed.</p>
+        <div class="row gap-2" style="flex-wrap:wrap;">
+          <select name="installmentCount">
+            <?php foreach ([2, 3, 4] as $n): ?>
+              <option value="<?= $n ?>" <?= (int) $course['installment_count'] === $n ? 'selected' : '' ?>><?= $n ?> payments</option>
+            <?php endforeach; ?>
+          </select>
+          <select name="installmentIntervalDays">
+            <?php $intervalOptions = [7 => 'Every week', 14 => 'Every 2 weeks', 30 => 'Every month']; ?>
+            <?php foreach ($intervalOptions as $days => $label): ?>
+              <option value="<?= $days ?>" <?= (int) ($course['installment_interval_days'] ?? 14) === $days ? 'selected' : '' ?>><?= e($label) ?> (<?= $days ?> days)</option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <p class="help">Full access unlocks after the first payment. The rest are collected on the schedule you pick above, with a short grace period before access pauses if one is missed.</p>
       </div>
     </div>
     <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>

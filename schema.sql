@@ -91,6 +91,9 @@ CREATE TABLE courses (
   -- is subscription_included.
   installments_enabled TINYINT(1) NOT NULL DEFAULT 0,
   installment_count TINYINT NULL,
+  -- Days between installments once a plan starts (creator's choice, e.g. 7/14/30) — copied onto
+  -- each installment_plans row at creation so a later change here doesn't affect a plan in progress.
+  installment_interval_days SMALLINT NOT NULL DEFAULT 14,
   premium_price DECIMAL(12,2) NULL,
   -- Only meaningful when the creator's school (users.pricing_model) is
   -- MONTHLY_SUBSCRIPTION: 1 (default) means this course is covered by the
@@ -315,6 +318,7 @@ CREATE TABLE installment_plans (
   total_amount DECIMAL(12,2) NOT NULL,
   installment_count TINYINT NOT NULL,
   installment_amount DECIMAL(12,2) NOT NULL,
+  installment_interval_days SMALLINT NOT NULL DEFAULT 14,
   installments_paid TINYINT NOT NULL DEFAULT 0,
   phone VARCHAR(32) NOT NULL,
   next_due_at DATETIME NOT NULL,

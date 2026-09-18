@@ -6,9 +6,11 @@
 // course outright — and stays up while the plan is ACTIVE/GRACE/COMPLETED.
 // A missed payment walks ACTIVE -> GRACE -> DEFAULTED (access paused) via
 // cron/track-maintenance.php's reminder + sweep sections, mirroring
-// includes/school_subscriptions.php's renewal lifecycle.
+// includes/school_subscriptions.php's renewal lifecycle. The gap between
+// installments is the creator's own choice per course (courses.installment_interval_days),
+// copied onto installment_plans.installment_interval_days when a plan starts
+// so a later change to the course doesn't affect a plan already in progress.
 
-const INSTALLMENT_INTERVAL_DAYS = 14;
 const INSTALLMENT_GRACE_DAYS = 5;
 const INSTALLMENT_REMINDER_WINDOW_DAYS = 3;
 
@@ -103,9 +105,10 @@ function initiate_installment_payment(int $learnerId, int $courseId, string $pho
     if (!$plan) {
         $installmentCount = (int) $course['installment_count'];
         $installmentAmount = round((float) $course['price'] / $installmentCount, 2);
+        $intervalDays = (int) $course['installment_interval_days'];
         $planId = db_insert(
-            "INSERT INTO installment_plans (total_amount, installment_count, installment_amount, phone, next_due_at, learner_id, creator_id, course_id) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)",
-            [(float) $course['price'], $installmentCount, $installmentAmount, $phone, $learnerId, $course['creator_id'], $courseId]
+            "INSERT INTO installment_plans (total_amount, installment_count, installment_amount, installment_interval_days, phone, next_due_at, learner_id, creator_id, course_id) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?)",
+            [(float) $course['price'], $installmentCount, $installmentAmount, $intervalDays, $phone, $learnerId, $course['creator_id'], $courseId]
         );
         $installmentNumber = 1;
         $amountDue = $installmentAmount;
@@ -162,7 +165,7 @@ function apply_installment_payment_success(array $payment): void {
                 [$paidCount, $plan['id']]
             );
         } else {
-            $nextDueAt = date('Y-m-d H:i:s', strtotime('+' . INSTALLMENT_INTERVAL_DAYS . ' days'));
+            $nextDueAt = date('Y-m-d H:i:s', strtotime('+' . (int) $plan['installment_interval_days'] . ' days'));
             db_run(
                 "UPDATE installment_plans SET installments_paid = ?, status = 'ACTIVE', next_due_at = ?, grace_ends_at = NULL, reminder_sent_at = NULL WHERE id = ?",
                 [$paidCount, $nextDueAt, $plan['id']]
