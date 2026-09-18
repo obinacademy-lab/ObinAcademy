@@ -48,6 +48,21 @@ function get_installment_plans_for_learner(int $learnerId): array {
     );
 }
 
+/** The amount due for a plan's NEXT installment. Always installment_amount
+ * (the creator's chosen first-installment figure) except the final
+ * installment, which collects whatever's actually left — so a first
+ * installment that isn't an even fraction of the price (the creator's own
+ * choice, not an auto-split) never leaves a stray shilling uncollected on
+ * the last payment. Shared by every place that needs "what's due next" so
+ * this can't drift out of sync between them. */
+function installment_amount_due(array $plan): float {
+    $installmentNumber = (int) $plan['installments_paid'] + 1;
+    $isLast = $installmentNumber >= (int) $plan['installment_count'];
+    return $isLast
+        ? round((float) $plan['total_amount'] - ((float) $plan['installment_amount'] * $plan['installments_paid']), 2)
+        : (float) $plan['installment_amount'];
+}
+
 function fetch_payment_with_installment(int $paymentId): ?array {
     return db_one(
         "SELECT p.*, c.title AS course_title, c.slug AS course_slug,
@@ -76,7 +91,7 @@ function initiate_installment_payment(int $learnerId, int $courseId, string $pho
     $course = db_one("SELECT * FROM courses WHERE id = ? AND status = 'PUBLISHED'", [$courseId]);
     if (!$course) return ['error' => 'Course not found.'];
     if ((int) $course['creator_id'] === $learnerId) return ['error' => 'Creators cannot buy their own course.'];
-    if (!$course['installments_enabled'] || (int) $course['installment_count'] < 2 || (float) $course['price'] <= 0) {
+    if (!$course['installments_enabled'] || (float) ($course['first_installment_amount'] ?? 0) <= 0 || (float) $course['price'] <= 0) {
         return ['error' => 'This course does not offer a payment plan.'];
     }
 
@@ -103,8 +118,10 @@ function initiate_installment_payment(int $learnerId, int $courseId, string $pho
     }
 
     if (!$plan) {
-        $installmentCount = (int) $course['installment_count'];
-        $installmentAmount = round((float) $course['price'] / $installmentCount, 2);
+        // Always exactly 2 installments: the creator's own chosen first
+        // amount, then whatever's left as the second — never an auto-split.
+        $installmentCount = 2;
+        $installmentAmount = (float) $course['first_installment_amount'];
         $intervalDays = (int) $course['installment_interval_days'];
         $planId = db_insert(
             "INSERT INTO installment_plans (total_amount, installment_count, installment_amount, installment_interval_days, phone, next_due_at, learner_id, creator_id, course_id) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?)",
@@ -115,12 +132,7 @@ function initiate_installment_payment(int $learnerId, int $courseId, string $pho
     } else {
         $planId = (int) $plan['id'];
         $installmentNumber = (int) $plan['installments_paid'] + 1;
-        $isLast = $installmentNumber >= (int) $plan['installment_count'];
-        // The last installment collects whatever is actually left, so
-        // per-installment rounding never leaves a stray shilling uncollected.
-        $amountDue = $isLast
-            ? round((float) $plan['total_amount'] - ((float) $plan['installment_amount'] * $plan['installments_paid']), 2)
-            : (float) $plan['installment_amount'];
+        $amountDue = installment_amount_due($plan);
     }
 
     $paymentId = db_insert(
@@ -201,7 +213,7 @@ function apply_installment_payment_success(array $payment): void {
  */
 function send_due_installment_reminders(): int {
     $due = db_all(
-        "SELECT ip.id, ip.course_id, ip.installments_paid, ip.installment_count, ip.installment_amount,
+        "SELECT ip.id, ip.course_id, ip.total_amount, ip.installments_paid, ip.installment_count, ip.installment_amount,
                 c.title AS course_title, c.slug AS course_slug,
                 learner.name AS learner_name, learner.email AS learner_email
          FROM installment_plans ip
@@ -217,7 +229,7 @@ function send_due_installment_reminders(): int {
         $payUrl = base_url('dashboard/learner/payment-plans.php');
         send_installment_reminder_email(
             $plan['learner_email'], $plan['learner_name'], $plan['course_title'],
-            $nextNumber, (int) $plan['installment_count'], (float) $plan['installment_amount'], $payUrl
+            $nextNumber, (int) $plan['installment_count'], installment_amount_due($plan), $payUrl
         );
         db_run('UPDATE installment_plans SET reminder_sent_at = NOW() WHERE id = ?', [$plan['id']]);
     }

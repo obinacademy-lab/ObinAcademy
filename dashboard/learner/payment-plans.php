@@ -26,10 +26,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       $needsPayment = in_array($plan['status'], ['GRACE', 'DEFAULTED'], true);
       $remaining = (int) $plan['installment_count'] - (int) $plan['installments_paid'];
       $nextInstallmentNumber = (int) $plan['installments_paid'] + 1;
-      $isLastInstallment = $nextInstallmentNumber >= (int) $plan['installment_count'];
-      $nextAmount = $isLastInstallment
-          ? round((float) $plan['total_amount'] - ((float) $plan['installment_amount'] * $plan['installments_paid']), 2)
-          : (float) $plan['installment_amount'];
+      $nextAmount = installment_amount_due($plan);
     ?>
       <div class="card card-pad">
         <div class="row between wrap gap-2">

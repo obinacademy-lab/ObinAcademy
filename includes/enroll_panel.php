@@ -39,7 +39,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $installmentPlan = $user ? get_installment_plan((int) $user['id'], (int) $course['id']) : null;
     $installmentAccessBlocked = $installmentPlan && !learner_has_installment_access($installmentPlan);
     if ($installmentAccessBlocked) $hasAccess = false;
-    $courseSupportsInstallments = (int) ($course['installments_enabled'] ?? 0) === 1 && (int) ($course['installment_count'] ?? 0) >= 2;
+    $courseSupportsInstallments = (int) ($course['installments_enabled'] ?? 0) === 1 && (float) ($course['first_installment_amount'] ?? 0) > 0;
     $schoolLabel = $course['creator_school_name'] ?: $course['creator_name'];
     $monthlyPrice = (float) ($course['creator_school_monthly_price'] ?? 0);
     // A subscription unlocks only ONE course at a time per creator — if this
@@ -184,7 +184,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                 <?php dash_icon('wallet'); ?>
                 <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
               </div>
-              <button class="btn btn-primary btn-block" data-action="pay">Pay <?= e(format_money((float) $installmentPlan['installment_amount'])) ?></button>
+              <button class="btn btn-primary btn-block" data-action="pay">Pay <?= e(format_money(installment_amount_due($installmentPlan))) ?></button>
             </div>
             <div data-state="waiting" class="hidden pay-waiting">
               <div class="spinner"></div>
@@ -248,22 +248,25 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
           <?php if ($courseSupportsInstallments && !$installmentPlan):
             // Installments always split the regular price, same as
             // initiate_installment_payment() — not the current sale price,
-            // which could change or expire between installments.
-            $installmentAmount = round($price / (int) $course['installment_count'], 2);
+            // which could change or expire between installments. The first
+            // amount is the creator's own choice (courses.first_installment_amount),
+            // never auto-computed — the second is simply whatever's left.
+            $firstInstallmentAmount = (float) $course['first_installment_amount'];
+            $secondInstallmentAmount = round($price - $firstInstallmentAmount, 2);
           ?>
             <div style="margin-top:14px;" data-payment-widget
                  data-course-id="<?= (int) $course['id'] ?>"
                  data-initiate-url="<?= e(base_url('api/initiate-installment-payment.php')) ?>"
                  data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
               <div data-state="idle">
-                <button class="btn btn-outline btn-block" data-action="start">Or pay in <?= (int) $course['installment_count'] ?> installments of <?= e(format_money($installmentAmount)) ?></button>
+                <button class="btn btn-outline btn-block" data-action="start">Or pay in 2 installments — <?= e(format_money($firstInstallmentAmount)) ?> now, <?= e(format_money($secondInstallmentAmount)) ?> later</button>
               </div>
               <div data-state="phone" class="hidden guest-form">
                 <div class="field-icon">
                   <?php dash_icon('wallet'); ?>
                   <input type="tel" placeholder="Mobile money phone e.g. 0772 123 456" data-phone-input>
                 </div>
-                <button class="btn btn-primary btn-block" data-action="pay">Pay First Installment: <?= e(format_money($installmentAmount)) ?></button>
+                <button class="btn btn-primary btn-block" data-action="pay">Pay First Installment: <?= e(format_money($firstInstallmentAmount)) ?></button>
               </div>
               <div data-state="waiting" class="hidden pay-waiting">
                 <div class="spinner"></div>
@@ -280,7 +283,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
               </div>
               <p class="error-text hidden" data-error></p>
             </div>
-            <p class="small muted" style="margin-top:8px;">Full access unlocks after the first payment. Remaining installments are collected every <?= (int) $course['installment_interval_days'] ?> days.</p>
+            <p class="small muted" style="margin-top:8px;">Full access unlocks after the first payment. The remaining <?= e(format_money($secondInstallmentAmount)) ?> is due <?= (int) $course['installment_interval_days'] ?> days later.</p>
           <?php endif; ?>
         <?php else: ?>
           <form method="post" action="<?= e(base_url('api/enroll-redirect.php')) ?>" style="margin-top:20px;">

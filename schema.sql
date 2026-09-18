@@ -94,6 +94,10 @@ CREATE TABLE courses (
   -- Days between installments once a plan starts (creator's choice, e.g. 7/14/30) — copied onto
   -- each installment_plans row at creation so a later change here doesn't affect a plan in progress.
   installment_interval_days SMALLINT NOT NULL DEFAULT 14,
+  -- The creator's own chosen amount for installment 1 — never auto-computed
+  -- as price/count. Always exactly 2 installments; the second is whatever's
+  -- left of price, worked out live (see includes/installments.php).
+  first_installment_amount DECIMAL(12,2) NULL,
   premium_price DECIMAL(12,2) NULL,
   -- Only meaningful when the creator's school (users.pricing_model) is
   -- MONTHLY_SUBSCRIPTION: 1 (default) means this course is covered by the
