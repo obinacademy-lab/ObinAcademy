@@ -344,12 +344,16 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .recip-open-pill svg { width: 12px; height: 12px; }
 .recip-open-row.opened .recip-open-pill { background: var(--dash-good-bg); color: #128c7e; }
 
-.broadcast-history-row { align-items: center; flex-wrap: nowrap; gap: 10px; }
-.broadcast-history-main { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
-.broadcast-history-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+/* ---------- shared dashboard list row (icon + text left, meta right —
+   stacks cleanly under 640px instead of squeezing the text column to
+   nothing). Used by Broadcast History, Bundles, and any future page that
+   lists records this way. ---------- */
+.list-row { align-items: center; flex-wrap: nowrap; gap: 10px; }
+.list-row-main { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+.list-row-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 @media (max-width: 640px) {
-  .broadcast-history-row { flex-wrap: wrap; align-items: flex-start; }
-  .broadcast-history-meta { flex-basis: 100%; justify-content: space-between; padding-left: 44px; }
+  .list-row { flex-wrap: wrap; align-items: flex-start; }
+  .list-row-meta { flex-basis: 100%; justify-content: space-between; padding-left: 44px; }
 }
 
 /* ---------- leaderboard ---------- */

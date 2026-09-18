@@ -178,12 +178,12 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <h3 class="dash-section-label reveal" style="margin-top:36px;">Broadcast History</h3>
   <div class="activity-feed reveal" style="margin-top:14px;">
     <?php foreach ($broadcasts as $b): ?>
-      <div class="activity-row broadcast-history-row">
-        <div class="broadcast-history-main">
+      <div class="activity-row list-row">
+        <div class="list-row-main">
           <span class="activity-dot" style="background:#e7f9ef; color:#128c7e; flex-shrink:0;"><?php dash_icon('message-square'); ?></span>
           <div class="activity-body"><strong><?= e(mb_strimwidth($b['message'], 0, 90, '…')) ?></strong></div>
         </div>
-        <div class="broadcast-history-meta">
+        <div class="list-row-meta">
           <span class="status-pill" style="color:var(--accent); background:var(--dash-tint); border-color:transparent; font-size:11.5px; padding:5px 12px;"><?= (int) $b['recipient_count'] ?> follower<?= (int) $b['recipient_count'] === 1 ? '' : 's' ?></span>
           <span class="small muted" style="width:90px; text-align:right; flex-shrink:0;"><?= e(format_date($b['created_at'])) ?></span>
         </div>

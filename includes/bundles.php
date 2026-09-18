@@ -2,10 +2,13 @@
 /** Course bundles — 2+ of a creator's own courses sold together for one
  * discounted one-time price. See migration/add-bundles.sql. */
 
-/** Every bundle a creator has made (any status), newest first, with its course count. */
+/** Every bundle a creator has made (any status), newest first, with its course count and the
+ * combined individual price of its courses (so the dashboard can show the learner's savings). */
 function get_bundles_for_creator(int $creatorId): array {
     return db_all(
-        "SELECT b.*, (SELECT COUNT(*) FROM bundle_courses bc WHERE bc.bundle_id = b.id) AS course_count
+        "SELECT b.*,
+                (SELECT COUNT(*) FROM bundle_courses bc WHERE bc.bundle_id = b.id) AS course_count,
+                (SELECT COALESCE(SUM(c.price), 0) FROM bundle_courses bc JOIN courses c ON c.id = bc.course_id WHERE bc.bundle_id = b.id) AS courses_total_price
          FROM bundles b WHERE b.creator_id = ? ORDER BY b.created_at DESC",
         [$creatorId]
     );
