@@ -3,17 +3,15 @@
 :root {
   --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
 
-  /* Single yellow/gold brand ramp (no more blue/purple rotation) — darkest
-     to lightest within the same ~43° gold hue as --gold below, so the
-     header/hero gradients that put white text directly on brand-950/900/800
-     keep AA-or-better contrast (verified: brand-950 ~11:1, brand-800 ~5.3:1
-     white-on-bg) instead of naively reusing the bright #f5b301 everywhere,
-     which white text fails badly against. */
-  --brand-950: #4a3800;
-  --brand-900: #664c00;
-  --brand-800: #8a6600;
-  --brand-700: #b38300;
-  --brand-600: #d9a300;
+  /* Deep purple brand ramp — the same violet family the old blue/purple
+     rotation used for its "purple" slot, now the platform's one static
+     theme instead of alternating. Already-verified white-on-bg contrast
+     (brand-950 ~15:1, the --accent shade below ~5.7:1). */
+  --brand-950: #4c1d95;
+  --brand-900: #5b21b6;
+  --brand-800: #6d28d9;
+  --brand-700: #7c3aed;
+  --brand-600: #8b5cf6;
 
   --ink: #16181a;
   --muted: #5b6670;
