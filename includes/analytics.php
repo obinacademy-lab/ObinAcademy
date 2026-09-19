@@ -282,6 +282,42 @@ function get_top_cities(int $days = 30, int $limit = 8): array {
     );
 }
 
+/** Top cities (with country) among logins in the last $days days — for the admin login-activity page. */
+function get_top_login_locations(int $days = 30, int $limit = 8): array {
+    $limit = max(1, min(50, $limit));
+    return db_all(
+        "SELECT city, country, COUNT(*) AS n
+         FROM login_log
+         WHERE logged_in_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND city IS NOT NULL
+         GROUP BY city, country ORDER BY n DESC LIMIT $limit",
+        [$days - 1]
+    );
+}
+
+/**
+ * Where a creator's own learners are logging in from, one row per city —
+ * each learner counted once, at their most recently known location (same
+ * "latest known location" idiom as LEAD_LOCATION_SUBQUERY in leads.php),
+ * not once per login. A learner who has never logged in from a resolved
+ * location is excluded rather than counted as "unknown".
+ */
+function get_top_learner_locations_for_creator(int $creatorId, int $limit = 8): array {
+    $limit = max(1, min(50, $limit));
+    return db_all(
+        "SELECT loc.city, loc.country, COUNT(*) AS n
+         FROM (
+           SELECT e.user_id,
+             (SELECT l.city FROM login_log l WHERE l.user_id = e.user_id AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1) AS city,
+             (SELECT l.country FROM login_log l WHERE l.user_id = e.user_id AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1) AS country
+           FROM (SELECT DISTINCT user_id FROM enrollments WHERE course_id IN (SELECT id FROM courses WHERE creator_id = ?) AND user_id IS NOT NULL) e
+         ) loc
+         WHERE loc.city IS NOT NULL
+         GROUP BY loc.city, loc.country
+         ORDER BY n DESC LIMIT $limit",
+        [$creatorId]
+    );
+}
+
 /** Most-viewed course detail pages in the last $days days, resolved to real course titles. */
 function get_most_viewed_courses(int $days = 30, int $limit = 8): array {
     $limit = max(1, min(50, $limit));

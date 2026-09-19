@@ -19,6 +19,7 @@ $statCounts = db_one(
 );
 
 $roleTint = ['ADMIN' => '#f87171', 'CREATOR' => '#fbbf24', 'LEARNER' => '#94a3b8'];
+$topLocations = get_top_login_locations(30, 8);
 
 $pageTitle = 'Login Activity — Admin — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
@@ -41,7 +42,22 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<div class="chart-card" style="margin-top:24px; padding:18px 20px;">
+<h3 class="dash-section-label" style="margin-top:32px;">Top Login Locations</h3>
+<p class="muted small" style="margin-top:4px;">Where sign-ins came from in the last 30 days. Approximate, resolved from IP address — never a precise location, and the address itself isn't kept.</p>
+<?php if ($topLocations): ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($topLocations as $c): ?>
+      <div class="list-row">
+        <div class="list-row-main"><span class="small" style="font-weight:600;"><?= e($c['city']) ?></span><span class="small muted">&middot; <?= e(country_name($c['country'])) ?></span></div>
+        <div class="list-row-meta small muted"><?= number_format((int) $c['n']) ?> login<?= (int) $c['n'] === 1 ? '' : 's' ?></div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php else: ?>
+  <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">Location data resolves gradually in the background — check back shortly.</div>
+<?php endif; ?>
+
+<div class="chart-card" style="margin-top:28px; padding:18px 20px;">
   <form method="get" class="leads-filter-bar">
     <div class="field-icon" style="flex:1 1 220px; max-width:280px; margin:0;">
       <?php dash_icon('search'); ?>

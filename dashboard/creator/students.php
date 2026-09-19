@@ -18,6 +18,7 @@ $totalStudents = count($allStudents);
 $coursesWithStudents = count(array_unique(array_column($allStudents, 'course_id')));
 $avgProgress = $totalStudents ? array_sum(array_column($allStudents, 'progress')) / $totalStudents : 0;
 $completedCount = count(array_filter($allStudents, fn($s) => (float) $s['progress'] >= 100));
+$topLocations = get_top_learner_locations_for_creator((int) $user['id'], 8);
 
 $pageTitle = 'My Students — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
@@ -60,6 +61,21 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <span class="muted small" style="margin-left:auto; white-space:nowrap;"><?= count($students) ?> student<?= count($students) === 1 ? '' : 's' ?> shown</span>
   </form>
 </div>
+
+<h3 class="dash-section-label" style="margin-top:28px;">Where Your Students Are</h3>
+<p class="muted small" style="margin-top:4px;">Each student's most recent known location. Approximate, resolved from IP address — never a precise location, and the address itself isn't kept.</p>
+<?php if ($topLocations): ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($topLocations as $c): ?>
+      <div class="list-row">
+        <div class="list-row-main"><span class="small" style="font-weight:600;"><?= e($c['city']) ?></span><span class="small muted">&middot; <?= e(country_name($c['country'])) ?></span></div>
+        <div class="list-row-meta small muted"><?= number_format((int) $c['n']) ?> student<?= (int) $c['n'] === 1 ? '' : 's' ?></div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php else: ?>
+  <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">Location data resolves gradually in the background — check back shortly.</div>
+<?php endif; ?>
 
 <?php if ($students): ?>
   <div class="activity-feed" style="margin-top:20px;">
