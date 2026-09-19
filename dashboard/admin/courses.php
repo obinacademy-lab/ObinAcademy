@@ -25,22 +25,29 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <?php endforeach; ?>
 </div>
 
-<div class="table-wrap" style="margin-top:20px;">
-  <table>
-    <thead><tr><th>Course</th><th>Creator</th><th>Price</th><th>Students</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-      <?php foreach ($courses as $c): ?>
-        <tr>
-          <td><?= e($c['title']) ?></td>
-          <td><?= e($c['creator_name']) ?></td>
-          <td><?= e(format_money((float) $c['price'])) ?></td>
-          <td><?= (int) $c['student_count'] ?></td>
-          <td><span class="badge <?= $badgeClass[$c['status']] ?>"><?= $c['status'] ?></span></td>
-          <td><a href="<?= e(base_url(($c['status'] === 'PENDING_REVIEW' ? 'dashboard/admin/course-review.php' : 'dashboard/creator/course-manage.php') . '?id=' . $c['id'])) ?>" class="btn btn-dark btn-sm">Open</a></td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$courses): ?><tr><td colspan="6" class="muted">No courses match this filter.</td></tr><?php endif; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$courses): ?>
+  <div class="card card-pad" style="margin-top:20px; border-style:dashed; text-align:center;">
+    <p class="muted">No courses match this filter.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:20px;">
+    <?php foreach ($courses as $c): ?>
+      <div class="activity-row list-row">
+        <div class="list-row-main">
+          <span class="activity-dot" style="background:var(--dash-tint); color:var(--accent); flex-shrink:0;"><?php dash_icon('book-open'); ?></span>
+          <div class="activity-body">
+            <strong><?= e($c['title']) ?></strong>
+            <div class="small muted" style="margin-top:2px;">
+              <?= e($c['creator_name']) ?> &middot; <?= e(format_money((float) $c['price'])) ?> &middot; <?= (int) $c['student_count'] ?> student<?= (int) $c['student_count'] === 1 ? '' : 's' ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <span class="badge <?= $badgeClass[$c['status']] ?>"><?= e($statuses[$c['status']] ?? $c['status']) ?></span>
+          <a href="<?= e(base_url(($c['status'] === 'PENDING_REVIEW' ? 'dashboard/admin/course-review.php' : 'dashboard/creator/course-manage.php') . '?id=' . $c['id'])) ?>" class="btn btn-dark btn-sm">Open</a>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
