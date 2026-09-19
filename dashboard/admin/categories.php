@@ -47,22 +47,28 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <button class="btn btn-primary">+ Add</button>
 </form>
 
-<div class="table-wrap" style="margin-top:20px;">
-  <table>
-    <thead><tr><th>Name</th><th>Courses</th><th></th></tr></thead>
-    <tbody>
-      <?php foreach ($categories as $c): ?>
-        <tr>
-          <td><?= e($c['name']) ?></td>
-          <td><?= (int) $c['course_count'] ?></td>
-          <td>
-            <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="delete"><input type="hidden" name="categoryId" value="<?= (int) $c['id'] ?>">
-              <button class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Delete</button>
-            </form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$categories): ?>
+  <div class="card card-pad" style="margin-top:20px; border-style:dashed; text-align:center;">
+    <p class="muted">No categories yet.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:20px;">
+    <?php foreach ($categories as $c): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <span class="activity-dot tone-neutral" style="flex-shrink:0;"><?php dash_icon('tag'); ?></span>
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($c['name']) ?></div>
+            <div class="small muted" style="margin-top:2px;"><?= (int) $c['course_count'] ?> course<?= (int) $c['course_count'] === 1 ? '' : 's' ?></div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="delete"><input type="hidden" name="categoryId" value="<?= (int) $c['id'] ?>">
+            <button class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Delete</button>
+          </form>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

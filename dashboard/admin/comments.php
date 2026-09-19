@@ -33,40 +33,41 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <h1 class="h2">Comments</h1>
 <p class="muted" style="margin-top:6px;">Comments automatically hidden for containing blocked language — review and restore any false positive, or delete for good.</p>
 
-<div class="table-wrap" style="margin-top:20px;">
-  <?php if ($hiddenComments): ?>
-    <table>
-      <thead><tr><th>Comment</th><th>Author</th><th>On</th><th>Why</th><th>When</th><th></th></tr></thead>
-      <tbody>
-        <?php foreach ($hiddenComments as $c): ?>
-          <tr>
-            <td style="max-width:320px;"><?= e(mb_strimwidth($c['body'], 0, 160, '…')) ?></td>
-            <td class="small"><?= e($c['author_name']) ?><br><span class="muted"><?= e($c['author_email']) ?></span></td>
-            <td class="small"><a href="<?= e(base_url('courses/view.php?slug=' . $c['course_slug'])) ?>" target="_blank" rel="noopener"><?= e($c['course_title']) ?></a></td>
-            <td class="small muted"><?= e($c['hidden_reason']) ?></td>
-            <td class="small muted"><?= e(format_date($c['created_at'])) ?></td>
-            <td>
-              <div class="row gap-2">
-                <form method="post">
-                  <?= csrf_field() ?>
-                  <input type="hidden" name="commentId" value="<?= (int) $c['id'] ?>">
-                  <input type="hidden" name="_action" value="restore">
-                  <button type="submit" class="btn btn-outline btn-sm">Restore</button>
-                </form>
-                <form method="post" onsubmit="return confirm('Permanently delete this comment?');">
-                  <?= csrf_field() ?>
-                  <input type="hidden" name="commentId" value="<?= (int) $c['id'] ?>">
-                  <input type="hidden" name="_action" value="delete">
-                  <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Delete</button>
-                </form>
-              </div>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php else: ?>
-    <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No hidden comments right now.</div>
-  <?php endif; ?>
-</div>
+<?php if (!$hiddenComments): ?>
+  <div class="card card-pad" style="margin-top:20px; border-style:dashed; text-align:center;">
+    <p class="muted">No hidden comments right now.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:20px;">
+    <?php foreach ($hiddenComments as $c): ?>
+      <div class="list-row" style="align-items:flex-start;">
+        <div class="list-row-main" style="align-items:flex-start;">
+          <span class="activity-dot tone-danger" style="flex-shrink:0; margin-top:2px;"><?php dash_icon('x-circle'); ?></span>
+          <div style="min-width:0;">
+            <div style="font-size:13.5px; line-height:1.5;"><?= e(mb_strimwidth($c['body'], 0, 200, '…')) ?></div>
+            <div class="small muted" style="margin-top:6px;">
+              <?= e($c['author_name']) ?> &middot;
+              <a href="<?= e(base_url('courses/view.php?slug=' . $c['course_slug'])) ?>" target="_blank" rel="noopener" style="color:inherit;"><?= e($c['course_title']) ?></a>
+              &middot; <?= e($c['hidden_reason']) ?> &middot; <?= e(format_date($c['created_at'])) ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <form method="post">
+            <?= csrf_field() ?>
+            <input type="hidden" name="commentId" value="<?= (int) $c['id'] ?>">
+            <input type="hidden" name="_action" value="restore">
+            <button type="submit" class="btn btn-outline btn-sm">Restore</button>
+          </form>
+          <form method="post" onsubmit="return confirm('Permanently delete this comment?');">
+            <?= csrf_field() ?>
+            <input type="hidden" name="commentId" value="<?= (int) $c['id'] ?>">
+            <input type="hidden" name="_action" value="delete">
+            <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Delete</button>
+          </form>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

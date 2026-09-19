@@ -99,22 +99,24 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <?php if ($daySummary['sales']): ?>
-  <div class="table-wrap" style="margin-top:20px;">
-    <table>
-      <thead><tr><th>Time</th><th>Course</th><th>Creator</th><th>Collected</th><th>Platform Fee</th><th>Creator Net</th></tr></thead>
-      <tbody>
-        <?php foreach ($daySummary['sales'] as $s): ?>
-          <tr>
-            <td><?= e(date('g:i A', strtotime($s['created_at']))) ?></td>
-            <td><?= e($s['course_title']) ?></td>
-            <td><?= e($s['creator_name']) ?></td>
-            <td><?= e(format_money((float) $s['gross_amount'])) ?></td>
-            <td><?= e(format_money((float) $s['platform_fee'])) ?></td>
-            <td><?= e(format_money((float) $s['amount'])) ?></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+  <div class="activity-feed" style="margin-top:20px;">
+    <?php foreach ($daySummary['sales'] as $s): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <span class="activity-dot tone-success" style="flex-shrink:0;"><?php dash_icon('banknote'); ?></span>
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($s['course_title']) ?></div>
+            <div class="small muted" style="margin-top:2px;"><?= e($s['creator_name']) ?> &middot; <?= e(date('g:i A', strtotime($s['created_at']))) ?></div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <div style="text-align:right;">
+            <div style="font-weight:700;"><?= e(format_money((float) $s['gross_amount'])) ?></div>
+            <div class="small muted" style="margin-top:2px;">fee <?= e(format_money((float) $s['platform_fee'])) ?> &middot; net <?= e(format_money((float) $s['amount'])) ?></div>
+          </div>
+        </div>
+      </div>
+    <?php endforeach; ?>
   </div>
 <?php else: ?>
   <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted); margin-top:20px;">No sales on this date.</div>

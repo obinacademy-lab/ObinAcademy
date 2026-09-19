@@ -65,35 +65,29 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </form>
 </div>
 
-<div class="table-wrap" style="margin-top:14px;">
-  <?php if ($logins): ?>
-    <table>
-      <thead><tr><th>User</th><th>Role</th><th>Date &amp; Time</th><th>Location</th><th>Device</th></tr></thead>
-      <tbody>
-        <?php foreach ($logins as $l): ?>
-          <?php $loc = trim(($l['city'] ?? '') . ($l['city'] && $l['country'] ? ', ' : '') . ($l['country'] ? country_name($l['country']) : ''), ' ,'); ?>
-          <tr>
-            <td>
-              <div class="row gap-2" style="align-items:center;">
-                <div class="row-avatar" style="--tint:<?= e($roleTint[$l['role']]) ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint); flex-shrink:0;"><?= e(mb_substr($l['name'], 0, 1)) ?></div>
-                <div style="min-width:0;">
-                  <div style="font-weight:700;"><?= e($l['name']) ?></div>
-                  <div class="small muted"><?= e($l['email']) ?></div>
-                </div>
-              </div>
-            </td>
-            <td><span class="role-pill" style="--tint:<?= e($roleTint[$l['role']]) ?>;"><?= e(ucfirst(strtolower($l['role']))) ?></span></td>
-            <td class="small"><?= e(format_date($l['logged_in_at'])) ?> <span class="muted"><?= e(date('g:i A', strtotime($l['logged_in_at']))) ?></span></td>
-            <td class="small"><?= $loc ? e($loc) : '<span class="muted">—</span>' ?></td>
-            <td class="small muted"><?= e($l['browser'] ?: '—') ?><?= $l['os'] ? ' &middot; ' . e($l['os']) : '' ?></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php else: ?>
-    <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No logins match these filters yet.</div>
-  <?php endif; ?>
-</div>
+<?php if ($logins): ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($logins as $l): ?>
+      <?php $loc = trim(($l['city'] ?? '') . ($l['city'] && $l['country'] ? ', ' : '') . ($l['country'] ? country_name($l['country']) : ''), ' ,'); ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div class="row-avatar" style="--tint:<?= e($roleTint[$l['role']]) ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint); flex-shrink:0;"><?= e(mb_substr($l['name'], 0, 1)) ?></div>
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($l['name']) ?></div>
+            <div class="small muted" style="margin-top:2px;">
+              <?= e($l['email']) ?> &middot; <?= e(format_date($l['logged_in_at'])) ?> <?= e(date('g:i A', strtotime($l['logged_in_at']))) ?><?= $loc ? ' &middot; ' . e($loc) : '' ?><?= $l['browser'] ? ' &middot; ' . e($l['browser']) : '' ?><?= $l['os'] ? ' &middot; ' . e($l['os']) : '' ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <span class="role-pill" style="--tint:<?= e($roleTint[$l['role']]) ?>;"><?= e(ucfirst(strtolower($l['role']))) ?></span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php else: ?>
+  <div class="card" style="margin-top:14px; padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No logins match these filters yet.</div>
+<?php endif; ?>
 
 <?php if ($totalPages > 1): ?>
   <div class="row gap-2" style="margin-top:16px; justify-content:center;">

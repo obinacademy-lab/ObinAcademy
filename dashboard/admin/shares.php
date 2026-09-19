@@ -41,20 +41,13 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <h2 class="h3">Most-Shared Courses</h2>
     <p class="muted small" style="margin-top:4px;">Ranked by visits their links generated, not just how many times they were shared — a course with more visits than shares is a sign its link is circulating beyond the person it was first sent to.</p>
     <?php if ($topCourses): ?>
-      <div class="table-wrap" style="margin-top:16px; box-shadow:none;">
-        <table>
-          <thead><tr><th>Course</th><th>Shares</th><th>Visits</th><th>Reach</th></tr></thead>
-          <tbody>
-            <?php foreach ($topCourses as $c): ?>
-              <tr>
-                <td><a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" target="_blank" rel="noopener" style="font-weight:600;"><?= e($c['title']) ?></a></td>
-                <td style="font-variant-numeric:tabular-nums;"><?= (int) $c['share_count'] ?></td>
-                <td style="font-variant-numeric:tabular-nums;"><?= (int) $c['visit_count'] ?></td>
-                <td style="font-variant-numeric:tabular-nums;"><?= (int) $c['reach'] ?></td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:2px;">
+        <?php foreach ($topCourses as $c): ?>
+          <div class="list-row" style="padding:8px 0;">
+            <div class="list-row-main"><a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" target="_blank" rel="noopener" class="small" style="font-weight:600;"><?= e($c['title']) ?></a></div>
+            <div class="list-row-meta small muted" style="font-variant-numeric:tabular-nums;"><?= (int) $c['share_count'] ?> shares &middot; <?= (int) $c['visit_count'] ?> visits &middot; <?= (int) $c['reach'] ?> reach</div>
+          </div>
+        <?php endforeach; ?>
       </div>
     <?php else: ?>
       <p class="muted small" style="margin-top:16px;">No shares logged yet in this range.</p>
@@ -88,30 +81,31 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </form>
 </div>
 
-<div class="table-wrap" style="margin-top:14px;">
-  <?php if ($shares): ?>
-    <table>
-      <thead><tr><th>Course</th><th>Channel</th><th>Shared By</th><th>When</th><th>Visits</th><th>Reach</th></tr></thead>
-      <tbody>
-        <?php foreach ($shares as $s): ?>
-          <tr>
-            <td><a href="<?= e(base_url('courses/view.php?slug=' . $s['course_slug'])) ?>" target="_blank" rel="noopener" style="font-weight:600;"><?= e($s['course_title']) ?></a></td>
-            <td><span class="badge badge-draft"><?= e($channelLabels[$s['channel']] ?? $s['channel']) ?></span></td>
-            <td class="small"><?= $s['sharer_name'] ? e($s['sharer_name']) : '<span class="muted">Guest</span>' ?></td>
-            <td class="small muted"><?= e(format_date($s['created_at'])) ?></td>
-            <td style="font-variant-numeric:tabular-nums;"><?= (int) $s['visit_count'] ?></td>
-            <td style="font-variant-numeric:tabular-nums;">
-              <?= (int) $s['reach'] ?>
-              <?php if ((int) $s['reach'] > 1): ?><span class="small" style="color:var(--dash-good); font-weight:700;" title="Multiple distinct people visited via this one link — it's been passed around further than just the first recipient.">↑ passed on</span><?php endif; ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php else: ?>
-    <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No shares match these filters yet.</div>
-  <?php endif; ?>
-</div>
+<?php if ($shares): ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($shares as $s): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div style="min-width:0;">
+            <a href="<?= e(base_url('courses/view.php?slug=' . $s['course_slug'])) ?>" target="_blank" rel="noopener" style="font-weight:700; display:block;"><?= e($s['course_title']) ?></a>
+            <div class="small muted" style="margin-top:2px;">
+              <?= $s['sharer_name'] ? e($s['sharer_name']) : 'Guest' ?> &middot; <?= e(format_date($s['created_at'])) ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <span class="badge badge-draft"><?= e($channelLabels[$s['channel']] ?? $s['channel']) ?></span>
+          <span class="small muted" style="white-space:nowrap; font-variant-numeric:tabular-nums;">
+            <?= (int) $s['visit_count'] ?> visits &middot; <?= (int) $s['reach'] ?> reach
+            <?php if ((int) $s['reach'] > 1): ?><span style="color:var(--dash-good); font-weight:700;" title="Multiple distinct people visited via this one link — it's been passed around further than just the first recipient.">↑ passed on</span><?php endif; ?>
+          </span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php else: ?>
+  <div class="card" style="margin-top:14px; padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No shares match these filters yet.</div>
+<?php endif; ?>
 
 <?php if ($totalPages > 1): ?>
   <div class="row gap-2" style="margin-top:16px; justify-content:center;">

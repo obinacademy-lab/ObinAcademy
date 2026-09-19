@@ -65,43 +65,57 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <h2 class="h3" style="margin-top:32px;">Pending (<?= count($pending) ?>)</h2>
-<div class="table-wrap" style="margin-top:14px;">
-  <table>
-    <thead><tr><th>Payee</th><th>Type</th><th>Amount</th><th>Phone</th><th>Requested</th><th></th></tr></thead>
-    <tbody>
-      <?php foreach ($pending as $w): ?>
-        <tr>
-          <td><?= e($w['payee_name']) ?></td>
-          <td><span class="badge <?= $typeBadgeClass[$w['payee_type']] ?>"><?= e(ucfirst(strtolower($w['payee_type']))) ?></span></td>
-          <td><?= e(format_money((float) $w['amount'])) ?></td>
-          <td><?= e($w['phone']) ?></td>
-          <td><?= e(format_date($w['requested_at'])) ?></td>
-          <td class="row gap-2">
-            <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="approve"><input type="hidden" name="withdrawalId" value="<?= (int) $w['id'] ?>"><button class="btn btn-primary btn-sm">Approve</button></form>
-            <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="reject"><input type="hidden" name="withdrawalId" value="<?= (int) $w['id'] ?>"><button class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Reject</button></form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$pending): ?><tr><td colspan="6" class="muted">Nothing pending.</td></tr><?php endif; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$pending): ?>
+  <div class="card card-pad" style="margin-top:14px; border-style:dashed; text-align:center;">
+    <p class="muted">Nothing pending.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($pending as $w): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div class="row-avatar" style="flex-shrink:0;"><?php dash_icon('banknote'); ?></div>
+          <div style="min-width:0;">
+            <div style="font-weight:700; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <?= e($w['payee_name']) ?>
+              <span class="badge <?= $typeBadgeClass[$w['payee_type']] ?>"><?= e(ucfirst(strtolower($w['payee_type']))) ?></span>
+            </div>
+            <div class="small muted" style="margin-top:2px;"><?= e(format_money((float) $w['amount'])) ?> &middot; <?= e($w['phone']) ?> &middot; requested <?= e(format_date($w['requested_at'])) ?></div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="approve"><input type="hidden" name="withdrawalId" value="<?= (int) $w['id'] ?>"><button class="btn btn-primary btn-sm">Approve</button></form>
+          <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="reject"><input type="hidden" name="withdrawalId" value="<?= (int) $w['id'] ?>"><button class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Reject</button></form>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 
 <h2 class="h3" style="margin-top:36px;">Recent History</h2>
-<div class="table-wrap" style="margin-top:14px;">
-  <table>
-    <thead><tr><th>Payee</th><th>Type</th><th>Amount</th><th>Status</th><th>Resolved</th></tr></thead>
-    <tbody>
-      <?php foreach ($resolved as $w): ?>
-        <tr>
-          <td><?= e($w['payee_name']) ?></td>
-          <td><span class="badge <?= $typeBadgeClass[$w['payee_type']] ?>"><?= e(ucfirst(strtolower($w['payee_type']))) ?></span></td>
-          <td><?= e(format_money((float) $w['amount'])) ?></td>
-          <td><span class="badge <?= $badgeClass[$w['status']] ?>"><?= $w['status'] ?></span></td>
-          <td><?= e(format_date($w['resolved_at'])) ?></td>
-        </tr>
-      <?php endforeach; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$resolved): ?>
+  <div class="card card-pad" style="margin-top:14px; border-style:dashed; text-align:center;">
+    <p class="muted">No resolved withdrawals yet.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($resolved as $w): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div class="row-avatar" style="flex-shrink:0;"><?php dash_icon('banknote'); ?></div>
+          <div style="min-width:0;">
+            <div style="font-weight:700; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <?= e($w['payee_name']) ?>
+              <span class="badge <?= $typeBadgeClass[$w['payee_type']] ?>"><?= e(ucfirst(strtolower($w['payee_type']))) ?></span>
+            </div>
+            <div class="small muted" style="margin-top:2px;"><?= e(format_money((float) $w['amount'])) ?> &middot; resolved <?= e(format_date($w['resolved_at'])) ?></div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <span class="badge <?= $badgeClass[$w['status']] ?>"><?= $w['status'] ?></span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

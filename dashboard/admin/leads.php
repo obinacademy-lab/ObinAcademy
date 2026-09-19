@@ -53,7 +53,7 @@ if ($detailId) {
       <span class="role-pill" style="--tint:<?= e($statusTint[$lead['status']]) ?>; font-size:12px; padding:6px 14px;"><?= e($statusLabels[$lead['status']]) ?></span>
     </div>
 
-    <div class="grid md:grid-4" style="margin-top:20px;">
+    <div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px;">
       <div class="mini-stat"><span class="mini-stat-value"><?= $lead['lead_type'] === 'creator' ? '🚀' : '🎓' ?></span><span class="mini-stat-label"><?= $lead['lead_type'] === 'creator' ? 'Creator Lead' : 'Learner Lead' ?></span></div>
       <div class="mini-stat"><span class="mini-stat-value"><?= e($sourceLabels[$lead['source']] ?? $lead['source']) ?></span><span class="mini-stat-label">Source</span></div>
       <div class="mini-stat"><span class="mini-stat-value"><?= (int) $lead['visit_count'] ?></span><span class="mini-stat-label">Visits</span></div>
@@ -113,25 +113,18 @@ if ($detailId) {
     </div>
 
     <h3 class="dash-section-label" style="margin-top:28px;">Browsing History</h3>
-    <div class="table-wrap" style="margin-top:14px;">
-      <?php if ($pageHistory): ?>
-        <table>
-          <thead><tr><th>Page</th><th>When</th><th>Time on Page</th><th>Scroll Depth</th></tr></thead>
-          <tbody>
-            <?php foreach ($pageHistory as $p): ?>
-              <tr>
-                <td><?= e($p['path']) ?></td>
-                <td><?= e(format_date($p['entered_at'])) ?></td>
-                <td><?= $p['time_on_page_seconds'] !== null ? (int) $p['time_on_page_seconds'] . 's' : '—' ?></td>
-                <td><?= (int) $p['scroll_depth_pct'] ?>%</td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php else: ?>
-        <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No browsing history linked to this lead.</div>
-      <?php endif; ?>
-    </div>
+    <?php if ($pageHistory): ?>
+      <div class="activity-feed" style="margin-top:14px;">
+        <?php foreach ($pageHistory as $p): ?>
+          <div class="list-row">
+            <div class="list-row-main"><span class="small" style="font-weight:600; word-break:break-all;"><?= e($p['path']) ?></span></div>
+            <div class="list-row-meta small muted"><?= e(format_date($p['entered_at'])) ?> &middot; <?= $p['time_on_page_seconds'] !== null ? (int) $p['time_on_page_seconds'] . 's' : '—' ?> &middot; <?= (int) $p['scroll_depth_pct'] ?>%</div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No browsing history linked to this lead.</div>
+    <?php endif; ?>
     <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
     <?php
     return;
@@ -189,7 +182,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <a href="<?= e(base_url('api/export-leads.php?' . $exportQuery)) ?>" class="btn btn-outline">⬇ Export CSV</a>
 </div>
 
-<div class="grid md:grid-4" style="margin-top:20px;">
+<div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px;">
   <div class="stat-card" data-hoverable="true" style="--hover-color:#2563eb;">
     <div class="icon"><?php dash_icon('sparkle'); ?></div>
     <div class="value"><?= number_format((int) ($statCounts['total'] ?? 0)) ?></div><div class="label">Total Leads</div>
@@ -299,37 +292,30 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </form>
 </div>
 
-<div class="table-wrap" style="margin-top:14px;">
-  <?php if ($leads): ?>
-    <table>
-      <thead><tr><th>Lead</th><th>Type</th><th>Source</th><th>Location</th><th>Status</th><th>Visits</th><th>Last Visit</th><th></th></tr></thead>
-      <tbody>
-        <?php foreach ($leads as $l): $rowLocation = trim(($l['city'] ?? '') . ($l['city'] && $l['country'] ? ', ' : '') . ($l['country'] ? country_name($l['country']) : ''), ' ,'); ?>
-          <tr>
-            <td>
-              <div class="row gap-2" style="align-items:center;">
-                <div class="row-avatar" style="--tint:<?= e($statusTint[$l['status']]) ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint); flex-shrink:0;"><?= e(mb_substr($l['name'], 0, 1)) ?></div>
-                <div style="min-width:0;">
-                  <div style="font-weight:700;"><?= e($l['name']) ?></div>
-                  <div class="small muted"><?= e($l['email']) ?></div>
-                </div>
-              </div>
-            </td>
-            <td><?= $l['lead_type'] === 'creator' ? '🚀 Creator' : '🎓 Learner' ?></td>
-            <td class="small"><?= e($sourceLabels[$l['source']] ?? $l['source']) ?></td>
-            <td class="small"><?= $rowLocation ? e($rowLocation) : '<span class="muted">—</span>' ?></td>
-            <td><span class="role-pill" style="--tint:<?= e($statusTint[$l['status']]) ?>;"><?= e($statusLabels[$l['status']]) ?></span></td>
-            <td style="font-variant-numeric:tabular-nums;"><?= (int) $l['visit_count'] ?></td>
-            <td class="small"><?= e(format_date($l['last_visit_at'])) ?></td>
-            <td><a href="<?= e(base_url('dashboard/admin/leads.php?id=' . $l['id'])) ?>" class="btn btn-outline btn-sm">View</a></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php else: ?>
-    <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No leads match these filters yet.</div>
-  <?php endif; ?>
-</div>
+<?php if ($leads): ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($leads as $l): $rowLocation = trim(($l['city'] ?? '') . ($l['city'] && $l['country'] ? ', ' : '') . ($l['country'] ? country_name($l['country']) : ''), ' ,'); ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div class="row-avatar" style="--tint:<?= e($statusTint[$l['status']]) ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint); flex-shrink:0;"><?= e(mb_substr($l['name'], 0, 1)) ?></div>
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($l['name']) ?></div>
+            <div class="small muted" style="margin-top:2px;">
+              <?= e($l['email']) ?> &middot; <?= $l['lead_type'] === 'creator' ? '🚀 Creator' : '🎓 Learner' ?> &middot; <?= e($sourceLabels[$l['source']] ?? $l['source']) ?><?= $rowLocation ? ' &middot; ' . e($rowLocation) : '' ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <span class="role-pill" style="--tint:<?= e($statusTint[$l['status']]) ?>;"><?= e($statusLabels[$l['status']]) ?></span>
+          <span class="small muted" style="white-space:nowrap;"><?= (int) $l['visit_count'] ?> visit<?= (int) $l['visit_count'] === 1 ? '' : 's' ?> &middot; <?= e(format_date($l['last_visit_at'])) ?></span>
+          <a href="<?= e(base_url('dashboard/admin/leads.php?id=' . $l['id'])) ?>" class="btn btn-outline btn-sm">View</a>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php else: ?>
+  <div class="card" style="margin-top:14px; padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No leads match these filters yet.</div>
+<?php endif; ?>
 
 <?php if ($totalPages > 1): ?>
   <div class="row gap-2" style="margin-top:16px; justify-content:center;">

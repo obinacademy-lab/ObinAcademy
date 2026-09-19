@@ -47,7 +47,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<div class="grid md:grid-4" style="margin-top:20px; gap:14px;">
+<div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px; gap:14px;">
   <div class="mini-stat"><span class="mini-stat-value"><?= $totalUsers ?></span><span class="mini-stat-label">Total Users</span></div>
   <div class="mini-stat" style="--tint:#94a3b8;"><span class="mini-stat-value"><?= $totalLearners ?></span><span class="mini-stat-label">Learners</span></div>
   <div class="mini-stat" style="--tint:#fbbf24;"><span class="mini-stat-value"><?= $totalCreators ?></span><span class="mini-stat-label">Creators</span></div>
@@ -62,64 +62,54 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <p class="small muted"><?= count($users) ?> user<?= count($users) === 1 ? '' : 's' ?><?= $q ? ' matching "' . e($q) . '"' : '' ?></p>
 </div>
 
-<div class="table-wrap" style="margin-top:18px;">
-  <table>
-    <thead><tr><th>User</th><th>Contact</th><th>Role</th><th>Joined</th><th></th></tr></thead>
-    <tbody>
-      <?php foreach ($users as $u): $isSelf = (int) $u['id'] === (int) $user['id']; ?>
-        <tr>
-          <td class="cell-nowrap-reset">
-            <div class="row gap-2" style="align-items:center;">
-              <div class="row-avatar" style="--tint:<?= e($roleTint[$u['role']] ?? '#94a3b8') ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint);"><?= e(mb_substr($u['name'], 0, 1)) ?></div>
-              <div style="min-width:0;">
-                <div style="font-weight:700; display:flex; align-items:center; gap:6px;">
-                  <?= e($u['name']) ?>
-                  <?php if ($isSelf): ?><span class="you-badge">You</span><?php endif; ?>
-                </div>
-              </div>
+<?php if (!$users): ?>
+  <div class="card card-pad" style="margin-top:18px; border-style:dashed; text-align:center;">
+    <p class="muted">No users match "<?= e($q) ?>".</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:18px;">
+    <?php foreach ($users as $u): $isSelf = (int) $u['id'] === (int) $user['id']; ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div class="row-avatar" style="--tint:<?= e($roleTint[$u['role']] ?? '#94a3b8') ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint); flex-shrink:0;"><?= e(mb_substr($u['name'], 0, 1)) ?></div>
+          <div style="min-width:0;">
+            <div style="font-weight:700; display:flex; align-items:center; gap:6px;">
+              <?= e($u['name']) ?>
+              <?php if ($isSelf): ?><span class="you-badge">You</span><?php endif; ?>
             </div>
-          </td>
-          <td class="cell-nowrap-reset">
-            <div class="small"><a href="mailto:<?= e($u['email']) ?>" style="color:var(--ink); font-weight:600;"><?= e($u['email']) ?></a></div>
-            <?php if (!empty($u['phone'])): $waPhone = preg_replace('/\D/', '', $u['phone']); $waPhone = str_starts_with($waPhone, '256') ? $waPhone : ('256' . ltrim($waPhone, '0')); ?>
-              <div class="small muted" style="margin-top:2px;">
-                <?= e($u['phone']) ?> &middot;
+            <div class="small muted" style="margin-top:2px;">
+              <a href="mailto:<?= e($u['email']) ?>" style="color:inherit;"><?= e($u['email']) ?></a>
+              <?php if (!empty($u['phone'])): $waPhone = preg_replace('/\D/', '', $u['phone']); $waPhone = str_starts_with($waPhone, '256') ? $waPhone : ('256' . ltrim($waPhone, '0')); ?>
+                &middot; <?= e($u['phone']) ?> &middot;
                 <a href="https://wa.me/<?= e($waPhone) ?>" target="_blank" rel="noopener noreferrer" style="color:var(--dash-good);">WhatsApp</a>
-              </div>
-            <?php else: ?>
-              <div class="small muted" style="margin-top:2px;">—</div>
-            <?php endif; ?>
-          </td>
-          <td>
-            <form method="post" class="role-select-wrap">
-              <?= csrf_field() ?>
-              <input type="hidden" name="_action" value="set_role">
-              <input type="hidden" name="userId" value="<?= (int) $u['id'] ?>">
-              <select name="role" class="role-select" onchange="this.form.submit()" <?= $isSelf ? 'disabled' : '' ?>
-                style="--tint:<?= e($roleTint[$u['role']] ?? '#94a3b8') ?>; background-color:color-mix(in srgb, var(--tint) 18%, transparent); color:var(--tint);">
-                <?php foreach (['LEARNER', 'CREATOR', 'ADMIN'] as $r): ?>
-                  <option value="<?= $r ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= $r ?></option>
-                <?php endforeach; ?>
-              </select>
-              <?php dash_icon('chevron-down', 'role-select-chevron'); ?>
+              <?php endif; ?>
+              &middot; joined <?= e(format_date($u['created_at'])) ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <form method="post" class="role-select-wrap">
+            <?= csrf_field() ?>
+            <input type="hidden" name="_action" value="set_role">
+            <input type="hidden" name="userId" value="<?= (int) $u['id'] ?>">
+            <select name="role" class="role-select" onchange="this.form.submit()" <?= $isSelf ? 'disabled' : '' ?>
+              style="--tint:<?= e($roleTint[$u['role']] ?? '#94a3b8') ?>; background-color:color-mix(in srgb, var(--tint) 18%, transparent); color:var(--tint);">
+              <?php foreach (['LEARNER', 'CREATOR', 'ADMIN'] as $r): ?>
+                <option value="<?= $r ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= $r ?></option>
+              <?php endforeach; ?>
+            </select>
+            <?php dash_icon('chevron-down', 'role-select-chevron'); ?>
+          </form>
+          <?php if (!$isSelf): ?>
+            <form method="post" data-confirm="Delete this user? This cannot be undone.">
+              <?= csrf_field() ?><input type="hidden" name="_action" value="delete"><input type="hidden" name="userId" value="<?= (int) $u['id'] ?>">
+              <button class="icon-btn-danger" type="submit" aria-label="Delete user"><?php dash_icon('trash'); ?></button>
             </form>
-          </td>
-          <td class="small muted"><?= e(format_date($u['created_at'])) ?></td>
-          <td>
-            <?php if (!$isSelf): ?>
-              <form method="post" data-confirm="Delete this user? This cannot be undone.">
-                <?= csrf_field() ?><input type="hidden" name="_action" value="delete"><input type="hidden" name="userId" value="<?= (int) $u['id'] ?>">
-                <button class="icon-btn-danger" type="submit" aria-label="Delete user"><?php dash_icon('trash'); ?></button>
-              </form>
-            <?php endif; ?>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$users): ?>
-        <tr><td colspan="5" class="muted" style="text-align:center; padding:32px 0;">No users match "<?= e($q) ?>".</td></tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-</div>
+          <?php endif; ?>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 <script>document.querySelectorAll('form[data-confirm]').forEach(f=>f.addEventListener('submit',e=>{if(!confirm(f.dataset.confirm))e.preventDefault();}));</script>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

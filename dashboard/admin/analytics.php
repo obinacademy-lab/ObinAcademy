@@ -71,7 +71,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </form>
 </div>
 
-<div class="grid md:grid-4" style="margin-top:20px;">
+<div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px;">
   <div class="stat-card" data-hoverable="true" style="--hover-color:#2563eb;">
     <div class="icon"><?php dash_icon('globe'); ?></div>
     <div class="value"><?= number_format($summary['visits']) ?></div><div class="label">Total Visits</div>
@@ -186,74 +186,62 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="grid md:grid-2" style="margin-top:14px; gap:16px;">
   <div>
     <p class="muted small" style="margin-bottom:8px;">Where sessions started</p>
-    <div class="table-wrap">
-      <?php if ($topPages): ?>
-        <table>
-          <thead><tr><th>Page</th><th>Sessions</th></tr></thead>
-          <tbody>
-            <?php foreach ($topPages as $p): ?>
-              <tr><td><?= e($p['landing_path']) ?></td><td><?= number_format((int) $p['visitors']) ?></td></tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php else: ?>
-        <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet.</div>
-      <?php endif; ?>
-    </div>
+    <?php if ($topPages): ?>
+      <div class="activity-feed">
+        <?php foreach ($topPages as $p): ?>
+          <div class="list-row">
+            <div class="list-row-main"><span class="small" style="font-weight:600; word-break:break-all;"><?= e($p['landing_path']) ?></span></div>
+            <div class="list-row-meta small muted"><?= number_format((int) $p['visitors']) ?></div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet.</div>
+    <?php endif; ?>
   </div>
   <div>
     <p class="muted small" style="margin-bottom:8px;">Where sessions ended</p>
-    <div class="table-wrap">
-      <?php if ($exitPages): ?>
-        <table>
-          <thead><tr><th>Page</th><th>Sessions</th></tr></thead>
-          <tbody>
-            <?php foreach ($exitPages as $p): ?>
-              <tr><td><?= e($p['exit_path']) ?></td><td><?= number_format((int) $p['n']) ?></td></tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php else: ?>
-        <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet.</div>
-      <?php endif; ?>
-    </div>
+    <?php if ($exitPages): ?>
+      <div class="activity-feed">
+        <?php foreach ($exitPages as $p): ?>
+          <div class="list-row">
+            <div class="list-row-main"><span class="small" style="font-weight:600; word-break:break-all;"><?= e($p['exit_path']) ?></span></div>
+            <div class="list-row-meta small muted"><?= number_format((int) $p['n']) ?></div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet.</div>
+    <?php endif; ?>
   </div>
 </div>
 
 <h3 class="dash-section-label" style="margin-top:32px;">Most-Viewed Courses</h3>
-<div class="table-wrap" style="margin-top:14px;">
-  <?php if ($topCourses): ?>
-    <table>
-      <thead><tr><th>Course</th><th>Views</th></tr></thead>
-      <tbody>
-        <?php foreach ($topCourses as $c): ?>
-          <tr><td><?= e($c['title']) ?></td><td><?= number_format($c['views']) ?></td></tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php else: ?>
-    <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No course views recorded yet in this range.</div>
-  <?php endif; ?>
-</div>
+<?php if ($topCourses): ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($topCourses as $c): ?>
+      <div class="list-row">
+        <div class="list-row-main"><span class="small" style="font-weight:600;"><?= e($c['title']) ?></span></div>
+        <div class="list-row-meta small muted"><?= number_format($c['views']) ?> views</div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php else: ?>
+  <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No course views recorded yet in this range.</div>
+<?php endif; ?>
 
 <h3 class="dash-section-label" style="margin-top:32px;">Location</h3>
 <p class="muted small" style="margin-top:4px;">Approximate, resolved from IP address — never a precise location, and the address itself isn't kept.</p>
-<div class="table-wrap" style="margin-top:14px;">
-  <?php if ($topCities): ?>
-    <table>
-      <thead><tr><th>City</th><th>Country</th><th>Sessions</th></tr></thead>
-      <tbody>
-        <?php foreach ($topCities as $c): ?>
-          <tr>
-            <td><?= e($c['city']) ?></td>
-            <td><?= e(country_name($c['country'])) ?></td>
-            <td><?= number_format((int) $c['n']) ?></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php else: ?>
-    <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">Location data resolves gradually in the background — check back shortly.</div>
-  <?php endif; ?>
-</div>
+<?php if ($topCities): ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($topCities as $c): ?>
+      <div class="list-row">
+        <div class="list-row-main"><span class="small" style="font-weight:600;"><?= e($c['city']) ?></span><span class="small muted">&middot; <?= e(country_name($c['country'])) ?></span></div>
+        <div class="list-row-meta small muted"><?= number_format((int) $c['n']) ?> sessions</div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php else: ?>
+  <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">Location data resolves gradually in the background — check back shortly.</div>
+<?php endif; ?>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

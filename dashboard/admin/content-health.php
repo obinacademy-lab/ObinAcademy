@@ -68,21 +68,21 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
 <?php if ($brokenCount > 0): ?>
   <h3 class="dash-section-label" style="margin-top:32px;">Broken (<?= $brokenCount ?>)</h3>
-  <div class="table-wrap" style="margin-top:14px;">
-    <table>
-      <thead><tr><th>Course</th><th>Lesson</th><th>Type</th><th>Problem</th><th></th></tr></thead>
-      <tbody>
-        <?php foreach ($results as $r): if ($r['ok']) continue; $l = $r['lesson']; ?>
-          <tr>
-            <td><?= e($l['course_title']) ?></td>
-            <td><?= e($l['title']) ?></td>
-            <td><span class="badge badge-draft"><?= e($l['type']) ?></span></td>
-            <td class="small" style="color:var(--danger);"><?= e($r['detail']) ?></td>
-            <td><a href="<?= e(base_url('dashboard/creator/course-manage.php?id=' . $l['course_id'])) ?>" class="btn btn-outline btn-sm">Manage Course</a></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($results as $r): if ($r['ok']) continue; $l = $r['lesson']; ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <span class="activity-dot tone-danger" style="flex-shrink:0;"><?php dash_icon('x-circle'); ?></span>
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($l['title']) ?></div>
+            <div class="small muted" style="margin-top:2px;"><?= e($l['course_title']) ?> &middot; <span style="color:var(--danger);"><?= e($r['detail']) ?></span></div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <a href="<?= e(base_url('dashboard/creator/course-manage.php?id=' . $l['course_id'])) ?>" class="btn btn-outline btn-sm">Manage Course</a>
+        </div>
+      </div>
+    <?php endforeach; ?>
   </div>
 <?php else: ?>
   <div class="all-caught-up" style="margin-top:24px;">
@@ -92,21 +92,29 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php endif; ?>
 
 <h3 class="dash-section-label" style="margin-top:36px;">All Lessons</h3>
-<div class="table-wrap" style="margin-top:14px;">
-  <table>
-    <thead><tr><th>Course</th><th>Lesson</th><th>Type</th><th>Status</th><th>Detail</th></tr></thead>
-    <tbody>
-      <?php foreach ($results as $r): $l = $r['lesson']; ?>
-        <tr>
-          <td><?= e($l['course_title']) ?> <?php if ($l['course_status'] !== 'PUBLISHED'): ?><span class="small muted">(<?= e($l['course_status']) ?>)</span><?php endif; ?></td>
-          <td><?= e($l['title']) ?></td>
-          <td><span class="badge badge-draft"><?= e($l['type']) ?><?= $r['external'] ? ' · external' : '' ?></span></td>
-          <td><?php if ($r['ok']): ?><span class="badge badge-published">OK</span><?php else: ?><span class="badge badge-rejected">Broken</span><?php endif; ?></td>
-          <td class="small muted"><?= e($r['detail']) ?></td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$results): ?><tr><td colspan="5" class="muted">No lessons found.</td></tr><?php endif; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$results): ?>
+  <div class="card card-pad" style="margin-top:14px; border-style:dashed; text-align:center;">
+    <p class="muted">No lessons found.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($results as $r): $l = $r['lesson']; ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <span class="activity-dot tone-<?= $r['ok'] ? 'success' : 'danger' ?>" style="flex-shrink:0;"><?php dash_icon($r['ok'] ? 'check-circle' : 'x-circle'); ?></span>
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($l['title']) ?></div>
+            <div class="small muted" style="margin-top:2px;">
+              <?= e($l['course_title']) ?><?php if ($l['course_status'] !== 'PUBLISHED'): ?> (<?= e($l['course_status']) ?>)<?php endif; ?>
+              &middot; <?= e($l['type']) ?><?= $r['external'] ? ' · external' : '' ?> &middot; <?= e($r['detail']) ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <?php if ($r['ok']): ?><span class="badge badge-published">OK</span><?php else: ?><span class="badge badge-rejected">Broken</span><?php endif; ?>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

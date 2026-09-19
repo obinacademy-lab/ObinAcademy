@@ -41,7 +41,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<div class="grid md:grid-4" style="margin-top:20px; gap:14px;">
+<div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px; gap:14px;">
   <div class="mini-stat" style="--tint:#f59e0b;"><span class="mini-stat-value"><?= count($pending) ?></span><span class="mini-stat-label">Pending</span></div>
   <div class="mini-stat" style="--tint:#16a34a;"><span class="mini-stat-value"><?= $approvedTotal ?></span><span class="mini-stat-label">Approved</span></div>
   <div class="mini-stat" style="--tint:#dc2626;"><span class="mini-stat-value"><?= $rejectedTotal ?></span><span class="mini-stat-label">Rejected</span></div>
