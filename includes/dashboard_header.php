@@ -11,25 +11,31 @@ $navByRole = [
     'LEARNER' => [
         'Learning' => [
             ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
+            ['/dashboard/learner/following.php', 'Following', 'users'],
+        ],
+        'Payments' => [
             ['/dashboard/learner/subscriptions.php', 'My Subscriptions', 'wallet'],
             ['/dashboard/learner/payment-plans.php', 'Payment Plans', 'tag'],
             ['/dashboard/gifts.php', 'Gifts Sent', 'gift'],
-            ['/dashboard/learner/following.php', 'Following', 'users'],
         ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],
         ],
     ],
     'CREATOR' => [
-        'Teaching' => [
+        'Courses' => [
             ['/dashboard/creator/index.php', 'My Courses', 'book-open'],
             ['/dashboard/creator/course-new.php', 'Create Course', 'plus-circle'],
-            ['/dashboard/creator/students.php', 'My Students', 'users'],
             ['/dashboard/creator/bundles.php', 'Bundles', 'layout-dashboard'],
-            ['/dashboard/creator/coupons.php', 'Coupons', 'tag'],
-            ['/dashboard/gifts.php', 'Gifts Sent', 'gift'],
-            ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
+        ],
+        'Students & Growth' => [
+            ['/dashboard/creator/students.php', 'My Students', 'users'],
             ['/dashboard/creator/shares.php', 'Course Shares', 'share'],
+            ['/dashboard/creator/coupons.php', 'Coupons', 'tag'],
+        ],
+        'Money' => [
+            ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
+            ['/dashboard/gifts.php', 'Gifts Sent', 'gift'],
         ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],

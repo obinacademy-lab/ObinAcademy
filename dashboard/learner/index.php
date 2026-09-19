@@ -45,23 +45,6 @@ if ($enrolledCategoryIds) {
 }
 if (!$recommended) $recommended = get_featured_courses(3);
 
-$certificates = db_all('
-    SELECT cert.*, c.title AS course_title, u.name AS creator_name
-    FROM certificates cert
-    JOIN enrollments e ON e.id = cert.enrollment_id
-    JOIN courses c ON c.id = cert.course_id
-    JOIN users u ON u.id = c.creator_id
-    WHERE e.user_id = ?
-    ORDER BY cert.issued_at DESC
-', [$user['id']]);
-
-$myReviews = db_all('
-    SELECT r.*, c.title AS course_title, c.slug AS course_slug
-    FROM reviews r JOIN courses c ON c.id = r.course_id
-    WHERE r.author_id = ?
-    ORDER BY r.created_at DESC LIMIT 5
-', [$user['id']]);
-
 $firstName = explode(' ', trim($user['name']))[0];
 $quotes = [
     'Small steps, every day, add up to real change.',
@@ -84,33 +67,33 @@ $lessonsLeft = $nextUp ? max(0, (int) round((float) $nextUp['lesson_count'] * (1
 $pageTitle = 'My Learning — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="row between wrap gap-3 reveal">
+<div class="dash-hero reveal">
   <div>
-    <h1 class="h2">Welcome back, <?= e($firstName) ?></h1>
-    <p class="dash-welcome-quote">"<?= e($quote) ?>"</p>
+    <h1 class="h2" style="color:#fff;">Welcome back, <?= e($firstName) ?></h1>
+    <p style="margin-top:6px; color:rgba(255,255,255,0.72); font-style:italic;">"<?= e($quote) ?>"</p>
   </div>
   <div class="row gap-2" style="flex-wrap:wrap;">
     <?php if ($nextUp): ?>
-      <a href="<?= e(base_url('learn.php?slug=' . $nextUp['slug'])) ?>" class="btn btn-primary">▶ Resume Learning</a>
+      <a href="<?= e(base_url('learn.php?slug=' . $nextUp['slug'])) ?>" class="btn btn-gold" style="border-radius:999px;">▶ Resume Learning</a>
     <?php endif; ?>
-    <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline">Browse Courses</a>
+    <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline" style="border-radius:999px;">Browse Courses</a>
   </div>
 </div>
 
 <div class="grid md:grid-2 lg:grid-4" style="margin-top:24px;">
-  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#2563eb;">
+  <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#2563eb;">
     <div class="icon"><?php dash_icon('graduation-cap'); ?></div>
     <div class="value" data-count-up data-count-value="<?= $enrolledCount ?>" data-count-suffix="">0</div><div class="label">Enrolled Courses</div>
   </div>
-  <div class="stat-card reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#10b981;">
+  <div class="stat-card accent-top reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#10b981;">
     <div class="icon"><?php dash_icon('check-circle'); ?></div>
     <div class="value" data-count-up data-count-value="<?= $completedCount ?>" data-count-suffix="">0</div><div class="label">Completed</div>
   </div>
-  <div class="stat-card reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#f5b301;">
+  <div class="stat-card accent-top reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#f5b301;">
     <div class="icon"><?php dash_icon('clock'); ?></div>
     <div class="value" data-count-up data-count-value="<?= $inProgressCount ?>" data-count-suffix="">0</div><div class="label">In Progress</div>
   </div>
-  <div class="stat-card reveal reveal-delay-3" data-hoverable="true" style="--hover-color:#8b5cf6;">
+  <div class="stat-card accent-top reveal reveal-delay-3" data-hoverable="true" style="--hover-color:#8b5cf6;">
     <div class="icon"><?php dash_icon('award'); ?></div>
     <div class="value" data-count-up data-count-value="<?= $certificateCount ?>" data-count-suffix="">0</div><div class="label">Certificates</div>
   </div>
@@ -207,40 +190,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 <?php endif; ?>
 
-<?php if ($certificates): ?>
-  <h3 class="dash-section-label" style="margin-top:40px;">My Certificates</h3>
-  <div class="grid sm:grid-2 lg:grid-3" style="margin-top:14px;">
-    <?php foreach ($certificates as $cert): ?>
-      <div class="cert-gallery-card">
-        <div class="cert-gallery-preview">
-          <?php dash_icon('award'); ?>
-        </div>
-        <div class="cert-gallery-body">
-          <h3><?= e($cert['course_title']) ?></h3>
-          <p class="muted small" style="margin-top:4px;">Issued <?= e(format_date($cert['issued_at'])) ?></p>
-          <a href="<?= e(base_url('certificate.php?code=' . $cert['code'])) ?>" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="margin-top:12px; width:100%;">View Certificate</a>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-<?php endif; ?>
-
-<?php if ($myReviews): ?>
-  <h3 class="dash-section-label" style="margin-top:40px;">Your Recent Reviews</h3>
-  <div class="leaderboard" style="margin-top:14px;">
-    <?php foreach ($myReviews as $r): ?>
-      <div class="leaderboard-row" style="align-items:flex-start;">
-        <div class="row-avatar" style="background:var(--surface); color:#f5b301;"><?php dash_icon('star'); ?></div>
-        <div class="leaderboard-info">
-          <div style="font-weight:600;"><?= e($r['course_title']) ?></div>
-          <p class="small muted" style="margin-top:3px; line-height:1.5;"><?= e($r['comment']) ?></p>
-          <div class="small muted" style="margin-top:4px;"><?= str_repeat('★', (int) $r['rating']) . str_repeat('☆', 5 - (int) $r['rating']) ?> &middot; <?= e(time_ago($r['created_at'])) ?></div>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-<?php endif; ?>
-
 <h3 class="dash-section-label" style="margin-top:40px;">Quick Actions</h3>
 <div class="quick-actions">
   <a href="<?= e(base_url('courses/index.php')) ?>" class="quick-action">
@@ -256,16 +205,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <a href="<?= e(base_url('contact.php')) ?>" class="quick-action">
     <span class="qa-icon" style="--tint:#06b6d4;"><?php dash_icon('quote'); ?></span>
     <span class="qa-text">Support Center</span>
-    <?php dash_icon('arrow-right', 'qa-arrow'); ?>
-  </a>
-  <a href="<?= e(base_url('become-creator.php')) ?>" class="quick-action">
-    <span class="qa-icon" style="--tint:#f5b301;"><?php dash_icon('sparkle'); ?></span>
-    <span class="qa-text">Become a Creator</span>
-    <?php dash_icon('arrow-right', 'qa-arrow'); ?>
-  </a>
-  <a href="<?= e(base_url('become-affiliate.php')) ?>" class="quick-action">
-    <span class="qa-icon" style="--tint:#8b5cf6;"><?php dash_icon('tag'); ?></span>
-    <span class="qa-text">Become an Affiliate</span>
     <?php dash_icon('arrow-right', 'qa-arrow'); ?>
   </a>
 </div>

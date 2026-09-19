@@ -24,12 +24,12 @@ $hasSocialLinks = $user['facebook_url'] || $user['instagram_url'] || $user['yout
 $pageTitle = 'My Courses — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="row between wrap gap-3 reveal">
+<div class="dash-hero reveal">
   <div>
-    <h1 class="h2">My Courses</h1>
-    <p class="muted" style="margin-top:6px;">Manage your courses and track performance.</p>
+    <h1 class="h2" style="color:#fff;">Welcome back, <?= e(explode(' ', trim($user['name']))[0]) ?></h1>
+    <p style="margin-top:6px; color:rgba(255,255,255,0.72);">Manage your courses and track how they're performing.</p>
   </div>
-  <a href="<?= e(base_url('dashboard/creator/course-new.php')) ?>" class="btn btn-primary">+ Create Course</a>
+  <a href="<?= e(base_url('dashboard/creator/course-new.php')) ?>" class="btn btn-gold" style="border-radius:999px;">+ Create Course</a>
 </div>
 
 <?php if (!$hasSocialLinks): ?>
@@ -46,9 +46,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php endif; ?>
 
 <div class="grid md:grid-3" style="margin-top:24px;">
-  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earnings</div></div>
-  <div class="stat-card reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#60a5fa;"><div class="icon"><?php dash_icon('book-open'); ?></div><div class="value" data-count-up data-count-value="<?= $publishedCount ?>" data-count-suffix="">0</div><div class="label">Published Courses</div></div>
-  <div class="stat-card reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('graduation-cap'); ?></div><div class="value" data-count-up data-count-value="<?= $totalEnrollments ?>" data-count-suffix="">0</div><div class="label">Total Enrollments</div></div>
+  <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earnings</div></div>
+  <div class="stat-card accent-top reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#60a5fa;"><div class="icon"><?php dash_icon('book-open'); ?></div><div class="value" data-count-up data-count-value="<?= $publishedCount ?>" data-count-suffix="">0</div><div class="label">Published Courses</div></div>
+  <div class="stat-card accent-top reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('graduation-cap'); ?></div><div class="value" data-count-up data-count-value="<?= $totalEnrollments ?>" data-count-suffix="">0</div><div class="label">Total Enrollments</div></div>
 </div>
 
 <?php if (!$courses): ?>
