@@ -213,6 +213,10 @@ CREATE TABLE payments (
   type ENUM('COURSE_PURCHASE','PREMIUM_UPGRADE','SUBSCRIPTION','SCHOOL_SUBSCRIPTION','BUNDLE_PURCHASE','INSTALLMENT_PAYMENT','COURSE_GIFT') NOT NULL DEFAULT 'COURSE_PURCHASE',
   status ENUM('PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'PENDING',
   status_message VARCHAR(500) NULL,
+  -- Send guard for the abandoned-checkout recovery email (see
+  -- includes/payment_recovery.php) — NULL means not sent yet. Only ever
+  -- set for a FAILED COURSE_PURCHASE/BUNDLE_PURCHASE payment.
+  recovery_email_sent_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   user_id INT NULL,

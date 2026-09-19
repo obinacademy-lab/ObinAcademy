@@ -764,6 +764,36 @@ function send_course_interest_reminder_email(string $to, string $name, string $c
         HTML);
 }
 
+/**
+ * Sent once a stale PENDING mobile-money payment is confirmed FAILED — see
+ * includes/payment_recovery.php. $itemType is 'course' or 'bundle', only
+ * ever used for the one word in the body copy.
+ */
+function send_payment_recovery_email(string $to, string $name, string $itemTitle, string $itemType, string $resumeUrl, float $amount): void {
+    $firstName = trim(explode(' ', $name)[0] ?? '') ?: 'there';
+    $label = $itemType === 'bundle' ? 'bundle' : 'course';
+    $amountLabel = format_money($amount);
+
+    resend_send($to, "Complete your purchase of {$itemTitle}", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">Hey {$firstName}, your payment didn't go through</h2>
+          <p>
+            You started buying the {$label} <strong>{$itemTitle}</strong> ({$amountLabel}), but the mobile
+            money payment wasn't completed — this usually means the prompt timed out, the PIN was wrong, or
+            there wasn't enough balance at that moment. Nothing was charged.
+          </p>
+          <p style="margin-top: 20px;">
+            <a href="{$resumeUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              Try Again
+            </a>
+          </p>
+          <p style="color: #5b6670; font-size: 13px; margin-top: 20px;">
+            If you keep having trouble, reach us on WhatsApp and we'll help you sort it out.
+          </p>
+        </div>
+        HTML);
+}
+
 /** Sent the moment an affiliate application is approved — the affiliate link already exists by the time this lands, since approve_affiliate_application() creates it in the same transaction. */
 function send_affiliate_application_approved_email(string $to, string $name, string $refCode): void {
     $dashboardUrl = base_url('login.php?redirect=' . urlencode('/dashboard/affiliate.php'));

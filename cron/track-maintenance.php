@@ -19,6 +19,7 @@ require_once __DIR__ . '/../includes/leads.php';
 require_once __DIR__ . '/../includes/notifications.php';
 require_once __DIR__ . '/../includes/retention.php';
 require_once __DIR__ . '/../includes/interest.php';
+require_once __DIR__ . '/../includes/payment_recovery.php';
 require_once __DIR__ . '/../includes/email.php';
 require_once __DIR__ . '/../includes/school_subscriptions.php';
 require_once __DIR__ . '/../includes/installments.php';
@@ -50,6 +51,16 @@ cron_section('lead_sequence', function () {
 cron_section('notification_sweep', function () {
     $notifCounts = sweep_visitor_notifications();
     echo '[' . date('Y-m-d H:i:s') . "] notification sweep: pricing_revisit={$notifCounts['pricing_revisit']} stale_returning_visitor={$notifCounts['stale_returning_visitor']}\n";
+});
+
+cron_section('stale_payment_reconciliation', function () {
+    $counts = sweep_stale_pending_payments();
+    echo '[' . date('Y-m-d H:i:s') . "] stale payment reconciliation: success={$counts['success']} failed={$counts['failed']} still_pending={$counts['still_pending']}\n";
+});
+
+cron_section('payment_recovery_emails', function () {
+    $counts = send_due_payment_recovery_emails();
+    echo '[' . date('Y-m-d H:i:s') . "] payment recovery emails: course={$counts['course']} bundle={$counts['bundle']}\n";
 });
 
 cron_section('learner_retention', function () {
