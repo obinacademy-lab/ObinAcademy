@@ -195,9 +195,30 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 /* ---------- dashboard page head + section labels ---------- */
 .dash-page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
 .status-pill { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: var(--dash-good); background: var(--dash-good-bg); border: 1px solid #bbf7d0; padding: 7px 14px; border-radius: var(--radius-full); flex-shrink: 0; }
+.status-pill.warn { color: var(--dash-warn); background: var(--dash-warn-bg); border-color: #fde68a; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.25); animation: status-pulse 1.8s ease-in-out infinite; }
+.status-dot.warn { background: var(--dash-warn); box-shadow: 0 0 0 3px rgba(217,119,6,0.25); }
 @keyframes status-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 .dash-section-label { font-size: 11.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- premium gradient hero header (Overview page) ---------- */
+.dash-hero {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 26px 28px; border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--brand-900), #0f2360 65%, var(--brand-800));
+  box-shadow: 0 20px 40px -24px color-mix(in srgb, var(--brand-900) 55%, transparent);
+}
+.dash-hero .status-pill { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.2); color: #fff; }
+.dash-hero .status-pill.warn { background: rgba(251,191,36,0.2); border-color: rgba(251,191,36,0.35); color: #fde68a; }
+.dash-hero .status-dot { background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,0.3); }
+.dash-hero .status-dot.warn { background: #fbbf24; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
+
+/* ---------- accented stat tiles (colored top border, ties tile to its meaning) ---------- */
+.stat-card.accent-top { border-top: 3px solid var(--hover-color, var(--accent)); }
+
+/* ---------- two-column split: attention list + chart, side by side ---------- */
+.dash-split { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .dash-split { grid-template-columns: 1fr 1.3fr; } }
 
 /* ---------- revenue growth chart ---------- */
 .growth-layout { display: grid; gap: 16px; grid-template-columns: 1fr; }
