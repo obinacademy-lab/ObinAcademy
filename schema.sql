@@ -159,6 +159,10 @@ CREATE TABLE enrollments (
   -- Stamped on enrollment and bumped on every update_lesson_progress() call —
   -- the signal the learner-retention cron sweep uses to detect inactivity.
   last_activity_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- Send guard for the "how was it?" review-request email (see
+  -- includes/review_nudges.php), fired once on reaching 100% completion.
+  -- NULL means not sent yet.
+  review_nudge_sent_at DATETIME NULL,
   enrolled_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME NULL,
   is_premium TINYINT(1) NOT NULL DEFAULT 0,

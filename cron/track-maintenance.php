@@ -20,6 +20,7 @@ require_once __DIR__ . '/../includes/notifications.php';
 require_once __DIR__ . '/../includes/retention.php';
 require_once __DIR__ . '/../includes/interest.php';
 require_once __DIR__ . '/../includes/payment_recovery.php';
+require_once __DIR__ . '/../includes/review_nudges.php';
 require_once __DIR__ . '/../includes/email.php';
 require_once __DIR__ . '/../includes/school_subscriptions.php';
 require_once __DIR__ . '/../includes/installments.php';
@@ -61,6 +62,11 @@ cron_section('stale_payment_reconciliation', function () {
 cron_section('payment_recovery_emails', function () {
     $counts = send_due_payment_recovery_emails();
     echo '[' . date('Y-m-d H:i:s') . "] payment recovery emails: course={$counts['course']} bundle={$counts['bundle']}\n";
+});
+
+cron_section('review_nudges', function () {
+    $sent = send_due_review_nudges();
+    echo '[' . date('Y-m-d H:i:s') . "] review nudges: {$sent} sent\n";
 });
 
 cron_section('learner_retention', function () {

@@ -192,7 +192,7 @@ require __DIR__ . '/../includes/header.php';
         </div>
       </div>
 
-      <div class="course-flat-sec">
+      <div class="course-flat-sec" id="reviews">
         <div class="course-flat-sec-head"><span class="dash" aria-hidden="true"></span><h2>Reviews</h2></div>
 
         <div class="reviews-grid reveal">

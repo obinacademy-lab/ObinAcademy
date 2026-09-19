@@ -794,6 +794,32 @@ function send_payment_recovery_email(string $to, string $name, string $itemTitle
         HTML);
 }
 
+/**
+ * Sent once, the first time an enrollment reaches 100% completion — see
+ * includes/review_nudges.php. $reviewUrl points straight at the course's
+ * #reviews section, where the review form already renders for an enrolled,
+ * non-owner learner.
+ */
+function send_review_nudge_email(string $to, string $name, string $courseTitle, string $reviewUrl): void {
+    $firstName = trim(explode(' ', $name)[0] ?? '') ?: 'there';
+
+    resend_send($to, "How was {$courseTitle}?", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
+          <div style="font-size: 34px;">🎉</div>
+          <h2 style="color: #1e3a8a; margin-top: 8px;">You finished the course!</h2>
+          <p style="color: #14181b; font-size: 15px; line-height: 1.6;">
+            Nice work, {$firstName} — you've completed <strong>{$courseTitle}</strong>. Got a minute to share what
+            you thought? It genuinely helps other learners decide, and helps the creator know what's working.
+          </p>
+          <p style="margin-top: 22px;">
+            <a href="{$reviewUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              Leave a Review
+            </a>
+          </p>
+        </div>
+        HTML);
+}
+
 /** Sent the moment an affiliate application is approved — the affiliate link already exists by the time this lands, since approve_affiliate_application() creates it in the same transaction. */
 function send_affiliate_application_approved_email(string $to, string $name, string $refCode): void {
     $dashboardUrl = base_url('login.php?redirect=' . urlencode('/dashboard/affiliate.php'));
