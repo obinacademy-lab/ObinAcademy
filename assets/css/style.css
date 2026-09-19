@@ -3,15 +3,14 @@
 :root {
   --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
 
-  /* Deep red/maroon brand ramp — darker and more brick-toned than --danger
-     below (#dc2626) on purpose, so error states still read as visually
-     distinct from ordinary brand chrome. Verified white-on-bg contrast:
-     brand-950 ~19:1, the --accent shade (brand-800) ~8.3:1. */
-  --brand-950: #450a0a;
-  --brand-900: #7f1d1d;
-  --brand-800: #991b1b;
-  --brand-700: #b91c1c;
-  --brand-600: #dc2626;
+  /* Back to the original blue — the platform's starting brand ramp, now the
+     one static theme (no more blue/purple rotation). Verified white-on-bg
+     contrast: brand-950 ~13:1, the --accent shade (brand-800) ~6.7:1. */
+  --brand-950: #1e3a8a;
+  --brand-900: #1e40af;
+  --brand-800: #1d4ed8;
+  --brand-700: #2563eb;
+  --brand-600: #3b82f6;
 
   --ink: #16181a;
   --muted: #5b6670;
