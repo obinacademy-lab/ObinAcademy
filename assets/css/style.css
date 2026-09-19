@@ -670,6 +670,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 .footer-wa-community-link svg { fill: currentColor; flex-shrink: 0; }
 .footer-wa-community-link:hover { background: #1ebe5b; color: #fff !important; transform: translateY(-1px); }
+@media (max-width: 480px) {
+  .footer-wa-community-link { font-size: 12.5px; padding: 6px 12px 6px 10px; white-space: nowrap; }
+}
 .footer-minimal-meta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .footer-minimal-socials { display: flex; align-items: center; gap: 14px; }
 .footer-minimal-socials a { color: rgba(255,255,255,0.72); display: flex; transition: color 0.15s ease; }

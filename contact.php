@@ -117,7 +117,7 @@ require __DIR__ . '/includes/header.php';
     <span class="pill"><?= ci('headphones') ?> Support &amp; Contact Center</span>
     <h1>We're Here to Help</h1>
     <p class="summary" style="margin-left:auto; margin-right:auto;">Whether you're a learner, creator, business, or partner, our team is ready to answer your questions and help you get the most out of Obin Academy.</p>
-    <div class="row gap-2" style="justify-content:center; margin-top:26px;">
+    <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:26px;">
       <a href="#contact-form" class="btn btn-gold">Contact Support <span class="btn-arrow">→</span></a>
       <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-outline">▶ Become a Creator</a>
     </div>
@@ -403,7 +403,7 @@ require __DIR__ . '/includes/header.php';
       <span class="eyebrow" style="background:rgba(255,255,255,0.1); color:var(--gold);">For Creators &amp; Experts</span>
       <h2 class="h2" style="margin-top:14px; color:#fff;">Ready to Share Your Knowledge?</h2>
       <p style="margin-top:12px; color:rgba(255,255,255,0.7); max-width:480px; margin-left:auto; margin-right:auto;">Create your first course today, inspire thousands of learners, and earn income from your expertise.</p>
-      <div class="row gap-2" style="justify-content:center; margin-top:26px;">
+      <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:26px;">
         <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-gold btn-lg">Become a Creator <span class="btn-arrow">→</span></a>
         <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline-light btn-lg">Explore Courses</a>
       </div>
