@@ -75,30 +75,86 @@ require __DIR__ . '/includes/header.php';
     <?php elseif ($user && (int) $user['id'] === (int) $selectedCourse['creator_id']): ?>
       <div class="alert alert-error" style="max-width:640px; margin:0 auto 32px;">You can't gift your own course.</div>
     <?php else: ?>
-      <div style="max-width:480px; margin:0 auto 40px;">
-        <a href="<?= e(gift_browse_url($q, $categorySlug, ['slug' => ''])) ?>" class="small muted" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; margin-bottom:16px;">
+      <div style="max-width:980px; margin:0 auto 40px;">
+        <a href="<?= e(gift_browse_url($q, $categorySlug, ['slug' => ''])) ?>" class="gift-checkout-back">
           <?php dash_icon('arrow-left'); ?> Choose a different course
         </a>
-        <div class="card card-pad" style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
-          <div class="course-flat-thumb" style="width:80px; height:50px; flex-shrink:0; margin-top:0;">
-            <?php if ($selectedCourse['thumbnail_url']): ?><img src="<?= e(asset_src($selectedCourse['thumbnail_url'])) ?>" alt="">
-            <?php else: ?><div class="placeholder" style="font-size:10px;">Obin Academy</div><?php endif; ?>
+
+        <div class="gift-checkout-grid">
+          <div class="gift-preview-card">
+            <div class="gift-preview-thumb">
+              <?php if ($selectedCourse['thumbnail_url']): ?>
+                <img src="<?= e(asset_src($selectedCourse['thumbnail_url'])) ?>" alt="">
+              <?php else: ?>
+                <div class="placeholder"><?= e($selectedCourse['title']) ?></div>
+              <?php endif; ?>
+              <span class="gift-preview-badge"><?php dash_icon('gift'); ?> Gift Preview</span>
+            </div>
+            <div class="gift-preview-body">
+              <h2><?= e($selectedCourse['title']) ?></h2>
+              <div class="creator-row" style="margin-top:10px;">
+                <div class="avatar">
+                  <?php if ($selectedCourse['creator_avatar_url']): ?><img src="<?= e(asset_src($selectedCourse['creator_avatar_url'])) ?>" alt="">
+                  <?php else: ?><?= e(mb_substr($selectedCourse['creator_name'], 0, 1)) ?><?php endif; ?>
+                </div>
+                <span>by <?= e($selectedCourse['creator_name']) ?></span>
+              </div>
+              <?php if ($selectedCourse['summary']): ?>
+                <p class="gift-preview-desc"><?= e($selectedCourse['summary']) ?></p>
+              <?php endif; ?>
+
+              <div class="gift-preview-price">
+                <?php if ($selectedEligibility['isSubscription']): ?>
+                  <span>UGX <?= number_format($selectedEligibility['monthlyPrice']) ?></span><span class="unit">/month</span>
+                <?php else: ?>
+                  <span>UGX <?= number_format($selectedEligibility['price']) ?></span>
+                <?php endif; ?>
+              </div>
+
+              <ul class="gift-preview-perks">
+                <li><?php dash_icon('check-circle'); ?><?= $selectedEligibility['isSubscription'] ? 'Access to the whole school while subscribed' : ($selectedCourse['access_duration_days'] ? (int) $selectedCourse['access_duration_days'] . ' days of access' : 'Lifetime access') ?></li>
+                <li><?php dash_icon('check-circle'); ?>Delivered by email — they can claim it right away</li>
+                <li><?php dash_icon('check-circle'); ?>Add a personal message, if you'd like</li>
+              </ul>
+            </div>
           </div>
-          <div>
-            <div style="font-weight:700; color:var(--ink);"><?= e($selectedCourse['title']) ?></div>
-            <div class="small muted">by <?= e($selectedCourse['creator_name']) ?></div>
+
+          <div class="gift-checkout-form">
+            <?php if (!$user): ?>
+              <div class="card card-pad" style="text-align:center;">
+                <p class="muted">Gifting a course needs a free account first — that's where your receipt and gift history live.</p>
+                <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/gift.php?slug=' . $selectedCourse['slug']))) ?>" class="btn btn-gold btn-block btn-lg shine" style="margin-top:16px;">Sign Up to Gift This Course</a>
+                <p class="guest-note">Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode('/gift.php?slug=' . $selectedCourse['slug']))) ?>">Log in</a></p>
+              </div>
+            <?php else: ?>
+              <?php render_gift_panel($selectedCourse, false); ?>
+            <?php endif; ?>
           </div>
         </div>
 
-        <?php if (!$user): ?>
-          <div class="card card-pad" style="text-align:center;">
-            <p class="muted">Gifting a course needs a free account first — that's where your receipt and gift history live.</p>
-            <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/gift.php?slug=' . $selectedCourse['slug']))) ?>" class="btn btn-gold btn-block btn-lg shine" style="margin-top:16px;">Sign Up to Gift This Course</a>
-            <p class="guest-note">Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode('/gift.php?slug=' . $selectedCourse['slug']))) ?>">Log in</a></p>
+        <div class="gift-steps">
+          <div class="gift-step">
+            <span class="gift-step-num" style="background:color-mix(in srgb, var(--accent) 12%, white); color:var(--accent);">1</span>
+            <div>
+              <div class="gift-step-title">Pick a course</div>
+              <div class="gift-step-desc">From any creator, any school.</div>
+            </div>
           </div>
-        <?php else: ?>
-          <?php render_gift_panel($selectedCourse, false); ?>
-        <?php endif; ?>
+          <div class="gift-step">
+            <span class="gift-step-num" style="background:color-mix(in srgb, var(--gold) 16%, white); color:var(--gold-dark);">2</span>
+            <div>
+              <div class="gift-step-title">Pay with Mobile Money</div>
+              <div class="gift-step-desc">MTN or Airtel, instantly.</div>
+            </div>
+          </div>
+          <div class="gift-step">
+            <span class="gift-step-num" style="background:color-mix(in srgb, var(--success) 14%, white); color:var(--success);">3</span>
+            <div>
+              <div class="gift-step-title">They get access</div>
+              <div class="gift-step-desc">Delivered by email, right away.</div>
+            </div>
+          </div>
+        </div>
       </div>
     <?php endif; ?>
   <?php endif; ?>
