@@ -3,11 +3,17 @@
 :root {
   --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
 
-  --brand-950: #1e3a8a;
-  --brand-900: #1e40af;
-  --brand-800: #1d4ed8;
-  --brand-700: #2563eb;
-  --brand-600: #3b82f6;
+  /* Single yellow/gold brand ramp (no more blue/purple rotation) — darkest
+     to lightest within the same ~43° gold hue as --gold below, so the
+     header/hero gradients that put white text directly on brand-950/900/800
+     keep AA-or-better contrast (verified: brand-950 ~11:1, brand-800 ~5.3:1
+     white-on-bg) instead of naively reusing the bright #f5b301 everywhere,
+     which white text fails badly against. */
+  --brand-950: #4a3800;
+  --brand-900: #664c00;
+  --brand-800: #8a6600;
+  --brand-700: #b38300;
+  --brand-600: #d9a300;
 
   --ink: #16181a;
   --muted: #5b6670;
@@ -18,8 +24,8 @@
   --border: #e7e4dc;
   --border-strong: #d8d4c8;
 
-  --accent: #2563eb;
-  --accent-dark: #1d4ed8;
+  --accent: var(--brand-800);
+  --accent-dark: var(--brand-900);
   --gold: #f5b301;
   --gold-dark: #c98e00;
   /* Referenced by .course-card/.creator-card's hover CTA pill — previously
@@ -54,21 +60,6 @@
   --container: 1180px;
 }
 
-/* Brand-hue rotation: a tiny inline script in header.php stamps
-   data-brand-hue="purple" on <html> for 30 minutes out of every 60,
-   flipping just these brand/accent tokens to a violet family with the
-   same relative lightness steps as their blue defaults above — content
-   colors (--ink/--muted/--border), --gold, and every font-size token
-   are untouched. */
-:root[data-brand-hue="purple"] {
-  --brand-950: #4c1d95;
-  --brand-900: #5b21b6;
-  --brand-800: #6d28d9;
-  --brand-700: #7c3aed;
-  --brand-600: #8b5cf6;
-  --accent: #7c3aed;
-  --accent-dark: #6d28d9;
-}
 
 * { box-sizing: border-box; }
 /* Matches the footer's own background as a fallback — but the real fix
@@ -498,7 +489,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    "signature" touch that a lot of flat, unadorned footers skip. */
 .site-footer::before {
   content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; z-index: 2;
-  background: linear-gradient(to right, var(--brand-700), var(--accent), var(--gold), #ec4899, var(--brand-700));
+  background: linear-gradient(to right, var(--brand-700), var(--accent), var(--gold), var(--brand-600), var(--brand-700));
 }
 /* Two large, static color orbs for ambient depth — the same language as
    the testimonials section, carried into the footer. */

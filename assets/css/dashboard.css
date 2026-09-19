@@ -565,7 +565,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 /* ---------- notification bell + dropdown (admin only) ---------- */
 .notif-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: #f87171; box-shadow: 0 0 0 2px var(--dash-panel); }
 .dash-notif-dropdown { width: 320px; max-height: 380px; overflow-y: auto; }
-.dash-notif-mark-read { background: none; border: none; color: #2563eb; font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; }
+.dash-notif-mark-read { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; }
 .dash-notif-row { padding: 10px 12px; border-radius: 10px; }
 .dash-notif-row:hover { background: #f4f5f8; }
 .dash-notif-row p { font-size: 13px; line-height: 1.45; color: #14181b; margin: 0; }
