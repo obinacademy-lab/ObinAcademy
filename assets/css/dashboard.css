@@ -517,10 +517,22 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-premium .chart-tooltip { background: var(--dash-panel-2); color: var(--ink); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.5); }
 .dash-premium .chart-tooltip::after { border-top-color: var(--dash-panel-2); }
 
-.dash-premium .table-wrap { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: var(--dash-shadow); }
+.dash-premium .table-wrap { background: var(--dash-panel); border-color: var(--dash-border); box-shadow: var(--dash-shadow); -webkit-overflow-scrolling: touch; }
 .dash-premium table th { background: var(--dash-panel-2); color: var(--muted); border-color: var(--dash-border); }
 .dash-premium table td { border-color: var(--dash-border-soft); }
 .dash-premium table tbody tr:hover td { background: var(--dash-border-soft); }
+/* A wide admin table is genuinely too wide for a phone no matter how tight
+   the columns get — rather than fight that, pin the identifying first
+   column (name/title/user) so it stays in view while the rest scrolls
+   underneath, with a soft edge shadow marking the boundary. Applies to
+   every dashboard table at once — no per-page markup needed. */
+.dash-premium table th:first-child, .dash-premium table td:first-child {
+  position: sticky; left: 0; z-index: 1;
+  box-shadow: 4px 0 6px -4px rgba(0,0,0,0.35);
+}
+.dash-premium table th:first-child { background: var(--dash-panel-2); }
+.dash-premium table td:first-child { background: var(--dash-panel); }
+.dash-premium table tbody tr:hover td:first-child { background: var(--dash-border-soft); }
 
 /* The account/notification dropdowns stay a light popover on purpose (a
    common pattern even inside dark UIs) — but --ink resolves near-white in
