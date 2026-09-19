@@ -13,6 +13,9 @@ const MAX_DAILY_WITHDRAWAL_UGX = 3000000;
 // keeps it visible anyway. Measured from reviewed_at (when it actually went
 // PUBLISHED), not created_at (which could be from long before it was ready).
 const NEW_COURSE_BADGE_DAYS = 14;
+// The platform-wide student community — one group for every learner across
+// every school, not per-course. Linked from the homepage and footer.
+const WHATSAPP_COMMUNITY_URL = 'https://chat.whatsapp.com/F4eY0Gff1Oh5DTlUiLs7Kt';
 
 const ACCESS_DURATION_OPTIONS = [
     ['label' => '30 days', 'days' => 30],
