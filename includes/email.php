@@ -180,6 +180,64 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
         HTML);
 }
 
+/**
+ * Notifies every admin account that a sale just happened, platform-wide.
+ * $buyerLabel is a display name only (never an email) — this is a quick
+ * heads-up, not a receipt. $grossAmount is what the buyer actually paid.
+ */
+function send_admin_sale_notification_email(string $itemTitle, string $itemLabel, string $buyerLabel, float $grossAmount, string $creatorName): void {
+    $admins = db_all("SELECT email FROM users WHERE role = 'ADMIN' AND email IS NOT NULL AND email != ''");
+    if (!$admins) return;
+
+    $amount = format_money($grossAmount);
+    $subject = "New Sale: {$itemTitle} — {$amount}";
+    $html = <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">New Sale</h2>
+          <p><strong>{$buyerLabel}</strong> just bought <strong>{$itemTitle}</strong> ({$itemLabel}) from <strong>{$creatorName}</strong>.</p>
+          <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px;">
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Amount Paid</td><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 700;">{$amount}</td></tr>
+            <tr><td style="padding: 8px 0; color: #5b6670;">Creator</td><td style="padding: 8px 0; text-align: right; font-weight: 700;">{$creatorName}</td></tr>
+          </table>
+          <p style="color: #5b6670; font-size: 12.5px; margin-top: 20px;">
+            Automatic platform-wide sale notification, sent to every admin account.
+          </p>
+        </div>
+        HTML;
+
+    foreach ($admins as $admin) {
+        resend_send($admin['email'], $subject, $html);
+    }
+}
+
+/**
+ * Notifies a course's creator that they just made a sale. $netEarning is
+ * their cut after the platform fee — the same number that lands on their
+ * Earnings page, not the buyer's gross payment.
+ */
+function send_creator_sale_notification_email(string $creatorEmail, string $creatorName, string $itemTitle, string $itemLabel, string $buyerLabel, float $netEarning): void {
+    if (!$creatorEmail) return;
+
+    $amount = format_money($netEarning);
+    $dashboardUrl = base_url('dashboard/creator/earnings.php');
+    resend_send($creatorEmail, "You Made a Sale: {$itemTitle}", <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">You Made a Sale!</h2>
+          <p>Hi {$creatorName},</p>
+          <p><strong>{$buyerLabel}</strong> just bought <strong>"{$itemTitle}"</strong> ({$itemLabel}).</p>
+          <p style="margin-top: 18px;">
+            <span style="display: inline-block; background: #ecfdf5; color: #16a34a; padding: 12px 20px; border-radius: 12px; font-weight: 800; font-size: 18px;">+{$amount}</span>
+          </p>
+          <p style="color: #5b6670; font-size: 13px;">This is your net earning after the platform fee — it's already added to your Earnings balance.</p>
+          <p style="margin-top: 24px;">
+            <a href="{$dashboardUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              View Earnings
+            </a>
+          </p>
+        </div>
+        HTML);
+}
+
 /** Same receipt template as send_payment_receipt_email(), pointed at a
  * bundle's title/slug instead of a single course's — payments.type
  * BUNDLE_PURCHASE joins bundle_title/bundle_slug (see

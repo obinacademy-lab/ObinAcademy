@@ -203,6 +203,18 @@ function apply_installment_payment_success(array $payment): void {
         db()->rollBack();
         throw $e;
     }
+
+    // Sale notifications only fire on the FIRST installment — that's the one
+    // that actually creates the enrollment (a new sale). Every installment
+    // after that is the same learner paying down a plan they already have,
+    // not a new purchase, so notifying on those would just spam the creator.
+    if ($isFirst) {
+        $creator = db_one('SELECT name, email FROM users WHERE id = ?', [$plan['creator_id']]);
+        if ($creator) {
+            send_admin_sale_notification_email($payment['course_title'], 'Course Enrollment (Installment Plan)', $payment['learner_name'], (float) $payment['amount'], $creator['name']);
+            send_creator_sale_notification_email($creator['email'], $creator['name'], $payment['course_title'], 'Course Enrollment (Installment Plan)', $payment['learner_name'], $split['net']);
+        }
+    }
 }
 
 /**

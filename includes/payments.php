@@ -85,6 +85,13 @@ function resolve_payment_with_iotec(array $payment): array {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
             apply_bundle_payment_success($payment);
             send_bundle_receipt_email($payment, $isGuestPayment, 'Course Bundle');
+            $bundleCreator = db_one('SELECT name, email FROM users WHERE id = ?', [$payment['bundle_creator_id']]);
+            if ($bundleCreator) {
+                $bundleBuyerLabel = $isGuestPayment ? ($payment['guest_name'] ?: 'A guest') : $payment['learner_name'];
+                $bundleSplit = split_sale((float) $payment['amount']);
+                send_admin_sale_notification_email($payment['bundle_title'], 'Course Bundle', $bundleBuyerLabel, (float) $payment['amount'], $bundleCreator['name']);
+                send_creator_sale_notification_email($bundleCreator['email'], $bundleCreator['name'], $payment['bundle_title'], 'Course Bundle', $bundleBuyerLabel, $bundleSplit['net']);
+            }
             return ['status' => 'SUCCESS'];
         }
 
@@ -168,6 +175,12 @@ function resolve_payment_with_iotec(array $payment): array {
                 throw $e;
             }
             send_payment_receipt_email($payment, $isGuestPayment, 'Course Enrollment');
+            $courseCreator = db_one('SELECT name, email FROM users WHERE id = ?', [$payment['course_creator_id']]);
+            if ($courseCreator) {
+                $buyerLabel = $isGuestPayment ? ($payment['guest_name'] ?: 'A guest') : $payment['learner_name'];
+                send_admin_sale_notification_email($payment['course_title'], 'Course Enrollment', $buyerLabel, (float) $payment['amount'], $courseCreator['name']);
+                send_creator_sale_notification_email($courseCreator['email'], $courseCreator['name'], $payment['course_title'], 'Course Enrollment', $buyerLabel, $split['net']);
+            }
         } else {
             db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
         }

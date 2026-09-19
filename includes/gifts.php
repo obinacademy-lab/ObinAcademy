@@ -325,7 +325,7 @@ function apply_course_gift_payment_success(array $payment): void {
 
         // The creator earns exactly what a direct purchase would, regardless
         // of who ends up with access to the course.
-        $course = db_one('SELECT creator_id FROM courses WHERE id = ?', [$payment['course_id']]);
+        $course = db_one('SELECT creator_id, name AS creator_name, email AS creator_email FROM courses c JOIN users u ON u.id = c.creator_id WHERE c.id = ?', [$payment['course_id']]);
         $split = split_sale((float) $payment['amount']);
         db_insert(
             'INSERT INTO earnings (creator_id, course_id, amount, gross_amount, platform_fee) VALUES (?, ?, ?, ?, ?)',
@@ -341,6 +341,11 @@ function apply_course_gift_payment_success(array $payment): void {
     send_gift_claim_email($payment['gift_recipient_email'], $payment['gift_recipient_name'], $payment['buyer_name'], $payment['course_title'], $payment['gift_message'], $claimUrl, $payment['gift_subscription_months'] !== null ? (int) $payment['gift_subscription_months'] : null);
     if ($payment['buyer_email']) {
         send_gift_purchase_receipt_email($payment);
+    }
+    if ($course) {
+        $giftBuyerLabel = ($payment['buyer_name'] ?: 'A learner') . ' (gift)';
+        send_admin_sale_notification_email($payment['course_title'], 'Course Gift', $giftBuyerLabel, (float) $payment['amount'], $course['creator_name']);
+        send_creator_sale_notification_email($course['creator_email'], $course['creator_name'], $payment['course_title'], 'Course Gift', $giftBuyerLabel, $split['net']);
     }
 }
 
