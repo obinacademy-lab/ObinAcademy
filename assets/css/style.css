@@ -3,15 +3,15 @@
 :root {
   --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
 
-  /* Deep purple brand ramp — the same violet family the old blue/purple
-     rotation used for its "purple" slot, now the platform's one static
-     theme instead of alternating. Already-verified white-on-bg contrast
-     (brand-950 ~15:1, the --accent shade below ~5.7:1). */
-  --brand-950: #4c1d95;
-  --brand-900: #5b21b6;
-  --brand-800: #6d28d9;
-  --brand-700: #7c3aed;
-  --brand-600: #8b5cf6;
+  /* Deep red/maroon brand ramp — darker and more brick-toned than --danger
+     below (#dc2626) on purpose, so error states still read as visually
+     distinct from ordinary brand chrome. Verified white-on-bg contrast:
+     brand-950 ~19:1, the --accent shade (brand-800) ~8.3:1. */
+  --brand-950: #450a0a;
+  --brand-900: #7f1d1d;
+  --brand-800: #991b1b;
+  --brand-700: #b91c1c;
+  --brand-600: #dc2626;
 
   --ink: #16181a;
   --muted: #5b6670;

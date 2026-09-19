@@ -52,7 +52,7 @@ const DASHBOARD_THEMES = [
 function dashboard_theme_default(string $role): string {
     return match ($role) {
         'ADMIN' => 'slate',
-        default => 'purple',
+        default => 'red',
     };
 }
 
