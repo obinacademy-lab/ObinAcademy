@@ -3,18 +3,23 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/leads.php';
 require __DIR__ . '/includes/retention.php';
 require __DIR__ . '/includes/course_notify.php';
+require __DIR__ . '/includes/interest.php';
 
-// Three separate token spaces share this one page — a lead's plain numeric
+// Four separate token spaces share this one page — a lead's plain numeric
 // token (unsubscribe_token()), a learner's 'u'-prefixed retention token
-// (retention_unsubscribe_token()), and a 'c'-prefixed new-course-announcement
-// token (new_course_unsubscribe_token()) — since each unsubscribes from a
-// different thing (pre-signup marketing, inactivity nudges, new-course
-// broadcasts) stored/toggled independently. The prefix alone routes between them.
+// (retention_unsubscribe_token()), a 'c'-prefixed new-course-announcement
+// token (new_course_unsubscribe_token()), and a 'w'-prefixed course-interest
+// reminder token (interest_unsubscribe_token()) — since each unsubscribes
+// from a different thing (pre-signup marketing, inactivity nudges,
+// new-course broadcasts, wishlist follow-ups) stored/toggled independently.
+// The prefix alone routes between them.
 $token = query_param('token');
 if (str_starts_with($token, 'u')) {
     $tokenType = 'retention';
 } elseif (str_starts_with($token, 'c')) {
     $tokenType = 'new_course';
+} elseif (str_starts_with($token, 'w')) {
+    $tokenType = 'interest';
 } else {
     $tokenType = 'lead';
 }
@@ -37,6 +42,16 @@ if ($tokenType === 'retention') {
     if ($account) {
         if (!$account['new_course_emails_opt_out']) {
             db_run('UPDATE users SET new_course_emails_opt_out = 1 WHERE id = ?', [$userId]);
+        }
+        $found = true;
+        $email = $account['email'];
+    }
+} elseif ($tokenType === 'interest') {
+    $userId = $token !== '' ? interest_unsubscribe_token_user_id($token) : null;
+    $account = $userId ? db_one('SELECT email, interest_emails_opt_out FROM users WHERE id = ?', [$userId]) : null;
+    if ($account) {
+        if (!$account['interest_emails_opt_out']) {
+            db_run('UPDATE users SET interest_emails_opt_out = 1 WHERE id = ?', [$userId]);
         }
         $found = true;
         $email = $account['email'];
@@ -68,6 +83,9 @@ require __DIR__ . '/includes/header.php';
       <?php elseif ($tokenType === 'new_course'): ?>
         <?= e($email) ?> won't receive "new course published" announcements anymore. You'll still get
         emails you need for your account, like receipts, password resets, or certificates.
+      <?php elseif ($tokenType === 'interest'): ?>
+        <?= e($email) ?> won't receive follow-up reminders about courses you marked interest in anymore.
+        You'll still get emails you need for your account, like receipts, password resets, or certificates.
       <?php else: ?>
         <?= e($email) ?> won't receive marketing emails from Obin Academy anymore. You'll still get
         emails you need for your account, like receipts or password resets.

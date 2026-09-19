@@ -18,6 +18,7 @@ require __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/leads.php';
 require_once __DIR__ . '/../includes/notifications.php';
 require_once __DIR__ . '/../includes/retention.php';
+require_once __DIR__ . '/../includes/interest.php';
 require_once __DIR__ . '/../includes/email.php';
 require_once __DIR__ . '/../includes/school_subscriptions.php';
 require_once __DIR__ . '/../includes/installments.php';
@@ -54,6 +55,11 @@ cron_section('notification_sweep', function () {
 cron_section('learner_retention', function () {
     $retentionCounts = send_due_retention_notifications();
     echo '[' . date('Y-m-d H:i:s') . "] learner retention: 5h={$retentionCounts['5h']} 24h={$retentionCounts['24h']} 72h={$retentionCounts['72h']}\n";
+});
+
+cron_section('course_interest_reminders', function () {
+    $reminded = send_due_interest_reminders();
+    echo '[' . date('Y-m-d H:i:s') . "] course interest reminders: {$reminded} sent\n";
 });
 
 cron_section('school_subscription_renewal_reminders', function () {

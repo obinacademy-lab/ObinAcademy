@@ -725,6 +725,45 @@ function send_retention_nudge_email(string $to, string $subject, string $emoji, 
         HTML);
 }
 
+/**
+ * One-time follow-up for a learner who marked "Keep me updated" on a course
+ * but never enrolled — see includes/interest.php. $salePrice is only
+ * non-null when the course has a genuinely active sale right now (checked
+ * by the caller via course_has_active_sale()); otherwise the email just
+ * shows the regular price, never an invented discount.
+ */
+function send_course_interest_reminder_email(string $to, string $name, string $courseTitle, string $creatorName, string $courseUrl, ?float $salePrice, float $price, string $unsubscribeUrl): void {
+    $firstName = trim(explode(' ', $name)[0] ?? '') ?: 'there';
+    $priceHtml = $salePrice !== null
+        ? '<span style="color:#9aa1ab; text-decoration:line-through; margin-right:8px;">' . format_money($price) . '</span><strong style="color:#16a34a;">' . format_money($salePrice) . '</strong>'
+        : '<strong>' . format_money($price) . '</strong>';
+    $subject = $salePrice !== null
+        ? "{$courseTitle} is now on sale"
+        : "Still thinking about {$courseTitle}?";
+
+    resend_send($to, $subject, <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1e3a8a;">Hey {$firstName},</h2>
+          <p>
+            You asked to be kept updated on <strong>{$courseTitle}</strong> by {$creatorName},
+            but you haven't enrolled yet. It's still right there waiting for you.
+          </p>
+          <p style="background: #f7f6f2; border-radius: 12px; padding: 14px 16px; font-size: 15px;">
+            {$priceHtml}
+          </p>
+          <p style="margin-top: 20px;">
+            <a href="{$courseUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              View Course
+            </a>
+          </p>
+          <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            You're getting this because you marked interest in a course on Obin Academy.
+            <a href="{$unsubscribeUrl}" style="color: #5b6670;">Unsubscribe from these reminders</a>.
+          </p>
+        </div>
+        HTML);
+}
+
 /** Sent the moment an affiliate application is approved — the affiliate link already exists by the time this lands, since approve_affiliate_application() creates it in the same transaction. */
 function send_affiliate_application_approved_email(string $to, string $name, string $refCode): void {
     $dashboardUrl = base_url('login.php?redirect=' . urlencode('/dashboard/affiliate.php'));

@@ -40,6 +40,10 @@ CREATE TABLE users (
   -- of "a new course just went live" broadcasts independently of inactivity
   -- nudges. See includes/course_notify.php.
   new_course_emails_opt_out TINYINT(1) NOT NULL DEFAULT 0,
+  -- Opt-out for "you marked interest in a course but never enrolled" nudges
+  -- specifically — see includes/interest.php. Independent of the two flags
+  -- above; a user can decline any of the three email categories on its own.
+  interest_emails_opt_out TINYINT(1) NOT NULL DEFAULT 0,
   -- NULL means "use this role's default" (see dashboard_theme_default() in
   -- functions.php) rather than baking a literal default in here — so
   -- changing a role's default later doesn't require touching existing rows.
@@ -676,6 +680,9 @@ CREATE TABLE login_log (
 CREATE TABLE course_interest (
   id INT AUTO_INCREMENT PRIMARY KEY,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- NULL = the one-time follow-up nudge (includes/interest.php) hasn't
+  -- fired yet. Set the moment it sends — the only guard against a repeat.
+  reminder_sent_at DATETIME NULL,
   user_id INT NOT NULL,
   course_id INT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
