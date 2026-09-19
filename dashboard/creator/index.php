@@ -57,21 +57,22 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <a href="<?= e(base_url('dashboard/creator/course-new.php')) ?>" class="btn btn-primary" style="margin-top:14px;">Create Your First Course</a>
   </div>
 <?php else: ?>
-  <div class="table-wrap reveal" style="margin-top:24px;">
-    <table>
-      <thead><tr><th>Course</th><th>Price</th><th>Students</th><th>Status</th><th></th></tr></thead>
-      <tbody>
-        <?php foreach ($courses as $c): ?>
-          <tr>
-            <td><div style="font-weight:600;"><?= e($c['title']) ?></div><div class="small muted"><?= e($c['category_name']) ?></div></td>
-            <td><?= e(format_money((float) $c['price'])) ?></td>
-            <td><?= (int) $c['student_count'] ?></td>
-            <td><span class="badge <?= $badgeClass[$c['status']] ?>"><?= $statusLabel[$c['status']] ?></span></td>
-            <td><a href="<?= e(base_url('dashboard/creator/course-manage.php?id=' . $c['id'])) ?>" class="btn btn-dark btn-sm">Manage</a></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+  <div class="activity-feed reveal" style="margin-top:24px;">
+    <?php foreach ($courses as $c): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <span class="activity-dot tone-neutral" style="flex-shrink:0;"><?php dash_icon('book-open'); ?></span>
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($c['title']) ?></div>
+            <div class="small muted" style="margin-top:2px;"><?= e($c['category_name']) ?> &middot; <?= e(format_money((float) $c['price'])) ?> &middot; <?= (int) $c['student_count'] ?> student<?= (int) $c['student_count'] === 1 ? '' : 's' ?></div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <span class="badge <?= $badgeClass[$c['status']] ?>"><?= $statusLabel[$c['status']] ?></span>
+          <a href="<?= e(base_url('dashboard/creator/course-manage.php?id=' . $c['id'])) ?>" class="btn btn-dark btn-sm">Manage</a>
+        </div>
+      </div>
+    <?php endforeach; ?>
   </div>
 <?php endif; ?>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

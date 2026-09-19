@@ -80,38 +80,44 @@ require __DIR__ . '/../includes/dashboard_header.php';
 </div>
 
 <h2 class="h3" style="margin-top:36px;">Recent Commissions</h2>
-<div class="table-wrap" style="margin-top:14px;">
-  <table>
-    <thead><tr><th>Course</th><th>Commission</th><th>Date</th></tr></thead>
-    <tbody>
-      <?php foreach ($recentEarnings as $e): ?>
-        <tr>
-          <td><?= e($e['course_title'] ?? ('Subscription — ' . (SUBSCRIPTION_TIERS[$e['subscription_tier']]['label'] ?? 'Renewal'))) ?></td>
-          <td style="font-weight:700;"><?= e(format_money((float) $e['amount'])) ?></td>
-          <td><?= e(format_date($e['created_at'])) ?></td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$recentEarnings): ?><tr><td colspan="3" class="muted">No commissions yet — share your link to get started.</td></tr><?php endif; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$recentEarnings): ?>
+  <div class="card card-pad" style="margin-top:14px; border-style:dashed; text-align:center;">
+    <p class="muted">No commissions yet — share your link to get started.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($recentEarnings as $e): ?>
+      <div class="list-row">
+        <div class="list-row-main"><span style="font-weight:600;"><?= e($e['course_title'] ?? ('Subscription — ' . (SUBSCRIPTION_TIERS[$e['subscription_tier']]['label'] ?? 'Renewal'))) ?></span></div>
+        <div class="list-row-meta">
+          <span style="font-weight:700;"><?= e(format_money((float) $e['amount'])) ?></span>
+          <span class="small muted"><?= e(format_date($e['created_at'])) ?></span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 
 <h2 class="h3" style="margin-top:36px;">Withdrawal History</h2>
-<div class="table-wrap" style="margin-top:14px;">
-  <table>
-    <thead><tr><th>Amount</th><th>Phone</th><th>Status</th><th>Requested</th></tr></thead>
-    <tbody>
-      <?php foreach ($withdrawals as $w): ?>
-        <tr>
-          <td><?= e(format_money((float) $w['amount'])) ?></td>
-          <td><?= e($w['phone']) ?></td>
-          <td><span class="badge <?= $badgeClass[$w['status']] ?>"><?= e($w['status']) ?></span></td>
-          <td><?= e(format_date($w['requested_at'])) ?></td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$withdrawals): ?><tr><td colspan="4" class="muted">No withdrawal requests yet.</td></tr><?php endif; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$withdrawals): ?>
+  <div class="card card-pad" style="margin-top:14px; border-style:dashed; text-align:center;">
+    <p class="muted">No withdrawal requests yet.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($withdrawals as $w): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <span style="font-weight:600;"><?= e(format_money((float) $w['amount'])) ?></span>
+          <span class="small muted"><?= e($w['phone']) ?></span>
+        </div>
+        <div class="list-row-meta">
+          <span class="badge <?= $badgeClass[$w['status']] ?>"><?= e($w['status']) ?></span>
+          <span class="small muted"><?= e(format_date($w['requested_at'])) ?></span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 <script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 <?php require __DIR__ . '/../includes/dashboard_footer.php'; ?>

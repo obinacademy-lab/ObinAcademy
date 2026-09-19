@@ -462,26 +462,27 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php endif; ?>
 
 <?php if ($interestedLearners): ?>
-  <div class="table-wrap" style="margin-top:14px;">
-    <table>
-      <thead><tr><th>Learner</th><th>Email</th><th>WhatsApp</th><th>Opted In</th></tr></thead>
-      <tbody>
-        <?php foreach ($interestedLearners as $il): $waNumber = whatsapp_number($il['phone']); ?>
-          <tr>
-            <td style="font-weight:600;"><?= e($il['name']) ?></td>
-            <td class="small"><a href="mailto:<?= e($il['email']) ?>"><?= e($il['email']) ?></a></td>
-            <td class="small">
-              <?php if ($waNumber): ?>
-                <a href="<?= e('https://wa.me/' . $waNumber . '?text=' . urlencode("Hi {$il['name']}, thanks for your interest in \"{$course['title']}\" on Obin Academy!")) ?>" target="_blank" rel="noopener">Message on WhatsApp</a>
-              <?php else: ?>
-                <span class="muted">No phone on file</span>
-              <?php endif; ?>
-            </td>
-            <td class="small muted"><?= e(format_date($il['created_at'])) ?></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+  <div class="activity-feed" style="margin-top:14px;">
+    <?php foreach ($interestedLearners as $il): $waNumber = whatsapp_number($il['phone']); ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($il['name']) ?></div>
+            <div class="small muted" style="margin-top:2px;">
+              <a href="mailto:<?= e($il['email']) ?>" style="color:inherit;"><?= e($il['email']) ?></a>
+              &middot; opted in <?= e(format_date($il['created_at'])) ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <?php if ($waNumber): ?>
+            <a href="<?= e('https://wa.me/' . $waNumber . '?text=' . urlencode("Hi {$il['name']}, thanks for your interest in \"{$course['title']}\" on Obin Academy!")) ?>" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Message on WhatsApp</a>
+          <?php else: ?>
+            <span class="small muted">No phone on file</span>
+          <?php endif; ?>
+        </div>
+      </div>
+    <?php endforeach; ?>
   </div>
 <?php else: ?>
   <p class="muted small" style="margin-top:14px;">No one has opted in to be contacted about this course yet.</p>

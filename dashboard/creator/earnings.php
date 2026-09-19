@@ -150,58 +150,64 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <h2 class="h3" style="margin-top:36px;">Recent Earnings</h2>
-<div class="table-wrap reveal" style="margin-top:14px;">
-  <table>
-    <thead><tr><th>Item</th><th>Gross</th><th>Platform Fee</th><th>Net</th><th>Date</th></tr></thead>
-    <tbody>
-      <?php foreach ($recentEarnings as $e): ?>
-        <tr>
-          <td><?= e($e['title']) ?></td>
-          <td><?= e(format_money((float) $e['gross_amount'])) ?></td>
-          <td><?= e(format_money((float) $e['platform_fee'])) ?></td>
-          <td style="font-weight:700;"><?= e(format_money((float) $e['amount'])) ?></td>
-          <td><?= e(format_date($e['created_at'])) ?></td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$recentEarnings): ?><tr><td colspan="5" class="muted">No earnings yet.</td></tr><?php endif; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$recentEarnings): ?>
+  <div class="card card-pad reveal" style="margin-top:14px; border-style:dashed; text-align:center;">
+    <p class="muted">No earnings yet.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed reveal" style="margin-top:14px;">
+    <?php foreach ($recentEarnings as $e): ?>
+      <div class="list-row">
+        <div class="list-row-main"><span style="font-weight:600;"><?= e($e['title']) ?></span></div>
+        <div class="list-row-meta">
+          <span class="small muted">gross <?= e(format_money((float) $e['gross_amount'])) ?> &middot; fee <?= e(format_money((float) $e['platform_fee'])) ?></span>
+          <span style="font-weight:700;"><?= e(format_money((float) $e['amount'])) ?></span>
+          <span class="small muted"><?= e(format_date($e['created_at'])) ?></span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 
 <h2 class="h3" style="margin-top:36px;">Subscription Pool Payouts</h2>
 <p class="muted small" style="margin-top:4px;">One payout per settled month, split across every creator by that month's watch-time share of the subscription pool.</p>
-<div class="table-wrap reveal" style="margin-top:14px;">
-  <table>
-    <thead><tr><th>Month</th><th>Your Watch-Time Share</th><th>Pool</th><th>Your Payout</th></tr></thead>
-    <tbody>
-      <?php foreach ($subscriptionPayouts as $p): ?>
-        <tr>
-          <td><?= e(date('F Y', strtotime($p['period_month']))) ?></td>
-          <td><?= $p['platform_total_watch_seconds'] > 0 ? round((int) $p['watch_seconds'] / (int) $p['platform_total_watch_seconds'] * 100, 1) : 0 ?>%</td>
-          <td><?= e(format_money((float) $p['pool_amount'])) ?></td>
-          <td style="font-weight:700;"><?= e(format_money((float) $p['payout_amount'])) ?></td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$subscriptionPayouts): ?><tr><td colspan="4" class="muted">No subscription payouts settled yet.</td></tr><?php endif; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$subscriptionPayouts): ?>
+  <div class="card card-pad reveal" style="margin-top:14px; border-style:dashed; text-align:center;">
+    <p class="muted">No subscription payouts settled yet.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed reveal" style="margin-top:14px;">
+    <?php foreach ($subscriptionPayouts as $p): ?>
+      <div class="list-row">
+        <div class="list-row-main"><span style="font-weight:600;"><?= e(date('F Y', strtotime($p['period_month']))) ?></span></div>
+        <div class="list-row-meta">
+          <span class="small muted"><?= $p['platform_total_watch_seconds'] > 0 ? round((int) $p['watch_seconds'] / (int) $p['platform_total_watch_seconds'] * 100, 1) : 0 ?>% of pool <?= e(format_money((float) $p['pool_amount'])) ?></span>
+          <span style="font-weight:700;"><?= e(format_money((float) $p['payout_amount'])) ?></span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 
 <h2 class="h3" style="margin-top:36px;">Withdrawal History</h2>
-<div class="table-wrap reveal" style="margin-top:14px;">
-  <table>
-    <thead><tr><th>Amount</th><th>Phone</th><th>Status</th><th>Requested</th></tr></thead>
-    <tbody>
-      <?php foreach ($withdrawals as $w): ?>
-        <tr>
-          <td><?= e(format_money((float) $w['amount'])) ?></td>
-          <td><?= e($w['phone']) ?></td>
-          <td><span class="badge <?= $badgeClass[$w['status']] ?>"><?= e($w['status']) ?></span></td>
-          <td><?= e(format_date($w['requested_at'])) ?></td>
-        </tr>
-      <?php endforeach; ?>
-      <?php if (!$withdrawals): ?><tr><td colspan="4" class="muted">No withdrawal requests yet.</td></tr><?php endif; ?>
-    </tbody>
-  </table>
-</div>
+<?php if (!$withdrawals): ?>
+  <div class="card card-pad reveal" style="margin-top:14px; border-style:dashed; text-align:center;">
+    <p class="muted">No withdrawal requests yet.</p>
+  </div>
+<?php else: ?>
+  <div class="activity-feed reveal" style="margin-top:14px;">
+    <?php foreach ($withdrawals as $w): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <span style="font-weight:600;"><?= e(format_money((float) $w['amount'])) ?></span>
+          <span class="small muted"><?= e($w['phone']) ?></span>
+        </div>
+        <div class="list-row-meta">
+          <span class="badge <?= $badgeClass[$w['status']] ?>"><?= e($w['status']) ?></span>
+          <span class="small muted"><?= e(format_date($w['requested_at'])) ?></span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

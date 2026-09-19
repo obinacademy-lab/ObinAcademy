@@ -102,51 +102,44 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </form>
 
 <?php if ($coupons): ?>
-  <div class="table-wrap" style="margin-top:28px;">
-    <table>
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>Discount</th>
-          <th>Applies To</th>
-          <th>Uses</th>
-          <th>Expires</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($coupons as $c):
-          $courseTitle = null;
-          if ($c['course_id']) {
-              foreach ($myCourses as $mc) { if ((int) $mc['id'] === (int) $c['course_id']) { $courseTitle = $mc['title']; break; } }
-          }
-        ?>
-          <tr>
-            <td style="font-weight:700; font-family:monospace;"><?= e($c['code']) ?></td>
-            <td><?= $c['discount_type'] === 'PERCENT' ? (int) $c['discount_value'] . '%' : e(format_money((float) $c['discount_value'])) ?> off</td>
-            <td><?= $courseTitle ? e($courseTitle) : 'All courses' ?></td>
-            <td><?= (int) $c['uses_count'] ?><?= $c['max_uses'] ? ' / ' . (int) $c['max_uses'] : '' ?></td>
-            <td><?= $c['expires_at'] ? e(format_date($c['expires_at'])) : '—' ?></td>
-            <td><span class="badge <?= $c['status'] === 'ACTIVE' ? 'badge-published' : 'badge-draft' ?>"><?= $c['status'] === 'ACTIVE' ? 'Active' : 'Disabled' ?></span></td>
-            <td class="row gap-2">
-              <form method="post" style="display:inline;">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="toggle">
-                <input type="hidden" name="couponId" value="<?= (int) $c['id'] ?>">
-                <button type="submit" class="btn btn-outline btn-sm"><?= $c['status'] === 'ACTIVE' ? 'Disable' : 'Enable' ?></button>
-              </form>
-              <form method="post" style="display:inline;" onsubmit="return confirm('Delete this coupon? This can\'t be undone.');">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="delete">
-                <input type="hidden" name="couponId" value="<?= (int) $c['id'] ?>">
-                <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger);">Delete</button>
-              </form>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+  <div class="activity-feed" style="margin-top:28px;">
+    <?php foreach ($coupons as $c):
+      $courseTitle = null;
+      if ($c['course_id']) {
+          foreach ($myCourses as $mc) { if ((int) $mc['id'] === (int) $c['course_id']) { $courseTitle = $mc['title']; break; } }
+      }
+    ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div style="min-width:0;">
+            <div style="font-weight:700; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-family:monospace;"><?= e($c['code']) ?></span>
+              <span class="badge <?= $c['status'] === 'ACTIVE' ? 'badge-published' : 'badge-draft' ?>"><?= $c['status'] === 'ACTIVE' ? 'Active' : 'Disabled' ?></span>
+            </div>
+            <div class="small muted" style="margin-top:2px;">
+              <?= $c['discount_type'] === 'PERCENT' ? (int) $c['discount_value'] . '%' : e(format_money((float) $c['discount_value'])) ?> off &middot;
+              <?= $courseTitle ? e($courseTitle) : 'All courses' ?> &middot;
+              <?= (int) $c['uses_count'] ?><?= $c['max_uses'] ? ' / ' . (int) $c['max_uses'] : '' ?> uses
+              <?= $c['expires_at'] ? ' &middot; expires ' . e(format_date($c['expires_at'])) : '' ?>
+            </div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <form method="post" style="display:inline;">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="toggle">
+            <input type="hidden" name="couponId" value="<?= (int) $c['id'] ?>">
+            <button type="submit" class="btn btn-outline btn-sm"><?= $c['status'] === 'ACTIVE' ? 'Disable' : 'Enable' ?></button>
+          </form>
+          <form method="post" style="display:inline;" onsubmit="return confirm('Delete this coupon? This can\'t be undone.');">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="couponId" value="<?= (int) $c['id'] ?>">
+            <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger);">Delete</button>
+          </form>
+        </div>
+      </div>
+    <?php endforeach; ?>
   </div>
 <?php else: ?>
   <div class="card card-pad" style="text-align:center; margin-top:28px; border-style:dashed;">

@@ -30,38 +30,25 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </form>
 
 <?php if ($students): ?>
-  <div class="table-wrap" style="margin-top:20px;">
-    <table>
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th>Course</th>
-          <th>Progress</th>
-          <th>Source</th>
-          <th>Enrolled</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($students as $s): ?>
-          <tr>
-            <td class="row gap-2" style="align-items:center;">
-              <div class="profile-avatar" style="width:32px; height:32px; font-size:13px; flex-shrink:0;">
-                <?php if ($s['learner_avatar_url']): ?><img src="<?= e(asset_src($s['learner_avatar_url'])) ?>" alt="">
-                <?php else: ?><?= e(mb_substr($s['learner_name'] ?: '?', 0, 1)) ?><?php endif; ?>
-              </div>
-              <div>
-                <div style="font-weight:700;"><?= e($s['learner_name'] ?: 'Unknown') ?><?= !$s['learner_user_id'] ? ' <span class="badge badge-draft" style="margin-left:4px;">Guest</span>' : '' ?></div>
-                <div class="small muted"><?= e($s['learner_email'] ?: '—') ?></div>
-              </div>
-            </td>
-            <td><?= e($s['course_title']) ?></td>
-            <td><?= number_format((float) $s['progress'], 0) ?>%</td>
-            <td><span class="badge badge-published"><?= e($sourceLabel[$s['source']] ?? $s['source']) ?></span></td>
-            <td class="small muted"><?= e(format_date($s['enrolled_at'])) ?></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+  <div class="activity-feed" style="margin-top:20px;">
+    <?php foreach ($students as $s): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div class="profile-avatar" style="width:36px; height:36px; font-size:13px; flex-shrink:0;">
+            <?php if ($s['learner_avatar_url']): ?><img src="<?= e(asset_src($s['learner_avatar_url'])) ?>" alt="">
+            <?php else: ?><?= e(mb_substr($s['learner_name'] ?: '?', 0, 1)) ?><?php endif; ?>
+          </div>
+          <div style="min-width:0;">
+            <div style="font-weight:700;"><?= e($s['learner_name'] ?: 'Unknown') ?><?= !$s['learner_user_id'] ? ' <span class="badge badge-draft" style="margin-left:4px;">Guest</span>' : '' ?></div>
+            <div class="small muted" style="margin-top:2px;"><?= e($s['learner_email'] ?: '—') ?> &middot; <?= e($s['course_title']) ?> &middot; <?= number_format((float) $s['progress'], 0) ?>% complete</div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <span class="badge badge-published"><?= e($sourceLabel[$s['source']] ?? $s['source']) ?></span>
+          <span class="small muted"><?= e(format_date($s['enrolled_at'])) ?></span>
+        </div>
+      </div>
+    <?php endforeach; ?>
   </div>
 <?php else: ?>
   <div class="card card-pad" style="text-align:center; margin-top:24px; border-style:dashed;">

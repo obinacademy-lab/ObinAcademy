@@ -17,28 +17,24 @@ require __DIR__ . '/../includes/dashboard_header.php';
     <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary" style="margin-top:14px;">Browse Courses to Gift</a>
   </div>
 <?php else: ?>
-  <div class="table-wrap" style="margin-top:24px;">
-    <table>
-      <thead>
-        <tr><th>Course</th><th>Recipient</th><th>Sent</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        <?php foreach ($gifts as $gift): ?>
-          <tr>
-            <td style="font-weight:700;"><a href="<?= e(base_url('courses/view.php?slug=' . $gift['course_slug'])) ?>" style="color:var(--ink);"><?= e($gift['course_title']) ?></a></td>
-            <td><?= e($gift['recipient_name']) ?><br><span class="small muted"><?= e($gift['recipient_email']) ?></span></td>
-            <td><?= e(format_date($gift['created_at'])) ?></td>
-            <td>
-              <?php if ($gift['status'] === 'CLAIMED'): ?>
-                <span class="badge badge-published">Claimed <?= e(format_date($gift['claimed_at'])) ?></span>
-              <?php else: ?>
-                <span class="badge badge-pending">Not Yet Claimed</span>
-              <?php endif; ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+  <div class="activity-feed" style="margin-top:24px;">
+    <?php foreach ($gifts as $gift): ?>
+      <div class="list-row">
+        <div class="list-row-main">
+          <div style="min-width:0;">
+            <a href="<?= e(base_url('courses/view.php?slug=' . $gift['course_slug'])) ?>" style="color:var(--ink); font-weight:700; display:block;"><?= e($gift['course_title']) ?></a>
+            <div class="small muted" style="margin-top:2px;"><?= e($gift['recipient_name']) ?> &middot; <?= e($gift['recipient_email']) ?> &middot; sent <?= e(format_date($gift['created_at'])) ?></div>
+          </div>
+        </div>
+        <div class="list-row-meta">
+          <?php if ($gift['status'] === 'CLAIMED'): ?>
+            <span class="badge badge-published">Claimed <?= e(format_date($gift['claimed_at'])) ?></span>
+          <?php else: ?>
+            <span class="badge badge-pending">Not Yet Claimed</span>
+          <?php endif; ?>
+        </div>
+      </div>
+    <?php endforeach; ?>
   </div>
 <?php endif; ?>
 <?php require __DIR__ . '/../includes/dashboard_footer.php'; ?>
