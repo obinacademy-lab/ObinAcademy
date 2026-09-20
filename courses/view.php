@@ -266,9 +266,10 @@ require __DIR__ . '/../includes/header.php';
       </div>
 
       <?php if ($relatedCourses): ?>
-        <div class="course-flat-sec">
-          <div class="course-flat-sec-head"><span class="dash" aria-hidden="true"></span><h2>Students Also Bought</h2></div>
-          <div class="grid sm:grid-2" style="margin-top:14px;">
+        <div class="sab-head"><span class="dash" aria-hidden="true"></span><h2>Students Also Bought</h2></div>
+        <p class="sab-sub">More from <?= e($course['category_name']) ?> — picked from what other learners on Obin Academy bought.</p>
+        <div class="sab-strip">
+          <div class="grid sm:grid-2">
             <?php foreach ($relatedCourses as $rc) render_course_card($rc); ?>
           </div>
         </div>

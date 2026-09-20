@@ -1836,6 +1836,23 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-flat-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .course-flat-sec-head .dash { width: 20px; height: 3px; border-radius: 2px; background: var(--gold); flex-shrink: 0; }
 
+/* ---------- "Students Also Bought" spotlight band (course detail page) —
+   the same restrained gold/accent tint already used for the "Trending
+   This Week" strip on the schools browse page (see .trending-strip),
+   reused here as a quiet "curated pick" frame around the cross-sell
+   course-card grid rather than a plain section like About/Curriculum. ---------- */
+.sab-head { display: flex; align-items: center; gap: 10px; margin-top: 40px; }
+.sab-head .dash { width: 22px; height: 3px; border-radius: 2px; background: var(--gold); flex-shrink: 0; }
+.sab-head h2 { font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -0.005em; color: var(--ink); }
+.sab-sub { font-size: 13.5px; color: var(--muted); margin: 6px 0 0 32px; line-height: 1.5; max-width: 48ch; }
+.sab-strip {
+  margin-top: 18px; padding: 24px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 8%, white), color-mix(in srgb, var(--accent) 6%, white));
+  border: 1px solid color-mix(in srgb, var(--gold) 25%, var(--border));
+  border-radius: var(--radius-lg);
+}
+.sab-strip .grid { margin-top: 0; }
+
 /* enroll_panel.php's sidebar card, restored to its premium look — used
    only on this page, so this edits its one existing rule rather than
    adding a scoped override. */
