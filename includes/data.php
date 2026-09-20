@@ -130,8 +130,15 @@ function get_school_cards(string $whereSql = '', array $params = [], string $ord
 }
 
 function get_featured_schools(int $take = 6): array {
-    return get_school_cards('', [], 'student_count DESC, course_count DESC, u.created_at ASC', $take);
+    return get_school_cards('', [], SCHOOL_POPULARITY_ORDER . ', u.created_at ASC', $take);
 }
+
+// Ranks a school by student_count (enrollments across its published
+// courses — the "most bought" signal) first, then by view_count as the
+// tiebreaker — the school with the most enrollments leads even if a
+// less-enrolled school has more views, and among equally-enrolled schools
+// the most-viewed one wins.
+const SCHOOL_POPULARITY_ORDER = 'student_count DESC, view_count DESC';
 
 /** Same fallback as get_school_cards()'s fallback_thumbnail_url, for a
  * single creator's own profile.php hero rather than a list of cards. */
@@ -144,7 +151,7 @@ function get_creator_fallback_thumbnail(int $creatorId): ?string {
 }
 
 const SCHOOL_SORT_OPTIONS = [
-    'popular' => ['label' => 'Most Popular', 'order' => 'student_count DESC, course_count DESC'],
+    'popular' => ['label' => 'Most Popular', 'order' => SCHOOL_POPULARITY_ORDER],
     'newest' => ['label' => 'Newest', 'order' => 'u.created_at DESC'],
     'rating' => ['label' => 'Highest Rated', 'order' => 'avg_rating DESC, student_count DESC'],
 ];

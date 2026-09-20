@@ -5,7 +5,7 @@ require __DIR__ . '/../includes/school_card.php';
 
 $q = query_param('q');
 $categorySlug = query_param('category');
-// 'popular' (purchases + views, see POPULARITY_ORDER) is the default browse
+// 'popular' (purchases + views, see SCHOOL_POPULARITY_ORDER) is the default browse
 // order now, not 'newest' — so 'popular' is the value treated as "no sort
 // filter applied" throughout this page (browse_url()'s URL-cleaning, the
 // chip active-states, $hasFilters), the same role 'newest' used to play.
