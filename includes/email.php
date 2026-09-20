@@ -142,6 +142,12 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
         $discountRow = '<tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #16a34a;">Discount Applied</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #16a34a;">-' . $savings . '</td></tr>';
     }
 
+    $crossSellHtml = receipt_cross_sell_html(
+        !empty($payment['course_id']) ? (int) $payment['course_id'] : null,
+        !empty($payment['course_category_id']) ? (int) $payment['course_category_id'] : null,
+        $isGuestPayment || empty($payment['user_id']) ? null : (int) $payment['user_id']
+    );
+
     resend_send($to, "Receipt for \"{$courseTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #2563eb;">
@@ -173,11 +179,70 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
             </a>
           </p>
 
+          {$crossSellHtml}
+
           <p style="color: #5b6670; font-size: 12.5px; text-align: center; margin-top: 28px;">
             Keep this receipt for your records. Questions about this payment? Reply to this email or reach us at info@obinacademy.site.
           </p>
         </div>
         HTML);
+}
+
+/**
+ * "You might also like" — up to 2 same-category course suggestions appended
+ * to a purchase receipt, buying intent being highest right after a purchase
+ * actually completes. Returns '' (never a broken/empty section) whenever
+ * $courseId or $categoryId is missing (a receipt type with no single course
+ * behind it, e.g. a school subscription) or nothing qualifies.
+ */
+function receipt_cross_sell_html(?int $courseId, ?int $categoryId, ?int $excludeUserId): string {
+    if ($courseId === null || $categoryId === null) return '';
+
+    // A self-contained query rather than reusing get_related_courses()/
+    // get_course_cards() (includes/data.php) — most page files plain-
+    // `require` data.php themselves rather than require_once, on the
+    // assumption it's never already loaded. email.php is pulled in by
+    // bootstrap.php on every single request (via affiliates.php), so
+    // require_once-ing data.php from here would make it load twice — a
+    // fatal "cannot redeclare" on every one of those pages.
+    $where = "c.id != ? AND c.category_id = ? AND c.status = 'PUBLISHED'";
+    $params = [$courseId, $categoryId];
+    if ($excludeUserId !== null) {
+        $where .= ' AND NOT EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = c.id AND e.user_id = ?)';
+        $params[] = $excludeUserId;
+    }
+    $suggestions = db_all(
+        "SELECT c.title, c.slug, c.price, c.sale_price, c.sale_ends_at, u.name AS creator_name
+         FROM courses c JOIN users u ON u.id = c.creator_id
+         WHERE $where
+         ORDER BY c.view_count DESC, (SELECT COUNT(*) FROM enrollments e2 WHERE e2.course_id = c.id) DESC, c.created_at DESC
+         LIMIT 2",
+        $params
+    );
+    if (!$suggestions) return '';
+
+    $rows = '';
+    foreach ($suggestions as $s) {
+        $url = base_url('courses/view.php?slug=' . $s['slug']);
+        $hasSale = course_has_active_sale($s);
+        $price = $hasSale ? (float) $s['sale_price'] : (float) $s['price'];
+        $priceLabel = $price > 0 ? format_money($price) : 'Free';
+        $rows .= <<<HTML
+            <tr>
+              <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <a href="{$url}" style="color: #14181b; text-decoration: none; font-weight: 700; font-size: 14px;">{$s['title']}</a>
+                <div style="color: #5b6670; font-size: 12.5px; margin-top: 2px;">by {$s['creator_name']} &middot; {$priceLabel}</div>
+              </td>
+            </tr>
+            HTML;
+    }
+
+    return <<<HTML
+        <div style="margin-top: 28px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+          <p style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">You Might Also Like</p>
+          <table role="presentation" style="width: 100%; border-collapse: collapse;">{$rows}</table>
+        </div>
+        HTML;
 }
 
 /**

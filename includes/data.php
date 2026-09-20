@@ -99,6 +99,23 @@ function get_trending_courses(int $take = 3): array {
 }
 
 /**
+ * "Students Also Bought" — other published courses in the same category,
+ * ranked the same way the browse grid's "Most Popular" is (POPULARITY_ORDER:
+ * views first, purchases as the tiebreaker). $excludeUserId, when given,
+ * drops any course that learner is already enrolled in — no point
+ * suggesting something they already own.
+ */
+function get_related_courses(int $courseId, int $categoryId, ?int $excludeUserId = null, int $take = 3): array {
+    $where = 'c.id != ? AND c.category_id = ?';
+    $params = [$courseId, $categoryId];
+    if ($excludeUserId !== null) {
+        $where .= ' AND NOT EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = c.id AND e.user_id = ?)';
+        $params[] = $excludeUserId;
+    }
+    return get_course_cards($where, $params, POPULARITY_ORDER, $take);
+}
+
+/**
  * Every creator's row (+ course/student counts, cheapest published-course
  * price) for school-card rendering — see includes/school_card.php.
  * $whereSql/$params filter the *creator* (u.*); course/category filtering

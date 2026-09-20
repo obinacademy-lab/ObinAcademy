@@ -3,6 +3,7 @@ require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/enroll_panel.php';
 require __DIR__ . '/../includes/enrollment.php';
+require __DIR__ . '/../includes/course_card.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -60,6 +61,10 @@ if ($user) {
         if ((int) $r['author_id'] === (int) $user['id']) { $myReview = $r; break; }
     }
 }
+
+$relatedCourses = $course['status'] === 'PUBLISHED'
+    ? get_related_courses((int) $course['id'], (int) $course['category_id'], $user ? (int) $user['id'] : null)
+    : [];
 
 $statusLabel = ['DRAFT' => 'a draft', 'PENDING_REVIEW' => 'pending admin review', 'REJECTED' => 'rejected and needs changes'];
 
@@ -259,6 +264,15 @@ require __DIR__ . '/../includes/header.php';
           </div>
         </div>
       </div>
+
+      <?php if ($relatedCourses): ?>
+        <div class="course-flat-sec">
+          <div class="course-flat-sec-head"><span class="dash" aria-hidden="true"></span><h2>Students Also Bought</h2></div>
+          <div class="grid sm:grid-2" style="margin-top:14px;">
+            <?php foreach ($relatedCourses as $rc) render_course_card($rc); ?>
+          </div>
+        </div>
+      <?php endif; ?>
     </div>
 
     <aside class="course-sidebar">

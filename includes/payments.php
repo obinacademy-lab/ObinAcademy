@@ -14,7 +14,7 @@ function validate_phone(string $phone): bool {
 
 function fetch_payment_with_course(int $paymentId): ?array {
     return db_one(
-        'SELECT p.*, c.price AS course_price, c.slug AS course_slug, c.title AS course_title, c.creator_id AS course_creator_id, c.access_duration_days,
+        'SELECT p.*, c.price AS course_price, c.slug AS course_slug, c.title AS course_title, c.creator_id AS course_creator_id, c.access_duration_days, c.category_id AS course_category_id,
                 u.name AS learner_name, u.email AS learner_email
          FROM payments p
          JOIN courses c ON c.id = p.course_id
