@@ -320,10 +320,10 @@ require __DIR__ . '/../includes/header.php';
 
 <?php if ($recentActivity): ?>
   <div class="activity-toast" id="activityToast" role="status" aria-live="polite">
-    <span class="activity-toast-dot" aria-hidden="true"></span>
+    <div class="activity-toast-badge" aria-hidden="true"><span data-activity-initial></span><span class="ring"></span></div>
     <div class="activity-toast-body">
       <p class="activity-toast-text" data-activity-text></p>
-      <p class="activity-toast-time" data-activity-time></p>
+      <p class="activity-toast-time"><span class="live-dot" aria-hidden="true"></span><span data-activity-time></span></p>
     </div>
     <button type="button" class="activity-toast-close" data-activity-close aria-label="Dismiss">&times;</button>
   </div>
@@ -344,6 +344,7 @@ require __DIR__ . '/../includes/header.php';
         <?php endforeach; ?>
       ];
 
+      var initialEl = toast.querySelector('[data-activity-initial]');
       var textEl = toast.querySelector('[data-activity-text]');
       var timeEl = toast.querySelector('[data-activity-time]');
       var closeBtn = toast.querySelector('[data-activity-close]');
@@ -361,9 +362,11 @@ require __DIR__ . '/../includes/header.php';
       function showEntry(i) {
         if (dismissed || i >= entries.length) return;
         var e = entries[i];
+        toast.classList.remove('show');
+        initialEl.textContent = (e.name.charAt(0) || '?').toUpperCase();
         textEl.innerHTML = '<b>' + e.name + '</b>' + (e.city ? ' from ' + e.city : '') + ' just enrolled in this course';
         timeEl.textContent = e.timeAgo;
-        toast.classList.add('show');
+        requestAnimationFrame(function () { toast.classList.add('show'); });
         timers.push(setTimeout(function () {
           toast.classList.remove('show');
           timers.push(setTimeout(function () { showEntry(i + 1); }, 4000));

@@ -3093,32 +3093,54 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 /* ---------- recent-activity social-proof toast (course detail page) —
    real enrollments only, see get_recent_enrollment_activity() in
-   includes/data.php. Bottom-LEFT and a fixed max-width (not centered/full-
-   width like .consent-banner) so the two don't collide if both show. ---------- */
+   includes/data.php. Bottom-LEFT and a fixed max-width on desktop (not
+   centered/full-width like .consent-banner) so the two don't collide if
+   both show; the mobile media query below switches to equal left/right
+   margins instead — no more lopsided edge-crowding on narrow phones. ---------- */
 .activity-toast {
   position: fixed; left: 16px; bottom: 16px; z-index: 170; max-width: 380px;
-  background: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 60%, black); border-radius: var(--radius-lg);
-  padding: 18px 20px; box-shadow: var(--shadow-pop-lg);
-  display: flex; align-items: flex-start; gap: 12px;
-  opacity: 0; transform: translateY(12px) scale(0.98); pointer-events: none;
-  transition: opacity 0.35s cubic-bezier(0.16,1,0.3,1), transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  background: linear-gradient(155deg, var(--danger), #a91d1d);
+  border-radius: var(--radius-lg);
+  padding: 16px 16px 16px 14px;
+  box-shadow: 0 20px 40px -12px rgba(169,29,29,0.45), 0 2px 8px -2px rgba(169,29,29,0.3);
+  display: flex; align-items: center; gap: 12px;
+  opacity: 0; transform: translateY(18px) scale(0.96); pointer-events: none;
+  transition: opacity 0.55s cubic-bezier(0.19,1,0.22,1), transform 0.55s cubic-bezier(0.19,1,0.22,1);
 }
 .activity-toast.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-.activity-toast-dot {
-  width: 10px; height: 10px; border-radius: 50%; background: #fff; flex-shrink: 0; margin-top: 7px;
+.activity-toast-badge {
+  position: relative; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.16); border: 1.5px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: #fff;
+}
+.activity-toast-badge .ring {
+  position: absolute; inset: -5px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.55);
+  opacity: 0; transform: scale(0.85);
+}
+.activity-toast.show .activity-toast-badge .ring { animation: activity-ring-pulse 2.2s cubic-bezier(0.16,1,0.3,1) 0.55s 2; }
+@keyframes activity-ring-pulse {
+  0% { opacity: 0.6; transform: scale(0.85); }
+  100% { opacity: 0; transform: scale(1.35); }
 }
 .activity-toast-body { flex: 1; min-width: 0; }
-.activity-toast-text { margin: 0; font-size: 15.5px; font-weight: 600; color: #fff; line-height: 1.4; }
+.activity-toast-text { margin: 0; font-size: 14.5px; font-weight: 600; color: #fff; line-height: 1.35; letter-spacing: -0.005em; }
 .activity-toast-text b { font-weight: 800; }
-.activity-toast-time { margin: 3px 0 0; font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.75); }
+.activity-toast-time { margin: 3px 0 0; font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,0.72); display: flex; align-items: center; gap: 5px; }
+.activity-toast-time .live-dot { width: 5px; height: 5px; border-radius: 50%; background: #fff; flex-shrink: 0; }
 .activity-toast-close {
-  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; border: none;
-  background: rgba(255,255,255,0.18); color: #fff; font-size: 15px; line-height: 1; cursor: pointer;
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.9); font-size: 15px; line-height: 1; cursor: pointer;
   display: flex; align-items: center; justify-content: center; padding: 0;
+  transition: background-color 0.15s ease, transform 0.15s ease;
 }
-.activity-toast-close:hover { background: rgba(255,255,255,0.3); }
+.activity-toast-close:hover { background: rgba(255,255,255,0.28); transform: scale(1.06); }
+@media (max-width: 480px) {
+  .activity-toast { left: 12px; right: 12px; max-width: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .activity-toast { transition: opacity 0.2s ease; transform: none; }
+  .activity-toast-badge .ring { animation: none; }
 }
 
 /* ---------- community feed ---------- */
