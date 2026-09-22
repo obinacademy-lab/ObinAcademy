@@ -319,14 +319,17 @@ require __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <?php if ($recentActivity): ?>
-  <div class="activity-toast" id="activityToast" role="status" aria-live="polite">
+  <button type="button" class="activity-toast" id="activityToast" aria-live="polite">
     <div class="activity-toast-badge" aria-hidden="true"><span data-activity-initial></span><span class="ring"></span></div>
     <div class="activity-toast-body">
       <p class="activity-toast-text" data-activity-text></p>
       <p class="activity-toast-time"><span class="live-dot" aria-hidden="true"></span><span data-activity-time></span></p>
     </div>
-    <button type="button" class="activity-toast-close" data-activity-close aria-label="Dismiss">&times;</button>
-  </div>
+    <div class="activity-toast-arrow" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </div>
+    <span class="activity-toast-close" data-activity-close role="button" tabindex="0" aria-label="Dismiss">&times;</span>
+  </button>
   <script>
     (() => {
       var toast = document.getElementById('activityToast');
@@ -357,7 +360,32 @@ require __DIR__ . '/../includes/header.php';
         toast.classList.remove('show');
         try { sessionStorage.setItem(storageKey, '1'); } catch (e) {}
       }
-      closeBtn.addEventListener('click', dismiss);
+      // stopPropagation so dismissing never also triggers the toast's own
+      // click-to-scroll below — closeBtn is a <span role="button">, not a
+      // real nested <button> (a <button> can't validly contain another),
+      // so Enter/Space activation needs its own handler too.
+      closeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        dismiss();
+      });
+      closeBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          dismiss();
+        }
+      });
+
+      // Tapping the toast itself scrolls to and briefly highlights the
+      // enroll/subscribe panel — social proof as an actual nudge toward
+      // buying, not just something to glance at.
+      var enrollPanel = document.querySelector('.enroll-panel');
+      toast.addEventListener('click', function () {
+        if (!enrollPanel) return;
+        enrollPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        enrollPanel.classList.add('activity-pulse');
+        setTimeout(function () { enrollPanel.classList.remove('activity-pulse'); }, 1400);
+      });
 
       // Never sit ON the real footer nav (Home/Explore Schools/Stories/…)
       // once a visitor scrolls that far — the toast is viewport-fixed, so
