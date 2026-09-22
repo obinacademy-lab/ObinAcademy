@@ -359,8 +359,28 @@ require __DIR__ . '/../includes/header.php';
       }
       closeBtn.addEventListener('click', dismiss);
 
+      // Never sit on top of the real footer nav (Home/Explore Schools/
+      // Stories/…) once a visitor scrolls that far — the toast is
+      // viewport-fixed, so it would otherwise cover those links for as
+      // long as it's mid-cycle. Checked fresh each time rather than via
+      // IntersectionObserver, whose observe() fires once immediately with
+      // whatever the CURRENT state is — on a short page the footer can
+      // already be within range at load, which would permanently block
+      // every future show before the visitor ever scrolled at all. A
+      // lightweight poll rather than a 'scroll' listener alone — some
+      // scroll paths (anchor jumps, programmatic scrolls, certain trackpad/
+      // momentum scrolling) don't reliably fire scroll events on every
+      // browser, and this is cheap enough to just always be correct.
+      var footer = document.querySelector('.site-footer-minimal');
+      function footerInView() {
+        return !!footer && footer.getBoundingClientRect().top < window.innerHeight;
+      }
+      setInterval(function () {
+        if (toast.classList.contains('show') && footerInView()) toast.classList.remove('show');
+      }, 250);
+
       function showEntry(i) {
-        if (dismissed || i >= entries.length) return;
+        if (dismissed || footerInView() || i >= entries.length) return;
         var e = entries[i];
         toast.classList.remove('show');
         initialEl.textContent = (e.name.charAt(0) || '?').toUpperCase();
