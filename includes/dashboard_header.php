@@ -153,75 +153,16 @@ if ($user['role'] === 'ADMIN') {
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/dashboard.css')) ?>">
 </head>
 <body>
-<?php if ($user['role'] === 'CREATOR'): ?>
-<div class="dash dash-topnav">
-  <header class="topnav-bar">
-    <div class="topnav-bar-inner">
-      <div class="topnav-left">
-        <?php render_logo(true, 'topnav-logo'); ?>
-        <nav class="topnav-groups">
-          <?php foreach ($navGroups as $groupLabel => $items): ?>
-            <div class="topnav-group">
-              <button class="topnav-group-trigger" type="button">
-                <?= e($groupLabel) ?>
-                <svg class="topnav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
-              </button>
-              <div class="topnav-dropdown">
-                <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; ?>
-                  <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>">
-                    <?php dash_icon($icon); ?><span><?= e($label) ?></span>
-                    <?php if ($badge > 0): ?><span class="nav-badge"><?= $badge ?></span><?php endif; ?>
-                  </a>
-                <?php endforeach; ?>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        </nav>
-      </div>
-      <div class="topnav-right">
-        <a href="<?= e(base_url('index.php')) ?>" target="_blank" rel="noopener" class="topnav-visit-site">
-          <?php dash_icon('arrow-right', 'visit-icon'); ?><span>Visit Live Site</span>
-        </a>
-        <div class="account-menu dash-account">
-          <button class="dash-who">
-            <span class="avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></span>
-            <span class="who-text">
-              <span class="name"><?= e($user['name']) ?></span>
-              <span class="role"><?= e(ucfirst(strtolower($user['role']))) ?></span>
-            </span>
-            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
-          </button>
-          <div class="account-dropdown">
-            <div class="account-dropdown-head">
-              <div class="name"><?= e($user['name']) ?></div>
-              <div class="email"><?= e($user['email']) ?></div>
-            </div>
-            <a href="<?= e(base_url('dashboard/settings.php')) ?>"><?php dash_icon('settings'); ?>Settings</a>
-            <a href="<?= e(base_url('logout.php')) ?>" class="danger"><?php dash_icon('log-out'); ?>Sign Out</a>
-          </div>
-        </div>
-        <button class="topnav-hamburger" type="button" data-topnav-open aria-label="Open menu">&#9776;</button>
-      </div>
-    </div>
-  </header>
-
-  <div class="topnav-mobile-panel" data-topnav-panel>
-    <button class="topnav-mobile-close" type="button" data-topnav-close aria-label="Close menu">&times;</button>
-    <?php foreach ($navGroups as $groupLabel => $items): ?>
-      <div class="topnav-mobile-group-label"><?= e($groupLabel) ?></div>
-      <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; ?>
-        <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>">
-          <?php dash_icon($icon); ?><span><?= e($label) ?></span>
-          <?php if ($badge > 0): ?><span class="nav-badge"><?= $badge ?></span><?php endif; ?>
-        </a>
-      <?php endforeach; ?>
-    <?php endforeach; ?>
-  </div>
-
-  <div class="dash-main">
-    <div class="dash-content">
-<?php else: ?>
-<div class="dash dash-premium theme-<?= e(dashboard_theme_for_user($user)) ?>">
+<?php
+  // Creator gets a fixed light "classic" shell (.dash-classic) instead of
+  // the dark .dash-premium theme system — same sidebar structure/markup as
+  // admin/learner below, just a different outer class supplying different
+  // tokens (see dashboard.css). No theme-<key> class for creators: classic
+  // is one fixed palette, not a pick-a-color theme (settings.php hides the
+  // theme-color picker for CREATOR accordingly).
+  $shellClass = $user['role'] === 'CREATOR' ? 'dash-classic' : 'dash-premium theme-' . dashboard_theme_for_user($user);
+?>
+<div class="dash <?= e($shellClass) ?>">
   <div class="dash-overlay" data-dash-overlay data-dash-close></div>
   <aside class="dash-sidebar" data-dash-sidebar>
     <div class="dash-sidebar-head">
@@ -323,7 +264,6 @@ if ($user['role'] === 'ADMIN') {
     </div>
 
     <div class="dash-content">
-<?php endif; ?>
       <?php
         $flashError = flash_get('error');
         $flashSuccess = flash_get('success');

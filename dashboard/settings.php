@@ -1,6 +1,6 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
-require __DIR__ . '/../includes/storage.php';
+require __DIR__ . '/../../includes/bootstrap.php';
+require __DIR__ . '/../../includes/storage.php';
 $user = require_login();
 
 $errors = [];
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Settings — Obin Academy';
-require __DIR__ . '/../includes/dashboard_header.php';
+require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <h1 class="h2">Settings</h1>
 
@@ -105,6 +105,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
   <div class="alert alert-error" style="margin-top:16px;"><?= e(implode(' ', $errors)) ?></div>
 <?php endif; ?>
 
+<?php if ($user['role'] !== 'CREATOR'): ?>
 <div class="card card-pad" style="margin-top:20px; max-width:560px;">
   <label style="display:block;">Dashboard Theme</label>
   <p class="help" style="margin-bottom:14px;">Pick the color that shows up across your dashboard's sidebar, buttons, and charts.</p>
@@ -142,6 +143,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
   });
 })();
 </script>
+<?php endif; ?>
 
 <form method="post" enctype="multipart/form-data" class="card card-pad" style="margin-top:20px; max-width:560px;">
   <?= csrf_field() ?>
@@ -226,4 +228,4 @@ require __DIR__ . '/../includes/dashboard_header.php';
 
   <button type="submit" class="btn btn-primary">Save Changes</button>
 </form>
-<?php require __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

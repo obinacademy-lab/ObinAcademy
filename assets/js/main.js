@@ -365,13 +365,6 @@ document.addEventListener("DOMContentLoaded", () => {
   dashOpenBtns.forEach((btn) => btn.addEventListener("click", () => setSidebar(true)));
   dashCloseBtns.forEach((btn) => btn.addEventListener("click", () => setSidebar(false)));
 
-  const topnavPanel = document.querySelector("[data-topnav-panel]");
-  const topnavOpenBtns = document.querySelectorAll("[data-topnav-open]");
-  const topnavCloseBtns = document.querySelectorAll("[data-topnav-close]");
-  topnavOpenBtns.forEach((btn) => btn.addEventListener("click", () => topnavPanel?.classList.add("open")));
-  topnavCloseBtns.forEach((btn) => btn.addEventListener("click", () => topnavPanel?.classList.remove("open")));
-  topnavPanel?.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => topnavPanel.classList.remove("open")));
-
   // Footer "Back to top" — a real smooth scroll rather than a bare #top
   // jump (there's no id="top" anchor on these pages).
   document.querySelectorAll("[data-back-to-top]").forEach((link) => {
