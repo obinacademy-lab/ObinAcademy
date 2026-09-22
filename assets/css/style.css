@@ -59,16 +59,6 @@
 
 
 * { box-sizing: border-box; }
-/* overscroll-behavior:none is meant to disable the phone rubber-band
-   bounce outright, but that's inconsistently honored across mobile
-   browsers (iOS Chrome in particular) — so it stays here as a first
-   layer, but isn't relied on alone. The second layer: on iOS WebKit, the
-   blank area a bounce DOES reveal past the end of the page is filled
-   with BODY's own background, not html's — so body carries the color
-   that's actually meant to show there (matching the site's own dark
-   footer/header, not a mismatched white slab under it) and <main> below
-   gets its own explicit white background back for the normal page
-   canvas in between. */
 html {
   scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--brand-950);
   overscroll-behavior: none;
@@ -78,12 +68,11 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   color: var(--ink);
-  background: var(--brand-950);
+  background: var(--white);
   font-size: 16px;
   line-height: 1.6;
   overscroll-behavior: none;
 }
-main { background: var(--white); }
 
 img, video, iframe { max-width: 100%; }
 a { color: inherit; }
