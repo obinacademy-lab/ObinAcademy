@@ -40,7 +40,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $installmentPlan = $user ? get_installment_plan((int) $user['id'], (int) $course['id']) : null;
     $installmentAccessBlocked = $installmentPlan && !learner_has_installment_access($installmentPlan);
     if ($installmentAccessBlocked) $hasAccess = false;
-    $courseSupportsInstallments = (int) ($course['installments_enabled'] ?? 0) === 1 && (float) ($course['first_installment_amount'] ?? 0) > 0;
+    // Every paid course offers a 2-installment plan — see
+    // default_first_installment_amount() for the fallback split when the
+    // creator hasn't set their own first-payment amount.
+    $courseSupportsInstallments = $price > 0;
     $schoolLabel = $course['creator_school_name'] ?: $course['creator_name'];
     $monthlyPrice = (float) ($course['creator_school_monthly_price'] ?? 0);
     // A subscription unlocks only ONE course at a time per creator — if this
@@ -256,7 +259,9 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
             // which could change or expire between installments. The first
             // amount is the creator's own choice (courses.first_installment_amount),
             // never auto-computed — the second is simply whatever's left.
-            $firstInstallmentAmount = (float) $course['first_installment_amount'];
+            $firstInstallmentAmount = (float) ($course['first_installment_amount'] ?? 0) > 0
+                ? (float) $course['first_installment_amount']
+                : default_first_installment_amount($price);
             $secondInstallmentAmount = round($price - $firstInstallmentAmount, 2);
           ?>
             <div style="margin-top:14px;" data-payment-widget
@@ -291,7 +296,7 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
               </div>
               <p class="error-text hidden" data-error></p>
             </div>
-            <p class="small muted" style="margin-top:8px;">Full access unlocks after the first payment. The remaining <?= e(format_money($secondInstallmentAmount)) ?> is due <?= (int) $course['installment_interval_days'] ?> days later.</p>
+            <p class="small muted" style="margin-top:8px;">Full access unlocks after the first payment. The remaining <?= e(format_money($secondInstallmentAmount)) ?> is due <?= (int) ($course['installment_interval_days'] ?: 14) ?> days later.</p>
           <?php endif; ?>
         <?php else: ?>
           <form method="post" action="<?= e(base_url('api/enroll-redirect.php')) ?>" style="margin-top:20px;">

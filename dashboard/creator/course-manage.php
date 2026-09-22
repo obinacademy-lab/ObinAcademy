@@ -75,11 +75,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $accessDurationDays = $accessDurationRaw === 'lifetime' ? null : (int) $accessDurationRaw;
         $premiumPriceRaw = post('premiumPrice');
         $premiumPrice = $premiumPriceRaw === '' ? null : (float) $premiumPriceRaw;
-        $installmentsEnabled = post('installmentsEnabled') === '1' ? 1 : 0;
-        $installmentCount = 2; // Always exactly 2 — the creator sets the first amount below, the second is whatever's left.
+        // Every paid course offers a 2-installment plan automatically — no
+        // per-course opt-in. The creator may still pick their own first
+        // amount here; leaving it blank falls back to half the price (see
+        // default_first_installment_amount()).
+        $installmentCount = 2;
         $installmentIntervalDays = in_array(post('installmentIntervalDays'), ['7', '14', '30'], true) ? (int) post('installmentIntervalDays') : 14;
         $firstInstallmentAmountRaw = post('firstInstallmentAmount');
         $firstInstallmentAmount = $firstInstallmentAmountRaw === '' ? null : (float) $firstInstallmentAmountRaw;
+        $installmentsEnabled = ($creatorHasSubscription && $subscriptionIncluded === 1) ? 0 : ($price > 0 ? 1 : 0);
 
         if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
         if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
@@ -87,18 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($creatorHasSubscription && $subscriptionIncluded === 0 && $price <= 0) {
             $errors[] = 'Set a price for this course, since you\'re selling it separately from your subscription.';
         }
-        if ($installmentsEnabled && $price <= 0) {
-            $errors[] = 'Set a price above 0 before offering a payment plan.';
-        }
-        if ($installmentsEnabled && $price > 0) {
-            if ($firstInstallmentAmount === null || $firstInstallmentAmount <= 0) {
-                $errors[] = 'Set the first installment amount.';
-            } elseif ($firstInstallmentAmount >= $price) {
+        if ($firstInstallmentAmount !== null) {
+            if ($firstInstallmentAmount <= 0) {
+                $errors[] = 'The first installment amount must be greater than 0.';
+            } elseif ($price > 0 && $firstInstallmentAmount >= $price) {
                 $errors[] = 'The first installment must be less than the full course price.';
             }
-        }
-        if ($creatorHasSubscription && $subscriptionIncluded === 1) {
-            $installmentsEnabled = 0;
         }
         if ($salePrice !== null && ($salePrice <= 0 || $salePrice >= $price)) {
             $errors[] = 'Sale price must be greater than 0 and less than the regular price.';
@@ -118,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             $sql = 'UPDATE courses SET title=?, summary=?, description=?, price=?, sale_price=?, sale_ends_at=?, category_id=?, access_duration_days=?, premium_price=?, subscription_included=?, installments_enabled=?, installment_count=?, installment_interval_days=?, first_installment_amount=?' . ($thumbnailUrl ? ', thumbnail_url=?' : '') . ' WHERE id=?';
-            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice, $subscriptionIncluded, $installmentsEnabled, $installmentCount, $installmentIntervalDays, $installmentsEnabled ? $firstInstallmentAmount : null];
+            $params = [$title, $summary, $description, $price, $salePrice, $saleEndsAt, $categoryId, $accessDurationDays, $premiumPrice, $subscriptionIncluded, $installmentsEnabled, $installmentCount, $installmentIntervalDays, $firstInstallmentAmount];
             if ($thumbnailUrl) $params[] = $thumbnailUrl;
             $params[] = $courseId;
             db_run($sql, $params);
@@ -233,16 +231,6 @@ unset($m);
 $studentCount = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
 $funnel = get_course_funnel($courseId);
 $interestedLearners = get_interested_learners($courseId);
-$paymentInsight = get_course_payment_insight($courseId);
-// Only worth surfacing once there's a real pattern (not 1-2 attempts), the
-// course actually charges something installments could split, and it isn't
-// already offering them.
-$soldSeparatelyNow = $creatorHasSubscription && (int) $course['subscription_included'] === 0;
-$showInstallmentNudge = $paymentInsight['failed'] >= 3
-    && $paymentInsight['insufficient_funds_pct'] >= 50
-    && (float) $course['price'] > 0
-    && (int) $course['installments_enabled'] !== 1
-    && (!$creatorHasSubscription || $soldSeparatelyNow);
 
 $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
 $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
@@ -312,15 +300,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <div class="alert alert-error" style="margin-top:16px;"><?= e(implode(' ', $errors)) ?></div>
 <?php endif; ?>
 
-<?php if ($showInstallmentNudge): ?>
-  <div class="alert alert-warning reveal" style="margin-top:16px; display:flex; align-items:flex-start; gap:14px; justify-content:space-between; flex-wrap:wrap;">
-    <div style="min-width:240px; flex:1;">
-      <strong>💡 You may be losing sales to affordability, not interest.</strong>
-      <p style="margin-top:4px;">In the last 30 days, <?= $paymentInsight['failed'] ?> payment attempt<?= $paymentInsight['failed'] === 1 ? '' : 's' ?> on this course failed — <?= $paymentInsight['insufficient_funds_pct'] ?>% were "insufficient funds," not a broken checkout. Letting learners pay a smaller amount upfront instead of the full <?= e(format_money((float) $course['price'])) ?> at once often recovers sales like these.</p>
-    </div>
-    <button type="button" class="btn btn-primary btn-sm" data-open-installments style="flex-shrink:0;">Enable Installments</button>
-  </div>
-<?php endif; ?>
 
 <details class="card reveal" style="margin-top:24px;" id="edit-course-details">
   <summary class="card-pad" style="cursor:pointer; font-weight:700; list-style:none;">✎ Edit Course Details</summary>
@@ -399,23 +378,18 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <div class="field"><label>Premium Download Price (UGX, optional)</label><input name="premiumPrice" type="number" min="0" step="1" value="<?= e($course['premium_price'] !== null ? (string) $course['premium_price'] : '') ?>" placeholder="Leave blank to disable downloads"></div>
     </div>
     <div class="field" data-installment-field style="<?= $creatorHasSubscription && !$soldSeparately ? 'display:none;' : '' ?>">
-      <label class="row gap-2" style="align-items:center; font-weight:600; cursor:pointer;">
-        <input type="checkbox" name="installmentsEnabled" value="1" data-installments-toggle <?= (int) $course['installments_enabled'] === 1 ? 'checked' : '' ?>>
-        <span>Let learners pay in installments</span>
-      </label>
-      <div data-installments-count-row style="margin-top:10px; <?= (int) $course['installments_enabled'] === 1 ? '' : 'display:none;' ?>">
-        <label class="small" style="font-weight:600; display:block; margin-bottom:6px;">First Installment Amount (UGX)</label>
-        <div class="row gap-2" style="flex-wrap:wrap;">
-          <input type="number" name="firstInstallmentAmount" min="1" step="1" style="max-width:180px;" value="<?= e($course['first_installment_amount'] !== null ? (string) $course['first_installment_amount'] : '') ?>" placeholder="e.g. 25000">
-          <select name="installmentIntervalDays">
-            <?php $intervalOptions = [7 => 'Every week', 14 => 'Every 2 weeks', 30 => 'Every month']; ?>
-            <?php foreach ($intervalOptions as $days => $label): ?>
-              <option value="<?= $days ?>" <?= (int) ($course['installment_interval_days'] ?? 14) === $days ? 'selected' : '' ?>><?= e($label) ?> (<?= $days ?> days)</option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <p class="help">Full access unlocks after this first payment. The learner pays the rest of the price on the schedule you pick, with a short grace period before access pauses if it's missed.</p>
+      <label class="small" style="font-weight:600; display:block; margin-bottom:6px;">Payment Plan — Pay in 2 Installments</label>
+      <p class="help" style="margin-top:0; margin-bottom:8px;">Every paid course automatically offers this. By default the first payment is half the price — set your own split below if you'd rather.</p>
+      <div class="row gap-2" style="flex-wrap:wrap;">
+        <input type="number" name="firstInstallmentAmount" min="1" step="1" style="max-width:180px;" value="<?= e($course['first_installment_amount'] !== null ? (string) $course['first_installment_amount'] : '') ?>" placeholder="e.g. 25000 (optional)">
+        <select name="installmentIntervalDays">
+          <?php $intervalOptions = [7 => 'Every week', 14 => 'Every 2 weeks', 30 => 'Every month']; ?>
+          <?php foreach ($intervalOptions as $days => $label): ?>
+            <option value="<?= $days ?>" <?= (int) ($course['installment_interval_days'] ?? 14) === $days ? 'selected' : '' ?>><?= e($label) ?> (<?= $days ?> days)</option>
+          <?php endforeach; ?>
+        </select>
       </div>
+      <p class="help">Full access unlocks after the first payment. The learner pays the rest on the schedule you pick, with a short grace period before access pauses if it's missed.</p>
     </div>
     <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
     <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -440,30 +414,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     })();
   </script>
 <?php endif; ?>
-<script>
-  (() => {
-    const toggle = document.querySelector('[data-installments-toggle]');
-    const countRow = document.querySelector('[data-installments-count-row]');
-    if (!toggle || !countRow) return;
-    toggle.addEventListener('change', () => { countRow.style.display = toggle.checked ? '' : 'none'; });
-  })();
-  (() => {
-    const openBtn = document.querySelector('[data-open-installments]');
-    const details = document.getElementById('edit-course-details');
-    const toggle = document.querySelector('[data-installments-toggle]');
-    if (!openBtn || !details || !toggle) return;
-    openBtn.addEventListener('click', () => {
-      details.open = true;
-      if (!toggle.checked) {
-        toggle.checked = true;
-        toggle.dispatchEvent(new Event('change'));
-      }
-      const firstAmountInput = document.querySelector('input[name="firstInstallmentAmount"]');
-      (firstAmountInput || toggle).scrollIntoView({ behavior: 'smooth', block: 'center' });
-      if (firstAmountInput) firstAmountInput.focus();
-    });
-  })();
-</script>
 
 <h2 class="h3" style="margin-top:36px;">Views &amp; Interest</h2>
 <p class="muted small" style="margin-top:6px;">Aggregate numbers only — no visitor is ever identified from views alone. The list below is only learners who opted in themselves.</p>

@@ -14,6 +14,16 @@
 const INSTALLMENT_GRACE_DAYS = 5;
 const INSTALLMENT_REMINDER_WINDOW_DAYS = 3;
 
+/**
+ * Every paid course offers a 2-installment plan — no per-course opt-in.
+ * A creator may still set courses.first_installment_amount to pick their
+ * own split; this is the fallback (half the price, rounded to a clean
+ * UGX 500 step) used whenever they haven't.
+ */
+function default_first_installment_amount(float $price): float {
+    return max(500, round($price / 2 / 500) * 500);
+}
+
 function get_installment_plan(int $learnerId, int $courseId): ?array {
     return db_one('SELECT * FROM installment_plans WHERE learner_id = ? AND course_id = ?', [$learnerId, $courseId]);
 }
@@ -91,7 +101,7 @@ function initiate_installment_payment(int $learnerId, int $courseId, string $pho
     $course = db_one("SELECT * FROM courses WHERE id = ? AND status = 'PUBLISHED'", [$courseId]);
     if (!$course) return ['error' => 'Course not found.'];
     if ((int) $course['creator_id'] === $learnerId) return ['error' => 'Creators cannot buy their own course.'];
-    if (!$course['installments_enabled'] || (float) ($course['first_installment_amount'] ?? 0) <= 0 || (float) $course['price'] <= 0) {
+    if ((float) $course['price'] <= 0) {
         return ['error' => 'This course does not offer a payment plan.'];
     }
 
@@ -119,10 +129,13 @@ function initiate_installment_payment(int $learnerId, int $courseId, string $pho
 
     if (!$plan) {
         // Always exactly 2 installments: the creator's own chosen first
-        // amount, then whatever's left as the second — never an auto-split.
+        // amount if they set one, else half the price, then whatever's
+        // left as the second.
         $installmentCount = 2;
-        $installmentAmount = (float) $course['first_installment_amount'];
-        $intervalDays = (int) $course['installment_interval_days'];
+        $installmentAmount = (float) $course['first_installment_amount'] > 0
+            ? (float) $course['first_installment_amount']
+            : default_first_installment_amount((float) $course['price']);
+        $intervalDays = (int) $course['installment_interval_days'] ?: 14;
         $planId = db_insert(
             "INSERT INTO installment_plans (total_amount, installment_count, installment_amount, installment_interval_days, phone, next_due_at, learner_id, creator_id, course_id) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?)",
             [(float) $course['price'], $installmentCount, $installmentAmount, $intervalDays, $phone, $learnerId, $course['creator_id'], $courseId]
@@ -141,7 +154,7 @@ function initiate_installment_payment(int $learnerId, int $courseId, string $pho
     );
 
     try {
-        $label = "Obin Academy - {$course['title']} (Installment {$installmentNumber} of {$course['installment_count']})";
+        $label = "Obin Academy - {$course['title']} (Installment {$installmentNumber} of 2)";
         $result = iotec_initiate_collection($amountDue, $phone, (string) $paymentId, substr($label, 0, 100));
         db_run('UPDATE payments SET iotec_transaction_id = ? WHERE id = ?', [$result['transactionId'], $paymentId]);
     } catch (Throwable $e) {
