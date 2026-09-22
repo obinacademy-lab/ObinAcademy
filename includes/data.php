@@ -157,6 +157,26 @@ function get_recent_activity_feed(?int $courseId = null, int $limit = 8): array 
     return array_slice($all, 0, $limit);
 }
 
+/**
+ * Real distinct visitors who loaded this course's page in the last
+ * $windowMinutes — for a "N people viewing this course right now" urgency
+ * badge on the enroll panel. Sourced from visitor_pageviews (first-party
+ * pageview tracking, gated behind cookie consent — see
+ * assets/js/visitor-tracker.js), never fabricated or padded with a fake
+ * minimum. Matches on "slug=<slug>" within the tracked path rather than an
+ * exact path string, since a course URL can carry extra query params (e.g.
+ * an affiliate ?ref= token) on top of ?slug=.
+ */
+function get_live_viewer_count(string $courseSlug, int $windowMinutes = 5): int {
+    $windowMinutes = max(1, min(30, $windowMinutes));
+    $row = db_one(
+        "SELECT COUNT(DISTINCT visitor_id) AS c FROM visitor_pageviews
+         WHERE (path LIKE ? OR path LIKE ?) AND entered_at >= (NOW() - INTERVAL $windowMinutes MINUTE)",
+        ['%slug=' . $courseSlug, '%slug=' . $courseSlug . '&%']
+    );
+    return (int) ($row['c'] ?? 0);
+}
+
 /** Top-rated published courses with at least one review — for a "Trending" spotlight row. */
 function get_trending_courses(int $take = 3): array {
     return get_course_cards(

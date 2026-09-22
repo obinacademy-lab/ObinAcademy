@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/data.php';
 require_once __DIR__ . '/school_subscriptions.php';
 require_once __DIR__ . '/installments.php';
 require_once __DIR__ . '/gifts.php';
@@ -69,6 +70,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php if (!$isSubscriptionIncluded && $hasSale): ?><span class="badge-pill badge-sale">🔥 <?= $saleDaysLeft !== null ? $saleDaysLeft . ' day' . ($saleDaysLeft === 1 ? '' : 's') . ' left' : 'On Sale' ?></span><?php endif; ?>
       </div>
       <div class="pad">
+        <?php $liveViewerCount = $isPublished ? get_live_viewer_count($course['slug']) : 0; ?>
+        <?php if ($liveViewerCount >= 2): ?>
+          <span class="live-pill" style="margin-bottom:12px;"><span class="live-dot"></span><?= (int) $liveViewerCount ?> people viewing right now</span>
+        <?php endif; ?>
         <?php if ($isSubscriptionIncluded): ?>
           <div class="price-row">
             <div class="price"><?= e(format_money($monthlyPrice)) ?></div>
