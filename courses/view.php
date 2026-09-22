@@ -67,7 +67,7 @@ $relatedCourses = $course['status'] === 'PUBLISHED'
     : [];
 
 $recentActivity = $course['status'] === 'PUBLISHED'
-    ? get_recent_enrollment_activity((int) $course['id'], 5)
+    ? get_recent_activity_feed((int) $course['id'], 5)
     : [];
 // This page renders its own specialized activity toast below (click
 // scrolls to the enroll panel) — the site-wide one in includes/footer.php
@@ -346,7 +346,8 @@ require __DIR__ . '/../includes/header.php';
         {
           name: <?= json_encode(display_name_initial($a['learner_name']), JSON_HEX_TAG) ?>,
           city: <?= json_encode($a['city'], JSON_HEX_TAG) ?>,
-          timeAgo: <?= json_encode(time_ago($a['enrolled_at']), JSON_HEX_TAG) ?>
+          timeAgo: <?= json_encode(time_ago($a['at']), JSON_HEX_TAG) ?>,
+          action: <?= json_encode($a['action'], JSON_HEX_TAG) ?>
         },
         <?php endforeach; ?>
       ];
@@ -422,7 +423,7 @@ require __DIR__ . '/../includes/header.php';
         var e = entries[i % entries.length];
         toast.classList.remove('show');
         initialEl.textContent = (e.name.charAt(0) || '?').toUpperCase();
-        textEl.innerHTML = '<b>' + e.name + '</b>' + (e.city ? ' from ' + e.city : '') + ' just enrolled in this course';
+        textEl.innerHTML = '<b>' + e.name + '</b>' + (e.city ? ' from ' + e.city : '') + ' ' + e.action + ' this course';
         timeEl.textContent = e.timeAgo;
         requestAnimationFrame(function () { toast.classList.add('show'); });
         timers.push(setTimeout(function () {

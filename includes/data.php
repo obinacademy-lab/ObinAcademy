@@ -89,46 +89,72 @@ function search_courses(string $query = '', string $categorySlug = '', string $s
 }
 
 /**
- * Real recent enrollments for a course's "recent activity" social-proof
- * toast (see courses/view.php) — never fabricated. Most recent first. City
- * is the learner's most recently known login location, same "latest known
- * location" idiom as LEAD_LOCATION_SUBQUERY/get_top_learner_locations_for_creator
- * — null when never resolved, and the toast just omits it rather than guessing.
+ * Real recent activity — enrollments, completions, and reviews mixed
+ * together — for the "recent activity" social-proof toast (see
+ * courses/view.php and includes/footer.php). Never fabricated. $courseId
+ * scopes to one course (the course page's own toast); null means the whole
+ * platform, any published course (the site-wide toast). Each row carries a
+ * uniform shape — type, learner_name, city, at, action (a ready-to-display
+ * verb phrase, including the star count for a review), course_title,
+ * course_slug — so a caller never needs to branch on $row['type'] itself.
+ *
+ * City is the learner's most recently known login location, same "latest
+ * known location" idiom as LEAD_LOCATION_SUBQUERY/
+ * get_top_learner_locations_for_creator — null when never resolved, and the
+ * toast just omits it rather than guessing. "Completed" uses last_activity_at
+ * as its timestamp — enrollments has no dedicated completed_at column, and
+ * for a learner sitting at 100% progress, the last time they touched the
+ * course is a reasonable real-data stand-in for when they finished it.
  */
-function get_recent_enrollment_activity(int $courseId, int $limit = 5): array {
-    $limit = max(1, min(10, $limit));
-    return db_all(
-        "SELECT e.enrolled_at, COALESCE(u.name, e.guest_name) AS learner_name,
-                (SELECT l.city FROM login_log l WHERE l.user_id = e.user_id AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1) AS city
-         FROM enrollments e
-         LEFT JOIN users u ON u.id = e.user_id
-         WHERE e.course_id = ? AND COALESCE(u.name, e.guest_name) IS NOT NULL
-         ORDER BY e.enrolled_at DESC
-         LIMIT $limit",
-        [$courseId]
-    );
-}
-
-/**
- * Real recent enrollments across the WHOLE platform, any course — for the
- * site-wide "recent activity" toast (see includes/footer.php). Same
- * real-data-only guarantee as get_recent_enrollment_activity(), just not
- * scoped to one course; course title/slug included so the toast can name
- * and link to the actual course someone bought.
- */
-function get_recent_platform_activity(int $limit = 8): array {
+function get_recent_activity_feed(?int $courseId = null, int $limit = 8): array {
     $limit = max(1, min(15, $limit));
-    return db_all(
-        "SELECT e.enrolled_at, COALESCE(u.name, e.guest_name) AS learner_name,
-                c.title AS course_title, c.slug AS course_slug,
-                (SELECT l.city FROM login_log l WHERE l.user_id = e.user_id AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1) AS city
+    $fetchLimit = $limit * 2; // over-fetch each type before merging, so the mix isn't dominated by whichever type's own query happens to sort first
+    $courseFilter = $courseId !== null ? 'AND c.id = ?' : '';
+    $params = $courseId !== null ? [$courseId] : [];
+    $citySub = fn(string $userCol) => "(SELECT l.city FROM login_log l WHERE l.user_id = $userCol AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1)";
+
+    $enrollPhrases = ["'just enrolled in'", "'just joined'", "'just signed up for'"];
+    $enrollAction = 'ELT(1 + (e.id MOD ' . count($enrollPhrases) . '), ' . implode(', ', $enrollPhrases) . ')';
+
+    $enrollments = db_all(
+        "SELECT 'enrolled' AS type, e.enrolled_at AS at, COALESCE(u.name, e.guest_name) AS learner_name,
+                {$citySub('e.user_id')} AS city, $enrollAction AS action,
+                c.title AS course_title, c.slug AS course_slug
          FROM enrollments e
          JOIN courses c ON c.id = e.course_id
          LEFT JOIN users u ON u.id = e.user_id
-         WHERE c.status = 'PUBLISHED' AND COALESCE(u.name, e.guest_name) IS NOT NULL
-         ORDER BY e.enrolled_at DESC
-         LIMIT $limit"
+         WHERE c.status = 'PUBLISHED' AND COALESCE(u.name, e.guest_name) IS NOT NULL $courseFilter
+         ORDER BY e.enrolled_at DESC LIMIT $fetchLimit",
+        $params
     );
+
+    $completions = db_all(
+        "SELECT 'completed' AS type, e.last_activity_at AS at, COALESCE(u.name, e.guest_name) AS learner_name,
+                {$citySub('e.user_id')} AS city, 'just completed' AS action,
+                c.title AS course_title, c.slug AS course_slug
+         FROM enrollments e
+         JOIN courses c ON c.id = e.course_id
+         LEFT JOIN users u ON u.id = e.user_id
+         WHERE c.status = 'PUBLISHED' AND e.progress >= 100 AND COALESCE(u.name, e.guest_name) IS NOT NULL $courseFilter
+         ORDER BY e.last_activity_at DESC LIMIT $fetchLimit",
+        $params
+    );
+
+    $reviews = db_all(
+        "SELECT 'reviewed' AS type, r.created_at AS at, u.name AS learner_name,
+                {$citySub('r.author_id')} AS city, CONCAT('left a ', r.rating, '-star review on') AS action,
+                c.title AS course_title, c.slug AS course_slug
+         FROM reviews r
+         JOIN courses c ON c.id = r.course_id
+         JOIN users u ON u.id = r.author_id
+         WHERE c.status = 'PUBLISHED' $courseFilter
+         ORDER BY r.created_at DESC LIMIT $fetchLimit",
+        $params
+    );
+
+    $all = array_merge($enrollments, $completions, $reviews);
+    usort($all, fn($a, $b) => strtotime($b['at']) <=> strtotime($a['at']));
+    return array_slice($all, 0, $limit);
 }
 
 /** Top-rated published courses with at least one review — for a "Trending" spotlight row. */

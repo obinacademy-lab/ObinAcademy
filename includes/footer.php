@@ -73,7 +73,7 @@
     // this page. courses/view.php sets $suppressGlobalActivityToast so its
     // own specialized (click-to-scroll) version isn't doubled up with this
     // one on that one page.
-    $recentPlatformActivity = empty($suppressGlobalActivityToast) ? get_recent_platform_activity(8) : [];
+    $recentPlatformActivity = empty($suppressGlobalActivityToast) ? get_recent_activity_feed(null, 8) : [];
   ?>
   <?php if ($recentPlatformActivity): ?>
     <button type="button" class="activity-toast" id="globalActivityToast" aria-live="polite">
@@ -99,7 +99,8 @@
           {
             name: <?= json_encode(display_name_initial($a['learner_name']), JSON_HEX_TAG) ?>,
             city: <?= json_encode($a['city'], JSON_HEX_TAG) ?>,
-            timeAgo: <?= json_encode(time_ago($a['enrolled_at']), JSON_HEX_TAG) ?>,
+            timeAgo: <?= json_encode(time_ago($a['at']), JSON_HEX_TAG) ?>,
+            action: <?= json_encode($a['action'], JSON_HEX_TAG) ?>,
             courseTitle: <?= json_encode(mb_strimwidth($a['course_title'], 0, 46, '…'), JSON_HEX_TAG) ?>,
             courseUrl: <?= json_encode(base_url('courses/view.php?slug=' . $a['course_slug']), JSON_HEX_TAG) ?>
           },
@@ -153,7 +154,7 @@
           currentUrl = e.courseUrl;
           toast.classList.remove('show');
           initialEl.textContent = (e.name.charAt(0) || '?').toUpperCase();
-          textEl.innerHTML = '<b>' + e.name + '</b>' + (e.city ? ' from ' + e.city : '') + ' just enrolled in ' + e.courseTitle;
+          textEl.innerHTML = '<b>' + e.name + '</b>' + (e.city ? ' from ' + e.city : '') + ' ' + e.action + ' ' + e.courseTitle;
           timeEl.textContent = e.timeAgo;
           requestAnimationFrame(function () { toast.classList.add('show'); });
           timers.push(setTimeout(function () {
