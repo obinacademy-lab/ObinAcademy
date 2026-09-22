@@ -233,6 +233,16 @@ unset($m);
 $studentCount = (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE course_id = ?', [$courseId])['n'];
 $funnel = get_course_funnel($courseId);
 $interestedLearners = get_interested_learners($courseId);
+$paymentInsight = get_course_payment_insight($courseId);
+// Only worth surfacing once there's a real pattern (not 1-2 attempts), the
+// course actually charges something installments could split, and it isn't
+// already offering them.
+$soldSeparatelyNow = $creatorHasSubscription && (int) $course['subscription_included'] === 0;
+$showInstallmentNudge = $paymentInsight['failed'] >= 3
+    && $paymentInsight['insufficient_funds_pct'] >= 50
+    && (float) $course['price'] > 0
+    && (int) $course['installments_enabled'] !== 1
+    && (!$creatorHasSubscription || $soldSeparatelyNow);
 
 $badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
 $statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
@@ -302,7 +312,17 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <div class="alert alert-error" style="margin-top:16px;"><?= e(implode(' ', $errors)) ?></div>
 <?php endif; ?>
 
-<details class="card reveal" style="margin-top:24px;">
+<?php if ($showInstallmentNudge): ?>
+  <div class="alert alert-warning reveal" style="margin-top:16px; display:flex; align-items:flex-start; gap:14px; justify-content:space-between; flex-wrap:wrap;">
+    <div style="min-width:240px; flex:1;">
+      <strong>💡 You may be losing sales to affordability, not interest.</strong>
+      <p style="margin-top:4px;">In the last 30 days, <?= $paymentInsight['failed'] ?> payment attempt<?= $paymentInsight['failed'] === 1 ? '' : 's' ?> on this course failed — <?= $paymentInsight['insufficient_funds_pct'] ?>% were "insufficient funds," not a broken checkout. Letting learners pay a smaller amount upfront instead of the full <?= e(format_money((float) $course['price'])) ?> at once often recovers sales like these.</p>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm" data-open-installments style="flex-shrink:0;">Enable Installments</button>
+  </div>
+<?php endif; ?>
+
+<details class="card reveal" style="margin-top:24px;" id="edit-course-details">
   <summary class="card-pad" style="cursor:pointer; font-weight:700; list-style:none;">✎ Edit Course Details</summary>
   <form method="post" enctype="multipart/form-data" class="card-pad" style="border-top:1px solid var(--dash-border);">
     <?= csrf_field() ?>
@@ -426,6 +446,22 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     const countRow = document.querySelector('[data-installments-count-row]');
     if (!toggle || !countRow) return;
     toggle.addEventListener('change', () => { countRow.style.display = toggle.checked ? '' : 'none'; });
+  })();
+  (() => {
+    const openBtn = document.querySelector('[data-open-installments]');
+    const details = document.getElementById('edit-course-details');
+    const toggle = document.querySelector('[data-installments-toggle]');
+    if (!openBtn || !details || !toggle) return;
+    openBtn.addEventListener('click', () => {
+      details.open = true;
+      if (!toggle.checked) {
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event('change'));
+      }
+      const firstAmountInput = document.querySelector('input[name="firstInstallmentAmount"]');
+      (firstAmountInput || toggle).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (firstAmountInput) firstAmountInput.focus();
+    });
   })();
 </script>
 

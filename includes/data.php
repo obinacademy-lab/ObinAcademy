@@ -525,3 +525,34 @@ function get_course_funnel(int $courseId): array {
         'share_channels' => $shareChannels,
     ];
 }
+
+/**
+ * Real payment-failure breakdown for a paid course, last $days — surfaces
+ * WHY buyers who tried to pay didn't complete (e.g. "insufficient funds" vs
+ * a genuine checkout error), so a creator can see this on their own
+ * dashboard (dashboard/creator/course-manage.php) instead of it only being
+ * visible to a platform admin running SQL by hand. Scoped to COURSE_PURCHASE
+ * only, same as includes/payment_recovery.php's recovery-email queries.
+ */
+function get_course_payment_insight(int $courseId, int $days = 30): array {
+    $days = max(1, min(90, $days));
+    $attempted = (int) (db_one(
+        "SELECT COUNT(*) AS n FROM payments WHERE course_id = ? AND type = 'COURSE_PURCHASE' AND created_at >= (NOW() - INTERVAL $days DAY)",
+        [$courseId]
+    )['n'] ?? 0);
+    $failed = (int) (db_one(
+        "SELECT COUNT(*) AS n FROM payments WHERE course_id = ? AND type = 'COURSE_PURCHASE' AND status = 'FAILED' AND created_at >= (NOW() - INTERVAL $days DAY)",
+        [$courseId]
+    )['n'] ?? 0);
+    $insufficientFunds = (int) (db_one(
+        "SELECT COUNT(*) AS n FROM payments WHERE course_id = ? AND type = 'COURSE_PURCHASE' AND status = 'FAILED' AND status_message LIKE '%insufficient%' AND created_at >= (NOW() - INTERVAL $days DAY)",
+        [$courseId]
+    )['n'] ?? 0);
+
+    return [
+        'attempted' => $attempted,
+        'failed' => $failed,
+        'insufficient_funds' => $insufficientFunds,
+        'insufficient_funds_pct' => $failed > 0 ? (int) round($insufficientFunds / $failed * 100) : 0,
+    ];
+}
