@@ -153,19 +153,7 @@ if ($user['role'] === 'ADMIN') {
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/dashboard.css')) ?>">
 </head>
 <body>
-<?php
-  // Every role now shares the same fixed light "colorful" shell
-  // (.dash-colorful) — one palette platform-wide, not a per-role/pick-a-
-  // color theme, so the old .dash-premium dark theme system is no longer
-  // applied anywhere (its CSS stays in dashboard.css, just unreferenced,
-  // in case it's wanted back later). $navAccentPalette assigns each nav
-  // item a rotating accent color via a --nav-accent CSS var for the
-  // sidebar's colored icon badges.
-  $shellClass = 'dash-colorful';
-  $navAccentPalette = ['#ec4899', '#8b5cf6', '#3b82f6', '#f5b301', '#10b981', '#f97316'];
-  $navAccentIdx = 0;
-?>
-<div class="dash <?= e($shellClass) ?>">
+<div class="dash dash-premium theme-<?= e(dashboard_theme_for_user($user)) ?>">
   <div class="dash-overlay" data-dash-overlay data-dash-close></div>
   <aside class="dash-sidebar" data-dash-sidebar>
     <div class="dash-sidebar-head">
@@ -183,9 +171,9 @@ if ($user['role'] === 'ADMIN') {
         <div class="dash-nav-group">
           <div class="dash-nav-group-label"><?= e($groupLabel) ?></div>
           <nav class="dash-nav">
-            <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; $navAccent = $navAccentPalette[$navAccentIdx % count($navAccentPalette)]; $navAccentIdx++; ?>
-              <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>" style="--nav-accent: <?= e($navAccent) ?>;">
-                <span class="dash-nav-icon-badge"><?php dash_icon($icon); ?></span><span><?= e($label) ?></span>
+            <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; ?>
+              <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>">
+                <?php dash_icon($icon); ?><span><?= e($label) ?></span>
                 <?php if ($badge > 0): ?><span class="nav-badge"><?= $badge ?></span><?php endif; ?>
               </a>
             <?php endforeach; ?>

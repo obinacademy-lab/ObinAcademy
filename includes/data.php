@@ -106,14 +106,11 @@ function search_courses(string $query = '', string $categorySlug = '', string $s
  * for a learner sitting at 100% progress, the last time they touched the
  * course is a reasonable real-data stand-in for when they finished it.
  */
-function get_recent_activity_feed(?int $courseId = null, int $limit = 8, ?int $creatorId = null): array {
+function get_recent_activity_feed(?int $courseId = null, int $limit = 8): array {
     $limit = max(1, min(15, $limit));
     $fetchLimit = $limit * 2; // over-fetch each type before merging, so the mix isn't dominated by whichever type's own query happens to sort first
-    $filters = [];
-    $params = [];
-    if ($courseId !== null) { $filters[] = 'c.id = ?'; $params[] = $courseId; }
-    if ($creatorId !== null) { $filters[] = 'c.creator_id = ?'; $params[] = $creatorId; }
-    $courseFilter = $filters ? 'AND ' . implode(' AND ', $filters) : '';
+    $courseFilter = $courseId !== null ? 'AND c.id = ?' : '';
+    $params = $courseId !== null ? [$courseId] : [];
     $citySub = fn(string $userCol) => "(SELECT l.city FROM login_log l WHERE l.user_id = $userCol AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1)";
 
     $enrollPhrases = ["'just enrolled in'", "'just joined'", "'just signed up for'"];
@@ -506,47 +503,6 @@ function get_interested_learners(int $courseId): array {
          FROM course_interest ci JOIN users u ON u.id = ci.user_id
          WHERE ci.course_id = ? ORDER BY ci.created_at DESC',
         [$courseId]
-    );
-}
-
-/**
- * Real share-channel breakdown across ALL of a creator's courses (not one
- * course, unlike get_course_funnel()'s per-course share_channels) — for the
- * creator dashboard's "Shares by Channel" donut. Top $limit channels by
- * count, any remainder folded into a single "Other" bucket rather than
- * dropped, so the percentages shown always add up to the real total.
- */
-function get_creator_share_channels(int $creatorId, int $limit = 3): array {
-    $limit = max(1, min(6, $limit));
-    $rows = db_all(
-        "SELECT cs.channel, COUNT(*) AS n
-         FROM course_shares cs JOIN courses c ON c.id = cs.course_id
-         WHERE c.creator_id = ? GROUP BY cs.channel ORDER BY n DESC",
-        [$creatorId]
-    );
-    $top = array_slice($rows, 0, $limit);
-    $otherCount = array_sum(array_column(array_slice($rows, $limit), 'n'));
-    if ($otherCount > 0) $top[] = ['channel' => 'other', 'n' => $otherCount];
-    return $top;
-}
-
-/**
- * Recent real payment attempts across all of a creator's courses — for the
- * dashboard's "Recent Enrollments" table (learner, course, amount, status).
- * Deliberately includes non-SUCCESS rows too (PENDING/FAILED show with
- * their own status pill) rather than only showing completed sales, since
- * that's real activity a creator would want visibility into either way.
- */
-function get_creator_recent_payments(int $creatorId, int $limit = 5): array {
-    $limit = max(1, min(20, $limit));
-    return db_all(
-        "SELECT p.amount, p.status, p.created_at, COALESCE(u.name, p.guest_name) AS learner_name, c.title AS course_title
-         FROM payments p
-         JOIN courses c ON c.id = p.course_id
-         LEFT JOIN users u ON u.id = p.user_id
-         WHERE c.creator_id = ? AND p.type = 'COURSE_PURCHASE'
-         ORDER BY p.created_at DESC LIMIT $limit",
-        [$creatorId]
     );
 }
 

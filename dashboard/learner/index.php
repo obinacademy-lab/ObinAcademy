@@ -80,11 +80,23 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<div class="grid md:grid-2 lg:grid-4" style="margin-top:24px; gap:16px;">
-  <div class="stat-card reveal" style="background:linear-gradient(135deg,#ec4899,#be185d); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">Enrolled Courses</div><div class="value" style="color:#fff;" data-count-up data-count-value="<?= $enrolledCount ?>" data-count-suffix="">0</div></div>
-  <div class="stat-card reveal reveal-delay-1" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">Completed</div><div class="value" style="color:#fff;" data-count-up data-count-value="<?= $completedCount ?>" data-count-suffix="">0</div></div>
-  <div class="stat-card reveal reveal-delay-2" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">In Progress</div><div class="value" style="color:#fff;" data-count-up data-count-value="<?= $inProgressCount ?>" data-count-suffix="">0</div></div>
-  <div class="stat-card reveal reveal-delay-3" style="background:linear-gradient(135deg,#f5b301,#c98e00); border:none; color:#3d2600;"><div class="label" style="color:#5c3d00;">Certificates</div><div class="value" style="color:#3d2600;" data-count-up data-count-value="<?= $certificateCount ?>" data-count-suffix="">0</div></div>
+<div class="grid md:grid-2 lg:grid-4" style="margin-top:24px;">
+  <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#2563eb;">
+    <div class="icon"><?php dash_icon('graduation-cap'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= $enrolledCount ?>" data-count-suffix="">0</div><div class="label">Enrolled Courses</div>
+  </div>
+  <div class="stat-card accent-top reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#10b981;">
+    <div class="icon"><?php dash_icon('check-circle'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= $completedCount ?>" data-count-suffix="">0</div><div class="label">Completed</div>
+  </div>
+  <div class="stat-card accent-top reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#f5b301;">
+    <div class="icon"><?php dash_icon('clock'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= $inProgressCount ?>" data-count-suffix="">0</div><div class="label">In Progress</div>
+  </div>
+  <div class="stat-card accent-top reveal reveal-delay-3" data-hoverable="true" style="--hover-color:#8b5cf6;">
+    <div class="icon"><?php dash_icon('award'); ?></div>
+    <div class="value" data-count-up data-count-value="<?= $certificateCount ?>" data-count-suffix="">0</div><div class="label">Certificates</div>
+  </div>
 </div>
 
 <?php if ($continuing): ?>
