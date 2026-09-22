@@ -109,6 +109,28 @@ function get_recent_enrollment_activity(int $courseId, int $limit = 5): array {
     );
 }
 
+/**
+ * Real recent enrollments across the WHOLE platform, any course — for the
+ * site-wide "recent activity" toast (see includes/footer.php). Same
+ * real-data-only guarantee as get_recent_enrollment_activity(), just not
+ * scoped to one course; course title/slug included so the toast can name
+ * and link to the actual course someone bought.
+ */
+function get_recent_platform_activity(int $limit = 8): array {
+    $limit = max(1, min(15, $limit));
+    return db_all(
+        "SELECT e.enrolled_at, COALESCE(u.name, e.guest_name) AS learner_name,
+                c.title AS course_title, c.slug AS course_slug,
+                (SELECT l.city FROM login_log l WHERE l.user_id = e.user_id AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1) AS city
+         FROM enrollments e
+         JOIN courses c ON c.id = e.course_id
+         LEFT JOIN users u ON u.id = e.user_id
+         WHERE c.status = 'PUBLISHED' AND COALESCE(u.name, e.guest_name) IS NOT NULL
+         ORDER BY e.enrolled_at DESC
+         LIMIT $limit"
+    );
+}
+
 /** Top-rated published courses with at least one review — for a "Trending" spotlight row. */
 function get_trending_courses(int $take = 3): array {
     return get_course_cards(

@@ -69,6 +69,10 @@ $relatedCourses = $course['status'] === 'PUBLISHED'
 $recentActivity = $course['status'] === 'PUBLISHED'
     ? get_recent_enrollment_activity((int) $course['id'], 5)
     : [];
+// This page renders its own specialized activity toast below (click
+// scrolls to the enroll panel) — the site-wide one in includes/footer.php
+// would otherwise double up with it here.
+$suppressGlobalActivityToast = true;
 
 $statusLabel = ['DRAFT' => 'a draft', 'PENDING_REVIEW' => 'pending admin review', 'REJECTED' => 'rejected and needs changes'];
 
