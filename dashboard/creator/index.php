@@ -171,24 +171,26 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 
   <div class="card card-pad">
-    <div class="dash-section-label" style="margin-bottom:14px;">Recent Enrollments</div>
+    <div class="dash-section-label" style="margin-bottom:8px;">Recent Enrollments</div>
     <?php if (!$recentPayments): ?>
       <p class="muted small">No payment attempts yet.</p>
     <?php else: ?>
-      <div class="table-wrap" style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse;">
-          <thead><tr><th style="text-align:left; padding:6px 10px;">Learner</th><th style="text-align:left; padding:6px 10px;">Course</th><th style="text-align:left; padding:6px 10px;">Amount</th><th style="text-align:left; padding:6px 10px;">Status</th></tr></thead>
-          <tbody>
-            <?php foreach ($recentPayments as $p): [$label, $bg, $fg] = $paymentStatusStyle[$p['status']]; ?>
-              <tr style="border-top:1px solid var(--dash-border-soft);">
-                <td style="padding:9px 10px; font-weight:700; font-size:13px;"><?= e($p['learner_name'] ?? 'Guest') ?></td>
-                <td style="padding:9px 10px; color:var(--muted); font-size:12.5px;"><?= e(mb_strimwidth($p['course_title'], 0, 28, '…')) ?></td>
-                <td style="padding:9px 10px; font-size:12.5px;"><?= e(format_money((float) $p['amount'])) ?></td>
-                <td style="padding:9px 10px;"><span style="padding:3px 9px; border-radius:6px; background:<?= $bg ?>; color:<?= $fg ?>; font-size:10.5px; font-weight:700;"><?= $label ?></span></td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
+      <div class="stack">
+        <?php foreach ($recentPayments as $p): [$label, $bg, $fg] = $paymentStatusStyle[$p['status']]; ?>
+          <div class="list-row">
+            <div class="list-row-main">
+              <span class="row-avatar"><?= e(mb_substr($p['learner_name'] ?? 'G', 0, 1)) ?></span>
+              <div style="min-width:0;">
+                <div style="font-weight:700; font-size:13.5px;"><?= e($p['learner_name'] ?? 'Guest') ?></div>
+                <div class="small muted" style="margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= e($p['course_title']) ?></div>
+              </div>
+            </div>
+            <div class="list-row-meta">
+              <span class="small" style="font-weight:700;"><?= e(format_money((float) $p['amount'])) ?></span>
+              <span style="padding:3px 9px; border-radius:6px; background:<?= $bg ?>; color:<?= $fg ?>; font-size:10.5px; font-weight:700; flex-shrink:0;"><?= $label ?></span>
+            </div>
+          </div>
+        <?php endforeach; ?>
       </div>
     <?php endif; ?>
   </div>
