@@ -11,7 +11,12 @@
   --dash-bad: #dc2626; --dash-bad-bg: #fef2f2;
   --dash-shadow: 0 1px 2px rgba(16,24,40,0.03), 0 4px 16px -8px rgba(16,24,40,0.08);
 
-  display: flex; min-height: 100vh; background: var(--dash-bg);
+  /* 100dvh tracks the real visible area as a phone's address bar shows/
+     hides; 100vh stays first as the fallback for browsers that don't know
+     dvh (an unknown value is ignored, so the dvh line wins wherever it's
+     supported) — without it, every dashboard page had scrollable empty
+     space below the real content until the visitor scrolled once. */
+  display: flex; min-height: 100vh; min-height: 100dvh; background: var(--dash-bg);
 }
 
 .dash-sidebar {
@@ -142,7 +147,7 @@
 .dash-content { padding: 22px 20px 60px; }
 
 @media (min-width: 1024px) {
-  .dash-sidebar { position: sticky; top: 0; height: 100vh; transform: none; width: 260px; flex-shrink: 0; }
+  .dash-sidebar { position: sticky; top: 0; height: 100vh; height: 100dvh; transform: none; width: 260px; flex-shrink: 0; }
   .dash-overlay { display: none !important; }
   .dash-sidebar-head button { display: none; }
   .dash-hamburger { display: none; }
