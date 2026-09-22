@@ -88,6 +88,27 @@ function search_courses(string $query = '', string $categorySlug = '', string $s
     return get_course_cards(implode(' AND ', $where), $params, $orderBy);
 }
 
+/**
+ * Real recent enrollments for a course's "recent activity" social-proof
+ * toast (see courses/view.php) — never fabricated. Most recent first. City
+ * is the learner's most recently known login location, same "latest known
+ * location" idiom as LEAD_LOCATION_SUBQUERY/get_top_learner_locations_for_creator
+ * — null when never resolved, and the toast just omits it rather than guessing.
+ */
+function get_recent_enrollment_activity(int $courseId, int $limit = 5): array {
+    $limit = max(1, min(10, $limit));
+    return db_all(
+        "SELECT e.enrolled_at, COALESCE(u.name, e.guest_name) AS learner_name,
+                (SELECT l.city FROM login_log l WHERE l.user_id = e.user_id AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1) AS city
+         FROM enrollments e
+         LEFT JOIN users u ON u.id = e.user_id
+         WHERE e.course_id = ? AND COALESCE(u.name, e.guest_name) IS NOT NULL
+         ORDER BY e.enrolled_at DESC
+         LIMIT $limit",
+        [$courseId]
+    );
+}
+
 /** Top-rated published courses with at least one review — for a "Trending" spotlight row. */
 function get_trending_courses(int $take = 3): array {
     return get_course_cards(

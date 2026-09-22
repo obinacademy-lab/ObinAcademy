@@ -66,6 +66,10 @@ $relatedCourses = $course['status'] === 'PUBLISHED'
     ? get_related_courses((int) $course['id'], (int) $course['category_id'], $user ? (int) $user['id'] : null)
     : [];
 
+$recentActivity = $course['status'] === 'PUBLISHED'
+    ? get_recent_enrollment_activity((int) $course['id'], 5)
+    : [];
+
 $statusLabel = ['DRAFT' => 'a draft', 'PENDING_REVIEW' => 'pending admin review', 'REJECTED' => 'rejected and needs changes'];
 
 $pageTitle = $course['title'] . ' — Obin Academy';
@@ -310,6 +314,63 @@ require __DIR__ . '/../includes/header.php';
       overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
       overlay.querySelectorAll('[data-guest-course-close]').forEach((btn) => btn.addEventListener('click', (e) => { e.preventDefault(); close(); }));
       setTimeout(open, 900);
+    })();
+  </script>
+<?php endif; ?>
+
+<?php if ($recentActivity): ?>
+  <div class="activity-toast" id="activityToast" role="status" aria-live="polite">
+    <span class="activity-toast-dot" aria-hidden="true"></span>
+    <div class="activity-toast-body">
+      <p class="activity-toast-text" data-activity-text></p>
+      <p class="activity-toast-time" data-activity-time></p>
+    </div>
+    <button type="button" class="activity-toast-close" data-activity-close aria-label="Dismiss">&times;</button>
+  </div>
+  <script>
+    (() => {
+      var toast = document.getElementById('activityToast');
+      if (!toast) return;
+      var storageKey = 'oaActivityToastDismissed_<?= (int) $course['id'] ?>';
+      try { if (sessionStorage.getItem(storageKey)) return; } catch (e) {}
+
+      var entries = [
+        <?php foreach ($recentActivity as $a): ?>
+        {
+          name: <?= json_encode(mb_substr(trim(explode(' ', $a['learner_name'])[0]), 0, 30), JSON_HEX_TAG) ?>,
+          city: <?= json_encode($a['city'], JSON_HEX_TAG) ?>,
+          timeAgo: <?= json_encode(time_ago($a['enrolled_at']), JSON_HEX_TAG) ?>
+        },
+        <?php endforeach; ?>
+      ];
+
+      var textEl = toast.querySelector('[data-activity-text]');
+      var timeEl = toast.querySelector('[data-activity-time]');
+      var closeBtn = toast.querySelector('[data-activity-close]');
+      var dismissed = false;
+      var timers = [];
+
+      function dismiss() {
+        dismissed = true;
+        timers.forEach(clearTimeout);
+        toast.classList.remove('show');
+        try { sessionStorage.setItem(storageKey, '1'); } catch (e) {}
+      }
+      closeBtn.addEventListener('click', dismiss);
+
+      function showEntry(i) {
+        if (dismissed || i >= entries.length) return;
+        var e = entries[i];
+        textEl.innerHTML = '<b>' + e.name + '</b>' + (e.city ? ' from ' + e.city : '') + ' just enrolled in this course';
+        timeEl.textContent = e.timeAgo;
+        toast.classList.add('show');
+        timers.push(setTimeout(function () {
+          toast.classList.remove('show');
+          timers.push(setTimeout(function () { showEntry(i + 1); }, 4000));
+        }, 6000));
+      }
+
+      timers.push(setTimeout(function () { showEntry(0); }, 4000));
     })();
   </script>
 <?php endif; ?>
