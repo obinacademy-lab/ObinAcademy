@@ -154,13 +154,18 @@ if ($user['role'] === 'ADMIN') {
 </head>
 <body>
 <?php
-  // Creator gets a fixed light "classic" shell (.dash-classic) instead of
+  // Creator gets a fixed light "colorful" shell (.dash-colorful) instead of
   // the dark .dash-premium theme system — same sidebar structure/markup as
   // admin/learner below, just a different outer class supplying different
-  // tokens (see dashboard.css). No theme-<key> class for creators: classic
-  // is one fixed palette, not a pick-a-color theme (settings.php hides the
-  // theme-color picker for CREATOR accordingly).
-  $shellClass = $user['role'] === 'CREATOR' ? 'dash-classic' : 'dash-premium theme-' . dashboard_theme_for_user($user);
+  // tokens (see dashboard.css). No theme-<key> class for creators: this is
+  // one fixed palette, not a pick-a-color theme (settings.php hides that
+  // picker for CREATOR accordingly). $navAccentPalette assigns each nav
+  // item a rotating accent color via a --nav-accent CSS var — harmless
+  // outside .dash-colorful, since only that theme's CSS actually reads it
+  // (admin/learner's icon color comes from dash-premium's theme instead).
+  $shellClass = $user['role'] === 'CREATOR' ? 'dash-colorful' : 'dash-premium theme-' . dashboard_theme_for_user($user);
+  $navAccentPalette = ['#ec4899', '#8b5cf6', '#3b82f6', '#f5b301', '#10b981', '#f97316'];
+  $navAccentIdx = 0;
 ?>
 <div class="dash <?= e($shellClass) ?>">
   <div class="dash-overlay" data-dash-overlay data-dash-close></div>
@@ -180,9 +185,9 @@ if ($user['role'] === 'ADMIN') {
         <div class="dash-nav-group">
           <div class="dash-nav-group-label"><?= e($groupLabel) ?></div>
           <nav class="dash-nav">
-            <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; ?>
-              <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>">
-                <?php dash_icon($icon); ?><span><?= e($label) ?></span>
+            <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; $navAccent = $navAccentPalette[$navAccentIdx % count($navAccentPalette)]; $navAccentIdx++; ?>
+              <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>" style="--nav-accent: <?= e($navAccent) ?>;">
+                <span class="dash-nav-icon-badge"><?php dash_icon($icon); ?></span><span><?= e($label) ?></span>
                 <?php if ($badge > 0): ?><span class="nav-badge"><?= $badge ?></span><?php endif; ?>
               </a>
             <?php endforeach; ?>

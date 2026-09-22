@@ -142,31 +142,43 @@
 .dash-content { padding: 22px 20px 60px; }
 
 /* =====================================================================
-   CREATOR DASHBOARD — light "classic" sidebar shell (separate from the
+   CREATOR DASHBOARD — light "colorful" sidebar shell (separate from the
    dark .dash-premium theme system used by learner/admin). Same sidebar/
    header markup as .dash-premium (dashboard_header.php shares one block
-   for all three roles), just a different outer class — .dash-classic
+   for all three roles), just a different outer class — .dash-colorful
    overrides only the handful of base .dash tokens it needs (the .dash
    block above is already the original light palette, pre-dash-premium)
    rather than reusing dash-premium's dark-theme color system. One fixed
    palette, not a pick-a-color theme like admin/learner get — no
    theme-<key> modifier, and settings.php hides that picker for creators.
+   Each nav item carries a --nav-accent CSS var (assigned in
+   dashboard_header.php, rotating through a fixed palette) that only this
+   theme's CSS reads, for the colored icon badges + active gradient pill.
    ===================================================================== */
-.dash.dash-classic {
-  --dash-bg: #f4f5f7; --dash-panel: #ffffff; --dash-panel-2: #f4f5f7;
-  --dash-border: #e2e4e9; --dash-border-soft: #ebedf1;
-  --dash-tint: #eef2fa;
+.dash.dash-colorful {
+  --dash-bg: #f4f5fb; --dash-panel: #ffffff; --dash-panel-2: #f4f5fb;
+  --dash-border: #eceef4; --dash-border-soft: #f2f3f9;
+  --dash-tint: #f6ecfb;
   --dash-good: #16a34a; --dash-good-bg: #f0fdf4;
   --dash-warn: #b45309; --dash-warn-bg: #fffbeb;
   --dash-bad: #dc2626; --dash-bad-bg: #fef2f2;
   --dash-accent-text: var(--brand-900);
-  --dash-shadow: 0 1px 2px rgba(20,24,27,0.03);
+  --dash-shadow: 0 1px 2px rgba(20,24,27,0.03), 0 10px 30px -16px rgba(20,24,27,0.10);
 }
-/* A left-border strip instead of the base pill/tint active state — reads
-   more like a traditional enterprise nav (QuickBooks/Stripe-style) than
-   the rounded "chip" active state the other themes use. */
-.dash-classic .dash-nav a.active { background: var(--dash-tint); border-left: 2.5px solid var(--brand-900); border-radius: 0 8px 8px 0; padding-left: 7.5px; }
-.dash-classic table th:first-child, .dash-classic table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--dash-panel); box-shadow: 4px 0 6px -4px rgba(20,24,27,0.12); }
+.dash-colorful .dash-nav-icon-badge {
+  width: 22px; height: 22px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--nav-accent) 15%, white); color: var(--nav-accent);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.dash-colorful .dash-nav-icon-badge svg { width: 13px; height: 13px; opacity: 1; color: inherit; }
+.dash-colorful .dash-nav a.active {
+  background: linear-gradient(135deg, var(--nav-accent), color-mix(in srgb, var(--nav-accent) 55%, black));
+  color: #fff;
+}
+.dash-colorful .dash-nav a.active .dash-nav-icon-badge { background: rgba(255,255,255,0.25); color: #fff; }
+.dash-colorful .dash-widget { background: linear-gradient(160deg, #ec4899, #8b5cf6); }
+.dash-colorful table th:first-child, .dash-colorful table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--dash-panel); box-shadow: 4px 0 6px -4px rgba(20,24,27,0.12); }
 
 @media (min-width: 1024px) {
   .dash-sidebar { position: sticky; top: 0; height: 100vh; transform: none; width: 260px; flex-shrink: 0; }
