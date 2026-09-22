@@ -228,6 +228,23 @@ function format_date(string $datetime): string {
     return date('M j, Y', strtotime($datetime));
 }
 
+/**
+ * "First L." from a full name — for the recent-activity toast
+ * (courses/view.php). A bare first name risks a name-collision mix-up: a
+ * different learner who shares that first name (or who never enrolled at
+ * all) could see it and wonder "wait, is that me? I never paid for this."
+ * The last-initial disambiguates without fully identifying anyone — never
+ * the full name.
+ */
+function display_name_initial(string $fullName): string {
+    $parts = preg_split('/\s+/', trim($fullName), -1, PREG_SPLIT_NO_EMPTY);
+    if (!$parts) return '';
+    $first = mb_substr($parts[0], 0, 30);
+    if (count($parts) === 1) return $first;
+    $initial = mb_strtoupper(mb_substr(end($parts), 0, 1));
+    return "{$first} {$initial}.";
+}
+
 /** A UG-style local number ("0772 123 456") into the digits-only international form wa.me needs. Null if it doesn't look like a real number. */
 function whatsapp_number(?string $phone): ?string {
     $digits = preg_replace('/\D/', '', (string) $phone);

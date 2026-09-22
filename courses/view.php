@@ -337,7 +337,7 @@ require __DIR__ . '/../includes/header.php';
       var entries = [
         <?php foreach ($recentActivity as $a): ?>
         {
-          name: <?= json_encode(mb_substr(trim(explode(' ', $a['learner_name'])[0]), 0, 30), JSON_HEX_TAG) ?>,
+          name: <?= json_encode(display_name_initial($a['learner_name']), JSON_HEX_TAG) ?>,
           city: <?= json_encode($a['city'], JSON_HEX_TAG) ?>,
           timeAgo: <?= json_encode(time_ago($a['enrolled_at']), JSON_HEX_TAG) ?>
         },
