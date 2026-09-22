@@ -40,6 +40,13 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $installmentPlan = $user ? get_installment_plan((int) $user['id'], (int) $course['id']) : null;
     $installmentAccessBlocked = $installmentPlan && !learner_has_installment_access($installmentPlan);
     if ($installmentAccessBlocked) $hasAccess = false;
+    // Covers BOTH a learner who missed a later installment (access was
+    // paused) AND one whose very first installment payment never went
+    // through (abandoned/failed mobile money prompt) — either way a plan
+    // row already exists, so the "start fresh" button below must not show
+    // (it would create a second, conflicting plan), and this is the only
+    // place left that offers a way to pay.
+    $showInstallmentResume = $installmentPlan && !$hasAccess;
     // Every paid course offers a 2-installment plan — see
     // default_first_installment_amount() for the fallback split when the
     // creator hasn't set their own first-payment amount.
@@ -178,14 +185,16 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
         <?php elseif (!$user): ?>
           <a href="<?= e(base_url('signup.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" class="btn btn-gold btn-block btn-lg shine" style="margin-top:20px;">Sign Up to Enroll</a>
           <p class="guest-note">Paid courses need a free account first — that's where your receipt, access, and certificate live. <a href="<?= e($loginUrl) ?>">Already have an account? Log in</a></p>
-        <?php elseif ($installmentAccessBlocked): ?>
-          <div class="alert alert-error" style="margin-top:20px;">Access paused — a payment plan installment was missed.</div>
+        <?php elseif ($showInstallmentResume): ?>
+          <?php if ($installmentAccessBlocked): ?>
+            <div class="alert alert-error" style="margin-top:20px;">Access paused — a payment plan installment was missed.</div>
+          <?php endif; ?>
           <div style="margin-top:14px;" data-payment-widget
                data-course-id="<?= (int) $course['id'] ?>"
                data-initiate-url="<?= e(base_url('api/initiate-installment-payment.php')) ?>"
                data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
             <div data-state="idle">
-              <button class="btn btn-gold btn-block btn-lg shine" data-action="start">Pay Next Installment to Resume</button>
+              <button class="btn btn-gold btn-block btn-lg shine" data-action="start"><?= $installmentPlan['installments_paid'] > 0 ? 'Pay Next Installment to Resume' : 'Finish Your First Installment' ?></button>
             </div>
             <div data-state="phone" class="hidden guest-form">
               <div class="field-icon">
