@@ -108,7 +108,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php endif; ?>
 
 <?php if ($totalPages > 1): ?>
-  <div class="row gap-2" style="margin-top:16px; justify-content:center;">
+  <div class="row gap-2" style="margin-top:16px; justify-content:center; flex-wrap:wrap; row-gap:8px;">
     <?php for ($p = 1; $p <= $totalPages; $p++): ?>
       <a href="<?= e(base_url('dashboard/admin/shares.php?' . http_build_query(array_filter($filters) + ['page' => $p]))) ?>"
          class="btn btn-sm <?= $p === $page ? 'btn-primary' : 'btn-outline' ?>"><?= $p ?></a>
