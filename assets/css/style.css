@@ -59,9 +59,18 @@
 
 
 * { box-sizing: border-box; }
+/* iOS Safari/Chrome (same engine underneath — confirmed the trailing
+   blank space below the footer shows in both) can leave scrollable
+   space at the end of a page that has nothing to do with any element on
+   it — a real, long-documented quirk of how it sizes the page. Tying
+   html/body's height explicitly to the real viewport is the standard
+   fix; it does NOT change what actually scrolls (still window/document,
+   same as always), so nothing that reads window.scrollY or listens for
+   a window scroll event is affected. */
 html {
   scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--brand-950);
   overscroll-behavior: none;
+  height: 100%;
 }
 
 body {
@@ -71,6 +80,7 @@ body {
   background: var(--white);
   font-size: 16px;
   line-height: 1.6;
+  min-height: 100%;
   overscroll-behavior: none;
 }
 
