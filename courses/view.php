@@ -409,9 +409,13 @@ require __DIR__ . '/../includes/header.php';
       }
       setInterval(repositionAboveFooter, 200);
 
+      // Loops indefinitely (wrapping back to the first real entry once it
+      // reaches the end) rather than stopping after one pass — a new one
+      // appears every 5s, for as long as the visitor stays on the page or
+      // until they dismiss it.
       function showEntry(i) {
-        if (dismissed || i >= entries.length) return;
-        var e = entries[i];
+        if (dismissed || entries.length === 0) return;
+        var e = entries[i % entries.length];
         toast.classList.remove('show');
         initialEl.textContent = (e.name.charAt(0) || '?').toUpperCase();
         textEl.innerHTML = '<b>' + e.name + '</b>' + (e.city ? ' from ' + e.city : '') + ' just enrolled in this course';
@@ -419,11 +423,11 @@ require __DIR__ . '/../includes/header.php';
         requestAnimationFrame(function () { toast.classList.add('show'); });
         timers.push(setTimeout(function () {
           toast.classList.remove('show');
-          timers.push(setTimeout(function () { showEntry(i + 1); }, 4000));
-        }, 6000));
+          timers.push(setTimeout(function () { showEntry(i + 1); }, 500));
+        }, 4500));
       }
 
-      timers.push(setTimeout(function () { showEntry(0); }, 4000));
+      timers.push(setTimeout(function () { showEntry(0); }, 5000));
     })();
   </script>
 <?php endif; ?>
