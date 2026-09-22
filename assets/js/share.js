@@ -136,7 +136,7 @@
   // the button's position continuously. Scrolling inside the menu itself
   // (its own overflow-y: auto, for very short viewports) must not trigger
   // this — capture:true sees that inner scroll too, so it's excluded explicitly.
-  window.addEventListener("scroll", (e) => {
+  document.body.addEventListener("scroll", (e) => {
     if (e.target.closest && e.target.closest("[data-share-menu]")) return;
     closeAllMenus();
   }, { passive: true, capture: true });

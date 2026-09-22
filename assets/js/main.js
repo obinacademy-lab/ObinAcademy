@@ -4,10 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const siteHeader = document.querySelector("[data-site-header]");
   if (siteHeader) {
     const updateHeaderScrolled = () => {
-      siteHeader.classList.toggle("scrolled", window.scrollY > 8);
+      siteHeader.classList.toggle("scrolled", document.body.scrollTop > 8);
     };
     updateHeaderScrolled();
-    window.addEventListener("scroll", updateHeaderScrolled, { passive: true });
+    document.body.addEventListener("scroll", updateHeaderScrolled, { passive: true });
   }
 
   const toggle = document.querySelector("[data-nav-toggle]");
@@ -370,27 +370,21 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("[data-back-to-top]").forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+      document.body.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
     });
   });
 });
 
-// Block the page's rubber-band overscroll at the very top/bottom edge.
-// overscroll-behavior: none (style.css) covers Chrome/Android/Firefox, but
-// Safari — and Chrome on iOS, which sits on the same engine — has never
-// honored it for the document's own bounce; confirmed live on a real
-// iPhone in both browsers, CSS alone genuinely cannot reach it there.
-// This was here before, removed once over a "cannot be interrupted"
-// console warning: that warning only means a touch gesture that SCROLLS
-// INTO the boundary mid-drag can't be cancelled retroactively once the
-// browser has committed it to native scrolling — real, but it's not the
-// common case. A gesture that STARTS already at the boundary (finger lifts
-// after reaching the bottom, then a new scroll/flick begins) is caught by
-// touchstart before any native handling claims it, and preventDefault on
-// its first touchmove genuinely does stop the bounce — which is how most
-// "scroll to the end, keep scrolling" bounces actually happen. Only
-// intervenes on a clearly-vertical drag, so horizontal chip-scroll rows
-// and a modal's own inner scroll are untouched.
+// Belt-and-suspenders backup for the same bounce body's own
+// overscroll-behavior:none (style.css) now handles directly — body is the
+// real scroll container as of this same change (see style.css), which is
+// what actually fixes this: Safari has never honored overscroll-behavior
+// on the page's own root scroll, but does honor it correctly on an
+// ordinary scrollable element like body now is. This touch listener is
+// kept as a second layer in case any real device still lets a gesture
+// through; measurements now read body's own scroll position, not
+// window's, to match. Only intervenes on a clearly-vertical drag, so
+// horizontal chip-scroll rows and a modal's own inner scroll are untouched.
 (() => {
   let startX = 0;
   let startY = 0;
@@ -405,9 +399,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const deltaY = touch.clientY - startY;
     if (Math.abs(deltaY) <= Math.abs(deltaX)) return; // horizontal drag — leave it alone
 
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    const atTop = window.scrollY <= 0;
-    const atBottom = window.scrollY >= maxScroll - 1;
+    const maxScroll = document.body.scrollHeight - document.body.clientHeight;
+    const atTop = document.body.scrollTop <= 0;
+    const atBottom = document.body.scrollTop >= maxScroll - 1;
     const pullingDownAtTop = atTop && deltaY > 0;
     const pullingUpAtBottom = atBottom && deltaY < 0;
     if (pullingDownAtTop || pullingUpAtBottom) e.preventDefault();

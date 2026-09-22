@@ -59,18 +59,22 @@
 
 
 * { box-sizing: border-box; }
-/* iOS Safari/Chrome (same engine underneath — confirmed the trailing
-   blank space below the footer shows in both) can leave scrollable
-   space at the end of a page that has nothing to do with any element on
-   it — a real, long-documented quirk of how it sizes the page. Tying
-   html/body's height explicitly to the real viewport is the standard
-   fix; it does NOT change what actually scrolls (still window/document,
-   same as always), so nothing that reads window.scrollY or listens for
-   a window scroll event is affected. */
+/* body is the real scroll container now, not html/the document root —
+   this is the actual, complete fix for the iOS Safari/Chrome trailing
+   blank space that neither CSS alone (overscroll-behavior on the
+   document root) nor the touch-JS fallback alone could fully close.
+   Safari has never honored overscroll-behavior on the page's own root
+   scroll, but DOES honor it correctly on an ordinary scrollable element
+   — this moves the real scroll onto body, turning it into that second,
+   actually-working case. html can no longer scroll at all (nothing left
+   to bounce there). Every script that read window.scrollY or listened
+   for a window scroll event was updated to read/listen on body instead
+   (main.js, lead-capture.js, share.js, visitor-tracker.js) — anything
+   position:fixed is unaffected, since fixed positioning is relative to
+   the viewport regardless of which element actually scrolls. */
 html {
   scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--brand-950);
-  overscroll-behavior: none;
-  height: 100%;
+  height: 100%; overflow: hidden;
 }
 
 body {
@@ -80,7 +84,7 @@ body {
   background: var(--white);
   font-size: 16px;
   line-height: 1.6;
-  min-height: 100%;
+  height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch;
   overscroll-behavior: none;
 }
 

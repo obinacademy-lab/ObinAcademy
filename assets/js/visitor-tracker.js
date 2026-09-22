@@ -14,14 +14,13 @@
     let reported = false;
 
     function currentScrollPct() {
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - doc.clientHeight;
+      const scrollable = document.body.scrollHeight - document.body.clientHeight;
       if (scrollable <= 0) return 100;
-      return Math.min(100, Math.round(((window.scrollY || doc.scrollTop) / scrollable) * 100));
+      return Math.min(100, Math.round((document.body.scrollTop / scrollable) * 100));
     }
 
     let scrollTicking = false;
-    window.addEventListener("scroll", () => {
+    document.body.addEventListener("scroll", () => {
       if (scrollTicking) return;
       scrollTicking = true;
       requestAnimationFrame(() => {

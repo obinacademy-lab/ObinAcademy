@@ -71,15 +71,14 @@
     if (scrollTicking) return;
     scrollTicking = true;
     requestAnimationFrame(() => {
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - doc.clientHeight;
-      const pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 100;
+      const scrollable = document.body.scrollHeight - document.body.clientHeight;
+      const pct = scrollable > 0 ? (document.body.scrollTop / scrollable) * 100 : 100;
       if (pct >= 70) showPopup();
       scrollTicking = false;
     });
   }
-  window.addEventListener("scroll", onScroll, { passive: true });
-  cleanups.push(() => window.removeEventListener("scroll", onScroll));
+  document.body.addEventListener("scroll", onScroll, { passive: true });
+  cleanups.push(() => document.body.removeEventListener("scroll", onScroll));
 
   function onMouseOut(e) {
     if (e.clientY <= 0) showPopup();
