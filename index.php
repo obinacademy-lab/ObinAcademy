@@ -5,6 +5,8 @@ require __DIR__ . '/includes/school_card.php';
 
 $schoolsPreview = get_featured_schools(6);
 $categories = get_categories();
+$platformStats = get_platform_stats();
+$platformRating = get_platform_rating();
 $categoryEmoji = [
     'finance' => '💰', 'business' => '💼', 'technology-software-development' => '💻',
     'marketing-digital-marketing' => '📣', 'design-creative' => '🎨', 'ecommerce' => '🛒',
@@ -40,8 +42,19 @@ require __DIR__ . '/includes/header.php';
 
 <div class="home-discover">
   <div class="home-discover-hero">
+    <span class="home-discover-badge">🇺🇬 Pay instantly with MTN &amp; Airtel Money</span>
     <h1>Discover schools</h1>
     <p class="sub">or <a href="<?= e(base_url('become-creator.php')) ?>">create your own school</a></p>
+  </div>
+
+  <div class="home-discover-stats">
+    <span><strong><?= number_format($platformStats['creator_count']) ?>+</strong> schools</span>
+    <span class="dot"></span>
+    <span><strong><?= number_format($platformStats['learner_count']) ?>+</strong> learners</span>
+    <?php if ($platformRating['count'] > 0): ?>
+      <span class="dot"></span>
+      <span>⭐ <strong><?= number_format($platformRating['avg'], 1) ?></strong> average rating</span>
+    <?php endif; ?>
   </div>
 
   <div class="home-discover-search">
@@ -74,6 +87,32 @@ require __DIR__ . '/includes/header.php';
     </div>
   <?php endif; ?>
 </div>
+
+<section class="launch-steps-section">
+  <div class="container">
+    <div class="launch-steps-head">
+      <h2>How Obin Academy works</h2>
+      <p>From browsing to learning in three steps — no bank card required.</p>
+    </div>
+    <div class="launch-steps">
+      <div class="launch-step reveal">
+        <span class="step-num">1</span>
+        <h3>Discover a school</h3>
+        <p>Browse real East African creators teaching finance, tech, farming, trades and more.</p>
+      </div>
+      <div class="launch-step reveal reveal-delay-1">
+        <span class="step-num num-gold">2</span>
+        <h3>Pay with Mobile Money</h3>
+        <p>MTN or Airtel — enter your number and approve right on your phone. No card, no bank account.</p>
+      </div>
+      <div class="launch-step reveal reveal-delay-2">
+        <span class="step-num">3</span>
+        <h3>Start learning instantly</h3>
+        <p>Access unlocks immediately — stream lessons, download resources, learn at your own pace.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="wa-community-section">
   <div class="container">

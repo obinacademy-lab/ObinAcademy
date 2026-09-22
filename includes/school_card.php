@@ -19,13 +19,19 @@ function render_school_card(array $school): void {
     // (get_school_cards()'s fallback_thumbnail_url) rather than showing the
     // plain placeholder box.
     $coverUrl = $school['school_cover_url'] ?: ($school['fallback_thumbnail_url'] ?? null);
+    // A small fixed palette so a grid of several cover-less cards doesn't
+    // render as identical blue boxes — picked deterministically from the
+    // school id, never randomly, so a given card's tint stays stable
+    // across page loads/renders.
+    $placeholderTints = ['#1d4ed8', '#0e7490', '#b45309', '#15803d', '#7c3aed', '#a21caf'];
+    $placeholderTint = $placeholderTints[(int) $school['id'] % count($placeholderTints)];
     ?>
     <a href="<?= e(base_url('profile.php?id=' . $school['id'])) ?>" class="home-discover-card reveal">
       <div class="thumb">
         <?php if (!empty($coverUrl)): ?>
           <img src="<?= e(asset_src($coverUrl)) ?>" alt="" loading="lazy">
         <?php else: ?>
-          <div class="placeholder">Obin Academy</div>
+          <div class="placeholder" style="--tint: <?= e($placeholderTint) ?>;"><?= e(mb_substr($schoolLabel, 0, 1)) ?></div>
         <?php endif; ?>
         <span class="avatar">
           <?php if (!empty($school['avatar_url'])): ?>

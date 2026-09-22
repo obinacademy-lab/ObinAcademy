@@ -2240,6 +2240,12 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    palette. Its own component, scoped to the homepage only. ---------- */
 .home-discover { background: var(--surface); }
 .home-discover-hero { max-width: 900px; margin: 0 auto; padding: 60px 24px 0; text-align: center; }
+.home-discover-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: var(--radius-full);
+  background: #fff; border: 1px solid var(--border-strong); font-size: 13px; font-weight: 700; color: var(--accent-dark);
+  box-shadow: 0 1px 2px rgba(20,24,27,0.04);
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
 .home-discover-hero h1 {
   margin: 0; font-size: clamp(38px, 7vw, 64px); font-weight: 800; letter-spacing: -0.02em; color: var(--ink);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both;
@@ -2266,9 +2272,19 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    shared class doesn't: a focus ring, matching the site's other inputs. */
 .hero-search-v3:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent), 0 1px 2px rgba(32,33,36,.13), 0 2px 6px rgba(32,33,36,.06); }
 
+.home-discover-stats {
+  max-width: 650px; margin: 22px auto 0; padding: 0 24px; display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 14px; font-size: 13.5px; color: var(--muted);
+  animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.12s;
+}
+.home-discover-stats strong { color: var(--ink); font-weight: 800; }
+.home-discover-stats .dot { width: 4px; height: 4px; border-radius: 999px; background: var(--border-strong); flex-shrink: 0; }
+
 .home-discover-chips {
   max-width: 1100px; margin: 32px auto 0; padding: 0 24px; display: flex; align-items: center; gap: 8px; overflow-x: auto;
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.2s;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
 }
 /* Sizing/weight matched to skool.com's own chip row (its computed styles:
    height 40px, padding 0 14px, 14px/400, 8px gap, #fff/#909090 inactive,
@@ -2279,8 +2295,8 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   text-decoration: none; transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 .home-discover-chip:hover { border-color: #c8c8c8; color: var(--ink); }
-.home-discover-chip.active { background: var(--muted); color: #fff; border-color: var(--muted); }
-.home-discover-chip.active:hover { color: #fff; }
+.home-discover-chip.active { background: var(--gold); color: #241a00; border-color: var(--gold); font-weight: 700; }
+.home-discover-chip.active:hover { color: #241a00; border-color: var(--gold-dark); }
 .home-discover-chip-filter {
   flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: var(--radius-full);
   font-size: 14px; font-weight: 400; background: #fff; border: 1px solid var(--border); color: var(--muted); white-space: nowrap;
@@ -2320,7 +2336,16 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   transition: opacity 0.35s ease;
 }
 .home-discover-card:hover .thumb::after { opacity: 1; }
-.home-discover-card .thumb .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 700; font-size: 13px; }
+/* No cover uploaded yet — a branded gradient + the school's own initial
+   reads as "this school hasn't added a cover" without looking broken next
+   to real cover photos, unlike the old plain grey "Obin Academy" box.
+   6 hue rotations (--tint set inline per card, see school_card.php) keep a
+   grid of several placeholder cards from looking identical. */
+.home-discover-card .thumb .placeholder {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--tint, var(--brand-800)), var(--brand-950));
+  color: rgba(255,255,255,0.32); font-weight: 800; font-size: 44px;
+}
 .home-discover-card .avatar {
   position: absolute; left: 16px; bottom: -20px; width: 48px; height: 48px; border-radius: 11px;
   background: #fff; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow: hidden;
@@ -2396,9 +2421,17 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 
 /* ---------- how-it-works steps (homepage) — reuses .step-num's circular
    badge (defined above, about page) for the number treatment. ---------- */
-.launch-steps { margin-top: 44px; display: grid; grid-template-columns: 1fr; gap: 28px; }
-@media (min-width: 800px) { .launch-steps { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
-.launch-step h3 { margin-top: 14px; font-size: 16px; }
+.launch-steps-section { padding: 20px 0 0; }
+.launch-steps-head { max-width: 600px; margin: 0 auto; text-align: center; }
+.launch-steps-head h2 { font-size: clamp(24px, 3.4vw, 30px); }
+.launch-steps-head p { margin-top: 8px; font-size: 14.5px; color: var(--muted); }
+.launch-steps { margin-top: 36px; display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 760px) { .launch-steps { grid-template-columns: repeat(3, 1fr); } }
+.launch-step {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 26px 24px;
+}
+.launch-step .step-num { width: 44px; height: 44px; border-radius: 12px; font-size: 18px; }
+.launch-step h3 { margin-top: 16px; font-size: 17px; }
 .launch-step p { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-height: 1.6; }
 
 /* ---------- why-subscribe benefit cards (subscribe page) ---------- */
