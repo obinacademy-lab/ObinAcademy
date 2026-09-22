@@ -145,7 +145,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<div class="grid md:grid-4" style="margin-top:20px; gap:16px;">
+<div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px; gap:16px;">
   <div class="stat-card reveal" style="background:linear-gradient(135deg,#ec4899,#be185d); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">Total Earnings</div><div class="value" style="color:#fff;"><?= e(format_money($totalEarnings)) ?></div></div>
   <div class="stat-card reveal reveal-delay-1" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">Total Students</div><div class="value" style="color:#fff;"><?= (int) $totalEnrollments ?></div></div>
   <div class="stat-card reveal reveal-delay-2" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">Course Views</div><div class="value" style="color:#fff;"><?= (int) $totalViews ?></div></div>
