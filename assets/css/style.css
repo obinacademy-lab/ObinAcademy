@@ -3099,10 +3099,10 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    margins instead — no more lopsided edge-crowding on narrow phones. ---------- */
 .activity-toast {
   position: fixed; left: 16px; bottom: 16px; z-index: 170; max-width: 380px;
-  background: linear-gradient(155deg, var(--danger), #a91d1d);
+  background: linear-gradient(155deg, var(--success), #15803d);
   border-radius: var(--radius-lg);
   padding: 16px 16px 16px 14px;
-  box-shadow: 0 20px 40px -12px rgba(169,29,29,0.45), 0 2px 8px -2px rgba(169,29,29,0.3);
+  box-shadow: 0 20px 40px -12px rgba(21,128,61,0.45), 0 2px 8px -2px rgba(21,128,61,0.3);
   display: flex; align-items: center; gap: 12px;
   opacity: 0; transform: translateY(18px) scale(0.96); pointer-events: none;
   transition: opacity 0.55s cubic-bezier(0.19,1,0.22,1), transform 0.55s cubic-bezier(0.19,1,0.22,1), bottom 0.25s ease;
