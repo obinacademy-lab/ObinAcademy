@@ -38,19 +38,13 @@ require __DIR__ . '/includes/auth_header.php';
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
       <label for="email">Email</label>
-      <div class="field-icon">
-        <?php dash_icon('mail'); ?>
-        <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="jane@example.com">
-      </div>
+      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Email address">
     </div>
     <div class="field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required placeholder="Password">
       <div class="field-row">
-        <label for="password">Password</label>
         <a href="<?= e(base_url('forgot-password.php')) ?>" class="forgot-link">Forgot password?</a>
-      </div>
-      <div class="field-icon">
-        <?php dash_icon('lock'); ?>
-        <input id="password" name="password" type="password" required placeholder="Your password">
       </div>
     </div>
     <button type="submit" class="btn btn-primary">Log In <span class="btn-arrow">→</span></button>

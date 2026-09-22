@@ -50,10 +50,7 @@ require __DIR__ . '/includes/auth_header.php';
       <?= csrf_field() ?>
       <div class="field">
         <label for="email">Email</label>
-        <div class="field-icon">
-          <?php dash_icon('mail'); ?>
-          <input id="email" name="email" type="email" required placeholder="jane@example.com">
-        </div>
+        <input id="email" name="email" type="email" required placeholder="Email address">
       </div>
       <button type="submit" class="btn btn-primary">Send Reset Link <span class="btn-arrow">→</span></button>
     </form>

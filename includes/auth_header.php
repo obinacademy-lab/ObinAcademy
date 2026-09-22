@@ -1,22 +1,42 @@
 <?php
 /**
- * Cinematic shell for auth pages (login, signup, forgot/reset password) — a
- * full-bleed crossfading photo background behind a centered card, with a
- * single trust strip (live platform stats + a rotating real testimonial)
- * beneath it. Callers may set, before requiring this file:
- *   $authTab            — 'login' | 'signup' to show the switcher pill
- *                          highlighting that tab, or omit to hide the
- *                          switcher entirely (forgot/reset password use none).
- *   $redirectTo          — carried onto the switcher's login.php/signup.php
- *                          links so toggling tabs doesn't lose it.
- * Usage: require __DIR__ . '/../includes/auth_header.php';
+ * Split-card shell for auth pages (login, signup, forgot/reset password) —
+ * a white rounded card: a curved brand-blue panel on one side (headline +
+ * a CTA toward the other auth action) and the real form on the other.
+ * Callers may set, before requiring this file:
+ *   $authTab      — 'login' | 'signup' picks the panel's copy/CTA toward
+ *                    the other action, or omit for a generic branding
+ *                    panel (forgot/reset password use none).
+ *   $redirectTo   — carried onto the panel's login.php/signup.php link so
+ *                    switching pages doesn't lose it.
  */
 require_once __DIR__ . '/data.php';
 
 $authStats = get_platform_stats();
-$authTestimonials = get_published_testimonials();
 $authRedirect = $redirectTo ?? '/dashboard.php';
-$authBgPhotos = ['assets/img/hero-bg-premium.jpg', 'assets/img/hero-couch-learner.jpg', 'assets/img/abt-creator-earnings.jpg'];
+$authLoginUrl = base_url('login.php?redirect=' . urlencode($authRedirect));
+$authSignupUrl = base_url('signup.php?redirect=' . urlencode($authRedirect));
+
+$authPanels = [
+    'login' => [
+        'title' => 'Hello, Friend!',
+        'sub' => 'New here? Create a free account and start learning or teaching in minutes.',
+        'cta' => 'Sign Up',
+        'href' => $authSignupUrl,
+    ],
+    'signup' => [
+        'title' => 'Welcome Back!',
+        'sub' => 'Already learning or teaching with us? Log in to pick up right where you left off.',
+        'cta' => 'Sign In',
+        'href' => $authLoginUrl,
+    ],
+];
+$authPanel = $authPanels[$authTab ?? ''] ?? [
+    'title' => 'Obin Academy',
+    'sub' => 'Real courses from African creators, paid for with mobile money.',
+    'cta' => 'Back to Home',
+    'href' => base_url('index.php'),
+];
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,25 +52,17 @@ $authBgPhotos = ['assets/img/hero-bg-premium.jpg', 'assets/img/hero-couch-learne
 </head>
 <body>
 <div class="auth-shell">
-  <div class="auth-bg-stage">
-    <?php foreach ($authBgPhotos as $photo): ?>
-      <div class="auth-bg-slide"><img src="<?= e(asset_src($photo)) ?>" alt=""></div>
-    <?php endforeach; ?>
-  </div>
-  <div class="auth-bg-scrim"></div>
-
   <div class="auth-topbar">
-    <?php render_logo(); ?>
     <a href="<?= e(base_url('index.php')) ?>" class="back-home"><?php dash_icon('arrow-left'); ?> Back to Home</a>
   </div>
 
   <div class="auth-stage">
     <div class="auth-card">
-      <div class="auth-card-pad">
-        <?php if (isset($authTab)): ?>
-          <div class="auth-switcher <?= $authTab === 'signup' ? 'signup' : '' ?>">
-            <div class="pill-indicator"></div>
-            <a href="<?= e(base_url('login.php?redirect=' . urlencode($authRedirect))) ?>" class="<?= $authTab === 'login' ? 'active' : '' ?>">Log In</a>
-            <a href="<?= e(base_url('signup.php?redirect=' . urlencode($authRedirect))) ?>" class="<?= $authTab === 'signup' ? 'active' : '' ?>">Sign Up</a>
-          </div>
-        <?php endif; ?>
+      <div class="auth-panel">
+        <div class="auth-panel-logo"><?php render_logo(); ?></div>
+        <div class="auth-panel-title"><?= e($authPanel['title']) ?></div>
+        <p class="auth-panel-sub"><?= e($authPanel['sub']) ?></p>
+        <a href="<?= e($authPanel['href']) ?>" class="auth-panel-cta"><?= e(mb_strtoupper($authPanel['cta'])) ?></a>
+      </div>
+
+      <div class="auth-form-side">

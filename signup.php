@@ -52,29 +52,19 @@ require __DIR__ . '/includes/auth_header.php';
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
       <label for="name">Full Name</label>
-      <div class="field-icon">
-        <?php dash_icon('user-plus'); ?>
-        <input id="name" name="name" type="text" required value="<?= e($name) ?>">
-      </div>
+      <input id="name" name="name" type="text" required value="<?= e($name) ?>" placeholder="Full Name">
     </div>
     <div class="field">
       <label for="email">Email</label>
-      <div class="field-icon">
-        <?php dash_icon('mail'); ?>
-        <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="jane@example.com">
-      </div>
+      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Email address">
     </div>
     <div class="field">
       <label for="phone">Phone Number (optional)</label>
-      <input id="phone" name="phone" type="tel" placeholder="e.g. 0772 123 456" value="<?= e($phone) ?>">
+      <input id="phone" name="phone" type="tel" placeholder="Phone Number (optional)" value="<?= e($phone) ?>">
     </div>
     <div class="field">
       <label for="password">Password</label>
-      <div class="field-icon">
-        <?php dash_icon('lock'); ?>
-        <input id="password" name="password" type="password" required minlength="8">
-      </div>
-      <p class="help">At least 8 characters.</p>
+      <input id="password" name="password" type="password" required minlength="8" placeholder="Password (min. 8 characters)">
     </div>
     <button type="submit" class="btn btn-primary">Create Account <span class="btn-arrow">→</span></button>
   </form>

@@ -45,17 +45,11 @@ require __DIR__ . '/includes/auth_header.php';
       <input type="hidden" name="token" value="<?= e($token) ?>">
       <div class="field">
         <label for="password">New Password</label>
-        <div class="field-icon">
-          <?php dash_icon('lock'); ?>
-          <input id="password" name="password" type="password" required minlength="8">
-        </div>
+        <input id="password" name="password" type="password" required minlength="8" placeholder="New Password">
       </div>
       <div class="field">
         <label for="confirmPassword">Confirm Password</label>
-        <div class="field-icon">
-          <?php dash_icon('lock'); ?>
-          <input id="confirmPassword" name="confirmPassword" type="password" required minlength="8">
-        </div>
+        <input id="confirmPassword" name="confirmPassword" type="password" required minlength="8" placeholder="Confirm Password">
       </div>
       <button type="submit" class="btn btn-primary">Reset Password <span class="btn-arrow">→</span></button>
     </form>
