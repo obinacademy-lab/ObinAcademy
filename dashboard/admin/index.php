@@ -67,23 +67,11 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <?php endif; ?>
 </div>
 
-<div class="grid sm:grid-2 lg:grid-4" style="margin-top:24px;">
-  <div class="stat-card accent-top" data-hoverable="true" style="--hover-color:#3b82f6;">
-    <div class="icon"><?php dash_icon('users'); ?></div>
-    <div class="value"><?= $userCount ?></div><div class="label">Total Users</div>
-  </div>
-  <div class="stat-card accent-top" data-hoverable="true" style="--hover-color:#8b5cf6;">
-    <div class="icon"><?php dash_icon('book-open'); ?></div>
-    <div class="value"><?= $publishedCount ?>/<?= $courseCount ?></div><div class="label">Courses</div><div class="sub">published / total</div>
-  </div>
-  <div class="stat-card accent-top" data-hoverable="true" style="--hover-color:#f5b301;">
-    <div class="icon"><?php dash_icon('banknote'); ?></div>
-    <div class="value"><?= e(format_money($revenueTotal)) ?></div><div class="label">Revenue (30d)</div>
-  </div>
-  <div class="stat-card accent-top <?= $totalPending > 0 ? 'highlight' : '' ?>" data-hoverable="true" style="--hover-color:#f59e0b;">
-    <div class="icon"><?php dash_icon('clipboard-check'); ?></div>
-    <div class="value"><?= $totalPending ?></div><div class="label">Need Your Action</div>
-  </div>
+<div class="grid sm:grid-2 lg:grid-4" style="margin-top:24px; gap:16px;">
+  <div class="stat-card reveal" style="background:linear-gradient(135deg,#ec4899,#be185d); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">Total Users</div><div class="value" style="color:#fff;"><?= $userCount ?></div></div>
+  <div class="stat-card reveal reveal-delay-1" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">Courses</div><div class="value" style="color:#fff;"><?= $publishedCount ?>/<?= $courseCount ?></div><div class="sub" style="color:rgba(255,255,255,0.7);">published / total</div></div>
+  <div class="stat-card reveal reveal-delay-2" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8); border:none; color:#fff;"><div class="label" style="color:rgba(255,255,255,0.85);">Revenue (30d)</div><div class="value" style="color:#fff;"><?= e(format_money($revenueTotal)) ?></div></div>
+  <div class="stat-card reveal reveal-delay-3" style="background:linear-gradient(135deg,#f5b301,#c98e00); border:none; color:#3d2600;"><div class="label" style="color:#5c3d00;">Need Your Action</div><div class="value" style="color:#3d2600;"><?= $totalPending ?></div></div>
 </div>
 
 <div class="dash-split" style="margin-top:32px;">

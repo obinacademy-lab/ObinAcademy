@@ -154,16 +154,14 @@ if ($user['role'] === 'ADMIN') {
 </head>
 <body>
 <?php
-  // Creator gets a fixed light "colorful" shell (.dash-colorful) instead of
-  // the dark .dash-premium theme system — same sidebar structure/markup as
-  // admin/learner below, just a different outer class supplying different
-  // tokens (see dashboard.css). No theme-<key> class for creators: this is
-  // one fixed palette, not a pick-a-color theme (settings.php hides that
-  // picker for CREATOR accordingly). $navAccentPalette assigns each nav
-  // item a rotating accent color via a --nav-accent CSS var — harmless
-  // outside .dash-colorful, since only that theme's CSS actually reads it
-  // (admin/learner's icon color comes from dash-premium's theme instead).
-  $shellClass = $user['role'] === 'CREATOR' ? 'dash-colorful' : 'dash-premium theme-' . dashboard_theme_for_user($user);
+  // Every role now shares the same fixed light "colorful" shell
+  // (.dash-colorful) — one palette platform-wide, not a per-role/pick-a-
+  // color theme, so the old .dash-premium dark theme system is no longer
+  // applied anywhere (its CSS stays in dashboard.css, just unreferenced,
+  // in case it's wanted back later). $navAccentPalette assigns each nav
+  // item a rotating accent color via a --nav-accent CSS var for the
+  // sidebar's colored icon badges.
+  $shellClass = 'dash-colorful';
   $navAccentPalette = ['#ec4899', '#8b5cf6', '#3b82f6', '#f5b301', '#10b981', '#f97316'];
   $navAccentIdx = 0;
 ?>
