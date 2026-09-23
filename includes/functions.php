@@ -571,6 +571,20 @@ function redirect(string $path): never {
     exit;
 }
 
+/**
+ * Validates a ?redirect= value that's meant to stay on this site (post-login
+ * bounce-back, etc.) before it's ever passed to redirect() — a bare
+ * str_starts_with($path, '/') check still lets a protocol-relative URL
+ * ("//evil.example/phish", which browsers resolve as https://evil.example/…)
+ * through, so this also rejects a second leading slash.
+ */
+function safe_local_redirect_path(string $path, string $fallback): string {
+    if ($path !== '' && str_starts_with($path, '/') && !str_starts_with($path, '//')) {
+        return $path;
+    }
+    return $fallback;
+}
+
 function flash_set(string $key, string $message): void {
     $_SESSION['flash'][$key] = $message;
 }

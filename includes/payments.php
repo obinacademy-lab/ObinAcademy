@@ -75,14 +75,25 @@ function resolve_payment_with_iotec(array $payment): array {
     $isGuestPayment = $payment['user_id'] === null;
 
     if ($result['status'] === 'Success') {
+        // Atomic claim: only the caller whose UPDATE actually matches a
+        // still-PENDING row proceeds to apply success side effects (grant
+        // access, insert earnings, send emails). Two overlapping resolves
+        // of the same payment (concurrent poll-payment.php tabs, a client
+        // retry racing the in-flight request, the cron sweep racing a live
+        // poll) both pass the earlier in-PHP PENDING check, but only one of
+        // them wins this row-level UPDATE — the loser sees rowCount() 0 and
+        // returns without re-granting access or double-crediting earnings.
+        $claimed = db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ? AND status = 'PENDING'", [$result['statusMessage'], $paymentId]);
+        if (!$claimed) {
+            return ['status' => 'SUCCESS'];
+        }
+
         if ($payment['type'] === 'SCHOOL_SUBSCRIPTION') {
-            db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
             apply_school_subscription_payment_success($payment);
             return ['status' => 'SUCCESS'];
         }
 
         if ($payment['type'] === 'BUNDLE_PURCHASE') {
-            db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
             apply_bundle_payment_success($payment);
             send_bundle_receipt_email($payment, $isGuestPayment, 'Course Bundle');
             $bundleCreator = db_one('SELECT name, email FROM users WHERE id = ?', [$payment['bundle_creator_id']]);
@@ -96,14 +107,12 @@ function resolve_payment_with_iotec(array $payment): array {
         }
 
         if ($payment['type'] === 'INSTALLMENT_PAYMENT') {
-            db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
             apply_installment_payment_success($payment);
             send_installment_receipt_email($payment);
             return ['status' => 'SUCCESS'];
         }
 
         if ($payment['type'] === 'COURSE_GIFT') {
-            db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
             apply_course_gift_payment_success($payment);
             return ['status' => 'SUCCESS'];
         }
@@ -114,7 +123,6 @@ function resolve_payment_with_iotec(array $payment): array {
                 $split = split_sale((float) $payment['amount']);
                 db()->beginTransaction();
                 try {
-                    db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
                     db_run('UPDATE enrollments SET is_premium = 1 WHERE id = ?', [$enrollment['id']]);
                     db_insert(
                         'INSERT INTO earnings (creator_id, course_id, amount, gross_amount, platform_fee) VALUES (?, ?, ?, ?, ?)',
@@ -126,8 +134,6 @@ function resolve_payment_with_iotec(array $payment): array {
                     throw $e;
                 }
                 send_payment_receipt_email($payment, $isGuestPayment, 'Premium Download Upgrade');
-            } else {
-                db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
             }
             return ['status' => 'SUCCESS'];
         }
@@ -144,7 +150,6 @@ function resolve_payment_with_iotec(array $payment): array {
             $expiresAt = compute_expires_at($payment['access_duration_days'] !== null ? (int) $payment['access_duration_days'] : null);
             db()->beginTransaction();
             try {
-                db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
                 if ($isGuestPayment) {
                     db_insert(
                         'INSERT INTO enrollments (user_id, guest_name, guest_email, access_token_hash, course_id, expires_at) VALUES (NULL, ?, ?, ?, ?, ?)',
@@ -181,8 +186,6 @@ function resolve_payment_with_iotec(array $payment): array {
                 send_admin_sale_notification_email($payment['course_title'], 'Course Enrollment', $buyerLabel, (float) $payment['amount'], $courseCreator['name']);
                 send_creator_sale_notification_email($courseCreator['email'], $courseCreator['name'], $payment['course_title'], 'Course Enrollment', $buyerLabel, $split['net']);
             }
-        } else {
-            db_run("UPDATE payments SET status = 'SUCCESS', status_message = ? WHERE id = ?", [$result['statusMessage'], $paymentId]);
         }
 
         return ['status' => 'SUCCESS'];

@@ -5,7 +5,7 @@ if (is_logged_in()) redirect('/dashboard.php');
 
 $errors = [];
 $name = $email = $phone = '';
-$redirectTo = query_param('redirect', '/dashboard.php');
+$redirectTo = safe_local_redirect_path(query_param('redirect', ''), '/dashboard.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(post('email'));
     $phone = post('phone');
     $password = post('password');
-    $redirectTo = post('redirect', '/dashboard.php');
+    $redirectTo = safe_local_redirect_path(post('redirect', ''), '/dashboard.php');
 
     if (strlen($name) < 2) $errors[] = 'Enter your full name.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Enter a valid email address.';
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $user = db_one('SELECT * FROM users WHERE id = ?', [$id]);
             login_user($user);
-            redirect($redirectTo ?: '/dashboard.php');
+            redirect($redirectTo);
         }
     }
 }

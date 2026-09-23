@@ -10,6 +10,9 @@ function enroll_in_course(int $userId, int $courseId): void {
     if ((int) $course['creator_id'] === $userId) {
         throw new RuntimeException('Creators cannot enroll in their own course.');
     }
+    if ((float) $course['price'] > 0) {
+        throw new RuntimeException('This course requires payment — use the mobile money option.');
+    }
 
     $existing = db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$userId, $courseId]);
     if ($existing) {

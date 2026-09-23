@@ -5,20 +5,20 @@ if (is_logged_in()) redirect('/dashboard.php');
 
 $errors = [];
 $email = '';
-$redirectTo = query_param('redirect', '/dashboard.php');
+$redirectTo = safe_local_redirect_path(query_param('redirect', ''), '/dashboard.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $email = strtolower(post('email'));
     $password = post('password');
-    $redirectTo = post('redirect', '/dashboard.php');
+    $redirectTo = safe_local_redirect_path(post('redirect', ''), '/dashboard.php');
 
     $user = db_one('SELECT * FROM users WHERE email = ?', [$email]);
     if (!$user || !verify_password($password, $user['password_hash'])) {
         $errors[] = 'Invalid email or password.';
     } else {
         login_user($user);
-        redirect($redirectTo ?: '/dashboard.php');
+        redirect($redirectTo);
     }
 }
 

@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/data.php';
-$user = require_login();
+$user = require_role(['CREATOR', 'ADMIN']);
 
 $totalEarnings = (float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM earnings WHERE creator_id = ?', [$user['id']])['n'] ?? 0);
 // Blended subscription payout pool, settled monthly by watch-time share

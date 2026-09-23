@@ -138,8 +138,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $moduleId = (int) post('moduleId');
         $title = post('lessonTitle');
         $type = post('lessonType') === 'PDF' ? 'PDF' : 'VIDEO';
+        $moduleOwned = db_one('SELECT id FROM modules WHERE id = ? AND course_id = ?', [$moduleId, $courseId]);
 
-        if ($title === '') {
+        if (!$moduleOwned) {
+            $errors[] = 'Module not found.';
+        } elseif ($title === '') {
             $errors[] = 'Lesson title is required.';
         } elseif (empty($_FILES['file']['name'])) {
             $errors[] = 'A file is required.';
@@ -157,7 +160,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif ($action === 'delete_lesson') {
-        db_run('DELETE FROM lessons WHERE id = ?', [(int) post('lessonId')]);
+        db_run(
+            'DELETE lessons FROM lessons JOIN modules ON modules.id = lessons.module_id WHERE lessons.id = ? AND modules.course_id = ?',
+            [(int) post('lessonId'), $courseId]
+        );
         redirect('/dashboard/creator/course-manage.php?id=' . $courseId);
     } elseif ($action === 'submit_for_review') {
         if (in_array($course['status'], ['DRAFT', 'REJECTED'], true)) {

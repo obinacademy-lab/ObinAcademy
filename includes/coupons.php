@@ -77,5 +77,10 @@ function validate_coupon(string $code, int $creatorId, int $courseId, ?int $user
 /** Called only from a payment's SUCCESS path (resolve_payment_with_iotec()) — records the redemption and bumps the coupon's use count, inside the same transaction as the enrollment it unlocked. $userId is null for a guest payment. */
 function record_coupon_redemption(int $couponId, ?int $userId, int $paymentId): void {
     db_insert('INSERT INTO coupon_redemptions (coupon_id, user_id, payment_id) VALUES (?, ?, ?)', [$couponId, $userId, $paymentId]);
-    db_run('UPDATE coupons SET uses_count = uses_count + 1 WHERE id = ?', [$couponId]);
+    // Bounded by max_uses here too, not just at validate_coupon() time — two
+    // learners who both start checkout while exactly one use is left can
+    // both pass that earlier check (it only runs at checkout start, not at
+    // redemption); this keeps the stored count from ever exceeding the cap
+    // even though the discount itself was already honored for both.
+    db_run('UPDATE coupons SET uses_count = uses_count + 1 WHERE id = ? AND (max_uses IS NULL OR uses_count < max_uses)', [$couponId]);
 }

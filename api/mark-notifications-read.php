@@ -6,5 +6,4 @@ require_role(['ADMIN']);
 csrf_verify();
 mark_notifications_read();
 
-$redirect = (string) post('redirect');
-redirect($redirect !== '' && str_starts_with($redirect, '/') ? $redirect : '/dashboard/admin/index.php');
+redirect(safe_local_redirect_path((string) post('redirect'), '/dashboard/admin/index.php'));
