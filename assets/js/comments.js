@@ -27,7 +27,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const courseId = root.dataset.courseId;
     const submitUrl = root.dataset.submitUrl;
     const deleteUrl = root.dataset.deleteUrl;
+    const likeUrl = root.dataset.likeUrl;
     const list = root.querySelector("[data-comment-list]");
+
+    // Optimistic like/unlike — flips the heart and count immediately (the
+    // TikTok-style snappy feel the button is going for), then reconciles
+    // with whatever the server actually recorded. A concurrent double-tap
+    // or a network hiccup self-corrects from that reconciliation rather
+    // than needing its own lock: the server's (liked, count) response is
+    // always the source of truth the UI settles back to.
+    list?.querySelectorAll("[data-like-toggle]").forEach((btn) => {
+      const countEl = btn.querySelector("[data-like-count]");
+      let busy = false;
+      btn.addEventListener("click", async () => {
+        if (busy) return;
+        busy = true;
+        const commentId = btn.dataset.commentId;
+        const wasLiked = btn.classList.contains("is-liked");
+        const prevCount = parseInt(countEl.textContent, 10) || 0;
+        btn.classList.toggle("is-liked", !wasLiked);
+        countEl.textContent = String(prevCount + (wasLiked ? -1 : 1));
+
+        try {
+          const res = await fetch(likeUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ commentId, csrf_token: csrfToken }),
+          });
+          const data = await res.json();
+          if (typeof data.count === "number") {
+            btn.classList.toggle("is-liked", !!data.liked);
+            countEl.textContent = String(data.count);
+          } else {
+            throw new Error("bad response");
+          }
+        } catch {
+          btn.classList.toggle("is-liked", wasLiked);
+          countEl.textContent = String(prevCount);
+        } finally {
+          busy = false;
+        }
+      });
+    });
 
     // Wire each thread's reply-toggle buttons (on the comment and on every
     // reply within it) to the one shared reply form for that thread.

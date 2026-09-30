@@ -4,6 +4,7 @@ require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/enroll_panel.php';
 require __DIR__ . '/../includes/enrollment.php';
 require __DIR__ . '/../includes/course_card.php';
+require __DIR__ . '/../includes/comments.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -61,6 +62,10 @@ if ($user) {
         if ((int) $r['author_id'] === (int) $user['id']) { $myReview = $r; break; }
     }
 }
+
+$comments = get_visible_comments((int) $course['id'], $user ? (int) $user['id'] : null);
+$commentCount = 0;
+foreach ($comments as $c) $commentCount += 1 + count($c['replies']);
 
 $relatedCourses = $course['status'] === 'PUBLISHED'
     ? get_related_courses((int) $course['id'], (int) $course['category_id'], $user ? (int) $user['id'] : null)
@@ -273,6 +278,133 @@ require __DIR__ . '/../includes/header.php';
         </div>
       </div>
 
+      <div class="course-flat-sec" id="comments">
+        <div class="course-flat-sec-head"><span class="dash" aria-hidden="true"></span><h2>Discussion</h2></div>
+
+        <div data-comments-root data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-comment.php')) ?>" data-delete-url="<?= e(base_url('api/delete-comment.php')) ?>" data-like-url="<?= e(base_url('api/toggle-comment-like.php')) ?>">
+          <div class="comments-heading">
+            <span class="comments-heading-icon"><?php dash_icon('message-square'); ?></span>
+            <span style="font-weight:700; font-size:14.5px; color:var(--ink);"><?= number_format($commentCount) ?> Comment<?= $commentCount === 1 ? '' : 's' ?></span>
+          </div>
+
+          <?php if ($user): ?>
+            <form class="comment-form" data-comment-submit style="margin-top:16px;">
+              <div class="comment-form-avatar">
+                <?php if (!empty($user['avatar_url'])): ?><img src="<?= e(asset_src($user['avatar_url'])) ?>" alt="">
+                <?php else: ?><?= e(mb_substr($user['name'], 0, 1)) ?><?php endif; ?>
+              </div>
+              <div class="comment-form-body">
+                <textarea name="body" rows="2" placeholder="Ask a question or share your thoughts about this course..." maxlength="2000"></textarea>
+                <div class="comment-form-footer">
+                  <span class="comment-char-count" data-char-count>2000</span>
+                  <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                </div>
+                <p class="small hidden" data-comment-error style="color:var(--danger); margin-top:6px;"></p>
+              </div>
+            </form>
+          <?php else: ?>
+            <p class="muted" style="margin-top:16px;">
+              <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to join the discussion.
+            </p>
+          <?php endif; ?>
+
+          <?php if (!$comments): ?>
+            <div class="comment-empty">
+              <?php dash_icon('message-square'); ?>
+              <span>No comments yet — be the first to start the discussion.</span>
+            </div>
+          <?php else: ?>
+            <div class="clist" data-comment-list>
+              <?php foreach ($comments as $c): ?>
+                <div class="ccard" data-comment-id="<?= (int) $c['id'] ?>">
+                  <div class="head">
+                    <span class="avatar">
+                      <?php if (!empty($c['author_avatar_url'])): ?><img src="<?= e(asset_src($c['author_avatar_url'])) ?>" alt="">
+                      <?php else: ?><?= e(mb_substr($c['author_name'], 0, 1)) ?><?php endif; ?>
+                    </span>
+                    <div style="min-width:0;">
+                      <div class="name"><?= e($c['author_name']) ?></div>
+                      <div class="small muted"><?= e(time_ago($c['created_at'])) ?></div>
+                    </div>
+                    <?php if ($user && ((int) $user['id'] === (int) $c['user_id'] || $isOwner || $isAdmin)): ?>
+                      <button type="button" class="ccard-delete" data-comment-delete aria-label="Delete comment"><?php dash_icon('trash'); ?></button>
+                    <?php endif; ?>
+                  </div>
+                  <p class="comment"><?= e($c['body']) ?></p>
+                  <div class="comment-actions-row">
+                    <?php if ($user): ?>
+                      <button type="button" class="clike<?= $c['liked_by_me'] ? ' is-liked' : '' ?>" data-like-toggle data-comment-id="<?= (int) $c['id'] ?>">
+                        <svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg>
+                        <span data-like-count><?= (int) $c['like_count'] ?></span>
+                      </button>
+                    <?php elseif ($c['like_count'] > 0): ?>
+                      <span class="clike is-static"><svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg><?= (int) $c['like_count'] ?></span>
+                    <?php endif; ?>
+                    <?php if ($user): ?>
+                      <button type="button" class="comment-reply-toggle" data-reply-toggle data-reply-to-id="<?= (int) $c['id'] ?>" data-reply-to-name="<?= e($c['author_name']) ?>">Reply</button>
+                    <?php endif; ?>
+                  </div>
+
+                  <?php if ($c['replies']): ?>
+                    <div class="comment-replies">
+                      <?php foreach ($c['replies'] as $r): ?>
+                        <div class="comment-reply" data-comment-id="<?= (int) $r['id'] ?>">
+                          <div class="head">
+                            <span class="avatar">
+                              <?php if (!empty($r['author_avatar_url'])): ?><img src="<?= e(asset_src($r['author_avatar_url'])) ?>" alt="">
+                              <?php else: ?><?= e(mb_substr($r['author_name'], 0, 1)) ?><?php endif; ?>
+                            </span>
+                            <div style="min-width:0;">
+                              <div class="name"><?= e($r['author_name']) ?></div>
+                              <div class="small muted"><?= e(time_ago($r['created_at'])) ?></div>
+                            </div>
+                            <?php if ($user && ((int) $user['id'] === (int) $r['user_id'] || $isOwner || $isAdmin)): ?>
+                              <button type="button" class="ccard-delete" data-comment-delete aria-label="Delete reply"><?php dash_icon('trash'); ?></button>
+                            <?php endif; ?>
+                          </div>
+                          <?php if ($r['reply_to_author_name'] && (int) $r['reply_to_comment_id'] !== (int) $c['id']): ?>
+                            <div class="comment-reply-to">Replying to <?= e($r['reply_to_author_name']) ?></div>
+                          <?php endif; ?>
+                          <p class="comment"><?= e($r['body']) ?></p>
+                          <div class="comment-actions-row">
+                            <?php if ($user): ?>
+                              <button type="button" class="clike<?= $r['liked_by_me'] ? ' is-liked' : '' ?>" data-like-toggle data-comment-id="<?= (int) $r['id'] ?>">
+                                <svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg>
+                                <span data-like-count><?= (int) $r['like_count'] ?></span>
+                              </button>
+                            <?php elseif ($r['like_count'] > 0): ?>
+                              <span class="clike is-static"><svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg><?= (int) $r['like_count'] ?></span>
+                            <?php endif; ?>
+                            <?php if ($user): ?>
+                              <button type="button" class="comment-reply-toggle" data-reply-toggle data-reply-to-id="<?= (int) $r['id'] ?>" data-reply-to-name="<?= e($r['author_name']) ?>">Reply</button>
+                            <?php endif; ?>
+                          </div>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
+
+                  <?php if ($user): ?>
+                    <form class="comment-reply-form" data-comment-submit data-thread-id="<?= (int) $c['id'] ?>">
+                      <div class="comment-reply-to-chip hidden" data-reply-chip>
+                        Replying to <span data-reply-chip-name></span>
+                        <button type="button" data-reply-cancel aria-label="Cancel reply">&times;</button>
+                      </div>
+                      <textarea name="body" rows="2" placeholder="Write a reply..." maxlength="2000"></textarea>
+                      <div class="comment-form-footer">
+                        <span class="comment-char-count" data-char-count>2000</span>
+                        <button type="submit" class="btn btn-primary btn-sm">Reply</button>
+                      </div>
+                      <p class="small hidden" data-comment-error style="color:var(--danger); margin-top:6px;"></p>
+                    </form>
+                  <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+        </div>
+      </div>
+
       <?php if ($relatedCourses): ?>
         <div class="sab-head"><span class="dash" aria-hidden="true"></span><h2>Students Also Bought</h2></div>
         <p class="sab-sub">More from <?= e($course['category_name']) ?> — picked from what other learners on Obin Academy bought.</p>
@@ -440,4 +572,5 @@ require __DIR__ . '/../includes/header.php';
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script>
 <script src="<?= e(versioned_asset('assets/js/review.js')) ?>"></script>
+<script src="<?= e(versioned_asset('assets/js/comments.js')) ?>"></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

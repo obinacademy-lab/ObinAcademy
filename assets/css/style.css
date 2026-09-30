@@ -2819,11 +2819,28 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .ccard-delete svg { width: 15px; height: 15px; }
 .ccard-delete:hover { color: var(--danger); background: var(--danger-bg); }
 
+.comment-actions-row { margin-top: 10px; display: flex; align-items: center; gap: 18px; }
+
 .comment-reply-toggle {
-  display: inline-block; margin-top: 10px; background: none; border: none; padding: 0;
+  display: inline-block; background: none; border: none; padding: 0;
   font-size: 12.5px; font-weight: 700; color: var(--muted); cursor: pointer; transition: color 0.15s ease;
 }
 .comment-reply-toggle:hover { color: var(--accent); }
+
+/* TikTok-style heart-and-count — filled/pink only once liked, a quiet
+   outline otherwise, with a small pop on the tap itself. */
+.clike {
+  display: inline-flex; align-items: center; gap: 5px; background: none; border: none; padding: 0;
+  cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums;
+  transition: color 0.15s ease;
+}
+.clike svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+.clike:hover { color: var(--ink); }
+.clike.is-liked { color: #ff2d55; }
+.clike.is-liked svg { fill: #ff2d55; stroke: #ff2d55; transform: scale(1.15); }
+.clike:active svg { transform: scale(0.85); }
+.clike.is-static { cursor: default; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .clike svg { transition: none; } }
 
 /* Closed by default (max-height:0), expands smoothly to .open instead of
    an instant hidden/shown swap. */
@@ -3321,6 +3338,147 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 @media (max-width: 560px) {
   .profile-about-card { padding: 22px; }
 }
+
+/* ---------- school profile, Direction 2: "Editorial" (local exploration —
+   quieter, restrained, serif display type + a single gold rule, no card
+   shells, hairline dividers instead — see school-followers.php's own
+   Editorial direction for the same visual language). ---------- */
+.display-font { font-family: "Fraunces", Georgia, serif; }
+.profile-section-eyebrow-editorial {
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-dark);
+}
+.profile-section-eyebrow-editorial .rule { display: block; margin-top: 10px; width: 40px; height: 2px; background: var(--gold); }
+.profile-about-editorial { margin-top: 18px; }
+.profile-about-editorial .profile-bio { margin-top: 0; max-width: 640px; font-size: 16.5px; }
+.profile-about-social-row-editorial {
+  margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--border-strong);
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.profile-about-social-row-editorial .label {
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+.profile-section-head-editorial h2 { font-weight: 600; letter-spacing: -0.01em; }
+
+/* ---------- school profile, Direction 3: "Storefront" (local exploration —
+   real UX/retention additions: a sticky in-page sub-nav, a trust-signal
+   grid, a two-column About with a fact card, and a real testimonials
+   section pulled from actual reviews — not deployed). ---------- */
+.school-hero-rating {
+  margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  padding: 7px 14px; border-radius: var(--radius-full); background: rgba(0,0,0,0.03); border: 1px solid var(--border);
+  font-size: 13.5px; color: var(--ink); transition: border-color 0.15s ease;
+}
+.school-hero-rating:hover { border-color: var(--border-strong); }
+.school-hero-rating .stars { display: inline-flex; gap: 1px; }
+.school-hero-rating .star { color: var(--border-strong); font-size: 13px; }
+.school-hero-rating .star.filled { color: var(--gold); }
+.school-hero-rating strong { font-weight: 800; }
+.school-hero-rating .muted-inline { color: var(--muted); }
+
+.profile-subnav { position: sticky; top: 68px; z-index: 49; background: #fff; border-bottom: 1px solid var(--border); }
+.profile-subnav-inner { display: flex; gap: 28px; overflow-x: auto; }
+.profile-subnav a {
+  flex-shrink: 0; padding: 15px 2px; font-size: 13.5px; font-weight: 700; color: var(--muted);
+  text-decoration: none; border-bottom: 2px solid transparent; transition: color 0.15s ease, border-color 0.15s ease;
+}
+.profile-subnav a:hover { color: var(--ink); }
+
+.trust-grid-section { padding: 40px 0 0; }
+.trust-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 700px) { .trust-grid { grid-template-columns: repeat(4, 1fr); } }
+.trust-tile { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 20px; }
+.trust-tile .icon {
+  width: 38px; height: 38px; border-radius: 11px; background: color-mix(in srgb, var(--accent) 12%, white);
+  color: var(--accent-dark); display: flex; align-items: center; justify-content: center;
+}
+.trust-tile .icon svg { width: 18px; height: 18px; }
+.trust-tile .title { margin-top: 14px; font-size: 14.5px; font-weight: 800; color: var(--ink); }
+.trust-tile .desc { margin-top: 6px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+.profile-about-grid { margin-top: 16px; display: grid; grid-template-columns: 1fr; gap: 24px; }
+@media (min-width: 800px) { .profile-about-grid { grid-template-columns: 2fr 1fr; align-items: start; } }
+.profile-about-social-row { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.profile-about-social-row .label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.03em; text-transform: uppercase; }
+.profile-at-a-glance { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+.profile-at-a-glance .title { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.profile-at-a-glance .row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--border); }
+.profile-at-a-glance .row:first-of-type { border-top: none; margin-top: 6px; }
+.profile-at-a-glance .k { font-size: 13.5px; color: var(--muted); font-weight: 600; }
+.profile-at-a-glance .v { font-size: 14.5px; color: var(--ink); font-weight: 800; }
+
+.review-grid { margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 18px; }
+@media (min-width: 800px) { .review-grid { grid-template-columns: repeat(3, 1fr); } }
+.review-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; display: flex; flex-direction: column; }
+.review-card .stars { display: flex; gap: 2px; }
+.review-card .star { color: var(--border-strong); font-size: 14px; }
+.review-card .star.filled { color: var(--gold); }
+.review-card .comment { margin-top: 12px; font-size: 14.5px; line-height: 1.6; color: var(--ink); flex-grow: 1; }
+.review-card .reviewer { margin-top: 18px; display: flex; align-items: center; gap: 10px; }
+.review-card .reviewer .avatar {
+  width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent) 16%, white); color: var(--brand-900); font-weight: 800; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+.review-card .reviewer .avatar img { width: 100%; height: 100%; object-fit: cover; }
+.review-card .reviewer .name { font-size: 13px; font-weight: 700; color: var(--ink); }
+.review-card .reviewer .course { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+
+/* ---------- school profile, Direction 4: "Cinematic" (local exploration —
+   a full-bleed poster-style hero (real cover photo, or a rich gradient when
+   none exists) with the school's name set large directly on the image,
+   instead of a light hero + a separate small cover strip. Everything below
+   it drops the card/tile fragmentation from Direction 3 in favor of plain
+   generous-whitespace text and one real pull-quote — not deployed). ---------- */
+.school-hero-cinematic {
+  position: relative; min-height: 460px; display: flex; align-items: flex-end; overflow: hidden;
+  background-image: var(--bg-image, linear-gradient(155deg, var(--brand-950), var(--brand-900) 55%, #6d28d9));
+  background-size: cover; background-position: center; background-color: var(--brand-950);
+}
+.school-hero-cinematic-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgba(8,10,20,0.94) 0%, rgba(8,10,20,0.62) 42%, rgba(8,10,20,0.08) 100%);
+}
+.school-hero-cinematic-inner { position: relative; z-index: 1; padding: 80px 0 52px; color: #fff; }
+.school-hero-cinematic-inner .byline {
+  display: inline-flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 600; color: rgba(255,255,255,0.8);
+}
+.school-hero-cinematic-inner .byline .avatar {
+  width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 12px; flex-shrink: 0;
+}
+.school-hero-cinematic-inner .byline .avatar img { width: 100%; height: 100%; object-fit: cover; }
+.school-hero-cinematic-inner h1 {
+  margin-top: 16px; font-size: clamp(34px, 6vw, 60px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.04; color: #fff;
+}
+.school-hero-cinematic-inner .headline { margin-top: 12px; font-size: 17px; color: rgba(255,255,255,0.82); max-width: 560px; line-height: 1.55; }
+.school-hero-cinematic-inner .meta-line { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: rgba(255,255,255,0.88); font-variant-numeric: tabular-nums; }
+.school-hero-cinematic-inner .meta-line .dot { opacity: 0.45; }
+.school-hero-cinematic-inner .meta-line a { color: #fff; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,0.4); }
+.school-hero-cinematic-inner .meta-line a:hover { text-decoration-color: #fff; }
+.school-hero-cinematic-inner .actions { margin-top: 28px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.school-hero-cinematic-follow {
+  border: none; cursor: pointer; background: #fff; color: var(--ink); font-size: 14px; font-weight: 800;
+  padding: 12px 28px; border-radius: var(--radius-full); transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.school-hero-cinematic-follow:hover { background: color-mix(in srgb, #fff 90%, var(--surface)); transform: translateY(-1px); }
+.school-hero-cinematic-follow.is-following { background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+.school-hero-cinematic-edit {
+  color: #fff; font-size: 13.5px; font-weight: 700; padding: 11px 22px; border-radius: var(--radius-full);
+  border: 1px solid rgba(255,255,255,0.4); text-decoration: none; transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.school-hero-cinematic-edit:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+.profile-about-cinematic { max-width: 680px; padding-top: 52px; }
+.profile-bio-cinematic { font-size: 18px; line-height: 1.75; color: var(--ink); }
+.profile-about-cinematic .creator-social { margin-top: 22px; }
+
+.pull-quote-section { padding: 52px 0; }
+.pull-quote { max-width: 680px; margin: 0 auto; padding: 0 24px; text-align: center; }
+.pull-quote p {
+  margin: 0; font-size: clamp(20px, 3vw, 26px); font-weight: 600; line-height: 1.5; color: var(--ink); letter-spacing: -0.01em;
+}
+.pull-quote cite { display: block; margin-top: 16px; font-size: 13.5px; font-weight: 700; color: var(--muted); font-style: normal; }
 
 /* ---------- creator "school" hero (profile.php) — a creator's public page
    reads as their own school (own name, own courses, own students) rather

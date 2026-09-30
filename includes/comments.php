@@ -58,15 +58,22 @@ function add_comment(int $userId, int $courseId, string $body, ?int $replyToId =
  * single course/event page view, so a missing `comments` table/column
  * (deploy landed before its migration ran) must not 500 the entire site's
  * course/event pages — just show no comments until it exists.
+ * @param ?int $viewerUserId the logged-in visitor, if any — each row's
+ *   'liked_by_me' reflects THEIR like state; a guest sees like counts but
+ *   never a filled heart.
  */
-function get_visible_comments(int $courseId): array {
+function get_visible_comments(int $courseId, ?int $viewerUserId = null): array {
     try {
         $rows = db_all(
-            "SELECT c.*, u.name AS author_name, u.avatar_url AS author_avatar_url
+            "SELECT c.*, u.name AS author_name, u.avatar_url AS author_avatar_url,
+                    (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id) AS like_count,
+                    " . ($viewerUserId !== null
+                        ? "EXISTS(SELECT 1 FROM comment_likes cl2 WHERE cl2.comment_id = c.id AND cl2.user_id = ?) AS liked_by_me"
+                        : "0 AS liked_by_me") . "
              FROM comments c JOIN users u ON u.id = c.user_id
              WHERE c.course_id = ? AND c.status = 'VISIBLE'
              ORDER BY c.created_at ASC",
-            [$courseId]
+            $viewerUserId !== null ? [$viewerUserId, $courseId] : [$courseId]
         );
     } catch (Throwable $e) {
         return [];
@@ -75,6 +82,8 @@ function get_visible_comments(int $courseId): array {
     $byId = [];
     foreach ($rows as $row) {
         $row['replies'] = [];
+        $row['like_count'] = (int) $row['like_count'];
+        $row['liked_by_me'] = (bool) $row['liked_by_me'];
         $byId[(int) $row['id']] = $row;
     }
     foreach ($byId as $id => $row) {
@@ -99,4 +108,34 @@ function delete_comment(int $commentId, bool $canModerate): bool {
     if (!$comment) return false;
     db_run('DELETE FROM comments WHERE id = ?', [$commentId]);
     return true;
+}
+
+/**
+ * Toggles the current user's like on a comment or reply — inserts if not
+ * already liked, removes if it is. The unique key on (comment_id, user_id)
+ * is what actually prevents a double-like from two rapid clicks landing at
+ * once; the try/catch just means that race ends in the same "liked" state
+ * instead of a fatal error, and the final COUNT always reflects true state
+ * either way.
+ * @return array{liked: bool, count: int}
+ */
+function toggle_comment_like(int $userId, int $commentId): array {
+    $comment = db_one("SELECT id FROM comments WHERE id = ? AND status = 'VISIBLE'", [$commentId]);
+    if (!$comment) return ['liked' => false, 'count' => 0];
+
+    $existing = db_one('SELECT id FROM comment_likes WHERE comment_id = ? AND user_id = ?', [$commentId, $userId]);
+    if ($existing) {
+        db_run('DELETE FROM comment_likes WHERE id = ?', [$existing['id']]);
+        $liked = false;
+    } else {
+        try {
+            db_insert('INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)', [$commentId, $userId]);
+        } catch (Throwable $e) {
+            // Unique-key collision from a concurrent click — already liked, fine.
+        }
+        $liked = true;
+    }
+
+    $count = (int) db_one('SELECT COUNT(*) AS n FROM comment_likes WHERE comment_id = ?', [$commentId])['n'];
+    return ['liked' => $liked, 'count' => $count];
 }
