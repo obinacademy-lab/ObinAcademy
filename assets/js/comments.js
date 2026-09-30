@@ -48,7 +48,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.addEventListener("click", (e) => {
-    if (openPicker && !e.target.closest(".comment-emoji-picker") && !e.target.closest("[data-emoji-toggle]")) {
+    if (
+      openPicker &&
+      !e.target.closest(".comment-emoji-picker") &&
+      !e.target.closest("[data-emoji-toggle]") &&
+      !e.target.closest(".comment-gif-picker") &&
+      !e.target.closest("[data-gif-toggle]")
+    ) {
       closeOpenPicker();
     }
   });
