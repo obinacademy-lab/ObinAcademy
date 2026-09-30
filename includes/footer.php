@@ -179,5 +179,6 @@
   <script src="<?= e(versioned_asset('assets/js/cookie-consent.js')) ?>"></script>
   <script src="<?= e(versioned_asset('assets/js/visitor-tracker.js')) ?>"></script>
   <script src="<?= e(versioned_asset('assets/js/lead-capture.js')) ?>"></script>
+  <script src="<?= e(versioned_asset('assets/js/notifications.js')) ?>"></script>
 </body>
 </html>

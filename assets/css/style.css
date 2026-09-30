@@ -237,6 +237,11 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
   border-radius: var(--radius-full); background: var(--gold);
 }
 
+/* Always visible at every width (unlike .nav-actions, desktop-only) — the
+   notification bell needs to reach a learner on their phone as much as on
+   desktop, so it sits here next to the hamburger instead of hiding behind
+   the account-menu pill row. */
+.nav-right { display: flex; align-items: center; gap: 10px; }
 .nav-actions { display: none; align-items: center; gap: 16px; font-size: 14.5px; }
 .nav-actions a.link { color: var(--ink); text-decoration: none; font-weight: 600; transition: color 0.15s ease; }
 .nav-actions a.link:hover { color: var(--accent); }
@@ -3623,6 +3628,16 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .site-notif-dot { position: absolute; top: 6px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: #e0245e; border: 2px solid var(--brand-950, var(--ink)); }
 .site-notif-menu { position: relative; }
 .site-notif-dropdown { width: 320px; padding: 4px 0; }
+/* Below the 900px breakpoint, .nav-right (bell + hamburger) sits pushed to
+   the right edge of the header by the container's space-between, with the
+   bell immediately ahead of the ~44px-wide hamburger — not enough room on
+   EITHER side of the bell for a 320px panel anchored to it (right:0
+   overflows left, left:0 overflows right, tried and confirmed both).
+   Anchored to the viewport instead of the button fixes that regardless of
+   exactly where the bell sits. */
+@media (max-width: 899px) {
+  .site-notif-dropdown { position: fixed; top: 76px; left: 16px; right: 16px; width: auto; }
+}
 .site-notif-dropdown .account-dropdown-head { padding: 10px 14px 10px; }
 .site-notif-mark-read { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; }
 .site-notif-row { display: block; padding: 10px 14px; border-radius: 0; text-decoration: none; }

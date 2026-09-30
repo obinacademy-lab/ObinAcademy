@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/moderation.php';
+require_once __DIR__ . '/user_notifications.php';
 
 /**
  * Posting a comment needs an account, but never enrollment/a ticket — that's
@@ -21,15 +22,17 @@ function add_comment(int $userId, int $courseId, string $body, ?int $replyToId =
     if (mb_strlen($body) < 2) return ['error' => 'Comment is too short.'];
     if (mb_strlen($body) > 2000) return ['error' => 'Comment is too long (2000 characters max).'];
 
-    $course = db_one('SELECT id FROM courses WHERE id = ?', [$courseId]);
+    $course = db_one('SELECT id, title, slug, creator_id FROM courses WHERE id = ?', [$courseId]);
     if (!$course) return ['error' => 'Course not found.'];
 
     $parentId = null;
     $replyToCommentId = null;
+    $replyToAuthorId = null;
     if ($replyToId !== null) {
-        $target = db_one("SELECT id, parent_id FROM comments WHERE id = ? AND course_id = ? AND status = 'VISIBLE'", [$replyToId, $courseId]);
+        $target = db_one("SELECT id, parent_id, user_id FROM comments WHERE id = ? AND course_id = ? AND status = 'VISIBLE'", [$replyToId, $courseId]);
         if (!$target) return ['error' => 'The comment you\'re replying to no longer exists.'];
         $replyToCommentId = (int) $target['id'];
+        $replyToAuthorId = (int) $target['user_id'];
         $parentId = $target['parent_id'] !== null ? (int) $target['parent_id'] : (int) $target['id'];
     }
 
@@ -44,6 +47,19 @@ function add_comment(int $userId, int $courseId, string $body, ?int $replyToId =
         );
     } catch (Throwable $e) {
         return ['error' => 'Comments aren\'t available right now — please try again shortly.'];
+    }
+
+    // A blocked-language comment is hidden from everyone including the
+    // course creator, so nobody gets notified about something nobody but
+    // an admin will ever see.
+    if ($status === 'VISIBLE') {
+        $authorName = db_one('SELECT name FROM users WHERE id = ?', [$userId])['name'] ?? 'Someone';
+        $link = base_url('courses/view.php?slug=' . $course['slug'] . '#comments');
+        if ($replyToAuthorId !== null) {
+            create_user_notification($replyToAuthorId, $userId, 'COMMENT_REPLY', "{$authorName} replied to your comment on \"{$course['title']}\".", $link);
+        } else {
+            create_user_notification((int) $course['creator_id'], $userId, 'NEW_COMMENT', "{$authorName} commented on your course \"{$course['title']}\".", $link);
+        }
     }
 
     return ['ok' => true, 'hidden' => $status === 'HIDDEN', 'id' => $id];
@@ -120,7 +136,12 @@ function delete_comment(int $commentId, bool $canModerate): bool {
  * @return array{liked: bool, count: int}
  */
 function toggle_comment_like(int $userId, int $commentId): array {
-    $comment = db_one("SELECT id FROM comments WHERE id = ? AND status = 'VISIBLE'", [$commentId]);
+    $comment = db_one(
+        "SELECT c.id, c.user_id, co.title AS course_title, co.slug AS course_slug
+         FROM comments c JOIN courses co ON co.id = c.course_id
+         WHERE c.id = ? AND c.status = 'VISIBLE'",
+        [$commentId]
+    );
     if (!$comment) return ['liked' => false, 'count' => 0];
 
     $existing = db_one('SELECT id FROM comment_likes WHERE comment_id = ? AND user_id = ?', [$commentId, $userId]);
@@ -130,6 +151,12 @@ function toggle_comment_like(int $userId, int $commentId): array {
     } else {
         try {
             db_insert('INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)', [$commentId, $userId]);
+            // Only on the like itself, never the unlike — an unlike undoing a
+            // moment ago isn't news, and re-notifying on every toggle would
+            // just spam whoever posted the comment.
+            $likerName = db_one('SELECT name FROM users WHERE id = ?', [$userId])['name'] ?? 'Someone';
+            $link = base_url('courses/view.php?slug=' . $comment['course_slug'] . '#comments');
+            create_user_notification((int) $comment['user_id'], $userId, 'COMMENT_LIKE', "{$likerName} liked your comment on \"{$comment['course_title']}\".", $link);
         } catch (Throwable $e) {
             // Unique-key collision from a concurrent click — already liked, fine.
         }

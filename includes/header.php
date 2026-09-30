@@ -50,7 +50,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800<?= isset($extraGoogleFont) ? '&family=' . e($extraGoogleFont) : '' ?>&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
 </head>
 <body id="top">
@@ -58,7 +58,26 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
     <div class="container">
       <?php render_logo(); ?>
 
-      <div class="nav-actions">
+      <div class="nav-right">
+        <?php if ($user): ?>
+          <div class="site-notif-menu account-menu">
+            <button type="button" class="site-icon-btn" aria-haspopup="true" aria-label="Notifications" data-notif-trigger>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span class="site-notif-dot hidden" data-notif-dot></span>
+            </button>
+            <div class="account-dropdown site-notif-dropdown">
+              <div class="account-dropdown-head" style="display:flex; align-items:center; justify-content:space-between;">
+                <span class="name" style="font-size:13px;">Notifications</span>
+                <button type="button" class="site-notif-mark-read hidden" data-notif-mark-read>Mark all read</button>
+              </div>
+              <div data-notif-list>
+                <p class="muted small" style="padding:14px;">No notifications yet.</p>
+              </div>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <div class="nav-actions">
         <?php if ($user): ?>
           <div class="account-menu">
             <button class="account-trigger" aria-haspopup="true">
@@ -94,12 +113,13 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           <a href="<?= e(base_url('become-affiliate.php')) ?>" class="btn btn-gold btn-sm shine">Become an Affiliate</a>
           <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-primary btn-sm shine">Create Your School <span class="btn-arrow">→</span></a>
         <?php endif; ?>
-      </div>
+        </div>
 
-      <button class="nav-toggle" data-nav-toggle aria-label="Toggle menu" aria-expanded="false">
-        <svg class="icon-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
-        <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-      </button>
+        <button class="nav-toggle" data-nav-toggle aria-label="Toggle menu" aria-expanded="false">
+          <svg class="icon-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+          <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
     </div>
   </header>
 
