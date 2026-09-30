@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/moderation.php';
 require_once __DIR__ . '/user_notifications.php';
+require_once __DIR__ . '/giphy.php';
 
 /**
  * Posting a comment needs an account, but never enrollment/a ticket — that's
@@ -14,12 +15,18 @@ require_once __DIR__ . '/user_notifications.php';
  *   separately, the *structural* parent_id always resolves up to that
  *   comment's top-level ancestor, since visual nesting is capped at two
  *   levels regardless of how deep the conversation actually goes.
+ * @param ?string $gifUrl an attached GIF sticker's URL, as returned by
+ *   includes/giphy.php — a comment needs body text, a GIF, or both. Anything
+ *   not actually on Giphy's media CDN (someone bypassing the picker UI and
+ *   POSTing a crafted value directly) is silently dropped rather than
+ *   rejecting the whole comment, same defensive stance as elsewhere here.
  * @return array{ok?: bool, hidden?: bool, id?: int, error?: string}
  */
-function add_comment(int $userId, int $courseId, string $body, ?int $replyToId = null): array {
+function add_comment(int $userId, int $courseId, string $body, ?int $replyToId = null, ?string $gifUrl = null): array {
     $body = trim($body);
-    if ($body === '') return ['error' => 'Write a comment before posting.'];
-    if (mb_strlen($body) < 2) return ['error' => 'Comment is too short.'];
+    if (!gif_url_is_trusted($gifUrl)) $gifUrl = null;
+    if ($body === '' && $gifUrl === null) return ['error' => 'Write a comment or attach a GIF before posting.'];
+    if ($body !== '' && mb_strlen($body) < 2) return ['error' => 'Comment is too short.'];
     if (mb_strlen($body) > 2000) return ['error' => 'Comment is too long (2000 characters max).'];
 
     $course = db_one('SELECT id, title, slug, creator_id FROM courses WHERE id = ?', [$courseId]);
@@ -42,8 +49,8 @@ function add_comment(int $userId, int $courseId, string $body, ?int $replyToId =
 
     try {
         $id = db_insert(
-            'INSERT INTO comments (body, status, hidden_reason, user_id, course_id, parent_id, reply_to_comment_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [$body, $status, $hiddenReason, $userId, $courseId, $parentId, $replyToCommentId]
+            'INSERT INTO comments (body, gif_url, status, hidden_reason, user_id, course_id, parent_id, reply_to_comment_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [$body, $gifUrl, $status, $hiddenReason, $userId, $courseId, $parentId, $replyToCommentId]
         );
     } catch (Throwable $e) {
         return ['error' => 'Comments aren\'t available right now — please try again shortly.'];

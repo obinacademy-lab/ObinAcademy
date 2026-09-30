@@ -93,6 +93,110 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // GIF picker — one panel per toggle button (main composer + each reply
+  // form), built lazily and reused, sharing the same openPicker/
+  // closeOpenPicker single-panel-at-a-time tracking as the emoji picker
+  // above. Unlike emoji (multi-select, stays open), picking a GIF is a
+  // single choice: it fills the form's hidden gifUrl input, shows a
+  // preview, and closes the panel — a comment carries at most one GIF.
+  function debounce(fn, ms) {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), ms);
+    };
+  }
+
+  document.querySelectorAll("[data-gif-toggle]").forEach((toggle) => {
+    const form = toggle.closest("form");
+    const footer = toggle.closest(".comment-form-footer");
+    const root = toggle.closest("[data-comments-root]");
+    const searchUrl = root?.dataset.gifSearchUrl;
+    const preview = form?.querySelector("[data-gif-preview]");
+    const previewImg = form?.querySelector("[data-gif-preview-img]");
+    const gifUrlInput = form?.querySelector("[data-gif-url-input]");
+    if (!footer || !form || !searchUrl || !gifUrlInput) return;
+
+    form.querySelector("[data-gif-remove]")?.addEventListener("click", () => {
+      gifUrlInput.value = "";
+      preview.classList.add("hidden");
+    });
+
+    let panel = null;
+    let grid = null;
+    let searchInput = null;
+
+    function renderGifs(gifs) {
+      grid.innerHTML = "";
+      if (!gifs.length) {
+        grid.innerHTML = '<p class="comment-gif-empty">No GIFs found.</p>';
+        return;
+      }
+      gifs.forEach((gif) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "comment-gif-tile";
+        const img = document.createElement("img");
+        img.src = gif.previewUrl;
+        img.alt = "";
+        img.loading = "lazy";
+        btn.appendChild(img);
+        btn.addEventListener("click", () => {
+          gifUrlInput.value = gif.url;
+          previewImg.src = gif.previewUrl;
+          preview.classList.remove("hidden");
+          closeOpenPicker();
+        });
+        grid.appendChild(btn);
+      });
+    }
+
+    async function fetchGifs(q) {
+      grid.innerHTML = '<p class="comment-gif-empty">Loading…</p>';
+      try {
+        const res = await fetch(searchUrl + "?q=" + encodeURIComponent(q));
+        const data = await res.json();
+        if (!Array.isArray(data.gifs)) throw new Error("bad response");
+        renderGifs(data.gifs);
+      } catch {
+        grid.innerHTML = '<p class="comment-gif-empty">GIFs aren\'t available right now.</p>';
+      }
+    }
+
+    const debouncedSearch = debounce((q) => fetchGifs(q), 350);
+
+    toggle.addEventListener("click", () => {
+      if (openPicker && openPicker.toggle === toggle) {
+        closeOpenPicker();
+        return;
+      }
+      closeOpenPicker();
+
+      if (!panel) {
+        panel = document.createElement("div");
+        panel.className = "comment-gif-picker hidden";
+        searchInput = document.createElement("input");
+        searchInput.type = "text";
+        searchInput.placeholder = "Search GIFs…";
+        searchInput.className = "comment-gif-search";
+        searchInput.addEventListener("input", () => debouncedSearch(searchInput.value.trim()));
+        grid = document.createElement("div");
+        grid.className = "comment-gif-grid";
+        const attrib = document.createElement("div");
+        attrib.className = "comment-gif-attrib";
+        attrib.textContent = "Powered by GIPHY";
+        panel.append(searchInput, grid, attrib);
+        footer.appendChild(panel);
+        fetchGifs("");
+      }
+
+      panel.classList.remove("hidden");
+      toggle.classList.add("open");
+      openPicker = { toggle, panel };
+      searchInput?.focus();
+    });
+  });
+
   document.querySelectorAll("[data-comments-root]").forEach((root) => {
     const courseId = root.dataset.courseId;
     const submitUrl = root.dataset.submitUrl;
@@ -175,19 +279,21 @@ document.addEventListener("DOMContentLoaded", () => {
       wireCharCount(form);
       const errorBox = form.querySelector("[data-comment-error]");
       const textarea = form.querySelector('textarea[name="body"]');
+      const gifUrlInput = form.querySelector("[data-gif-url-input]");
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         errorBox.classList.add("hidden");
         const body = textarea.value.trim();
-        if (!body) return;
+        const gifUrl = gifUrlInput?.value || null;
+        if (!body && !gifUrl) return;
         const parentId = form.dataset.replyToId || form.dataset.threadId || null;
 
         try {
           const res = await fetch(submitUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ courseId, body, parentId, csrf_token: csrfToken }),
+            body: JSON.stringify({ courseId, body, parentId, gifUrl, csrf_token: csrfToken }),
           });
           const data = await res.json();
           if (data.error) {

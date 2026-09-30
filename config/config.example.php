@@ -25,3 +25,6 @@ define('IOTEC_CLIENT_SECRET', '');
 // Use the TEST wallet ID while developing. Swap to your live wallet ID only
 // once you're ready to accept real learner payments.
 define('IOTEC_WALLET_ID', '');
+
+// --- GIF stickers (Giphy — developers.giphy.com, free Beta key) ------------
+define('GIPHY_API_KEY', '');

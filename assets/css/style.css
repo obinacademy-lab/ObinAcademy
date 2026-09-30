@@ -2814,6 +2814,56 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   .comment-emoji-picker { width: 100%; left: 0; grid-template-columns: repeat(7, 1fr); }
 }
 
+/* ---------- GIF picker (comment/reply composer) ---------- */
+.comment-gif-toggle {
+  display: flex; align-items: center; justify-content: center; height: 30px; flex-shrink: 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 15px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; color: var(--muted);
+  cursor: pointer; padding: 0 10px; line-height: 1; transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.comment-gif-toggle:hover, .comment-gif-toggle.open {
+  background: color-mix(in srgb, var(--accent) 10%, #fff); border-color: var(--accent); color: var(--accent);
+}
+.comment-gif-picker {
+  position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 40; width: 280px;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px -16px rgba(20,24,27,0.28); padding: 10px;
+}
+.comment-gif-search {
+  width: 100%; border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+  font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 12px; margin-bottom: 8px;
+}
+.comment-gif-search:focus { outline: none; border-color: var(--border-strong); }
+.comment-gif-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  max-height: 220px; overflow-y: auto;
+}
+.comment-gif-tile {
+  aspect-ratio: 1 / 1; border: none; border-radius: 8px; overflow: hidden; padding: 0;
+  cursor: pointer; background: var(--surface);
+}
+.comment-gif-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.comment-gif-empty {
+  grid-column: 1 / -1; text-align: center; font-size: 12.5px; color: var(--muted); padding: 18px 0; margin: 0;
+}
+.comment-gif-attrib { text-align: right; font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+@media (max-width: 420px) {
+  .comment-gif-picker { width: 100%; left: 0; }
+}
+
+/* the GIF attached to the composer before posting, and to a posted comment */
+.comment-gif-preview {
+  position: relative; display: inline-block; margin: 6px 0; max-width: 160px;
+}
+.comment-gif-preview img { width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block; }
+.comment-gif-preview [data-gif-remove] {
+  position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--ink); color: #fff; border: 2px solid #fff; font-size: 14px; line-height: 1;
+  cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center;
+}
+.comment-gif { max-width: 200px; margin: 4px 0 8px; }
+.comment-gif img { width: 100%; border-radius: 12px; display: block; }
+
 .comment-empty {
   margin-top: 18px; padding: 28px 20px; text-align: center; border: 1.5px dashed var(--border);
   border-radius: var(--radius-lg); display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted);

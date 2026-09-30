@@ -281,7 +281,7 @@ require __DIR__ . '/../includes/header.php';
       <div class="course-flat-sec" id="comments">
         <div class="course-flat-sec-head"><span class="dash" aria-hidden="true"></span><h2>Discussion</h2></div>
 
-        <div data-comments-root data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-comment.php')) ?>" data-delete-url="<?= e(base_url('api/delete-comment.php')) ?>" data-like-url="<?= e(base_url('api/toggle-comment-like.php')) ?>">
+        <div data-comments-root data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-comment.php')) ?>" data-delete-url="<?= e(base_url('api/delete-comment.php')) ?>" data-like-url="<?= e(base_url('api/toggle-comment-like.php')) ?>" data-gif-search-url="<?= e(base_url('api/search-gifs.php')) ?>">
           <div class="comments-heading">
             <span class="comments-heading-icon"><?php dash_icon('message-square'); ?></span>
             <span style="font-weight:700; font-size:14.5px; color:var(--ink);"><?= number_format($commentCount) ?> Comment<?= $commentCount === 1 ? '' : 's' ?></span>
@@ -295,8 +295,14 @@ require __DIR__ . '/../includes/header.php';
               </div>
               <div class="comment-form-body">
                 <textarea name="body" rows="2" placeholder="Ask a question or share your thoughts about this course..." maxlength="2000"></textarea>
+                <div class="comment-gif-preview hidden" data-gif-preview>
+                  <img data-gif-preview-img src="" alt="Attached GIF">
+                  <button type="button" data-gif-remove aria-label="Remove GIF">&times;</button>
+                </div>
+                <input type="hidden" name="gifUrl" data-gif-url-input value="">
                 <div class="comment-form-footer">
                   <button type="button" class="comment-emoji-toggle" data-emoji-toggle aria-label="Add an emoji">😊</button>
+                  <button type="button" class="comment-gif-toggle" data-gif-toggle aria-label="Add a GIF">GIF</button>
                   <span class="comment-char-count" data-char-count>2000</span>
                   <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
                 </div>
@@ -331,7 +337,8 @@ require __DIR__ . '/../includes/header.php';
                       <button type="button" class="ccard-delete" data-comment-delete aria-label="Delete comment"><?php dash_icon('trash'); ?></button>
                     <?php endif; ?>
                   </div>
-                  <p class="comment"><?= e($c['body']) ?></p>
+                  <?php if ($c['body'] !== ''): ?><p class="comment"><?= e($c['body']) ?></p><?php endif; ?>
+                  <?php if (gif_url_is_trusted($c['gif_url'] ?? null)): ?><div class="comment-gif"><img src="<?= e($c['gif_url']) ?>" alt="" loading="lazy"></div><?php endif; ?>
                   <div class="comment-actions-row">
                     <?php if ($user): ?>
                       <button type="button" class="clike<?= $c['liked_by_me'] ? ' is-liked' : '' ?>" data-like-toggle data-comment-id="<?= (int) $c['id'] ?>">
@@ -366,7 +373,8 @@ require __DIR__ . '/../includes/header.php';
                           <?php if ($r['reply_to_author_name'] && (int) $r['reply_to_comment_id'] !== (int) $c['id']): ?>
                             <div class="comment-reply-to">Replying to <?= e($r['reply_to_author_name']) ?></div>
                           <?php endif; ?>
-                          <p class="comment"><?= e($r['body']) ?></p>
+                          <?php if ($r['body'] !== ''): ?><p class="comment"><?= e($r['body']) ?></p><?php endif; ?>
+                          <?php if (gif_url_is_trusted($r['gif_url'] ?? null)): ?><div class="comment-gif"><img src="<?= e($r['gif_url']) ?>" alt="" loading="lazy"></div><?php endif; ?>
                           <div class="comment-actions-row">
                             <?php if ($user): ?>
                               <button type="button" class="clike<?= $r['liked_by_me'] ? ' is-liked' : '' ?>" data-like-toggle data-comment-id="<?= (int) $r['id'] ?>">
@@ -392,8 +400,14 @@ require __DIR__ . '/../includes/header.php';
                         <button type="button" data-reply-cancel aria-label="Cancel reply">&times;</button>
                       </div>
                       <textarea name="body" rows="2" placeholder="Write a reply..." maxlength="2000"></textarea>
+                      <div class="comment-gif-preview hidden" data-gif-preview>
+                        <img data-gif-preview-img src="" alt="Attached GIF">
+                        <button type="button" data-gif-remove aria-label="Remove GIF">&times;</button>
+                      </div>
+                      <input type="hidden" name="gifUrl" data-gif-url-input value="">
                       <div class="comment-form-footer">
                         <button type="button" class="comment-emoji-toggle" data-emoji-toggle aria-label="Add an emoji">😊</button>
+                        <button type="button" class="comment-gif-toggle" data-gif-toggle aria-label="Add a GIF">GIF</button>
                         <span class="comment-char-count" data-char-count>2000</span>
                         <button type="submit" class="btn btn-primary btn-sm">Reply</button>
                       </div>

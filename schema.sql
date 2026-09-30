@@ -798,6 +798,11 @@ CREATE TABLE reviews (
 CREATE TABLE comments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   body TEXT NOT NULL,
+  -- An attached GIF sticker (from Giphy) — a comment may carry text, a GIF,
+  -- or both. Only ever set to a URL on Giphy's own media CDN, validated by
+  -- add_comment() at write time and again by the template at render time,
+  -- since this is rendered as an unescaped <img src> (see courses/view.php).
+  gif_url VARCHAR(500) NULL,
   status ENUM('VISIBLE','HIDDEN') NOT NULL DEFAULT 'VISIBLE',
   hidden_reason VARCHAR(255) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
