@@ -51,14 +51,22 @@ function add_comment(int $userId, int $courseId, string $body, ?int $replyToId =
 
     // A blocked-language comment is hidden from everyone including the
     // course creator, so nobody gets notified about something nobody but
-    // an admin will ever see.
+    // an admin will ever see. Wrapped in its own try/catch, same defensive
+    // reasoning as get_visible_comments()'s: a missing user_notifications
+    // table (deploy landed before its migration ran) must not break
+    // posting a comment — the comment itself already succeeded above, and
+    // a lost notification is a much smaller problem than a 500 on submit.
     if ($status === 'VISIBLE') {
-        $authorName = db_one('SELECT name FROM users WHERE id = ?', [$userId])['name'] ?? 'Someone';
-        $link = base_url('courses/view.php?slug=' . $course['slug'] . '#comments');
-        if ($replyToAuthorId !== null) {
-            create_user_notification($replyToAuthorId, $userId, 'COMMENT_REPLY', "{$authorName} replied to your comment on \"{$course['title']}\".", $link);
-        } else {
-            create_user_notification((int) $course['creator_id'], $userId, 'NEW_COMMENT', "{$authorName} commented on your course \"{$course['title']}\".", $link);
+        try {
+            $authorName = db_one('SELECT name FROM users WHERE id = ?', [$userId])['name'] ?? 'Someone';
+            $link = base_url('courses/view.php?slug=' . $course['slug'] . '#comments');
+            if ($replyToAuthorId !== null) {
+                create_user_notification($replyToAuthorId, $userId, 'COMMENT_REPLY', "{$authorName} replied to your comment on \"{$course['title']}\".", $link);
+            } else {
+                create_user_notification((int) $course['creator_id'], $userId, 'NEW_COMMENT', "{$authorName} commented on your course \"{$course['title']}\".", $link);
+            }
+        } catch (Throwable $e) {
+            // Notification failed — the comment itself still posted fine above.
         }
     }
 
@@ -158,7 +166,10 @@ function toggle_comment_like(int $userId, int $commentId): array {
             $link = base_url('courses/view.php?slug=' . $comment['course_slug'] . '#comments');
             create_user_notification((int) $comment['user_id'], $userId, 'COMMENT_LIKE', "{$likerName} liked your comment on \"{$comment['course_title']}\".", $link);
         } catch (Throwable $e) {
-            // Unique-key collision from a concurrent click — already liked, fine.
+            // Unique-key collision from a concurrent click (already liked, fine)
+            // or a missing user_notifications table (deploy landed before its
+            // migration ran) — either way the like itself is already recorded
+            // above, so this is never worse than a lost notification.
         }
         $liked = true;
     }
