@@ -296,6 +296,7 @@ require __DIR__ . '/../includes/header.php';
               <div class="comment-form-body">
                 <textarea name="body" rows="2" placeholder="Ask a question or share your thoughts about this course..." maxlength="2000"></textarea>
                 <div class="comment-form-footer">
+                  <button type="button" class="comment-emoji-toggle" data-emoji-toggle aria-label="Add an emoji">😊</button>
                   <span class="comment-char-count" data-char-count>2000</span>
                   <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
                 </div>
@@ -392,6 +393,7 @@ require __DIR__ . '/../includes/header.php';
                       </div>
                       <textarea name="body" rows="2" placeholder="Write a reply..." maxlength="2000"></textarea>
                       <div class="comment-form-footer">
+                        <button type="button" class="comment-emoji-toggle" data-emoji-toggle aria-label="Add an emoji">😊</button>
                         <span class="comment-char-count" data-char-count>2000</span>
                         <button type="submit" class="btn btn-primary btn-sm">Reply</button>
                       </div>

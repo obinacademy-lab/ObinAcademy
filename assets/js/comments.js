@@ -23,6 +23,76 @@ document.addEventListener("DOMContentLoaded", () => {
     update();
   }
 
+  // Emoji picker — one shared list, a panel built lazily on each toggle
+  // button's first click (there can be one per form: the main composer
+  // plus one per open reply thread) and reused after that. Only one panel
+  // stays open at a time; picking an emoji inserts it at the textarea's
+  // actual cursor position and keeps the panel open, so tapping several in
+  // a row (the TikTok-style flurry-of-emoji habit this is built for) works
+  // without re-opening it each time.
+  const EMOJI = [
+    "😀", "😂", "🤣", "😊", "😍", "🥰", "😎", "🤔",
+    "😅", "😉", "😇", "🥳", "😮", "😢", "😭", "😡",
+    "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "🤝",
+    "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍",
+    "🔥", "✨", "⭐", "🎉", "🎊", "💯", "🚀", "🎯",
+    "📚", "✅", "❌", "💡", "🤩", "😴", "🙃", "😱",
+  ];
+  let openPicker = null;
+
+  function closeOpenPicker() {
+    if (!openPicker) return;
+    openPicker.panel.classList.add("hidden");
+    openPicker.toggle.classList.remove("open");
+    openPicker = null;
+  }
+
+  document.addEventListener("click", (e) => {
+    if (openPicker && !e.target.closest(".comment-emoji-picker") && !e.target.closest("[data-emoji-toggle]")) {
+      closeOpenPicker();
+    }
+  });
+
+  document.querySelectorAll("[data-emoji-toggle]").forEach((toggle) => {
+    const footer = toggle.closest(".comment-form-footer");
+    const textarea = footer?.parentElement.querySelector('textarea[name="body"]');
+    if (!footer || !textarea) return;
+
+    let panel = null;
+    toggle.addEventListener("click", () => {
+      if (openPicker && openPicker.toggle === toggle) {
+        closeOpenPicker();
+        return;
+      }
+      closeOpenPicker();
+
+      if (!panel) {
+        panel = document.createElement("div");
+        panel.className = "comment-emoji-picker hidden";
+        EMOJI.forEach((emoji) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = emoji;
+          btn.addEventListener("click", () => {
+            const start = textarea.selectionStart ?? textarea.value.length;
+            const end = textarea.selectionEnd ?? textarea.value.length;
+            textarea.value = textarea.value.slice(0, start) + emoji + textarea.value.slice(end);
+            const caret = start + emoji.length;
+            textarea.focus();
+            textarea.setSelectionRange(caret, caret);
+            textarea.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+          panel.appendChild(btn);
+        });
+        footer.appendChild(panel);
+      }
+
+      panel.classList.remove("hidden");
+      toggle.classList.add("open");
+      openPicker = { toggle, panel };
+    });
+  });
+
   document.querySelectorAll("[data-comments-root]").forEach((root) => {
     const courseId = root.dataset.courseId;
     const submitUrl = root.dataset.submitUrl;
