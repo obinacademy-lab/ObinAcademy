@@ -3308,6 +3308,20 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .profile-section-head h2 { font-size: 19px; font-weight: 800; }
 .profile-section-head .count { font-size: 13.5px; color: var(--muted); font-weight: 600; }
 
+/* ---------- school profile: "About This School" (profile.php, creator branch) ---------- */
+.profile-section-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+.profile-about-card {
+  margin-top: 14px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 32px; box-shadow: 0 1px 2px rgba(20,24,27,0.04), 0 8px 24px -14px rgba(20,24,27,0.14);
+}
+.profile-about-card .profile-bio { margin-top: 0; max-width: none; }
+.profile-about-social-row { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.profile-about-social-row .label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.03em; text-transform: uppercase; }
+.profile-about-social-row .creator-social { margin-top: 0; }
+@media (max-width: 560px) {
+  .profile-about-card { padding: 22px; }
+}
+
 /* ---------- creator "school" hero (profile.php) — a creator's public page
    reads as their own school (own name, own courses, own students) rather
    than a generic member-profile card. Flat like every other hero now

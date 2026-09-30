@@ -89,9 +89,15 @@ require __DIR__ . '/includes/header.php';
   </section>
 
   <?php if ($profile['bio'] || array_filter($socials)): ?>
-    <div class="container" style="max-width:900px; padding-top:40px; text-align:center;">
-      <?php if ($profile['bio']): ?><div class="profile-bio" style="margin:0 auto; max-width:none; text-align:left; font-size:17px;"><?= nl2br(e($profile['bio'])) ?></div><?php endif; ?>
-      <?php render_social_links($socials); ?>
+    <div class="container" style="max-width:900px; padding-top:40px; text-align:left;">
+      <div class="profile-section-eyebrow">About This School</div>
+      <div class="profile-about-card">
+        <?php if ($profile['bio']): ?><div class="profile-bio" style="font-size:16px;"><?= nl2br(e($profile['bio'])) ?></div><?php endif; ?>
+        <div class="profile-about-social-row">
+          <span class="label">Follow <?= e($schoolLabel) ?></span>
+          <?php render_social_links($socials); ?>
+        </div>
+      </div>
     </div>
   <?php endif; ?>
 
@@ -117,7 +123,8 @@ require __DIR__ . '/includes/header.php';
     <?php endif; ?>
     <?php if ($stats['teaching'] > 0): ?>
       <div class="profile-section" style="margin-top:<?= $publishedBundles ? '44px' : '0' ?>;">
-        <div class="profile-section-head">
+        <div class="profile-section-eyebrow">Courses</div>
+        <div class="profile-section-head" style="margin-top:6px;">
           <h2><?= e($profile['name']) ?>'s Courses</h2>
           <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
         </div>
