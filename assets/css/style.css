@@ -3369,6 +3369,66 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .member-directory-row .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
 .member-directory-row .role-tag { margin-left: auto; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--brand-800); background: rgba(29,78,216,0.09); padding: 3px 9px; border-radius: var(--radius-full); flex-shrink: 0; }
 
+/* ---------- followers page (school-followers.php) ---------- */
+.followers-back-link {
+  display: inline-flex; align-items: center; gap: 9px; padding: 7px 14px 7px 8px; border-radius: var(--radius-full);
+  background: #fff; border: 1px solid var(--border); font-size: 13px; font-weight: 700; color: var(--muted);
+  box-shadow: 0 1px 2px rgba(20,24,27,0.04); text-decoration: none; transition: border-color 0.15s ease, color 0.15s ease;
+}
+.followers-back-link:hover { border-color: var(--border-strong); color: var(--ink); }
+.followers-back-link .icon {
+  width: 22px; height: 22px; border-radius: var(--radius-full); background: var(--surface);
+  display: flex; align-items: center; justify-content: center; color: var(--ink); flex-shrink: 0;
+}
+.followers-back-link .icon svg { width: 13px; height: 13px; }
+
+.followers-identity { margin-top: 30px; display: flex; align-items: center; gap: 16px; }
+.followers-identity-avatar {
+  width: 60px; height: 60px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, white), var(--surface));
+  color: var(--brand-900); font-weight: 800; font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 4px var(--gold);
+}
+.followers-identity-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.followers-identity h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.followers-count-badge {
+  margin-top: 6px; display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px; border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--gold) 16%, white); border: 1px solid color-mix(in srgb, var(--gold) 32%, var(--border));
+  font-size: 12.5px; font-weight: 700; color: #7a5206;
+}
+.followers-count-badge .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--gold-dark); }
+
+.followers-section-label {
+  margin-top: 40px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase;
+}
+
+.followers-panel {
+  margin-top: 14px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px rgba(20,24,27,0.04), 0 8px 24px -14px rgba(20,24,27,0.14); overflow: hidden;
+}
+.followers-row { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.followers-row:last-child { border-bottom: none; }
+.followers-row-avatar {
+  width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--tint, var(--brand-800)), var(--brand-950));
+  box-shadow: 0 0 0 3px #fff, 0 0 0 4px var(--border);
+  color: #fff; font-weight: 800; font-size: 17px; display: flex; align-items: center; justify-content: center;
+}
+.followers-row-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.followers-row-name { flex-grow: 1; min-width: 0; font-size: 15.5px; font-weight: 800; color: var(--ink); }
+.followers-row-since {
+  flex-shrink: 0; padding: 5px 13px; border-radius: var(--radius-full); background: var(--surface);
+  font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap;
+}
+@media (max-width: 560px) {
+  .followers-identity { gap: 12px; }
+  .followers-identity-avatar { width: 52px; height: 52px; font-size: 19px; }
+  .followers-identity h1 { font-size: 21px; }
+  .followers-row { padding: 16px; gap: 12px; flex-wrap: wrap; }
+  .followers-row-since { flex-basis: calc(100% - 64px); margin-left: 64px; width: fit-content; box-sizing: border-box; }
+}
+
 /* ---------- study group chat ---------- */
 .chat-message { display: flex; align-items: flex-end; gap: 8px; max-width: 78%; }
 .chat-message.mine { align-self: flex-end; flex-direction: row-reverse; max-width: 78%; }
