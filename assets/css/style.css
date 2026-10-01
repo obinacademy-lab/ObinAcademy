@@ -2274,7 +2274,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .home-discover { background: var(--surface); }
 .home-discover-hero { max-width: 960px; margin: 0 auto; padding: 60px 24px 0; text-align: center; }
 .home-discover-hero h1 {
-  margin: 0; font-size: clamp(46px, 10.5vw, 88px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; color: var(--accent);
+  margin: 0; font-size: clamp(26px, 8.4vw, 88px); white-space: nowrap; font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; color: var(--accent);
   animation: hero-rise 0.6s cubic-bezier(0.16,1,0.3,1) both;
 }
 .home-discover-hero .sub {
