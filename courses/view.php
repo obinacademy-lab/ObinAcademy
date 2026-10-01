@@ -305,16 +305,16 @@ require __DIR__ . '/../includes/header.php';
                   <?php endif; ?>
                   <div class="bubble-stack">
                     <?php if (!$isMine): ?><span class="sender-name"><?= e($c['author_name']) ?></span><?php endif; ?>
-                    <div class="bubble">
+                    <div class="cbubble">
                       <?php if ($c['reply_to_author_name']): ?>
-                        <span class="quote">
+                        <span class="reply-quote">
                           <span class="qname"><?= ($user && (int) $user['id'] === (int) $c['reply_to_user_id']) ? 'You' : e($c['reply_to_author_name']) ?></span>
                           <span class="qtext"><?= e($c['reply_to_snippet']) ?></span>
                         </span>
                       <?php endif; ?>
                       <?php if ($c['body'] !== ''): ?><p class="btext"><?= e($c['body']) ?></p><?php endif; ?>
                       <?php if (gif_url_is_trusted($c['gif_url'] ?? null)): ?><div class="gif-bubble"><img src="<?= e($c['gif_url']) ?>" alt="" loading="lazy"></div><?php endif; ?>
-                      <div class="meta">
+                      <div class="crow-meta">
                         <span><?= e(time_ago($c['created_at'])) ?></span>
                         <?php if ($user): ?>
                           <button type="button" class="like<?= $c['liked_by_me'] ? ' is-liked' : '' ?>" data-like-toggle data-comment-id="<?= (int) $c['id'] ?>">
