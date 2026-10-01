@@ -161,10 +161,10 @@ if ($user['role'] === 'ADMIN') {
       <button data-dash-close aria-label="Close menu">✕</button>
     </div>
 
-    <a href="<?= e(base_url('index.php')) ?>" target="_blank" rel="noopener" class="dash-visit-site">
-      <?php dash_icon('arrow-right', 'visit-icon'); ?>
-      <span>Visit Live Site</span>
-    </a>
+    <div class="dash-me">
+      <span class="dash-me-av"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></span>
+      <span class="dash-me-text"><b><?= e($user['name']) ?></b><small><?= e(ucfirst(strtolower($user['role']))) ?></small></span>
+    </div>
 
     <div class="dash-nav-scroll">
       <?php foreach ($navGroups as $groupLabel => $items): ?>
@@ -173,7 +173,7 @@ if ($user['role'] === 'ADMIN') {
           <nav class="dash-nav">
             <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; ?>
               <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>">
-                <?php dash_icon($icon); ?><span><?= e($label) ?></span>
+                <span class="nav-ic"><?php dash_icon($icon); ?></span><span class="nav-t"><?= e($label) ?></span>
                 <?php if ($badge > 0): ?><span class="nav-badge"><?= $badge ?></span><?php endif; ?>
               </a>
             <?php endforeach; ?>
@@ -190,6 +190,11 @@ if ($user['role'] === 'ADMIN') {
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
+
+    <div class="dash-sidebar-foot">
+      <a href="<?= e(base_url('index.php')) ?>" target="_blank" rel="noopener">Visit site</a>
+      <a href="<?= e(base_url('logout.php')) ?>">Sign out</a>
+    </div>
   </aside>
 
   <div class="dash-main">

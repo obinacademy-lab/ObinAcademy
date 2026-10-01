@@ -134,10 +134,11 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         </div>
       <?php endif; ?>
-      <?php if ($user): ?>
-        <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>"><span class="mm-icon">👤</span><?= in_array($user['role'], ['CREATOR', 'ADMIN'], true) ? 'My School' : 'My Profile' ?></a>
-        <a href="<?= e(base_url('dashboard.php')) ?>"><span class="mm-icon">📊</span>Dashboard</a>
-        <a href="<?= e(base_url('dashboard/settings.php')) ?>"><span class="mm-icon">⚙️</span>Settings</a>
+      <?php if ($user): $mmPath = current_path(); ?>
+        <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>" class="<?= $mmPath === '/profile.php' ? 'active' : '' ?>"><span class="mm-icon">👤</span><?= in_array($user['role'], ['CREATOR', 'ADMIN'], true) ? 'My School' : 'My Profile' ?></a>
+        <a href="<?= e(base_url('dashboard.php')) ?>" class="<?= str_starts_with($mmPath, '/dashboard') && $mmPath !== '/dashboard/settings.php' ? 'active' : '' ?>"><span class="mm-icon">📊</span>Dashboard</a>
+        <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="<?= $mmPath === '/dashboard/settings.php' ? 'active' : '' ?>"><span class="mm-icon">⚙️</span>Settings</a>
+        <hr class="mm-rule">
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>
       <?php else: ?>
         <a href="<?= e(base_url('login.php')) ?>" class="mm-cta mm-cta-ink">Log In</a>
@@ -146,6 +147,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
       <?php endif; ?>
     </div>
   </div>
+  <div class="mobile-menu-scrim" data-mobile-scrim></div>
 
   <?php
     $flashError = flash_get('error');

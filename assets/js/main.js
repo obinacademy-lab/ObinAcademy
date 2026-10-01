@@ -13,13 +13,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggle = document.querySelector("[data-nav-toggle]");
   const menu = document.querySelector("[data-mobile-menu]");
   if (toggle && menu) {
-    toggle.addEventListener("click", () => {
-      menu.classList.toggle("open");
-      const expanded = menu.classList.contains("open");
-      toggle.setAttribute("aria-expanded", String(expanded));
-    });
+    const setMenuOpen = (open) => {
+      menu.classList.toggle("open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+    };
+    toggle.addEventListener("click", () => setMenuOpen(!menu.classList.contains("open")));
     menu.querySelectorAll("a").forEach((link) => {
-      link.addEventListener("click", () => menu.classList.remove("open"));
+      link.addEventListener("click", () => setMenuOpen(false));
+    });
+    // The menu is a floating card now, so a tap on the dimmed page behind
+    // it (or Escape) closes it, like any popover.
+    document.querySelector("[data-mobile-scrim]")?.addEventListener("click", () => setMenuOpen(false));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && menu.classList.contains("open")) setMenuOpen(false);
     });
   }
 

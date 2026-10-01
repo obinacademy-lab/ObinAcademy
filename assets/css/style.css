@@ -305,32 +305,47 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
   .nav-toggle { display: none; }
 }
 
+/* Floating card: detached from the header with a margin on every side,
+   fading/lifting in rather than collapsing open, with a dimmed scrim behind
+   (see .mobile-menu-scrim; main.js closes it on a scrim tap or Escape). */
 .mobile-menu {
-  max-height: 0; overflow: hidden; opacity: 0;
-  border-top: 1px solid var(--border);
-  background: var(--white);
-  transition: max-height 0.35s ease, opacity 0.25s ease;
+  position: fixed; top: 76px; left: 12px; right: 12px; z-index: 45;
+  max-height: calc(100vh - 92px); max-height: calc(100dvh - 92px); overflow-y: auto;
+  background: var(--white); border: 1px solid var(--border); border-radius: 22px;
+  box-shadow: 0 30px 60px -20px rgba(20,24,27,0.5);
+  opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-8px) scale(0.985); transform-origin: top right;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
 }
-.mobile-menu.open { max-height: 720px; opacity: 1; }
-.mobile-menu .container { padding: 16px 20px 24px; display: flex; flex-direction: column; gap: 4px; }
-.mobile-menu-account { display: flex; align-items: center; gap: 12px; padding: 10px 4px 18px; margin-bottom: 6px; border-bottom: 1px solid var(--border); }
-.mobile-menu-account .account-avatar { width: 40px; height: 40px; font-size: 15px; }
+.mobile-menu.open { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s; }
+.mobile-menu .container { max-width: none; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.mobile-menu-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(22,24,26,0.32); opacity: 0; visibility: hidden; transition: opacity 0.2s ease, visibility 0s linear 0.2s; }
+.mobile-menu.open + .mobile-menu-scrim { opacity: 1; visibility: visible; transition-delay: 0s; }
+@media (min-width: 900px) { .mobile-menu-scrim { display: none; } }
+.mobile-menu-account {
+  display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 6px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--brand-tint, #fef2f2), #fee2e2); border: 1px solid #fecaca;
+}
+.mobile-menu-account .account-avatar { width: 42px; height: 42px; font-size: 15px; }
 .mobile-menu-account .name { font-weight: 700; font-size: 14.5px; color: var(--ink); }
-.mobile-menu-account .email { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.mobile-menu-account .email { font-size: 12.5px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
 .mobile-menu a {
   display: flex; align-items: center; gap: 12px;
-  padding: 13px 6px;
+  padding: 8px;
   text-decoration: none;
   color: var(--ink);
-  font-weight: 600; font-size: 15px;
-  border-radius: 10px;
+  font-weight: 600; font-size: 14.5px;
+  border-radius: 14px;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .mobile-menu a:hover { background: var(--surface); color: var(--ink); }
-.mobile-menu a.active { color: var(--brand-800); background: color-mix(in srgb, var(--accent) 8%, white); }
+.mobile-menu a.active { color: #fff; background: var(--accent); box-shadow: 0 10px 20px -12px color-mix(in srgb, var(--accent) 90%, transparent); }
 .mobile-menu a + a { margin-top: 1px; }
-.mobile-menu .mm-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
-.mobile-menu a.mm-danger { color: var(--danger); }
+.mobile-menu .mm-icon { width: 36px; height: 36px; border-radius: 11px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.mobile-menu a.active .mm-icon { background: rgba(255,255,255,0.22); }
+.mobile-menu a:not(.mm-cta):not(.mm-danger)::after { content: "›"; margin-left: auto; padding-right: 4px; opacity: 0.45; font-size: 18px; line-height: 1; }
+.mobile-menu .mm-rule { border: 0; height: 1px; background: var(--border); margin: 6px 8px; width: auto; }
+.mobile-menu a.mm-danger { color: var(--brand-900); }
+.mobile-menu a.mm-danger .mm-icon { background: var(--danger-bg); }
 .mobile-menu a.mm-danger:hover { background: var(--danger-bg); }
 .mobile-menu a.mm-cta {
   justify-content: center; margin-top: 14px; padding: 14px;

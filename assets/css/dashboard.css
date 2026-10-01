@@ -19,56 +19,81 @@
   display: flex; min-height: 100vh; min-height: 100dvh; background: var(--dash-bg);
 }
 
+/* Floating card: detached from the screen edge with a margin all round,
+   rounded, soft-shadowed. On phones it slides in over the page; from 1024px
+   it sits in the layout, sticky, as a card beside the content. */
 .dash-sidebar {
   position: fixed;
-  inset: 0 auto 0 0;
-  width: 260px;
-  background: var(--dash-panel);
-  border-right: 1px solid var(--dash-border);
+  inset: 10px auto 10px 10px;
+  width: 268px;
+  max-width: calc(100vw - 20px);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--dash-panel) 88%, white), var(--dash-panel));
+  border: 1px solid var(--dash-border);
+  border-radius: 22px;
+  box-shadow: 0 24px 48px -24px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.04) inset;
   z-index: 60;
-  transform: translateX(-100%);
+  transform: translateX(calc(-100% - 20px));
   transition: transform 0.25s ease;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 18px 12px;
+  padding: 14px;
 }
 .dash-sidebar.open { transform: translateX(0); }
-.dash-sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 18px; flex-shrink: 0; }
+.dash-sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 14px; flex-shrink: 0; }
 .dash-sidebar-head button { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
 
-.dash-visit-site {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  margin: 0 2px 16px; padding: 9px 12px;
-  border: 1px dashed var(--dash-border); border-radius: 9px;
-  color: var(--muted); text-decoration: none;
-  font-size: 12.5px; font-weight: 700;
-  flex-shrink: 0;
+.dash-me {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 10px;
+  border-radius: 14px; background: var(--dash-border-soft); border: 1px solid var(--dash-border-soft); flex-shrink: 0;
+}
+.dash-me-av {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(145deg, var(--accent), var(--accent-dark)); color: #fff; font-weight: 700; font-size: 14px;
+}
+.dash-me-text { min-width: 0; display: flex; flex-direction: column; }
+.dash-me-text b { font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-me-text small { font-size: 11px; color: var(--muted); }
+.dash-sidebar-foot { display: flex; gap: 8px; margin-top: 12px; flex-shrink: 0; }
+.dash-sidebar-foot a {
+  flex: 1; text-align: center; padding: 9px; border-radius: 11px;
+  border: 1px dashed var(--dash-border); color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 700;
   transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
 }
-.dash-visit-site:hover { border-color: var(--accent); color: var(--accent); background: var(--dash-tint); }
-.dash-visit-site .visit-icon { width: 14px; height: 14px; transform: rotate(-45deg); }
+.dash-sidebar-foot a:hover { border-color: var(--accent); color: var(--ink); background: var(--dash-tint); }
 
-.dash-nav-scroll { flex-shrink: 0; padding-bottom: 8px; }
+.dash-nav-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 6px 8px 0; margin-right: -6px; scrollbar-width: thin; scrollbar-color: var(--dash-border) transparent; }
 .dash-nav-group { padding: 0 2px; margin-top: 18px; }
 .dash-nav-group:first-of-type { margin-top: 0; }
 .dash-nav-group-label { padding: 0 10px 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); opacity: 0.75; }
 .dash-nav { display: flex; flex-direction: column; gap: 2px; }
 .dash-nav a {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  display: flex; align-items: center; gap: 11px;
+  padding: 6px 8px 6px 6px;
+  border-radius: 13px;
   color: var(--muted);
   text-decoration: none;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
-.dash-nav a svg { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.85; }
-.dash-nav a span { flex: 1; min-width: 0; }
+.dash-nav .nav-ic {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--dash-border-soft);
+}
+.dash-nav .nav-ic svg { width: 15px; height: 15px; opacity: 0.9; }
+.dash-nav .nav-t { flex: 1; min-width: 0; }
 .dash-nav a:hover { background: var(--dash-border-soft); color: var(--ink); }
-.dash-nav a.active { background: var(--dash-tint); color: var(--brand-900); }
-.dash-nav a.active svg { opacity: 1; color: var(--accent); }
+.dash-nav a.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #fff;
+  box-shadow: 0 10px 20px -10px color-mix(in srgb, var(--accent) 90%, transparent);
+}
+.dash-nav a.active .nav-ic { background: rgba(255,255,255,0.2); }
+.dash-nav a.active .nav-ic svg { opacity: 1; }
+/* Gold's accent is too light for white text, so that theme's pill goes dark. */
+.dash-premium.theme-gold .dash-nav a.active { color: #2b1c00; }
+.dash-premium.theme-gold .dash-nav a.active .nav-ic { background: rgba(43,28,0,0.14); }
 .nav-badge {
   flex: 0 0 auto; min-width: 19px; height: 19px; padding: 0 5px;
   border-radius: var(--radius-full); background: var(--gold); color: #4a2e00;
@@ -147,7 +172,7 @@
 .dash-content { padding: 22px 20px 60px; }
 
 @media (min-width: 1024px) {
-  .dash-sidebar { position: sticky; top: 0; height: 100vh; height: 100dvh; transform: none; width: 260px; flex-shrink: 0; }
+  .dash-sidebar { position: sticky; top: 10px; height: calc(100vh - 20px); height: calc(100dvh - 20px); transform: none; width: 268px; flex-shrink: 0; margin: 10px 0 10px 10px; align-self: flex-start; }
   .dash-overlay { display: none !important; }
   .dash-sidebar-head button { display: none; }
   .dash-hamburger { display: none; }
