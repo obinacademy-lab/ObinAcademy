@@ -253,7 +253,7 @@ require __DIR__ . '/../includes/header.php';
             <?php endif; ?>
           </div>
 
-          <?php if ($isEnrolled && !$isOwner): ?>
+          <?php if ($user && $isEnrolled && !$isOwner): ?>
             <div class="rform" data-review-form data-course-id="<?= (int) $course['id'] ?>" data-submit-url="<?= e(base_url('api/submit-review.php')) ?>">
               <h3><?= $myReview ? 'Edit your review' : 'Leave a review' ?></h3>
               <p class="small muted">Tell other learners what you thought of this course.</p>
@@ -268,6 +268,24 @@ require __DIR__ . '/../includes/header.php';
                 <p class="small hidden" data-review-error style="color:var(--danger); margin-top:8px;"></p>
                 <button type="submit" class="btn btn-primary"><?= $myReview ? 'Update review' : 'Submit review' ?></button>
               </form>
+            </div>
+          <?php endif; ?>
+          <?php if (!($user && $isEnrolled && !$isOwner)):
+            // Say why there is no review form, rather than silently omitting it.
+            $reviewHere = '/courses/view.php?slug=' . urlencode($course['slug']) . '#reviews';
+          ?>
+            <div class="rev-gate">
+              <?php if ($isOwner || $isAdmin): ?>
+                <p>Reviews come from learners, so you can't review a course you run.</p>
+              <?php elseif (!$user && $isEnrolled): ?>
+                <p><b>Your purchase is saved on this device.</b> Log in or create a free account to leave a review.</p>
+                <div class="rev-gate-actions">
+                  <a class="btn btn-primary btn-sm" href="<?= e(base_url('login.php?redirect=' . urlencode($reviewHere))) ?>">Log in</a>
+                  <a class="btn btn-outline btn-sm" href="<?= e(base_url('signup.php?redirect=' . urlencode($reviewHere))) ?>">Create account</a>
+                </div>
+              <?php else: ?>
+                <p><b>Only learners enrolled in this course can leave a review.</b> Enrol first, then come back here to share what you thought.</p>
+              <?php endif; ?>
             </div>
           <?php endif; ?>
 

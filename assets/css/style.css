@@ -2829,6 +2829,11 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 .rbar-row .count { text-align: right; color: var(--ink); }
 
 .rform { padding: 24px 26px; border-bottom: 1px solid var(--border); background: var(--surface); }
+/* Why there's no review form (guest, not enrolled, or the course's own owner). */
+.rev-gate { padding: 20px 26px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.rev-gate p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--muted); }
+.rev-gate p b { color: var(--ink); font-weight: 700; }
+.rev-gate-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .rform h3 { margin: 0; font-size: 16px; font-weight: 800; }
 .rform .small { margin-top: 4px; }
 .rform .star-input { display: flex; gap: 3px; margin-top: 10px; }
