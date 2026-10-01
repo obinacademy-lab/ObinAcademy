@@ -16,17 +16,18 @@ require_once __DIR__ . '/giphy.php';
  *   comment's top-level ancestor, since visual nesting is capped at two
  *   levels regardless of how deep the conversation actually goes.
  * @param ?string $gifUrl an attached GIF sticker's URL, as returned by
- *   includes/giphy.php — a comment needs body text, a GIF, or both. Anything
- *   not actually on Giphy's media CDN (someone bypassing the picker UI and
- *   POSTing a crafted value directly) is silently dropped rather than
+ *   includes/giphy.php — rides along with the required body text, never a
+ *   replacement for it (a GIF/emoji alone is not a postable comment). Any
+ *   URL not actually on Giphy's media CDN (someone bypassing the picker UI
+ *   and POSTing a crafted value directly) is silently dropped rather than
  *   rejecting the whole comment, same defensive stance as elsewhere here.
  * @return array{ok?: bool, hidden?: bool, id?: int, error?: string}
  */
 function add_comment(int $userId, int $courseId, string $body, ?int $replyToId = null, ?string $gifUrl = null): array {
     $body = trim($body);
     if (!gif_url_is_trusted($gifUrl)) $gifUrl = null;
-    if ($body === '' && $gifUrl === null) return ['error' => 'Write a comment or attach a GIF before posting.'];
-    if ($body !== '' && mb_strlen($body) < 2) return ['error' => 'Comment is too short.'];
+    if ($body === '') return ['error' => 'Write a comment before posting.'];
+    if (mb_strlen($body) < 2) return ['error' => 'Comment is too short.'];
     if (mb_strlen($body) > 2000) return ['error' => 'Comment is too long (2000 characters max).'];
 
     $course = db_one('SELECT id, title, slug, creator_id FROM courses WHERE id = ?', [$courseId]);

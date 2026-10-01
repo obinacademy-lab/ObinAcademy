@@ -292,7 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
         errorBox.classList.add("hidden");
         const body = textarea.value.trim();
         const gifUrl = gifUrlInput?.value || null;
-        if (!body && !gifUrl) return;
+        if (!body) return;
         const parentId = form.dataset.replyToId || form.dataset.threadId || null;
 
         try {
