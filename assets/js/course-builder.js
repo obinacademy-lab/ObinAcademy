@@ -405,7 +405,7 @@
       const touched = c.summary !== "" || c.description !== "" || c.title !== "";
       field("kind")[0].value = c.price > 0 || !touched ? "paid" : "free";
     }
-    if (c.thumbnailUrl) { const img = $("[data-cb-thumb-img]"); img.src = c.thumbnailUrl; img.hidden = false; }
+    showThumb(c.thumbnailUrl);
     syncPriceUi();
     $("[data-cb-pill]").textContent = c.status === "REJECTED" ? "Needs changes" : "Draft";
   }
@@ -457,6 +457,14 @@
     if (evt === "input") f.addEventListener("change", () => { syncPriceUi(); updateChecklist(); });
   });
 
+  function showThumb(url) {
+    const img = $("[data-cb-thumb-img]");
+    if (url) img.src = url;
+    img.hidden = !url;
+    $("[data-cb-thumb-ph]").hidden = !!url;
+    $("[data-cb-thumbbox]").classList.toggle("has-img", !!url);
+  }
+
   const thumbInput = $("[data-cb-thumb]");
   thumbInput.addEventListener("change", async () => {
     const f = thumbInput.files[0];
@@ -464,15 +472,16 @@
     if (!f) return;
     const err = $("[data-cb-thumb-err]");
     err.hidden = true;
+    if (f.size > 5 * 1024 * 1024) { err.textContent = "That image is over 5 MB. Choose a smaller one."; err.hidden = false; return; }
     try {
       await ensureCourse();
+      setSaved("Uploading thumbnail…");
       const j = await upload("upload_thumbnail", f, () => {});
       S = j.state;
-      const img = $("[data-cb-thumb-img]");
-      img.src = S.course.thumbnailUrl;
-      img.hidden = false;
+      showThumb(S.course.thumbnailUrl);
       setSaved("Thumbnail saved");
-    } catch (e) { err.textContent = e.message; err.hidden = false; }
+      updateChecklist();
+    } catch (e) { err.textContent = e.message; err.hidden = false; setSaved("Draft saved"); }
   });
 
   // ---- checklist and submit -----------------------------------------------
@@ -497,13 +506,15 @@
     if (buildEl.hidden) return;
     const r = readiness();
     const done = r.filter((x) => x[1]).length;
-    $("[data-cb-left]").innerHTML = r.map((x) => '<li class="' + (x[1] ? "is-ok" : "") + '"><span class="cb-d">' + TICK + "</span>" + esc(x[0]) + "</li>").join("");
+    const hasThumb = !!(S && S.course.thumbnailUrl);
+    $("[data-cb-left]").innerHTML = r.map((x) => '<li class="' + (x[1] ? "is-ok" : "") + '"><span class="cb-d">' + TICK + "</span>" + esc(x[0]) + "</li>").join("") +
+      '<li class="is-opt' + (hasThumb ? " is-ok" : "") + '"><span class="cb-d">' + TICK + "</span>Thumbnail (recommended)</li>";
     $("[data-cb-meter]").style.width = (done / r.length) * 100 + "%";
     const all = done === r.length && !submitted;
     $("[data-cb-submit]").disabled = !all;
     const hint = $("[data-cb-hint]");
     if (submitted) hint.textContent = "Waiting for admin review.";
-    else if (all) hint.textContent = S && S.course.thumbnailUrl ? "" : "Tip: a thumbnail helps the course sell (under More options).";
+    else if (all) hint.textContent = hasThumb ? "" : "Tip: add a thumbnail above. Courses with one sell better.";
     else hint.textContent = r.length - done + " thing" + (r.length - done === 1 ? "" : "s") + " left";
     renderSub();
   }

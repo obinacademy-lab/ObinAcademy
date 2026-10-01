@@ -82,6 +82,13 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <aside class="cb-side">
         <div class="cb-box">
           <div class="cb-box-head"><h3>Course details</h3><span class="cb-saved" data-cb-saved aria-live="polite"></span></div>
+          <div class="cb-f"><span class="cb-lbl">Thumbnail</span>
+            <label class="cb-thumbbox" data-cb-thumbbox>
+              <img data-cb-thumb-img alt="Course thumbnail" hidden>
+              <span class="cb-thumbph" data-cb-thumb-ph><?php dash_icon('upload'); ?><b>Add a thumbnail</b><small>JPG, PNG or WebP · 16:9 works best · up to 5 MB</small></span>
+              <input type="file" accept="image/*" data-cb-thumb hidden>
+            </label>
+            <p class="cb-help" data-cb-thumb-err hidden></p></div>
           <div class="cb-f"><label for="cb-cat">Category</label>
             <select id="cb-cat" data-f="categoryId">
               <option value="">Select a category</option>
@@ -106,9 +113,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
           <details class="cb-adv"><summary>More options</summary>
             <div class="cb-adv-in">
-              <div class="cb-f"><span class="cb-lbl">Thumbnail</span>
-                <div class="cb-thumb"><img data-cb-thumb-img alt="" hidden><label class="btn btn-outline btn-sm" style="cursor:pointer;">Choose image<input type="file" accept="image/*" data-cb-thumb hidden></label></div>
-                <p class="cb-help" data-cb-thumb-err hidden></p></div>
               <div class="cb-f"><label for="cb-acc">How long learners keep access</label>
                 <select id="cb-acc" data-f="accessDurationDays">
                   <?php foreach (ACCESS_DURATION_OPTIONS as $o): ?><option value="<?= $o['days'] ?? 'lifetime' ?>"><?= e($o['label']) ?></option><?php endforeach; ?>
