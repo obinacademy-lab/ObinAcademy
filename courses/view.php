@@ -64,8 +64,7 @@ if ($user) {
 }
 
 $comments = get_visible_comments((int) $course['id'], $user ? (int) $user['id'] : null);
-$commentCount = 0;
-foreach ($comments as $c) $commentCount += 1 + count($c['replies']);
+$commentCount = count($comments);
 
 $relatedCourses = $course['status'] === 'PUBLISHED'
     ? get_related_courses((int) $course['id'], (int) $course['category_id'], $user ? (int) $user['id'] : null)
@@ -287,34 +286,6 @@ require __DIR__ . '/../includes/header.php';
             <span style="font-weight:700; font-size:14.5px; color:var(--ink);"><?= number_format($commentCount) ?> Comment<?= $commentCount === 1 ? '' : 's' ?></span>
           </div>
 
-          <?php if ($user): ?>
-            <form class="comment-form" data-comment-submit style="margin-top:16px;">
-              <div class="comment-form-avatar">
-                <?php if (!empty($user['avatar_url'])): ?><img src="<?= e(asset_src($user['avatar_url'])) ?>" alt="">
-                <?php else: ?><?= e(mb_substr($user['name'], 0, 1)) ?><?php endif; ?>
-              </div>
-              <div class="comment-form-body">
-                <textarea name="body" rows="2" placeholder="Ask a question or share your thoughts about this course..." maxlength="2000"></textarea>
-                <div class="comment-gif-preview hidden" data-gif-preview>
-                  <img data-gif-preview-img src="" alt="Attached GIF">
-                  <button type="button" data-gif-remove aria-label="Remove GIF">&times;</button>
-                </div>
-                <input type="hidden" name="gifUrl" data-gif-url-input value="">
-                <div class="comment-form-footer">
-                  <button type="button" class="comment-emoji-toggle" data-emoji-toggle aria-label="Add an emoji">😊</button>
-                  <button type="button" class="comment-gif-toggle" data-gif-toggle aria-label="Add a GIF">GIF</button>
-                  <span class="comment-char-count" data-char-count>2000</span>
-                  <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
-                </div>
-                <p class="small hidden" data-comment-error style="color:var(--danger); margin-top:6px;"></p>
-              </div>
-            </form>
-          <?php else: ?>
-            <p class="muted" style="margin-top:16px;">
-              <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to join the discussion.
-            </p>
-          <?php endif; ?>
-
           <?php if (!$comments): ?>
             <div class="comment-empty">
               <?php dash_icon('message-square'); ?>
@@ -322,101 +293,81 @@ require __DIR__ . '/../includes/header.php';
             </div>
           <?php else: ?>
             <div class="clist" data-comment-list>
-              <?php foreach ($comments as $c): ?>
-                <div class="ccard" data-comment-id="<?= (int) $c['id'] ?>">
-                  <div class="head">
-                    <span class="avatar">
+              <?php foreach ($comments as $c):
+                $isMine = $user && (int) $user['id'] === (int) $c['user_id'];
+              ?>
+                <div class="crow <?= $isMine ? 'mine' : 'theirs' ?>" data-comment-id="<?= (int) $c['id'] ?>" data-author-name="<?= e($c['author_name']) ?>" data-snippet="<?= e($c['snippet']) ?>">
+                  <?php if (!$isMine): ?>
+                    <span class="mini-avatar">
                       <?php if (!empty($c['author_avatar_url'])): ?><img src="<?= e(asset_src($c['author_avatar_url'])) ?>" alt="">
                       <?php else: ?><?= e(mb_substr($c['author_name'], 0, 1)) ?><?php endif; ?>
                     </span>
-                    <div style="min-width:0;">
-                      <div class="name"><?= e($c['author_name']) ?></div>
-                      <div class="small muted"><?= e(time_ago($c['created_at'])) ?></div>
-                    </div>
-                    <?php if ($user && ((int) $user['id'] === (int) $c['user_id'] || $isOwner || $isAdmin)): ?>
-                      <button type="button" class="ccard-delete" data-comment-delete aria-label="Delete comment"><?php dash_icon('trash'); ?></button>
-                    <?php endif; ?>
-                  </div>
-                  <?php if ($c['body'] !== ''): ?><p class="comment"><?= e($c['body']) ?></p><?php endif; ?>
-                  <?php if (gif_url_is_trusted($c['gif_url'] ?? null)): ?><div class="comment-gif"><img src="<?= e($c['gif_url']) ?>" alt="" loading="lazy"></div><?php endif; ?>
-                  <div class="comment-actions-row">
-                    <?php if ($user): ?>
-                      <button type="button" class="clike<?= $c['liked_by_me'] ? ' is-liked' : '' ?>" data-like-toggle data-comment-id="<?= (int) $c['id'] ?>">
-                        <svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg>
-                        <span data-like-count><?= (int) $c['like_count'] ?></span>
-                      </button>
-                    <?php elseif ($c['like_count'] > 0): ?>
-                      <span class="clike is-static"><svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg><?= (int) $c['like_count'] ?></span>
-                    <?php endif; ?>
-                    <?php if ($user): ?>
-                      <button type="button" class="comment-reply-toggle" data-reply-toggle data-reply-to-id="<?= (int) $c['id'] ?>" data-reply-to-name="<?= e($c['author_name']) ?>">Reply</button>
-                    <?php endif; ?>
-                  </div>
-
-                  <?php if ($c['replies']): ?>
-                    <div class="comment-replies">
-                      <?php foreach ($c['replies'] as $r): ?>
-                        <div class="comment-reply" data-comment-id="<?= (int) $r['id'] ?>">
-                          <div class="head">
-                            <span class="avatar">
-                              <?php if (!empty($r['author_avatar_url'])): ?><img src="<?= e(asset_src($r['author_avatar_url'])) ?>" alt="">
-                              <?php else: ?><?= e(mb_substr($r['author_name'], 0, 1)) ?><?php endif; ?>
-                            </span>
-                            <div style="min-width:0;">
-                              <div class="name"><?= e($r['author_name']) ?></div>
-                              <div class="small muted"><?= e(time_ago($r['created_at'])) ?></div>
-                            </div>
-                            <?php if ($user && ((int) $user['id'] === (int) $r['user_id'] || $isOwner || $isAdmin)): ?>
-                              <button type="button" class="ccard-delete" data-comment-delete aria-label="Delete reply"><?php dash_icon('trash'); ?></button>
-                            <?php endif; ?>
-                          </div>
-                          <?php if ($r['reply_to_author_name'] && (int) $r['reply_to_comment_id'] !== (int) $c['id']): ?>
-                            <div class="comment-reply-to">Replying to <?= e($r['reply_to_author_name']) ?></div>
-                          <?php endif; ?>
-                          <?php if ($r['body'] !== ''): ?><p class="comment"><?= e($r['body']) ?></p><?php endif; ?>
-                          <?php if (gif_url_is_trusted($r['gif_url'] ?? null)): ?><div class="comment-gif"><img src="<?= e($r['gif_url']) ?>" alt="" loading="lazy"></div><?php endif; ?>
-                          <div class="comment-actions-row">
-                            <?php if ($user): ?>
-                              <button type="button" class="clike<?= $r['liked_by_me'] ? ' is-liked' : '' ?>" data-like-toggle data-comment-id="<?= (int) $r['id'] ?>">
-                                <svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg>
-                                <span data-like-count><?= (int) $r['like_count'] ?></span>
-                              </button>
-                            <?php elseif ($r['like_count'] > 0): ?>
-                              <span class="clike is-static"><svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg><?= (int) $r['like_count'] ?></span>
-                            <?php endif; ?>
-                            <?php if ($user): ?>
-                              <button type="button" class="comment-reply-toggle" data-reply-toggle data-reply-to-id="<?= (int) $r['id'] ?>" data-reply-to-name="<?= e($r['author_name']) ?>">Reply</button>
-                            <?php endif; ?>
-                          </div>
-                        </div>
-                      <?php endforeach; ?>
-                    </div>
                   <?php endif; ?>
-
-                  <?php if ($user): ?>
-                    <form class="comment-reply-form" data-comment-submit data-thread-id="<?= (int) $c['id'] ?>">
-                      <div class="comment-reply-to-chip hidden" data-reply-chip>
-                        Replying to <span data-reply-chip-name></span>
-                        <button type="button" data-reply-cancel aria-label="Cancel reply">&times;</button>
+                  <div class="bubble-stack">
+                    <?php if (!$isMine): ?><span class="sender-name"><?= e($c['author_name']) ?></span><?php endif; ?>
+                    <div class="bubble">
+                      <?php if ($c['reply_to_author_name']): ?>
+                        <span class="quote">
+                          <span class="qname"><?= ($user && (int) $user['id'] === (int) $c['reply_to_user_id']) ? 'You' : e($c['reply_to_author_name']) ?></span>
+                          <span class="qtext"><?= e($c['reply_to_snippet']) ?></span>
+                        </span>
+                      <?php endif; ?>
+                      <?php if ($c['body'] !== ''): ?><p class="btext"><?= e($c['body']) ?></p><?php endif; ?>
+                      <?php if (gif_url_is_trusted($c['gif_url'] ?? null)): ?><div class="gif-bubble"><img src="<?= e($c['gif_url']) ?>" alt="" loading="lazy"></div><?php endif; ?>
+                      <div class="meta">
+                        <span><?= e(time_ago($c['created_at'])) ?></span>
+                        <?php if ($user): ?>
+                          <button type="button" class="like<?= $c['liked_by_me'] ? ' is-liked' : '' ?>" data-like-toggle data-comment-id="<?= (int) $c['id'] ?>">
+                            <svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg>
+                            <span data-like-count><?= (int) $c['like_count'] ?></span>
+                          </button>
+                          <button type="button" class="reply-icon-btn" data-reply-toggle aria-label="Reply">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17 4 12l5-5"/><path d="M4 12h11a4 4 0 0 1 0 8h-1"/></svg>
+                          </button>
+                        <?php elseif ($c['like_count'] > 0): ?>
+                          <span class="like is-static"><svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.2 1.6 6.9 4.4 5.4c2.3-1.2 4.9-.4 6.1 1.5l1.5 2.3 1.5-2.3c1.2-1.9 3.8-2.7 6.1-1.5 2.8 1.5 3.4 4.8 1.7 7.5C18.7 16.65 12 21 12 21Z"/></svg><?= (int) $c['like_count'] ?></span>
+                        <?php endif; ?>
+                        <?php if ($user && ($isMine || $isOwner || $isAdmin)): ?>
+                          <button type="button" class="crow-delete" data-comment-delete aria-label="Delete comment"><?php dash_icon('trash'); ?></button>
+                        <?php endif; ?>
                       </div>
-                      <textarea name="body" rows="2" placeholder="Write a reply..." maxlength="2000"></textarea>
-                      <div class="comment-gif-preview hidden" data-gif-preview>
-                        <img data-gif-preview-img src="" alt="Attached GIF">
-                        <button type="button" data-gif-remove aria-label="Remove GIF">&times;</button>
-                      </div>
-                      <input type="hidden" name="gifUrl" data-gif-url-input value="">
-                      <div class="comment-form-footer">
-                        <button type="button" class="comment-emoji-toggle" data-emoji-toggle aria-label="Add an emoji">😊</button>
-                        <button type="button" class="comment-gif-toggle" data-gif-toggle aria-label="Add a GIF">GIF</button>
-                        <span class="comment-char-count" data-char-count>2000</span>
-                        <button type="submit" class="btn btn-primary btn-sm">Reply</button>
-                      </div>
-                      <p class="small hidden" data-comment-error style="color:var(--danger); margin-top:6px;"></p>
-                    </form>
-                  <?php endif; ?>
+                    </div>
+                  </div>
+                  <div class="reply-affordance" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17 4 12l5-5"/><path d="M4 12h11a4 4 0 0 1 0 8h-1"/></svg>
+                  </div>
                 </div>
               <?php endforeach; ?>
             </div>
+            <?php if ($user): ?><p class="swipe-caption">Swipe a message to reply</p><?php endif; ?>
+          <?php endif; ?>
+
+          <?php if ($user): ?>
+            <form class="comment-form" data-comment-submit>
+              <div class="comment-reply-to-chip hidden" data-reply-chip>
+                <span class="chip-text">Replying to <span data-reply-chip-name></span>: <span data-reply-chip-snippet></span></span>
+                <button type="button" data-reply-cancel aria-label="Cancel reply">&times;</button>
+              </div>
+              <div class="comment-gif-preview hidden" data-gif-preview>
+                <img data-gif-preview-img src="" alt="Attached GIF">
+                <button type="button" data-gif-remove aria-label="Remove GIF">&times;</button>
+              </div>
+              <input type="hidden" name="gifUrl" data-gif-url-input value="">
+              <div class="comment-form-bar">
+                <button type="button" class="comment-emoji-toggle" data-emoji-toggle aria-label="Add an emoji">😊</button>
+                <button type="button" class="comment-gif-toggle" data-gif-toggle aria-label="Add a GIF">GIF</button>
+                <textarea name="body" rows="1" placeholder="Write a comment…" maxlength="2000"></textarea>
+                <span class="comment-char-count" data-char-count>2000</span>
+                <button type="submit" class="send-btn" aria-label="Post comment">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+                </button>
+              </div>
+              <p class="small hidden" data-comment-error style="color:var(--danger); margin-top:6px;"></p>
+            </form>
+          <?php else: ?>
+            <p class="muted" style="margin-top:16px;">
+              <a href="<?= e(base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']))) ?>" style="color:var(--accent); font-weight:600;">Log in</a> to join the discussion.
+            </p>
           <?php endif; ?>
         </div>
       </div>

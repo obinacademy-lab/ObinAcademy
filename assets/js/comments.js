@@ -1,11 +1,11 @@
-// Comment/reply forms (AJAX submit) + delete buttons for the course/event
-// discussion section. Works for any number of [data-comments-root] widgets
-// on a page. Each top-level comment ("thread") has exactly one reply form,
-// shared by every "Reply" button inside that thread (on the top-level
-// comment itself and on each of its replies) — clicking any of them just
-// changes which comment the shared form is currently addressing, via
-// form.dataset.replyToId, so anyone can reply to anyone in the thread
-// without a separate form per comment.
+// Comment/reply widget for the course/event discussion section — a single
+// flat, WhatsApp-group-style chat thread (newest first) with ONE composer
+// at the bottom shared by every row. Replying to any message (top-level or
+// a reply alike, since there's no visual thread-nesting anymore) sets that
+// message as the composer's reply target — either by tapping its reply
+// icon or by swiping the row, like swiping a WhatsApp message — and posts
+// as a single request carrying that target's id plus whatever was typed.
+// Works for any number of [data-comments-root] widgets on a page.
 document.addEventListener("DOMContentLoaded", () => {
   const MAX_LEN = 2000;
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
@@ -18,14 +18,78 @@ document.addEventListener("DOMContentLoaded", () => {
       const remaining = MAX_LEN - textarea.value.length;
       counter.textContent = remaining;
       counter.classList.toggle("comment-char-count-low", remaining < 100);
+      // Auto-grow the single-line-at-rest pill so a longer comment still
+      // wraps to multiple visible lines instead of scrolling internally.
+      textarea.style.height = "auto";
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
     };
     textarea.addEventListener("input", update);
     update();
   }
 
-  // Emoji picker — one shared list, a panel built lazily on each toggle
-  // button's first click (there can be one per form: the main composer
-  // plus one per open reply thread) and reused after that. Only one panel
+  // Swipe-to-reply — a horizontal drag on a message row (touch or mouse,
+  // unified via Pointer Events) nudges it toward the trailing edge and
+  // reveals a reply icon; releasing past the threshold fires onReply.
+  // touch-action:pan-y (see CSS) lets vertical page scroll keep working
+  // on touch while this still gets first crack at horizontal movement.
+  function wireSwipeToReply(row, onReply) {
+    const THRESHOLD = 46;
+    const MAX = 64;
+    let startX = 0;
+    let startY = 0;
+    let dragging = false;
+    let decided = false;
+    let horizontal = false;
+
+    function reset() {
+      row.style.transform = "";
+      row.classList.remove("swiping");
+    }
+
+    row.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("button, a")) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      startX = e.clientX;
+      startY = e.clientY;
+      dragging = true;
+      decided = false;
+      horizontal = false;
+    });
+
+    row.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (!decided) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        decided = true;
+        horizontal = Math.abs(dx) > Math.abs(dy);
+        if (!horizontal) {
+          dragging = false;
+          return;
+        }
+        row.setPointerCapture?.(e.pointerId);
+      }
+      const mine = row.classList.contains("mine");
+      const clamped = mine ? Math.min(0, Math.max(dx, -MAX)) : Math.max(0, Math.min(dx, MAX));
+      row.style.transform = `translateX(${clamped}px)`;
+      row.classList.toggle("swiping", Math.abs(clamped) > 14);
+    });
+
+    function end(e) {
+      if (!dragging) return;
+      dragging = false;
+      const dx = e.clientX - startX;
+      const triggered = decided && horizontal && Math.abs(dx) >= THRESHOLD;
+      reset();
+      if (triggered) onReply();
+    }
+    row.addEventListener("pointerup", end);
+    row.addEventListener("pointercancel", end);
+  }
+
+  // Emoji picker — one shared list, a panel built lazily on the composer's
+  // toggle button's first click and reused after that. Only one panel
   // stays open at a time; picking an emoji inserts it at the textarea's
   // actual cursor position and keeps the panel open, so tapping several in
   // a row (the TikTok-style flurry-of-emoji habit this is built for) works
@@ -60,8 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.querySelectorAll("[data-emoji-toggle]").forEach((toggle) => {
-    const footer = toggle.closest(".comment-form-footer");
-    const textarea = footer?.parentElement.querySelector('textarea[name="body"]');
+    const footer = toggle.closest(".comment-form-bar");
+    const textarea = footer?.querySelector('textarea[name="body"]');
     if (!footer || !textarea) return;
 
     let panel = null;
@@ -99,9 +163,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // GIF picker — one panel per toggle button (main composer + each reply
-  // form), built lazily and reused, sharing the same openPicker/
-  // closeOpenPicker single-panel-at-a-time tracking as the emoji picker
+  // GIF picker — a panel for the composer's toggle button, built lazily
+  // and reused, sharing the same openPicker/closeOpenPicker
+  // single-panel-at-a-time tracking as the emoji picker
   // above. Unlike emoji (multi-select, stays open), picking a GIF is a
   // single choice: it fills the form's hidden gifUrl input, shows a
   // preview, and closes the panel — a comment carries at most one GIF.
@@ -115,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll("[data-gif-toggle]").forEach((toggle) => {
     const form = toggle.closest("form");
-    const footer = toggle.closest(".comment-form-footer");
+    const footer = toggle.closest(".comment-form-bar");
     const root = toggle.closest("[data-comments-root]");
     const searchUrl = root?.dataset.gifSearchUrl;
     const preview = form?.querySelector("[data-gif-preview]");
@@ -250,41 +314,40 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Wire each thread's reply-toggle buttons (on the comment and on every
-    // reply within it) to the one shared reply form for that thread.
-    root.querySelectorAll(".ccard[data-comment-id]").forEach((card) => {
-      const threadId = card.dataset.commentId;
-      const form = card.querySelector("form.comment-reply-form");
+    // The single composer at the bottom doubles as the reply box — tapping
+    // a row's reply icon or swiping it (wired below, per row) sets that
+    // row as the target via setReplyTarget, shown as a quoted chip above
+    // the input until posted or cancelled.
+    const form = root.querySelector("[data-comment-submit]");
+    const chip = form?.querySelector("[data-reply-chip]");
+    const chipName = form?.querySelector("[data-reply-chip-name]");
+    const chipSnippet = form?.querySelector("[data-reply-chip-snippet]");
+    const textarea = form?.querySelector('textarea[name="body"]');
+
+    function setReplyTarget(id, name, snippet) {
       if (!form) return;
-      const chip = form.querySelector("[data-reply-chip]");
-      const chipName = form.querySelector("[data-reply-chip-name]");
-      const textarea = form.querySelector("textarea");
+      form.dataset.replyToId = id;
+      if (chipName) chipName.textContent = name || "";
+      if (chipSnippet) chipSnippet.textContent = snippet || "";
+      chip?.classList.remove("hidden");
+      textarea?.focus();
+    }
+    function clearReplyTarget() {
+      if (!form) return;
+      delete form.dataset.replyToId;
+      chip?.classList.add("hidden");
+    }
+    form?.querySelector("[data-reply-cancel]")?.addEventListener("click", clearReplyTarget);
 
-      card.querySelectorAll("[data-reply-toggle]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const targetId = btn.dataset.replyToId;
-          form.dataset.replyToId = targetId;
-          if (targetId === threadId) {
-            chip?.classList.add("hidden");
-          } else {
-            if (chipName) chipName.textContent = btn.dataset.replyToName || "";
-            chip?.classList.remove("hidden");
-          }
-          form.classList.add("open");
-          textarea?.focus();
-        });
-      });
-
-      form.querySelector("[data-reply-cancel]")?.addEventListener("click", () => {
-        delete form.dataset.replyToId;
-        chip?.classList.add("hidden");
-      });
+    list?.querySelectorAll(".crow[data-comment-id]").forEach((row) => {
+      const doReply = () => setReplyTarget(row.dataset.commentId, row.dataset.authorName, row.dataset.snippet);
+      row.querySelector("[data-reply-toggle]")?.addEventListener("click", doReply);
+      wireSwipeToReply(row, doReply);
     });
 
-    root.querySelectorAll("[data-comment-submit]").forEach((form) => {
+    if (form) {
       wireCharCount(form);
       const errorBox = form.querySelector("[data-comment-error]");
-      const textarea = form.querySelector('textarea[name="body"]');
       const gifUrlInput = form.querySelector("[data-gif-url-input]");
 
       form.addEventListener("submit", async (e) => {
@@ -293,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const body = textarea.value.trim();
         const gifUrl = gifUrlInput?.value || null;
         if (!body) return;
-        const parentId = form.dataset.replyToId || form.dataset.threadId || null;
+        const parentId = form.dataset.replyToId || null;
 
         try {
           const res = await fetch(submitUrl, {
@@ -318,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
           errorBox.classList.remove("hidden");
         }
       });
-    });
+    }
 
     list?.querySelectorAll("[data-comment-delete]").forEach((btn) => {
       btn.addEventListener("click", async () => {

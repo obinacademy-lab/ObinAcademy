@@ -82,14 +82,32 @@ function add_comment(int $userId, int $courseId, string $body, ?int $replyToId =
 }
 
 /**
- * Publicly visible comments for one course/event's detail page, as a tree —
- * each top-level comment (newest first) carries its replies (oldest first)
- * in a 'replies' key, and every row carries 'reply_to_author_name' (who it
- * was directly addressed to, which for a reply-to-a-reply is someone other
- * than the top-level comment's author). Defensive: this runs on every
- * single course/event page view, so a missing `comments` table/column
- * (deploy landed before its migration ran) must not 500 the entire site's
- * course/event pages — just show no comments until it exists.
+ * A short quoted preview of a comment — the actual text (truncated), or a
+ * "GIF" placeholder for a sticker-only comment — used two ways: as the
+ * in-bubble quote on whatever reply points at this comment, and as the
+ * preview shown in the composer's reply chip when this comment itself
+ * becomes the reply target (tapped or swiped).
+ */
+function comment_quote_snippet(array $row): string {
+    $body = trim((string) ($row['body'] ?? ''));
+    if ($body !== '') {
+        return mb_strlen($body) > 80 ? mb_substr($body, 0, 80) . '…' : $body;
+    }
+    return !empty($row['gif_url']) ? 'GIF' : '';
+}
+
+/**
+ * Publicly visible comments for one course/event's detail page, as a single
+ * flat chronological list (newest first, matching the rest of the site) —
+ * a WhatsApp-group-style chat rather than the old nested-under-its-thread
+ * layout, so a reply doesn't get visually grouped under its parent; instead
+ * every row carries 'reply_to_author_name' and 'reply_to_snippet' (a quoted
+ * preview of whatever it's replying to, or both null for a top-level
+ * comment) so the template can render that quote inline in the bubble.
+ * Defensive: this runs on every single course/event page view, so a
+ * missing `comments` table/column (deploy landed before its migration ran)
+ * must not 500 the entire site's course/event pages — just show no
+ * comments until it exists.
  * @param ?int $viewerUserId the logged-in visitor, if any — each row's
  *   'liked_by_me' reflects THEIR like state; a guest sees like counts but
  *   never a filled heart.
@@ -113,24 +131,28 @@ function get_visible_comments(int $courseId, ?int $viewerUserId = null): array {
 
     $byId = [];
     foreach ($rows as $row) {
-        $row['replies'] = [];
         $row['like_count'] = (int) $row['like_count'];
         $row['liked_by_me'] = (bool) $row['liked_by_me'];
+        $row['snippet'] = comment_quote_snippet($row);
         $byId[(int) $row['id']] = $row;
     }
+
+    $flat = [];
     foreach ($byId as $id => $row) {
         $replyToId = $row['reply_to_comment_id'] !== null ? (int) $row['reply_to_comment_id'] : null;
-        $byId[$id]['reply_to_author_name'] = ($replyToId !== null && isset($byId[$replyToId])) ? $byId[$replyToId]['author_name'] : null;
-    }
-    foreach ($byId as $id => $row) {
-        $parentId = $row['parent_id'] !== null ? (int) $row['parent_id'] : null;
-        if ($parentId !== null && isset($byId[$parentId])) {
-            $byId[$parentId]['replies'][] = $byId[$id];
+        if ($replyToId !== null && isset($byId[$replyToId])) {
+            $row['reply_to_author_name'] = $byId[$replyToId]['author_name'];
+            $row['reply_to_user_id'] = (int) $byId[$replyToId]['user_id'];
+            $row['reply_to_snippet'] = $byId[$replyToId]['snippet'];
+        } else {
+            $row['reply_to_author_name'] = null;
+            $row['reply_to_user_id'] = null;
+            $row['reply_to_snippet'] = null;
         }
+        $flat[] = $row;
     }
 
-    $topLevel = array_values(array_filter($byId, fn(array $row): bool => $row['parent_id'] === null));
-    return array_reverse($topLevel);
+    return array_reverse($flat);
 }
 
 /** @param bool $canModerate true for the comment's own author, the course's creator, or an admin. */
