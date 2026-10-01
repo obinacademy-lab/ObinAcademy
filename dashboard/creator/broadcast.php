@@ -48,7 +48,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <div class="grid md:grid-3 reveal" style="margin-top:22px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#2563eb;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#dc2626;">
     <div class="icon"><?php dash_icon('users'); ?></div>
     <div class="value"><?= count($recipients) ?></div>
     <div class="label">Followers reachable</div>

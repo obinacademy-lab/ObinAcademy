@@ -45,7 +45,7 @@ const SALE_DURATION_OPTIONS = [
 const DASHBOARD_THEMES = [
     'purple' => ['label' => 'Purple', 'swatch' => '#8b5cf6'],
     'gold'   => ['label' => 'Gold',   'swatch' => '#f5b301'],
-    'red'    => ['label' => 'Red',    'swatch' => '#e03c4e'],
+    'red'    => ['label' => 'Red',    'swatch' => '#dc2626'],
     'green'  => ['label' => 'Green',  'swatch' => '#3d8f5f'],
     'blue'   => ['label' => 'Blue',   'swatch' => '#3b82f6'],
     'slate'  => ['label' => 'Slate',  'swatch' => '#94a3b8'],
@@ -55,7 +55,7 @@ const DASHBOARD_THEMES = [
 function dashboard_theme_default(string $role): string {
     return match ($role) {
         'ADMIN' => 'slate',
-        default => 'blue',
+        default => 'red',
     };
 }
 

@@ -22,7 +22,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <p class="muted" style="margin-top:6px;">How your students and visitors are sharing your course links, and how far each one is actually reaching — last 30 days.</p>
 
 <div class="grid md:grid-3" style="margin-top:20px;">
-  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#2563eb;">
+  <div class="stat-card reveal" data-hoverable="true" style="--hover-color:#dc2626;">
     <div class="icon"><?php dash_icon('share'); ?></div>
     <div class="value" data-count-up data-count-value="<?= (int) $summary['shares'] ?>" data-count-suffix="">0</div><div class="label">Shares</div>
   </div>

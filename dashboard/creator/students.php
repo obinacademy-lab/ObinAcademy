@@ -31,7 +31,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <div class="grid sm:grid-2 lg:grid-4" style="margin-top:24px;">
-  <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#3b82f6;">
+  <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#ef4444;">
     <div class="icon"><?php dash_icon('users'); ?></div>
     <div class="value"><?= $totalStudents ?></div><div class="label">Total Students</div>
   </div>

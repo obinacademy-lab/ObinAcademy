@@ -60,7 +60,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
     <div class="icon"><?php dash_icon('check-circle'); ?></div>
     <div class="value"><?= e(format_money($available)) ?></div><div class="label">Available to Withdraw</div>
   </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#60a5fa;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#f87171;">
     <div class="icon"><?php dash_icon('users'); ?></div>
     <div class="value"><?= $salesCount ?></div><div class="label">Referred Sales</div>
   </div>

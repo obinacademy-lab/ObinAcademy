@@ -15,7 +15,7 @@ require __DIR__ . '/includes/header.php';
 // Same fixed 6-color rotation used for school cards without a cover photo
 // (includes/school_card.php) — deterministic per user id, so a given
 // follower's ring color stays stable across page loads.
-$avatarTints = ['#1d4ed8', '#0e7490', '#b45309', '#15803d', '#7c3aed', '#a21caf'];
+$avatarTints = ['#dc2626', '#0e7490', '#b45309', '#15803d', '#7c3aed', '#a21caf'];
 ?>
 <div class="container" style="max-width:640px; padding-top:40px; padding-bottom:80px;">
   <a href="<?= e(base_url('profile.php?id=' . $creatorId)) ?>" class="followers-back-link">

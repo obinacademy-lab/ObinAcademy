@@ -13,7 +13,7 @@ $whatWeDo = [
 ];
 
 $creatorBenefits = [
-    ['♾️', '#2563eb', 'Unlimited Courses', 'Create as many online courses as you want — there\'s no cap on what you can teach.'],
+    ['♾️', '#dc2626', 'Unlimited Courses', 'Create as many online courses as you want — there\'s no cap on what you can teach.'],
     ['🎥', '#f5b301', 'Video & Materials', 'Upload video lessons, PDFs, and learning materials your students can revisit anytime.'],
     ['💵', '#10b981', 'Set Your Own Pricing', 'You decide what your expertise is worth — full control over every course price.'],
     ['✨', '#8b5cf6', 'Build Your Brand', 'Grow a personal brand and reputation as a trusted expert in your field.'],
@@ -32,7 +32,7 @@ $paceBenefits = [
 ];
 
 $commitments = [
-    ['🧭', '#2563eb', 'An Easy-to-Use Platform', 'We deliver a learning experience that\'s simple, fast, and enjoyable to use.'],
+    ['🧭', '#dc2626', 'An Easy-to-Use Platform', 'We deliver a learning experience that\'s simple, fast, and enjoyable to use.'],
     ['🚀', '#f5b301', 'Support for Creators', 'We help creators build real, successful education businesses on Obin Academy.'],
     ['🛠️', '#10b981', 'Real-World Skills', 'We help learners gain practical skills they can apply immediately.'],
     ['💡', '#8b5cf6', 'Innovation', 'We promote innovation and a culture of continuous learning.'],
@@ -158,7 +158,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <div class="grid lg:grid-2" style="gap:24px;">
       <div class="value-card reveal" style="padding:34px 28px;">
-        <span class="icon-badge" style="--tint:#2563eb; width:56px; height:56px; font-size:26px;">🔭</span>
+        <span class="icon-badge" style="--tint:#dc2626; width:56px; height:56px; font-size:26px;">🔭</span>
         <h3 style="margin-top:20px; font-size:18px;">Our Vision</h3>
         <p style="margin-top:10px; font-size:14.5px;">To become Africa's leading digital learning marketplace where millions of people learn valuable skills, transform their lives, and create new income opportunities through education.</p>
       </div>
@@ -451,7 +451,7 @@ require __DIR__ . '/includes/header.php';
 <div class="section" style="background: var(--surface);">
   <div class="container" style="max-width:640px;">
     <div class="newsletter-panel reveal">
-      <span class="icon-badge" style="--tint:#2563eb; margin:0 auto;">✉️</span>
+      <span class="icon-badge" style="--tint:#dc2626; margin:0 auto;">✉️</span>
       <h2 class="h2" style="margin-top:18px;">Stay Ahead With Obin Academy</h2>
       <p class="lede" style="margin:10px auto 0; max-width:440px;">Subscribe for updates on new courses, creator opportunities, and learning resources — straight to your inbox.</p>
       <form method="post" action="<?= e(base_url('contact.php')) ?>#newsletter" class="newsletter-form" data-loading-submit>

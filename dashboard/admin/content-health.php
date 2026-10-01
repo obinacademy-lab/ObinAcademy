@@ -52,7 +52,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <p class="muted" style="margin-top:6px;">Checks every lesson's video/PDF file is actually readable — catches a broken upload before a learner does.</p>
 
 <div class="grid md:grid-3" style="margin-top:20px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#2563eb;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#dc2626;">
     <div class="icon"><?php dash_icon('book-open'); ?></div>
     <div class="value"><?= count($results) ?></div><div class="label">Lessons Checked</div>
   </div>

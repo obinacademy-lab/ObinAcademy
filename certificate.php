@@ -63,7 +63,7 @@ $pageTitle = $cert['course_title'] . ' — Certificate — Obin Academy';
       position: absolute; inset: 0; z-index: 0;
       background:
         radial-gradient(ellipse at 50% 42%, rgba(184,134,11,.05), transparent 60%),
-        repeating-linear-gradient(115deg, rgba(30,58,138,.025) 0px, rgba(30,58,138,.025) 1px, transparent 1px, transparent 14px),
+        repeating-linear-gradient(115deg, rgba(153,27,27,.025) 0px, rgba(153,27,27,.025) 1px, transparent 1px, transparent 14px),
         repeating-linear-gradient(25deg, rgba(184,134,11,.02) 0px, rgba(184,134,11,.02) 1px, transparent 1px, transparent 14px);
     }
     .cert-watermark { position: absolute; z-index: 0; top: 50%; left: 50%; transform: translate(-50%,-46%); width: 40%; opacity: .05; color: var(--brand-950); pointer-events: none; }
@@ -155,7 +155,7 @@ $pageTitle = $cert['course_title'] . ' — Certificate — Obin Academy';
             <circle cx="50" cy="46" r="38" fill="url(#sealGrad)"></circle>
             <circle cx="50" cy="46" r="38" fill="none" stroke="#7a5a06" stroke-width="1"></circle>
             <circle cx="50" cy="46" r="31" fill="none" stroke="#fff" stroke-width="1" stroke-dasharray="2 3" opacity="0.65"></circle>
-            <circle cx="50" cy="46" r="26" fill="#1e3a8a"></circle>
+            <circle cx="50" cy="46" r="26" fill="#991b1b"></circle>
             <g transform="translate(50,46) scale(1.5) translate(-12,-12)" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 10 12 5 2 10l10 5 10-5Z"></path>
               <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"></path>
@@ -204,7 +204,7 @@ $pageTitle = $cert['course_title'] . ' — Certificate — Obin Academy';
         text: <?= json_encode($verifyUrl) ?>,
         width: 54,
         height: 54,
-        colorDark: '#1e3a8a',
+        colorDark: '#991b1b',
         colorLight: '#fdfcf8',
         correctLevel: QRCode.CorrectLevel.M
       });

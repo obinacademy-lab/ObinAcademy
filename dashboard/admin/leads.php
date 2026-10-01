@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $detailId = (int) query_param('id');
 $statusLabels = ['NEW' => 'New', 'CONTACTED' => 'Contacted', 'INTERESTED' => 'Interested', 'ENROLLED' => 'Enrolled', 'CREATOR' => 'Creator', 'LOST' => 'Lost'];
-$statusTint = ['NEW' => '#2563eb', 'CONTACTED' => '#8b5cf6', 'INTERESTED' => '#f5b301', 'ENROLLED' => '#10b981', 'CREATOR' => '#ec4899', 'LOST' => '#94a3b8'];
+$statusTint = ['NEW' => '#dc2626', 'CONTACTED' => '#8b5cf6', 'INTERESTED' => '#f5b301', 'ENROLLED' => '#10b981', 'CREATOR' => '#ec4899', 'LOST' => '#94a3b8'];
 $sourceLabels = ['google' => 'Google / Search', 'social' => 'Social Media', 'direct' => 'Direct / Shared Link', 'other' => 'Other'];
 
 if ($detailId) {
@@ -183,7 +183,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#2563eb;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#dc2626;">
     <div class="icon"><?php dash_icon('sparkle'); ?></div>
     <div class="value"><?= number_format((int) ($statCounts['total'] ?? 0)) ?></div><div class="label">Total Leads</div>
   </div>

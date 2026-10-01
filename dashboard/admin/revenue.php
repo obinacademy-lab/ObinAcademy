@@ -84,7 +84,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
 <h3 class="dash-section-label" style="margin-top:28px;"><?= e(format_date($selectedDate . ' 00:00:00')) ?></h3>
 <div class="grid md:grid-3" style="margin-top:14px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#2563eb;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#dc2626;">
     <div class="icon">💵</div>
     <div class="value"><?= e(format_money($daySummary['collected'])) ?></div><div class="label">Total Collected</div>
   </div>

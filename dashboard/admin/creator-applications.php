@@ -45,7 +45,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <div class="mini-stat" style="--tint:#f59e0b;"><span class="mini-stat-value"><?= count($pending) ?></span><span class="mini-stat-label">Pending</span></div>
   <div class="mini-stat" style="--tint:#16a34a;"><span class="mini-stat-value"><?= $approvedTotal ?></span><span class="mini-stat-label">Approved</span></div>
   <div class="mini-stat" style="--tint:#dc2626;"><span class="mini-stat-value"><?= $rejectedTotal ?></span><span class="mini-stat-label">Rejected</span></div>
-  <div class="mini-stat" style="--tint:#2563eb;"><span class="mini-stat-value"><?= $approvalRate !== null ? $approvalRate . '%' : '—' ?></span><span class="mini-stat-label">Approval Rate</span></div>
+  <div class="mini-stat" style="--tint:#dc2626;"><span class="mini-stat-value"><?= $approvalRate !== null ? $approvalRate . '%' : '—' ?></span><span class="mini-stat-label">Approval Rate</span></div>
 </div>
 
 <h3 class="dash-section-label" style="margin-top:32px;">Pending Review</h3>

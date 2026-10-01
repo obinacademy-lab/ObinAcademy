@@ -5,7 +5,7 @@
   --dash-panel: #ffffff;
   --dash-border: #e4e7ec;
   --dash-border-soft: #edeef2;
-  --dash-tint: #eaf1ff;
+  --dash-tint: #fef2f2;
   --dash-good: #059669; --dash-good-bg: #ecfdf5;
   --dash-warn: #d97706; --dash-warn-bg: #fffaeb;
   --dash-bad: #dc2626; --dash-bad-bg: #fef2f2;
@@ -79,7 +79,7 @@
 .dash-widget {
   margin: auto 2px 4px; padding: 15px;
   border-radius: var(--radius); border: none;
-  background: linear-gradient(160deg, var(--brand-900), #0f2360);
+  background: linear-gradient(160deg, var(--brand-900), #450a0a);
   flex-shrink: 0;
   box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--brand-900) 55%, transparent);
 }
@@ -210,7 +210,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-hero {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
   padding: 26px 28px; border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--brand-900), #0f2360 65%, var(--brand-800));
+  background: linear-gradient(135deg, var(--brand-900), #450a0a 65%, var(--brand-800));
   box-shadow: 0 20px 40px -24px color-mix(in srgb, var(--brand-900) 55%, transparent);
 }
 .dash-hero .status-pill { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.2); color: #fff; }
@@ -481,8 +481,8 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-premium.theme-slate {
   --dash-bg: #0a0c12; --dash-panel: #12141d; --dash-panel-2: #171a26;
   --dash-border: rgba(255,255,255,0.08); --dash-border-soft: rgba(255,255,255,0.05);
-  --dash-tint: rgba(59,130,246,0.14); --dash-shadow: none;
-  --dash-accent-text: #93c5fd;
+  --dash-tint: rgba(239,68,68,0.14); --dash-shadow: none;
+  --dash-accent-text: #fca5a5;
   --ink: #f2f4fa; --muted: #8b93a8;
 }
 .dash-premium.theme-purple {
@@ -501,9 +501,9 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 }
 .dash-premium.theme-red {
   --dash-bg: #150a0b; --dash-panel: #221012; --dash-panel-2: #2b1416;
-  --dash-border: rgba(224,60,78,0.18); --dash-border-soft: rgba(224,60,78,0.09);
-  --dash-tint: rgba(224,60,78,0.16); --dash-shadow: 0 1px 2px rgba(16,4,6,0.4), 0 16px 40px -20px rgba(16,4,6,0.7);
-  --accent: #e03c4e; --accent-dark: #a8232f; --dash-accent-text: #ff9494;
+  --dash-border: rgba(220,38,38,0.20); --dash-border-soft: rgba(220,38,38,0.10);
+  --dash-tint: rgba(220,38,38,0.18); --dash-shadow: 0 1px 2px rgba(16,4,6,0.4), 0 16px 40px -20px rgba(16,4,6,0.7);
+  --accent: #dc2626; --accent-dark: #b91c1c; --dash-accent-text: #fca5a5;
   --ink: #f8ecec; --muted: #ab8a8c;
 }
 .dash-premium.theme-green {
@@ -608,7 +608,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-notif-row:hover { background: #f4f5f8; }
 .dash-notif-row p { font-size: 13px; line-height: 1.45; color: #14181b; margin: 0; }
 .dash-notif-row .muted { font-size: 11px; margin-top: 4px; display: block; color: #5b6670; }
-.dash-notif-row.unread { background: #eaf1ff; }
+.dash-notif-row.unread { background: #fef2f2; }
 .dash-notif-row.unread p { font-weight: 600; }
 
 /* Every plain <input>/<select>/<textarea> across the dashboard (search
