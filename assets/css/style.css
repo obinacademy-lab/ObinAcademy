@@ -2344,7 +2344,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.45s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.35s ease;
 }
 .home-discover-card.reveal:hover { border-color: var(--border-strong); box-shadow: var(--shadow-pop-lg); transform: translateY(-6px); }
-.home-discover-card .thumb { position: relative; aspect-ratio: 16/10; background: var(--border); overflow: hidden; }
+.home-discover-card .thumb { position: relative; aspect-ratio: 16/9; background: var(--border); overflow: hidden; }
 .home-discover-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s cubic-bezier(0.16,1,0.3,1); }
 .home-discover-card:hover .thumb img { transform: scale(1.08); }
 .home-discover-card .thumb::after {
@@ -2354,15 +2354,15 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 .home-discover-card:hover .thumb::after { opacity: 1; }
 .home-discover-card .thumb .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 700; font-size: 13px; }
+/* Skool-style: the logo sits inline beside the school name (see .school-id),
+   not overlapping the banner. */
 .home-discover-card .avatar {
-  position: absolute; left: 16px; bottom: -20px; width: 48px; height: 48px; border-radius: 11px;
-  background: #fff; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow: hidden;
-  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; color: var(--accent);
-  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1);
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--border); overflow: hidden;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: var(--accent);
 }
-.home-discover-card:hover .avatar { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,.2); }
 @media (prefers-reduced-motion: reduce) {
-  .home-discover-card.reveal, .home-discover-card .thumb img, .home-discover-card .thumb::after, .home-discover-card .avatar { transition: none; }
+  .home-discover-card.reveal, .home-discover-card .thumb img, .home-discover-card .thumb::after { transition: none; }
   .home-discover-card.reveal:hover { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2375,27 +2375,58 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .home-discover-card.reveal:nth-child(5) { transition-delay: 0.32s, 0.32s, 0s, 0s; }
 .home-discover-card.reveal:nth-child(6) { transition-delay: 0.4s, 0.4s, 0s, 0s; }
 .home-discover-card .avatar img { width: 100%; height: 100%; object-fit: cover; }
-.home-discover-card .body { padding: 34px 18px 20px; }
-.home-discover-card h3 { margin: 0; font-size: 19px; font-weight: 800; line-height: 1.25; letter-spacing: -0.01em; color: var(--ink); }
-.home-discover-card .creator { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
-.home-discover-card .desc {
-  margin: 10px 0 0; font-size: 14px; color: #4a4a4a; line-height: 1.55;
+.home-discover-card .body { padding: 16px 18px 18px; }
+.home-discover-card .school-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.home-discover-card .school-id-text { min-width: 0; display: flex; flex-direction: column; }
+.home-discover-card h3 {
+  margin: 0; font-size: 17px; font-weight: 800; line-height: 1.25; letter-spacing: -0.01em; color: var(--ink);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-/* Icon+number pairs instead of "N courses · N students · ..." — the words
-   alone were wider than the card at any readable size, wrapping mid-row
-   (see .course-card .stats-row for the same convention on a course card).
-   Never wraps: nowrap + flex-shrink:0 on every pair, with a hidden
-   horizontal scroll as a last-resort safety net rather than breaking. */
-.home-discover-card .school-stats-row {
-  margin: 14px 0 0; display: flex; align-items: center; gap: 12px;
+.home-discover-card .creator { margin: 2px 0 0; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-discover-card .desc {
+  margin: 12px 0 0; font-size: 14px; color: #4a4a4a; line-height: 1.55;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+/* One meta row: courses, students, rating (only with reviews), then the
+   price pushed right. Icon+number pairs rather than words (see
+   .course-card .stats-row) so it never outgrows the card; nowrap with a
+   hidden scroll as a last-resort safety net. */
+.home-discover-card .school-meta {
+  margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 14px;
   flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
 }
-.home-discover-card .school-stats-row::-webkit-scrollbar { display: none; }
-.home-discover-card .school-stats-row span { display: flex; align-items: center; gap: 4px; flex-shrink: 0; font-size: 12.5px; font-weight: 700; color: var(--muted); }
-.home-discover-card .school-stats-row svg { width: 13px; height: 13px; flex-shrink: 0; }
-.home-discover-card .school-price-row { margin: 10px 0 0; font-size: 13px; color: var(--muted); white-space: nowrap; }
-.home-discover-card .school-price-row strong { color: var(--ink); font-weight: 800; }
+.home-discover-card .school-meta::-webkit-scrollbar { display: none; }
+.home-discover-card .school-meta > span { display: flex; align-items: center; gap: 5px; flex-shrink: 0; font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.home-discover-card .school-meta svg { width: 14px; height: 14px; flex-shrink: 0; }
+.home-discover-card .school-meta .rating svg { fill: var(--gold); stroke: none; }
+.home-discover-card .school-meta > span.price { display: block; margin-left: auto; font-weight: 400; }
+.home-discover-card .school-meta .price strong { color: var(--ink); font-weight: 800; }
+
+/* Homepage search: no submit button, like skool's — Enter submits. */
+.hero-search-v3.home-search-bare { padding-right: 22px; }
+.hero-search-v3.home-search-bare input { padding: 16px 0; }
+.hero-search-v3.home-search-bare input::-webkit-search-cancel-button { display: none; }
+
+/* "More…" reveals the categories beyond the first seven. */
+.home-discover-chips { scrollbar-width: none; }
+.home-discover-chips::-webkit-scrollbar { display: none; }
+.home-discover-chip[hidden] { display: none; }
+button.home-discover-chip { font-family: inherit; cursor: pointer; }
+.home-discover-chip-filter { margin-left: auto; }
+.home-discover-chips.is-expanded { flex-wrap: wrap; overflow-x: visible; }
+.home-discover-chips.is-expanded .home-discover-chip-filter { margin-left: 0; }
+
+/* Numbered pagination: Previous 1 2 … 9 Next. */
+.home-pager { margin-top: 44px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; font-size: 14px; }
+.home-pager a, .home-pager span, .home-pager i {
+  min-width: 36px; height: 36px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px; font-style: normal; color: var(--muted); text-decoration: none;
+}
+.home-pager a:hover { background: var(--surface); color: var(--ink); }
+.home-pager .on { background: var(--ink); color: #fff; font-weight: 700; }
+.home-pager .dis { opacity: 0.4; }
+.home-pager i { padding: 0 4px; min-width: 0; }
 
 .home-discover-cta { text-align: center; margin-top: 40px; }
 .home-discover-cta a {

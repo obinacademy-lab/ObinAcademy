@@ -211,7 +211,7 @@ function get_related_courses(int $courseId, int $categoryId, ?int $excludeUserId
  * happens against the EXISTS subquery a caller adds to $whereSql, same
  * pattern get_course_cards() uses for courses.
  */
-function get_school_cards(string $whereSql = '', array $params = [], string $orderBy = 'student_count DESC', ?int $limit = null): array {
+function get_school_cards(string $whereSql = '', array $params = [], string $orderBy = 'student_count DESC', ?int $limit = null, ?int $offset = null): array {
     $sql = "
         SELECT u.id, u.name, u.school_name, u.avatar_url, u.school_cover_url, u.headline,
           u.pricing_model, u.school_monthly_price,
@@ -219,6 +219,7 @@ function get_school_cards(string $whereSql = '', array $params = [], string $ord
           (SELECT COUNT(*) FROM enrollments e JOIN courses c2 ON c2.id = e.course_id WHERE c2.creator_id = u.id AND c2.status = 'PUBLISHED') AS student_count,
           (SELECT MIN(c3.price) FROM courses c3 WHERE c3.creator_id = u.id AND c3.status = 'PUBLISHED' AND c3.price > 0) AS min_price,
           (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN courses c4 ON c4.id = r.course_id WHERE c4.creator_id = u.id) AS avg_rating,
+          (SELECT COUNT(*) FROM reviews r9 JOIN courses c9 ON c9.id = r9.course_id WHERE c9.creator_id = u.id) AS review_count,
           (SELECT COALESCE(SUM(c7.view_count), 0) FROM courses c7 WHERE c7.creator_id = u.id AND c7.status = 'PUBLISHED') AS view_count,
           (SELECT COUNT(*) FROM school_follows sf WHERE sf.creator_id = u.id) AS follower_count,
           -- A school with no school_cover_url of its own borrows the
@@ -231,8 +232,20 @@ function get_school_cards(string $whereSql = '', array $params = [], string $ord
           " . ($whereSql ? "AND $whereSql" : '') . "
         ORDER BY $orderBy
     ";
-    if ($limit) $sql .= " LIMIT $limit";
+    if ($limit) $sql .= ' LIMIT ' . (int) $limit . ($offset ? ' OFFSET ' . (int) $offset : '');
     return db_all($sql, $params);
+}
+
+/** How many schools get_school_cards() would return in total (same eligibility rule) — for pagination. */
+function count_school_cards(string $whereSql = '', array $params = []): int {
+    $row = db_one(
+        "SELECT COUNT(*) AS n FROM users u
+         WHERE u.role IN ('CREATOR', 'ADMIN')
+           AND EXISTS (SELECT 1 FROM courses c5 WHERE c5.creator_id = u.id AND c5.status = 'PUBLISHED')
+           " . ($whereSql ? "AND $whereSql" : ''),
+        $params
+    );
+    return (int) ($row['n'] ?? 0);
 }
 
 function get_featured_schools(int $take = 6): array {
