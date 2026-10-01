@@ -174,6 +174,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $eligible = false;
                 flash_set('error', 'Add at least one module with a lesson before submitting for review.');
             }
+            // A draft started in the upload-first builder sits in a placeholder category until one is picked.
+            $catRow = db_one('SELECT slug FROM categories WHERE id = ?', [$course['category_id']]);
+            if ($eligible && $catRow && $catRow['slug'] === 'uncategorized') {
+                $eligible = false;
+                flash_set('error', 'Choose a category in Edit Course Details before submitting for review.');
+            }
             if ($eligible) {
                 db_run("UPDATE courses SET status='PENDING_REVIEW', submitted_at=NOW(), rejection_reason=NULL WHERE id=?", [$courseId]);
                 note_admin_edit($actingAsAdmin, $user, 'course.submitted', $course['title'], 'via creator dashboard');
@@ -262,6 +268,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <?php render_share_button(base_url('courses/view.php?slug=' . $course['slug']), $course['title'], 'Share Course', 'light', (int) $course['id']); ?>
     <?php endif; ?>
     <?php if (in_array($course['status'], ['DRAFT', 'REJECTED'], true)): ?>
+      <a href="<?= e(base_url('dashboard/creator/course-build.php?id=' . $courseId)) ?>" class="btn btn-outline btn-sm">Open in builder</a>
       <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="submit_for_review"><button class="btn btn-primary btn-sm">Submit for Review</button></form>
     <?php elseif ($course['status'] === 'PENDING_REVIEW'): ?>
       <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="withdraw_submission"><button class="btn btn-outline btn-sm">Withdraw</button></form>

@@ -29,7 +29,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <h1 class="h2" style="color:#fff;">Welcome back, <?= e(explode(' ', trim($user['name']))[0]) ?></h1>
     <p style="margin-top:6px; color:rgba(255,255,255,0.72);">Manage your courses and track how they're performing.</p>
   </div>
-  <a href="<?= e(base_url('dashboard/creator/course-new.php')) ?>" class="btn btn-gold" style="border-radius:999px;">+ Create Course</a>
+  <a href="<?= e(base_url('dashboard/creator/course-build.php')) ?>" class="btn btn-gold" style="border-radius:999px;">+ Create Course</a>
 </div>
 
 <?php if (!$hasSocialLinks): ?>
@@ -54,7 +54,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php if (!$courses): ?>
   <div class="card card-pad reveal" style="margin-top:24px; text-align:center; border-style:dashed;">
     <p class="muted">You haven't created any courses yet.</p>
-    <a href="<?= e(base_url('dashboard/creator/course-new.php')) ?>" class="btn btn-primary" style="margin-top:14px;">Create Your First Course</a>
+    <a href="<?= e(base_url('dashboard/creator/course-build.php')) ?>" class="btn btn-primary" style="margin-top:14px;">Create Your First Course</a>
   </div>
 <?php else: ?>
   <div class="activity-feed reveal" style="margin-top:24px;">

@@ -23,8 +23,9 @@ function get_students_for_creator(int $creatorId): array {
     );
 }
 
+/** All categories for public lists and forms. The "Uncategorized" placeholder that unfinished builder drafts sit in is left out. */
 function get_categories(): array {
-    return db_all('SELECT * FROM categories ORDER BY name ASC');
+    return db_all("SELECT * FROM categories WHERE slug <> 'uncategorized' ORDER BY name ASC");
 }
 
 /** Course rows (+ category name, creator name/avatar, student count, avg rating) for card rendering. */
