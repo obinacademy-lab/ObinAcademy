@@ -129,9 +129,51 @@ require __DIR__ . '/includes/header.php';
           <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
         </div>
         <?php if ($teaching): ?>
-          <div class="grid sm:grid-2 lg:grid-2">
-            <?php foreach ($teaching as $c) render_course_card($c); ?>
+          <?php
+            // In-school course search: shown once a school has enough courses
+            // that scrolling for one gets tedious. Filtering is client-side
+            // (school-search.js) over the cards already on the page, by title,
+            // category or summary — instant, no reload.
+            $schoolCats = [];
+            foreach ($teaching as $tc) {
+                $cid = (int) $tc['category_id'];
+                if (!isset($schoolCats[$cid])) $schoolCats[$cid] = ['name' => $tc['category_name'], 'n' => 0];
+                $schoolCats[$cid]['n']++;
+            }
+            uasort($schoolCats, fn($a, $b) => $b['n'] <=> $a['n']);
+            $showSchoolSearch = count($teaching) >= 4;
+          ?>
+          <?php if ($showSchoolSearch): ?>
+            <div class="school-search" data-school-search data-total="<?= count($teaching) ?>">
+              <label class="school-search-box">
+                <?php dash_icon('search'); ?>
+                <input type="search" placeholder="Search <?= e($profile['name']) ?>'s courses by name or category" aria-label="Search this school's courses" data-school-search-input autocomplete="off">
+                <button type="button" class="school-search-clear" data-school-search-clear aria-label="Clear search" hidden>&times;</button>
+              </label>
+              <?php if (count($schoolCats) > 1): ?>
+                <div class="school-chips" role="group" aria-label="Filter by category">
+                  <button type="button" class="school-chip is-active" data-school-chip="" aria-pressed="true">All <span><?= count($teaching) ?></span></button>
+                  <?php foreach ($schoolCats as $cid => $cat): ?>
+                    <button type="button" class="school-chip" data-school-chip="<?= (int) $cid ?>" aria-pressed="false"><?= e($cat['name']) ?> <span><?= (int) $cat['n'] ?></span></button>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
+              <p class="school-search-status" data-school-search-status aria-live="polite" hidden></p>
+            </div>
+          <?php endif; ?>
+          <div class="grid sm:grid-2 lg:grid-2" data-school-courses>
+            <?php foreach ($teaching as $c): ?>
+              <div class="school-course" data-course-cat="<?= (int) $c['category_id'] ?>" data-course-text="<?= e(mb_strtolower(($c['title'] ?? '') . ' ' . ($c['category_name'] ?? '') . ' ' . ($c['summary'] ?? ''))) ?>">
+                <?php render_course_card($c); ?>
+              </div>
+            <?php endforeach; ?>
           </div>
+          <?php if ($showSchoolSearch): ?>
+            <div class="school-search-empty" data-school-search-empty hidden>
+              <p>No courses match <strong data-school-search-term></strong>.</p>
+              <button type="button" class="btn btn-outline btn-sm" data-school-search-reset>Show all courses</button>
+            </div>
+          <?php endif; ?>
         <?php endif; ?>
       </div>
     <?php else: ?>
@@ -172,4 +214,5 @@ require __DIR__ . '/includes/header.php';
   </div>
 <?php endif; ?>
 <?php if ($isCreator): ?><script src="<?= e(versioned_asset('assets/js/share.js')) ?>"></script><?php endif; ?>
+<?php if ($isCreator): ?><script src="<?= e(versioned_asset('assets/js/school-search.js')) ?>"></script><?php endif; ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>
