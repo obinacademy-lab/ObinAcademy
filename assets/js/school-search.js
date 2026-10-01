@@ -10,14 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const input = root.querySelector("[data-school-search-input]");
   const clearBtn = root.querySelector("[data-school-search-clear]");
   const status = root.querySelector("[data-school-search-status]");
+  const statusText = status?.querySelector("[data-school-search-text]");
+  const clearFiltersBtn = status?.querySelector("[data-school-search-clear-filters]");
   const chips = Array.from(root.querySelectorAll("[data-school-chip]"));
   const section = root.closest(".profile-section");
-  const countEl = section?.querySelector(".profile-section-head .count");
   const empty = section?.querySelector("[data-school-search-empty]");
   const emptyTerm = empty?.querySelector("[data-school-search-term]");
   const resetBtn = empty?.querySelector("[data-school-search-reset]");
   const total = parseInt(root.dataset.total, 10) || 0;
-  const originalCount = countEl ? countEl.textContent : "";
 
   // Lowercased and accent-stripped on both sides so "cafe" finds "Café".
   const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -44,12 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const filtering = raw !== "" || activeCat !== "";
     clearBtn.hidden = raw === "";
-    if (countEl) {
-      countEl.textContent = filtering ? `${shown} of ${total} course${total === 1 ? "" : "s"}` : originalCount;
-    }
+    // The header keeps its plain total; the results line carries the count.
     if (status) {
-      status.hidden = !filtering;
-      status.textContent = filtering ? `${shown} course${shown === 1 ? "" : "s"} found` : "";
+      status.dataset.idle = String(!filtering);
+      if (statusText) {
+        statusText.innerHTML = filtering ? `Showing <b>${shown}</b> of <b>${total}</b> course${total === 1 ? "" : "s"}` : "";
+      }
     }
     list.hidden = shown === 0;
     if (empty) {
@@ -92,4 +92,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   chips.forEach((chip) => chip.addEventListener("click", () => setCategory(chip.dataset.schoolChip)));
   resetBtn?.addEventListener("click", reset);
+  clearFiltersBtn?.addEventListener("click", reset);
 });

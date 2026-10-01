@@ -148,7 +148,7 @@ require __DIR__ . '/includes/header.php';
               <label class="school-search-box">
                 <?php dash_icon('search'); ?>
                 <input type="search" placeholder="Search <?= e($profile['name']) ?>'s courses by name or category" aria-label="Search this school's courses" data-school-search-input autocomplete="off">
-                <button type="button" class="school-search-clear" data-school-search-clear aria-label="Clear search" hidden>&times;</button>
+                <button type="button" class="school-search-clear" data-school-search-clear aria-label="Clear search" hidden>Clear</button>
               </label>
               <?php if (count($schoolCats) > 1): ?>
                 <div class="school-chips" role="group" aria-label="Filter by category">
@@ -158,7 +158,7 @@ require __DIR__ . '/includes/header.php';
                   <?php endforeach; ?>
                 </div>
               <?php endif; ?>
-              <p class="school-search-status" data-school-search-status aria-live="polite" hidden></p>
+              <p class="school-search-status" data-school-search-status data-idle="true" aria-live="polite"><span data-school-search-text></span><button type="button" data-school-search-clear-filters>Clear filters</button></p>
             </div>
           <?php endif; ?>
           <div class="grid sm:grid-2 lg:grid-2" data-school-courses>
