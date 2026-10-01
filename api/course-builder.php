@@ -130,8 +130,15 @@ try {
             $type = $mime === 'application/pdf' ? 'PDF' : 'VIDEO';
             $fileUrl = save_upload($_FILES['file'], $type === 'VIDEO' ? 'videos' : 'pdfs');
 
-            // Lessons join the last module; the first upload creates the default one.
-            $module = db_one('SELECT id FROM modules WHERE course_id = ? ORDER BY sort_order DESC, id DESC LIMIT 1', [$courseId]);
+            // Lessons go into the module the creator picked; with none picked they join the last
+            // module, and the very first upload creates a default one.
+            $wantModule = (int) ($in['moduleId'] ?? 0);
+            if ($wantModule) {
+                $module = db_one('SELECT id FROM modules WHERE id = ? AND course_id = ?', [$wantModule, $courseId]);
+                if (!$module) json_response(['error' => 'That module no longer exists.'], 404);
+            } else {
+                $module = db_one('SELECT id FROM modules WHERE course_id = ? ORDER BY sort_order DESC, id DESC LIMIT 1', [$courseId]);
+            }
             if ($module) {
                 $moduleId = (int) $module['id'];
             } else {
@@ -144,6 +151,20 @@ try {
             );
             builder_ok($courseId, ['lessonId' => $lessonId]);
         }
+
+        case 'add_module': {
+            $title = mb_substr($str('title'), 0, 191);
+            if ($title === '') $title = DEFAULT_MODULE_TITLE;
+            $next = (int) db_one('SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM modules WHERE course_id = ?', [$courseId])['n'];
+            $newId = db_insert('INSERT INTO modules (title, sort_order, course_id) VALUES (?, ?, ?)', [$title, $next, $courseId]);
+            builder_ok($courseId, ['newModuleId' => $newId]);
+        }
+
+        case 'delete_module':
+            // Its lessons go with it (the old manage page did the same, with a confirmation).
+            db_run('DELETE FROM modules WHERE id = ? AND course_id = ?', [(int) $in['id'], $courseId]);
+            builder_reindex($courseId);
+            builder_ok($courseId);
 
         case 'upload_thumbnail': {
             if (empty($_FILES['file']['name'])) json_response(['error' => 'No image received.'], 400);

@@ -1,7 +1,8 @@
-// Upload-first course builder (dashboard/creator/course-build.php).
-// The first file dropped creates the draft course through api/course-builder.php;
-// after that the page is a lesson timeline (upload, rename, reorder, split into
-// modules) next to a details panel that autosaves. Nothing reloads.
+// Course builder (dashboard/creator/course-build.php).
+// The first file dropped (or "Start with modules") creates the draft course through
+// api/course-builder.php. After that the page is a list of modules, each with its own
+// lessons and its own upload area (add, name, reorder, delete), next to a details panel
+// that autosaves. Nothing reloads.
 (() => {
   const root = document.querySelector("[data-cb]");
   if (!root) return;
@@ -20,7 +21,8 @@
   let S = cfg.state; // {course, modules} from the server, or null before the draft exists
   let courseId = cfg.courseId || 0;
   let creating = null;
-  let pending = []; // files uploading or waiting: {pid, file, pct, status: queued|uploading|error, msg}
+  let pending = []; // files uploading or waiting: {pid, file, moduleId, pct, status: queued|uploading|error, msg}
+  let nudged = false; // the first auto-created module gets focus once, so it is named straight away
   let nextPid = 1;
   let running = false;
   let submitted = false;
@@ -48,13 +50,14 @@
     return json;
   }
 
-  function upload(action, file, onProgress) {
+  function upload(action, file, onProgress, extra = {}) {
     return new Promise((resolve, reject) => {
       const fd = new FormData();
       fd.append("action", action);
       fd.append("courseId", String(courseId));
       fd.append("csrf_token", cfg.csrf);
       fd.append("file", file);
+      Object.entries(extra).forEach(([k, v]) => fd.append(k, String(v)));
       const xhr = new XMLHttpRequest();
       xhr.open("POST", cfg.api);
       xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)); };
@@ -99,12 +102,16 @@
 
   // ---- adding files -------------------------------------------------------
   const OK_EXT = /\.(mp4|mov|webm|ogv|ogg|m4v|pdf)$/i;
-  function addFiles(list) {
+  function addFiles(list, moduleId = null) {
     const files = Array.from(list).filter((f) => f.type === "application/pdf" || f.type.startsWith("video/") || OK_EXT.test(f.name));
     const skipped = list.length - files.length;
-    if (!files.length) { startError("Those files aren't videos or PDFs. Use MP4, MOV, WebM or PDF."); return; }
+    if (!files.length) {
+      const msg = "Those files aren't videos or PDFs. Use MP4, MOV, WebM or PDF.";
+      if (buildEl.hidden) startError(msg); else setSaved(msg, true);
+      return;
+    }
     startError("");
-    files.forEach((file) => pending.push({ pid: nextPid++, file, pct: 0, status: "queued", msg: "" }));
+    files.forEach((file) => pending.push({ pid: nextPid++, file, moduleId, pct: 0, status: "queued", msg: "" }));
     showBuilder();
     if (skipped) setSaved(skipped + " file" + (skipped === 1 ? " was" : "s were") + " skipped (not a video or PDF).", true);
     ensureCourse().then(runQueue).catch((e) => {
@@ -125,9 +132,21 @@
         p.pct = 0;
         renderTimeline();
         try {
-          const j = await upload("upload_lesson", p.file, (pct) => { p.pct = pct; paintPending(p); });
+          const j = await upload("upload_lesson", p.file, (pct) => { p.pct = pct; paintPending(p); }, p.moduleId ? { moduleId: p.moduleId } : {});
           S = j.state;
           pending = pending.filter((x) => x !== p);
+          // Files dropped before any module existed all belong to the one the server just made.
+          const lastId = S.modules.length ? S.modules[S.modules.length - 1].id : null;
+          pending.forEach((x) => { if (x.moduleId === null) x.moduleId = lastId; });
+          if (!nudged) {
+            const fresh = S.modules.find((m) => isUnnamed(m.title));
+            if (fresh) {
+              nudged = true;
+              renderTimeline();
+              const inp = tl.querySelector('[data-mt="' + fresh.id + '"]');
+              if (inp) inp.focus();
+            }
+          }
         } catch (e) {
           p.status = "error";
           p.msg = e.message;
@@ -174,37 +193,66 @@
       '<button type="button" class="cb-x" data-cancel="' + p.pid + '">' + (err ? "Remove" : "Cancel") + "</button></div>";
   }
 
+  const isUnnamed = (t) => !String(t || "").trim() || (cfg.unnamed || []).includes(t);
+
+  function zoneHtml(moduleId) {
+    return '<div class="cb-modzone" data-zone="' + moduleId + '"><span>Drop lesson files here, or</span>' +
+      '<label class="btn btn-outline btn-sm" style="cursor:pointer;">Choose files<input type="file" multiple accept="video/*,application/pdf" data-pickmod="' + moduleId + '" hidden></label></div>';
+  }
+
   function renderTimeline() {
-    const mods = S ? S.modules : [];
-    let h = "";
-    if (!mods.length && pending.length) {
-      h += '<div class="cb-modh"><span class="cb-k">Module 1</span><span class="cb-mn">Course content</span></div>';
+    // Keep what the creator is typing when an upload finishing redraws the list.
+    const ae = document.activeElement;
+    let keep = null;
+    if (ae && tl.contains(ae) && (ae.dataset.mt || ae.dataset.lt)) {
+      keep = { sel: ae.dataset.mt ? '[data-mt="' + ae.dataset.mt + '"]' : '[data-lt="' + ae.dataset.lt + '"]', v: ae.value, s: ae.selectionStart, e: ae.selectionEnd };
     }
+    const mods = S ? S.modules : [];
+    const lastId = mods.length ? mods[mods.length - 1].id : null;
+    const inMod = (id) => pending.filter((p) => p.moduleId === id || (p.moduleId === null && id === lastId));
+    let h = "";
     mods.forEach((m, mi) => {
-      h += '<div class="cb-modh" data-mh="' + m.id + '"><span class="cb-k">Module ' + (mi + 1) + '</span>' +
-        '<input type="text" class="cb-mt" data-mt="' + m.id + '" value="' + esc(m.title) + '" maxlength="190" aria-label="Module name">' +
-        (mi > 0 ? '<button type="button" class="cb-x" data-merge="' + m.id + '">Merge up</button>' : "") + "</div>";
-      if (!m.lessons.length) h += '<div class="cb-empty" data-mh="' + m.id + '">No lessons here. Drag one in, or merge this module up.</div>';
+      const named = !isUnnamed(m.title);
+      h += '<div class="cb-modh" data-mh="' + m.id + '"><span class="cb-k">Module ' + (mi + 1) + "</span>" +
+        '<input type="text" class="cb-mt' + (named ? "" : " is-unnamed") + '" data-mt="' + m.id + '" value="' + esc(named ? m.title : "") + '" placeholder="Name this module" maxlength="190" aria-label="Module name">' +
+        '<span class="cb-mv cb-mv-h"><button type="button" data-mup="' + m.id + '" aria-label="Move module up"' + (mi === 0 ? " disabled" : "") + '>▲</button>' +
+        '<button type="button" data-mdn="' + m.id + '" aria-label="Move module down"' + (mi === mods.length - 1 ? " disabled" : "") + ">▼</button></span>" +
+        (mi > 0 ? '<button type="button" class="cb-x" data-merge="' + m.id + '">Merge up</button>' : "") +
+        '<button type="button" class="cb-x" data-delmod="' + m.id + '">Delete</button></div>';
+      const up = inMod(m.id);
+      if (!m.lessons.length && !up.length) h += '<div class="cb-empty" data-mh="' + m.id + '">No lessons in this module yet.</div>';
       m.lessons.forEach((l, li) => {
         h += lessonRow(l);
         if (li < m.lessons.length - 1) h += '<div class="cb-split"><button type="button" data-split="' + l.id + '">Split here · start a new module</button></div>';
       });
+      up.forEach((p) => { h += pendingRow(p); });
+      h += zoneHtml(m.id);
     });
-    pending.forEach((p) => { h += pendingRow(p); });
-    if (!mods.length && !pending.length) h = '<div class="cb-empty">No lessons yet. Add files below.</div>';
+    if (!mods.length && pending.length) {
+      h += '<div class="cb-modh"><span class="cb-k">Module 1</span><span class="cb-mn">Setting up…</span></div>';
+      pending.forEach((p) => { h += pendingRow(p); });
+    }
+    if (!mods.length && !pending.length) h = '<div class="cb-empty">No modules yet. Name your first module below, then add its lessons.</div>';
     tl.innerHTML = h;
+    if (keep) {
+      const node = tl.querySelector(keep.sel);
+      if (node) {
+        node.value = keep.v;
+        node.focus();
+        try { node.setSelectionRange(keep.s, keep.e); } catch {}
+      }
+    }
     renderSub();
   }
 
   function renderSub() {
     const n = lessonCount();
-    const m = S ? S.modules.filter((x) => x.lessons.length).length : 0;
+    const m = S ? S.modules.length : 0;
     const up = pending.filter((p) => p.status !== "error").length;
     $("[data-cb-sub]").textContent =
-      n + " lesson" + (n === 1 ? "" : "s") + " in " + m + " module" + (m === 1 ? "" : "s") +
-      (up ? " · " + up + " uploading" : "") + ". Drag by the handle, or use the arrows, to reorder.";
+      m + " module" + (m === 1 ? "" : "s") + " · " + n + " lesson" + (n === 1 ? "" : "s") +
+      (up ? " · " + up + " uploading" : "") + ". Reorder modules and lessons with the arrows, or drag lessons by the handle.";
   }
-
   // ---- ordering -----------------------------------------------------------
   const cloneMods = () => S.modules.map((m) => ({ ...m, lessons: m.lessons.slice() }));
   const structure = (mods) => mods.map((m) => ({ id: m.id, lessons: m.lessons.map((l) => l.id) }));
@@ -250,6 +298,26 @@
     commitOrder(mods);
   }
 
+  function moveModule(id, dir) {
+    const mods = cloneMods();
+    const i = mods.findIndex((m) => m.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= mods.length) return;
+    [mods[i], mods[j]] = [mods[j], mods[i]];
+    commitOrder(mods);
+  }
+
+  function dropEnd(moduleId) {
+    if (dragId === null) return;
+    const mods = cloneMods();
+    const from = locate(mods, dragId);
+    const mod = mods.find((m) => m.id === moduleId);
+    if (!from || !mod) return;
+    const [lesson] = mods[from.mi].lessons.splice(from.li, 1);
+    mod.lessons.push(lesson);
+    commitOrder(mods);
+  }
+
   function dropOn(targetLid, targetModuleId) {
     if (dragId === null) return;
     const mods = cloneMods();
@@ -284,6 +352,18 @@
         S = j.state; renderTimeline();
         const inp = tl.querySelector('[data-mt="' + j.newModuleId + '"]');
         if (inp) { inp.focus(); inp.select(); }
+      } else if (b.dataset.mup) {
+        moveModule(+b.dataset.mup, -1);
+      } else if (b.dataset.mdn) {
+        moveModule(+b.dataset.mdn, 1);
+      } else if (b.dataset.delmod) {
+        const id = +b.dataset.delmod;
+        const m = S.modules.find((x) => x.id === id);
+        const n = m ? m.lessons.length : 0;
+        if (!confirm(n ? "Delete this module and its " + n + " lesson" + (n === 1 ? "" : "s") + "?" : "Delete this empty module?")) return;
+        pending = pending.filter((p) => p.moduleId !== id);
+        S = (await api("delete_module", { id })).state;
+        renderTimeline(); updateChecklist();
       } else if (b.dataset.merge) {
         S = (await api("merge", { id: +b.dataset.merge })).state;
         renderTimeline();
@@ -300,12 +380,22 @@
   tl.addEventListener("change", async (e) => {
     const t = e.target;
     if (!(t instanceof HTMLInputElement)) return;
+    if (t.dataset.pickmod) {
+      addFiles(t.files, +t.dataset.pickmod);
+      t.value = "";
+      return;
+    }
     const kind = t.dataset.lt ? "lesson" : t.dataset.mt ? "module" : null;
     if (!kind) return;
     const id = +(t.dataset.lt || t.dataset.mt);
     const title = t.value.trim();
     if (!title) { renderTimeline(); return; }
-    try { S = (await api("rename", { kind, id, title })).state; setSaved("Saved"); }
+    try {
+      S = (await api("rename", { kind, id, title })).state;
+      if (kind === "module") t.classList.toggle("is-unnamed", isUnnamed(title));
+      setSaved("Saved");
+      updateChecklist();
+    }
     catch (err) { setSaved(err.message, true); }
   });
 
@@ -321,7 +411,14 @@
     dragId = null;
     tl.querySelectorAll(".is-drag, .is-target").forEach((el) => el.classList.remove("is-drag", "is-target"));
   });
+  const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
   tl.addEventListener("dragover", (e) => {
+    const z = e.target.closest("[data-zone]");
+    if (z && (dragId !== null || hasFiles(e))) {
+      e.preventDefault();
+      z.classList.add("is-over");
+      return;
+    }
     if (dragId === null) return;
     const t = e.target.closest("[data-lid], [data-mh]");
     if (!t) return;
@@ -329,32 +426,55 @@
     tl.querySelectorAll(".is-target").forEach((el) => el.classList.remove("is-target"));
     t.classList.add("is-target");
   });
+  tl.addEventListener("dragleave", (e) => {
+    const z = e.target.closest("[data-zone]");
+    if (z) z.classList.remove("is-over");
+  });
   tl.addEventListener("drop", (e) => {
+    const z = e.target.closest("[data-zone]");
+    if (z) {
+      e.preventDefault();
+      z.classList.remove("is-over");
+      if (dragId !== null) dropEnd(+z.dataset.zone);
+      else if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files, +z.dataset.zone);
+      return;
+    }
     const t = e.target.closest("[data-lid], [data-mh]");
     if (!t || dragId === null) return;
     e.preventDefault();
     if (t.dataset.lid) { if (+t.dataset.lid !== dragId) dropOn(+t.dataset.lid, null); }
     else dropOn(null, +t.dataset.mh);
   });
-
-  // ---- file inputs and drop zones -----------------------------------------
+  // ---- start screen, add-module form --------------------------------------
   $$("[data-cb-pick]").forEach((inp) => inp.addEventListener("change", () => { addFiles(inp.files); inp.value = ""; }));
-  [$("[data-cb-drop]"), $("[data-cb-more]")].forEach((zone) => {
-    zone.addEventListener("dragover", (e) => { if (dragId === null) { e.preventDefault(); zone.classList.add("is-over"); } });
-    zone.addEventListener("dragleave", () => zone.classList.remove("is-over"));
-    zone.addEventListener("drop", (e) => {
-      if (dragId !== null) return;
-      e.preventDefault();
-      zone.classList.remove("is-over");
-      addFiles(e.dataTransfer.files);
-    });
+  const startZone = $("[data-cb-drop]");
+  startZone.addEventListener("dragover", (e) => { if (dragId === null) { e.preventDefault(); startZone.classList.add("is-over"); } });
+  startZone.addEventListener("dragleave", () => startZone.classList.remove("is-over"));
+  startZone.addEventListener("drop", (e) => {
+    if (dragId !== null) return;
+    e.preventDefault();
+    startZone.classList.remove("is-over");
+    addFiles(e.dataTransfer.files);
   });
   $("[data-cb-blank]").addEventListener("click", async () => {
     startError("");
-    try { await ensureCourse(); showBuilder(); $("[data-f=title]").focus(); }
+    try { await ensureCourse(); showBuilder(); $("[data-cb-modname]").focus(); }
     catch (e) { startError(e.message); }
   });
-
+  $("[data-cb-addmod]").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const inp = $("[data-cb-modname]");
+    const title = inp.value.trim();
+    if (!title) { inp.focus(); return; }
+    try {
+      await ensureCourse();
+      S = (await api("add_module", { title })).state;
+      inp.value = "";
+      renderTimeline();
+      updateChecklist();
+      setSaved("Module added");
+    } catch (err) { setSaved(err.message, true); }
+  });
   // ---- details panel ------------------------------------------------------
   const savedEl = $("[data-cb-saved]");
   function setSaved(text, bad = false) {
@@ -500,6 +620,9 @@
   function readiness() {
     const f = collect();
     const left = pending.length;
+    const mods = S ? S.modules : [];
+    const unnamed = mods.filter((m) => isUnnamed(m.title)).length;
+    const empty = mods.filter((m) => !m.lessons.length).length;
     const price = Number(f.price) || 0;
     let priceOk;
     if (cfg.subscription) priceOk = f.subscriptionIncluded === 1 || price > 0;
@@ -510,7 +633,9 @@
       [cfg.subscription ? "Set a price for this course" : "Set a price, or choose Free", priceOk],
       ["Write a one-line summary", f.summary.trim().length >= 10],
       ["Describe what learners get", f.description.trim().length >= 20],
-      [left ? "Finish uploading (" + left + " left)" : "Upload at least one lesson", lessonCount() > 0 && left === 0],
+      [left ? "Finish uploading (" + left + " left)" : "Add a module with at least one lesson", mods.length > 0 && lessonCount() > 0 && left === 0],
+      ["Name every module", mods.length > 0 && unnamed === 0],
+      ["Put a lesson in every module", mods.length > 0 && empty === 0],
     ];
   }
 

@@ -12,7 +12,9 @@
 
 const UNCATEGORIZED_SLUG = 'uncategorized';
 const UNTITLED_COURSE = 'Untitled course';
-const DEFAULT_MODULE_TITLE = 'Course content';
+const DEFAULT_MODULE_TITLE = 'Untitled module';
+// Placeholder module names: a creator has to give every module a real name before submitting.
+const UNNAMED_MODULE_TITLES = ['Untitled module', 'New module'];
 
 function uncategorized_category_id(): int {
     $row = db_one('SELECT id FROM categories WHERE slug = ?', [UNCATEGORIZED_SLUG]);
@@ -114,6 +116,14 @@ function builder_submit_problems(int $courseId, bool $creatorHasSubscription, st
     if (mb_strlen($c['summary']) < 10) $p[] = 'Write a one-line summary (at least 10 characters).';
     if (mb_strlen($c['description']) < 20) $p[] = 'Describe what learners get (at least 20 characters).';
     $lessonCount = (int) db_one('SELECT COUNT(*) AS n FROM lessons l JOIN modules m ON m.id = l.module_id WHERE m.course_id = ?', [$courseId])['n'];
-    if ($lessonCount === 0) $p[] = 'Upload at least one lesson.';
+    if ($lessonCount === 0) $p[] = 'Add at least one module with a lesson.';
+    $unnamed = false;
+    $empty = false;
+    foreach (db_all('SELECT m.title, (SELECT COUNT(*) FROM lessons l WHERE l.module_id = m.id) AS n FROM modules m WHERE m.course_id = ?', [$courseId]) as $m) {
+        if (trim($m['title']) === '' || in_array($m['title'], UNNAMED_MODULE_TITLES, true)) $unnamed = true;
+        if ((int) $m['n'] === 0) $empty = true;
+    }
+    if ($unnamed) $p[] = 'Give every module a name.';
+    if ($empty) $p[] = 'Every module needs at least one lesson. Add one, or delete the empty module.';
     return $p;
 }

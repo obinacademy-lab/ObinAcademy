@@ -39,6 +39,7 @@ $config = [
     'listUrl' => base_url('dashboard/creator/index.php'),
     'buildUrl' => base_url('dashboard/creator/course-build.php?id='),
     'feeRate' => PLATFORM_FEE_RATE,
+    'unnamed' => UNNAMED_MODULE_TITLES,
     'state' => $state,
 ];
 
@@ -47,8 +48,8 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <div class="cb" data-cb>
   <section class="cb-start" data-cb-start>
-    <h1 class="h2">Start with your videos</h1>
-    <p class="cb-lede">Drop your lesson files and the course is set up around them. You can name it and set the price right after.</p>
+    <h1 class="h2">Build your course in modules</h1>
+    <p class="cb-lede">Drop your lesson files to begin. They go into a first module that you name next. Add more modules, each with its own lessons, as you go.</p>
     <div class="cb-big" data-cb-drop>
       <?php dash_icon('upload'); ?>
       <h3>Drag videos or PDFs here</h3>
@@ -57,7 +58,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <label class="btn btn-primary" style="cursor:pointer;">Choose files<input type="file" multiple accept="video/*,application/pdf" data-cb-pick hidden></label>
       </div>
     </div>
-    <p class="cb-skip">No files yet? <button type="button" class="cb-link" data-cb-blank>Start with details only</button></p>
+    <p class="cb-skip">Prefer to plan your modules first? <button type="button" class="cb-link" data-cb-blank>Start with modules</button></p>
     <p class="cb-error" data-cb-start-error role="alert" hidden></p>
   </section>
 
@@ -73,10 +74,10 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         </div>
         <p class="cb-sub" data-cb-sub></p>
         <div class="cb-tl" data-cb-tl></div>
-        <div class="cb-more" data-cb-more>
-          <p>Add more lessons. They join the end of the list.</p>
-          <label class="btn btn-outline btn-sm" style="cursor:pointer;">Add files<input type="file" multiple accept="video/*,application/pdf" data-cb-pick hidden></label>
-        </div>
+        <form class="cb-addmod" data-cb-addmod>
+          <input type="text" data-cb-modname maxlength="190" placeholder="New module title (e.g. Getting started)" aria-label="New module title" autocomplete="off">
+          <button type="submit" class="btn btn-primary btn-sm">Add module</button>
+        </form>
       </div>
 
       <aside class="cb-side">

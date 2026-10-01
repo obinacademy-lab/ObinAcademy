@@ -873,3 +873,24 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .cb-hint { margin: 8px 0 0; font-size: 12px; color: var(--muted); text-align: center; min-height: 18px; }
 .cb-hint a { color: var(--accent); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .cb * { transition: none !important; } }
+
+/* Modules: per-module upload area, add-module form, header controls. */
+.cb-mt.is-unnamed { border-color: var(--accent); background: var(--dash-tint); }
+.cb-mt.is-unnamed::placeholder { color: var(--accent); opacity: .8; }
+.cb-mv-h { flex-direction: row; }
+.cb-mv-h button[disabled] { opacity: .3; cursor: default; }
+.cb-modzone {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 2px 0 6px; padding: 10px 14px;
+  border: 1.5px dashed var(--dash-border); border-radius: 13px; color: var(--muted); font-size: 12.5px;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.cb-modzone.is-over { border-color: var(--accent); background: var(--dash-tint); }
+.cb-addmod {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; padding: 14px; border: 1px dashed var(--dash-border);
+  border-radius: 14px; background: var(--dash-panel);
+}
+.cb-addmod input {
+  flex: 1; min-width: 180px; font: inherit; font-size: 14px; color: var(--ink); background: var(--dash-panel);
+  border: 1px solid var(--dash-border); border-radius: 11px; padding: 10px 12px;
+}
+.cb-addmod input:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
