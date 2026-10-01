@@ -47,16 +47,18 @@ const DASHBOARD_THEMES = [
     'gold'   => ['label' => 'Gold',   'swatch' => '#f5b301'],
     'red'    => ['label' => 'Red',    'swatch' => '#dc2626'],
     'green'  => ['label' => 'Green',  'swatch' => '#3d8f5f'],
-    'blue'   => ['label' => 'Blue',   'swatch' => '#3b82f6'],
-    'slate'  => ['label' => 'Slate',  'swatch' => '#94a3b8'],
 ];
 
-/** The theme a role opens with before the learner/creator/admin ever picks one for themselves. */
+/**
+ * The theme every role opens with before the learner/creator/admin ever picks
+ * one for themselves: the platform's own brand red, the same for students,
+ * creators and admins. Blue and Slate used to be offered (and were the old
+ * learner/creator and admin defaults); they were retired with the red rebrand,
+ * so a user who still has one stored simply falls through to this default via
+ * dashboard_theme_for_user() rather than needing a data migration.
+ */
 function dashboard_theme_default(string $role): string {
-    return match ($role) {
-        'ADMIN' => 'slate',
-        default => 'red',
-    };
+    return 'red';
 }
 
 /** @return string a valid DASHBOARD_THEMES key — never trusts a stored value blindly, in case it predates a theme being renamed/removed. */

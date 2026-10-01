@@ -499,17 +499,6 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   color: var(--ink);
 }
 
-/* Slate intentionally leaves --accent/--accent-dark undefined here, so they
-   keep resolving to the site's own global blue (style.css :root --accent)
-   instead of a theme color — this is the original admin look, preserved
-   byte-for-byte so an admin who's never touched the picker sees zero change. */
-.dash-premium.theme-slate {
-  --dash-bg: #0a0c12; --dash-panel: #12141d; --dash-panel-2: #171a26;
-  --dash-border: rgba(255,255,255,0.08); --dash-border-soft: rgba(255,255,255,0.05);
-  --dash-tint: rgba(239,68,68,0.14); --dash-shadow: none;
-  --dash-accent-text: #fca5a5;
-  --ink: #f2f4fa; --muted: #8b93a8;
-}
 .dash-premium.theme-purple {
   --dash-bg: #130b28; --dash-panel: #1c1240; --dash-panel-2: #251854;
   --dash-border: rgba(196,163,255,0.15); --dash-border-soft: rgba(196,163,255,0.07);
@@ -538,14 +527,6 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   --accent: #3d8f5f; --accent-dark: #276b45; --dash-accent-text: #8fe0b3;
   --ink: #edf5f0; --muted: #8aab97;
 }
-.dash-premium.theme-blue {
-  --dash-bg: #0a0f1a; --dash-panel: #121b2f; --dash-panel-2: #18243d;
-  --dash-border: rgba(96,165,250,0.16); --dash-border-soft: rgba(96,165,250,0.08);
-  --dash-tint: rgba(59,130,246,0.16); --dash-shadow: 0 1px 2px rgba(4,8,16,0.4), 0 16px 40px -20px rgba(4,8,16,0.7);
-  --accent: #3b82f6; --accent-dark: #2563eb; --dash-accent-text: #93c5fd;
-  --ink: #eef4fd; --muted: #8798b8;
-}
-
 .dash-premium .dash-widget { background: var(--dash-panel-2); border: 1px solid var(--dash-border); box-shadow: none; }
 .dash-premium .dash-nav a.active { color: var(--dash-accent-text); }
 
