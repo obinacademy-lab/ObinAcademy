@@ -45,55 +45,34 @@ $socials = [
     'linkedin' => $profile['linkedin_url'],
 ];
 
-// LOCAL DESIGN EXPLORATION ONLY — Direction 4, not deployed. Real data only:
-// this creator's own review aggregate (across all their courses) plus their
-// single best real review, used as one quiet pull-quote rather than a grid
-// of testimonial cards — no invented rating or quote.
-$creatorRating = $isCreator ? db_one(
-    "SELECT COALESCE(AVG(r.rating), 0) AS avg, COUNT(*) AS n
-     FROM reviews r JOIN courses c ON c.id = r.course_id
-     WHERE c.creator_id = ?",
-    [$profileId]
-) : ['avg' => 0, 'n' => 0];
-$bestReview = $isCreator ? db_one(
-    "SELECT r.rating, r.comment, u.name AS reviewer_name
-     FROM reviews r JOIN courses c ON c.id = r.course_id JOIN users u ON u.id = r.author_id
-     WHERE c.creator_id = ? AND r.rating >= 4
-     ORDER BY r.rating DESC, r.created_at DESC LIMIT 1",
-    [$profileId]
-) : null;
-
 $pageTitle = $profile['name'] . ' — Obin Academy';
 $pageDescription = $profile['headline'] ?: ($profile['bio'] ? mb_strimwidth($profile['bio'], 0, 155, '…') : 'View ' . $profile['name'] . '\'s profile on Obin Academy.');
 require __DIR__ . '/includes/header.php';
 ?>
 <?php if ($isCreator): ?>
-  <section class="school-hero-cinematic"<?php if (!empty($schoolCoverUrl)): ?> style="--bg-image:url('<?= e(asset_src($schoolCoverUrl)) ?>');"<?php endif; ?>>
-    <div class="school-hero-cinematic-scrim"></div>
-    <div class="container school-hero-cinematic-inner">
-      <span class="byline">
-        <span class="avatar">
+  <section class="school-hero">
+    <?php if (!empty($schoolCoverUrl)): ?>
+      <div class="school-hero-cover"><img src="<?= e(asset_src($schoolCoverUrl)) ?>" alt=""></div>
+    <?php endif; ?>
+    <div class="container school-hero-inner">
+      <span class="school-hero-byline">
+        <span class="school-hero-avatar">
           <?php if ($profile['avatar_url']): ?><img src="<?= e(asset_src($profile['avatar_url'])) ?>" alt="">
           <?php else: ?><?= e(mb_substr($profile['name'], 0, 1)) ?><?php endif; ?>
         </span>
         by <?= e($profile['name']) ?><?php if ($profile['role'] === 'ADMIN'): ?> · Admin<?php endif; ?>
       </span>
       <h1><?= e($schoolLabel) ?></h1>
-      <?php if ($profile['headline']): ?><p class="headline"><?= e($profile['headline']) ?></p><?php endif; ?>
-      <div class="meta-line">
-        <span><?= number_format($stats['teaching']) ?> Course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
-        <span class="dot">·</span>
-        <span><?= number_format($stats['students']) ?> Student<?= $stats['students'] === 1 ? '' : 's' ?></span>
-        <span class="dot">·</span>
-        <a href="<?= e(base_url('school-followers.php?id=' . $profileId)) ?>"><?= number_format($followerCount) ?> Follower<?= $followerCount === 1 ? '' : 's' ?></a>
-        <?php if ($creatorRating['n'] > 0): ?>
-          <span class="dot">·</span>
-          <span>★ <?= number_format((float) $creatorRating['avg'], 1) ?> (<?= number_format((int) $creatorRating['n']) ?>)</span>
-        <?php endif; ?>
+      <?php if ($profile['headline']): ?><p class="school-hero-headline"><?= e($profile['headline']) ?></p><?php endif; ?>
+      <div class="school-hero-stats">
+        <div class="stat"><span class="value"><?= number_format($stats['teaching']) ?></span><span class="label">Course<?= $stats['teaching'] === 1 ? '' : 's' ?></span></div>
+        <div class="stat"><span class="value"><?= number_format($stats['students']) ?></span><span class="label">Student<?= $stats['students'] === 1 ? '' : 's' ?></span></div>
+        <div class="stat"><span class="value"><?= number_format($stats['views']) ?></span><span class="label">View<?= $stats['views'] === 1 ? '' : 's' ?></span></div>
+        <a href="<?= e(base_url('school-followers.php?id=' . $profileId)) ?>" class="stat stat-link"><span class="value" data-follower-count><?= number_format($followerCount) ?></span><span class="label">Follower<?= $followerCount === 1 ? '' : 's' ?></span></a>
       </div>
-      <div class="actions">
+      <div class="school-hero-actions">
         <?php if (!$isMe): ?>
-          <button type="button" class="school-hero-cinematic-follow<?= $isFollowing ? ' is-following' : '' ?>" data-follow-toggle
+          <button type="button" class="school-hero-follow-btn<?= $isFollowing ? ' is-following' : '' ?>" data-follow-toggle
                   data-creator-id="<?= (int) $profileId ?>"
                   data-logged-in="<?= $user ? '1' : '0' ?>"
                   data-toggle-url="<?= e(base_url('api/toggle-school-follow.php')) ?>"
@@ -101,33 +80,28 @@ require __DIR__ . '/includes/header.php';
             <span data-follow-label><?= $isFollowing ? 'Following' : 'Follow' ?></span>
           </button>
         <?php endif; ?>
-        <?php render_share_button(base_url('profile.php?id=' . $profile['id']), $schoolLabel, 'Share', 'dark', null, 'Share this school'); ?>
+        <?php render_share_button(base_url('profile.php?id=' . $profile['id']), $schoolLabel, 'Share School', 'light', null, 'Share this school'); ?>
         <?php if ($isMe): ?>
-          <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="school-hero-cinematic-edit">Edit Your School</a>
+          <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="school-hero-edit-btn">Edit Your School</a>
         <?php endif; ?>
       </div>
     </div>
   </section>
 
   <?php if ($profile['bio'] || array_filter($socials)): ?>
-    <section class="container profile-about-cinematic">
-      <?php if ($profile['bio']): ?><p class="profile-bio-cinematic"><?= nl2br(e($profile['bio'])) ?></p><?php endif; ?>
-      <?php if (array_filter($socials)): ?><?php render_social_links($socials); ?><?php endif; ?>
-    </section>
-  <?php endif; ?>
-
-  <?php if ($bestReview): ?>
-    <section class="pull-quote-section">
-      <div class="container">
-        <blockquote class="pull-quote">
-          <p>"<?= e($bestReview['comment']) ?>"</p>
-          <cite>— <?= e($bestReview['reviewer_name']) ?></cite>
-        </blockquote>
+    <div class="container" style="max-width:900px; padding-top:40px; text-align:left;">
+      <div class="profile-section-eyebrow">About This School</div>
+      <div class="profile-about-card">
+        <?php if ($profile['bio']): ?><div class="profile-bio" style="font-size:16px;"><?= nl2br(e($profile['bio'])) ?></div><?php endif; ?>
+        <div class="profile-about-social-row">
+          <span class="label">Follow <?= e($schoolLabel) ?></span>
+          <?php render_social_links($socials); ?>
+        </div>
       </div>
-    </section>
+    </div>
   <?php endif; ?>
 
-  <div class="container" style="max-width:1000px; padding-top:8px; padding-bottom:80px;">
+  <div class="container" style="max-width:900px; padding-top:40px; padding-bottom:80px;">
     <?php if ($publishedBundles): ?>
       <div class="profile-section" style="margin-top:0;">
         <div class="profile-section-head">
@@ -149,13 +123,16 @@ require __DIR__ . '/includes/header.php';
     <?php endif; ?>
     <?php if ($stats['teaching'] > 0): ?>
       <div class="profile-section" style="margin-top:<?= $publishedBundles ? '44px' : '0' ?>;">
-        <div class="profile-section-head">
+        <div class="profile-section-eyebrow">Courses</div>
+        <div class="profile-section-head" style="margin-top:6px;">
           <h2><?= e($profile['name']) ?>'s Courses</h2>
           <span class="count"><?= number_format($stats['teaching']) ?> course<?= $stats['teaching'] === 1 ? '' : 's' ?></span>
         </div>
-        <div class="grid sm:grid-2">
-          <?php foreach ($teaching as $c) render_course_card($c); ?>
-        </div>
+        <?php if ($teaching): ?>
+          <div class="grid sm:grid-2 lg:grid-2">
+            <?php foreach ($teaching as $c) render_course_card($c); ?>
+          </div>
+        <?php endif; ?>
       </div>
     <?php else: ?>
       <div class="card card-pad" style="text-align:center; border-style:dashed;">
