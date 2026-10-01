@@ -108,6 +108,10 @@ require __DIR__ . '/../../includes/dashboard_header.php';
               <p class="cb-help" data-cb-earn></p></div>
           <?php endif; ?>
 
+          <div class="cb-f">
+            <label class="cb-radio"><input type="checkbox" data-cb-dl-toggle> <span><b>Sell lesson downloads</b><small>Optional. Learners pay an extra fee to download this course's files.</small></span></label>
+            <div data-cb-dl-box hidden style="margin-top:8px;"><label for="cb-prem">Download price (UGX)</label><input id="cb-prem" type="number" min="0" step="1000" inputmode="numeric" placeholder="e.g. 15000" data-f="premiumPrice"></div>
+          </div>
           <div class="cb-f"><label for="cb-summary">One-line summary</label><input id="cb-summary" type="text" maxlength="500" placeholder="One sentence describing the course" data-f="summary" autocomplete="off"></div>
           <div class="cb-f"><label for="cb-desc">What will learners get?</label><textarea id="cb-desc" rows="4" placeholder="What will they learn? What is included?" data-f="description"></textarea></div>
 
@@ -117,7 +121,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
                 <select id="cb-acc" data-f="accessDurationDays">
                   <?php foreach (ACCESS_DURATION_OPTIONS as $o): ?><option value="<?= $o['days'] ?? 'lifetime' ?>"><?= e($o['label']) ?></option><?php endforeach; ?>
                 </select></div>
-              <div class="cb-f"><label for="cb-prem">Premium download price (UGX)</label><input id="cb-prem" type="number" min="0" step="1000" placeholder="Leave blank for no downloads" data-f="premiumPrice"></div>
               <p class="cb-help">Sale prices and payment plans are set from the course page once it's published.</p>
             </div>
           </details>

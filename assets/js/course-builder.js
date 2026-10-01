@@ -397,6 +397,8 @@
     field("description")[0].value = c.description;
     field("accessDurationDays")[0].value = c.accessDurationDays;
     field("premiumPrice")[0].value = c.premiumPrice;
+    dlToggle.checked = c.premiumPrice !== "";
+    syncDownloads();
     field("price")[0].value = c.price > 0 ? String(c.price) : "";
     if (cfg.subscription) {
       field("subscriptionIncluded").forEach((r) => { r.checked = +r.value === c.subscriptionIncluded; });
@@ -455,6 +457,16 @@
     const evt = f.tagName === "SELECT" || f.type === "radio" ? "change" : "input";
     f.addEventListener(evt, () => { syncPriceUi(); updateChecklist(); scheduleSave(); });
     if (evt === "input") f.addEventListener("change", () => { syncPriceUi(); updateChecklist(); });
+  });
+
+  // "Sell lesson downloads": the price box only shows while the box is ticked; unticking clears it (no downloads).
+  const dlToggle = $("[data-cb-dl-toggle]");
+  function syncDownloads() { $("[data-cb-dl-box]").hidden = !dlToggle.checked; }
+  dlToggle.addEventListener("change", () => {
+    syncDownloads();
+    const input = field("premiumPrice")[0];
+    if (dlToggle.checked) input.focus();
+    else if (input.value !== "") { input.value = ""; input.dispatchEvent(new Event("input", { bubbles: true })); }
   });
 
   function showThumb(url) {
