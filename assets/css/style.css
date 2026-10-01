@@ -136,15 +136,6 @@ p { margin: 0; }
   .lg\:grid-3 { grid-template-columns: repeat(3, 1fr); }
   .lg\:grid-4 { grid-template-columns: repeat(4, 1fr); }
   .lg\:grid-6 { grid-template-columns: repeat(6, 1fr); }
-  /* Course detail page's content column, spanning 2 of the 3 columns
-     .lg:grid-3 defines here. Scoped to this same breakpoint on purpose —
-     below 1024px the grid only has 1 real column, and an unconditional
-     "span 2" there forces CSS Grid to invent a second, auto-sized column
-     to satisfy the span. That phantom column had no content of its own
-     to size against, so the browser was blowing the whole row (and the
-     page) out past the viewport width on narrow phones — exactly the
-     "have to drag sideways to read it" bug this fixes. */
-  .course-detail-main { grid-column: span 2; }
   /* Same pattern, same reason: the WhatsApp Broadcast compose card spans 2
      of the 3 columns .lg:grid-3 defines here, scoped to this breakpoint so
      it doesn't force a phantom column below 1024px. */
@@ -2587,16 +2578,42 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .hero-trust-row .item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,0.78); }
 .hero-trust-row svg { width: 16px; height: 16px; color: var(--gold); flex-shrink: 0; }
 
-/* ---------- sticky sidebar (enroll panel + instructor card) ---------- */
+/* ---------- course detail page layout ----------
+   Four independent grid children — course-top (thumbnail + About),
+   course-sidebar (the enroll/payment panel), course-rest (Curriculum,
+   Reviews, Discussion) and course-sab (Students Also Bought) — rather
+   than one big content column plus a sidebar. Below 1024px this is a
+   single-column grid, so plain source order IS the visual order: top,
+   then the payment panel immediately after (the priority a learner
+   should see first), then the rest of the content, then Students Also
+   Bought last. At 1024px+ grid-template-areas reassembles the familiar
+   two-column layout — content on the left across all three content
+   blocks, the sticky payment panel on the right spanning all three rows
+   — without needing a second copy of the panel's markup/JS for mobile. */
+.course-layout { display: grid; gap: 48px; grid-template-columns: 1fr; align-items: start; }
 /* min-width:0 overrides the grid item's implicit min-width:auto (which
    floors at its content's min-content size) — without it, one wide,
    hard-to-shrink line anywhere inside (a price row, a badge, a button
-   label) can force this whole column, and the single-column mobile grid
-   it sits in, wider than the viewport. Same reasoning applies to the
-   content column (.course-detail-main, courses/view.php) it sits beside. */
-.course-sidebar { display:flex; flex-direction:column; gap:20px; min-width: 0; }
-.course-detail-main { min-width: 0; }
-@media (min-width:1024px) { .course-sidebar { position:sticky; top:88px; align-self:start; } }
+   label, a long curriculum title) can force its column, and the
+   single-column mobile grid it sits in, wider than the viewport. */
+.course-top, .course-rest, .course-sab, .course-sidebar { min-width: 0; }
+/* .course-flat-sec/.sab-head's own margin-top (40px) is for spacing
+   WITHIN a block; between course-top/course-rest/course-sab themselves
+   the grid's own 48px gap already does that job, so each wrapper's
+   first heading drops its own margin-top rather than stacking both. */
+.course-rest > .course-flat-sec:first-child { margin-top: 0; }
+.course-sab > .sab-head { margin-top: 0; }
+.course-sidebar { display:flex; flex-direction:column; gap:20px; }
+@media (min-width: 1024px) {
+  .course-layout {
+    grid-template-columns: 2fr 1fr;
+    grid-template-areas: "top sidebar" "rest sidebar" "sab sidebar";
+  }
+  .course-top { grid-area: top; }
+  .course-rest { grid-area: rest; }
+  .course-sab { grid-area: sab; }
+  .course-sidebar { grid-area: sidebar; position: sticky; top: 88px; align-self: start; }
+}
 
 /* ---------- curriculum accordion ---------- */
 .curriculum-list { display:flex; flex-direction:column; gap:12px; }

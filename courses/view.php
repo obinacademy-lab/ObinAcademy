@@ -160,8 +160,8 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <section class="section" style="background:var(--surface);">
-  <div class="container grid lg:grid-3" style="gap:48px; align-items:start;">
-    <div class="course-detail-main reveal reveal-delay-1">
+  <div class="container course-layout">
+    <div class="course-top reveal reveal-delay-1">
       <div class="course-flat-thumb course-flat-thumb-lg">
         <?php if (!empty($course['thumbnail_url'])): ?>
           <img src="<?= e(asset_src($course['thumbnail_url'])) ?>" alt="">
@@ -174,7 +174,13 @@ require __DIR__ . '/../includes/header.php';
         <div class="course-flat-sec-head"><span class="dash" aria-hidden="true"></span><h2>About This Course</h2></div>
         <div class="muted course-description"><?= format_rich_text($course['description']) ?></div>
       </div>
+    </div>
 
+    <aside class="course-sidebar">
+      <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled, $isInterested); ?>
+    </aside>
+
+    <div class="course-rest">
       <div class="course-flat-sec">
         <div class="course-flat-sec-head"><span class="dash" aria-hidden="true"></span><h2>Curriculum</h2></div>
         <div class="curriculum-stat"><strong><?= count($course['modules']) ?></strong> module<?= count($course['modules']) === 1 ? '' : 's' ?> &middot; <strong><?= $totalLessons ?></strong> lesson<?= $totalLessons === 1 ? '' : 's' ?></div>
@@ -371,8 +377,10 @@ require __DIR__ . '/../includes/header.php';
           <?php endif; ?>
         </div>
       </div>
+    </div>
 
-      <?php if ($relatedCourses): ?>
+    <?php if ($relatedCourses): ?>
+      <div class="course-sab">
         <div class="sab-head"><span class="dash" aria-hidden="true"></span><h2>Students Also Bought</h2></div>
         <p class="sab-sub">More from <?= e($course['category_name']) ?> — picked from what other learners on Obin Academy bought.</p>
         <div class="sab-strip">
@@ -380,12 +388,8 @@ require __DIR__ . '/../includes/header.php';
             <?php foreach ($relatedCourses as $rc) render_course_card($rc); ?>
           </div>
         </div>
-      <?php endif; ?>
-    </div>
-
-    <aside class="course-sidebar">
-      <?php render_enroll_panel($course, $user, $isOwner, $isEnrolled, $isInterested); ?>
-    </aside>
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 
