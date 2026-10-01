@@ -1837,9 +1837,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-flat-thumb-lg { box-shadow: 0 30px 60px -30px rgba(20,24,27,0.35); }
 
 .course-flat-sec { margin-top: 40px; }
-.course-flat-sec h2 { font-size: 18px; font-weight: 700; margin: 0; color: var(--ink); }
-.course-flat-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.course-flat-sec-head .dash { width: 20px; height: 3px; border-radius: 2px; background: var(--gold); flex-shrink: 0; }
+.course-flat-sec h2 { font-size: 24px; font-weight: 700; margin: 0; color: var(--ink); letter-spacing: -0.015em; text-wrap: balance; }
+.course-flat-sec-head { margin-bottom: 20px; }
+.course-flat-sec-head .sec-eyebrow { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-dark); }
 
 /* ---------- "Students Also Bought" spotlight band (course detail page) —
    the same restrained gold/accent tint already used for the "Trending
@@ -1889,6 +1889,26 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .course-description .rich-text-list li::before {
   content: ""; position: absolute; left: 2px; top: 9px;
   width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+}
+/* Course page About: the first paragraph reads as the lead, the rest as
+   comfortable body copy at a readable measure. */
+.course-layout .course-description { font-size: 15.5px; line-height: 1.8; max-width: 66ch; }
+.course-layout .course-description > p:first-child { font-size: 18px; line-height: 1.65; font-weight: 500; color: var(--ink); }
+.course-layout .course-description .rich-text-list li::before { background: var(--gold); top: 10px; }
+.course-facts {
+  display: grid; grid-template-columns: repeat(2, 1fr); margin-top: 28px;
+  border: 1px solid var(--border); border-radius: 16px; background: #fff; overflow: hidden;
+}
+.course-facts .fact { padding: 16px 18px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-width: 0; }
+.course-facts .fact:nth-child(2n) { border-right: 0; }
+.course-facts .fact:nth-last-child(-n+2) { border-bottom: 0; }
+.course-facts .v { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.course-facts .k { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+@media (min-width: 560px) {
+  .course-facts { grid-template-columns: repeat(4, 1fr); }
+  .course-facts .fact { border-bottom: 0; }
+  .course-facts .fact:nth-child(2n) { border-right: 1px solid var(--border); }
+  .course-facts .fact:last-child { border-right: 0; }
 }
 
 /* Light hero variant for courses/index.php + courses/view.php only —
@@ -2615,6 +2635,50 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   .course-sidebar { grid-area: sidebar; position: sticky; top: 88px; align-self: start; }
 }
 
+/* ---------- course page checkout card ----------
+   Scoped to .course-sidebar so bundle.php's own .enroll-panel keeps its
+   look. One focal price, one gold primary action, installments as a
+   quiet secondary plan, trust strip docked at the foot. */
+.course-sidebar .enroll-panel { border-radius: 22px; box-shadow: 0 2px 6px rgba(20,24,27,0.05), 0 32px 56px -28px rgba(20,24,27,0.30); }
+.course-sidebar .enroll-panel::before { height: 3px; }
+.course-sidebar .enroll-panel .pad { padding: 26px 26px 0; }
+.course-sidebar .enroll-panel button, .course-sidebar .enroll-panel input { font-family: inherit; }
+.course-sidebar .price-label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.course-sidebar .sale-pill { font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; padding: 3px 10px; border-radius: var(--radius-full); background: linear-gradient(135deg, #ff8a65, var(--danger)); color: #fff; }
+.course-sidebar .price-row { margin-top: 4px; gap: 6px 10px; }
+.course-sidebar .enroll-panel .price {
+  font-size: 36px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums;
+  background: none; -webkit-background-clip: border-box; background-clip: border-box; color: var(--ink); -webkit-text-fill-color: currentColor;
+}
+.course-sidebar .price-strike { font-size: 16px; font-weight: 600; color: var(--muted); text-decoration: line-through; margin-right: 8px; letter-spacing: 0; }
+.course-sidebar .enroll-panel .access-note { margin-top: 10px; font-size: 12.5px; font-weight: 500; }
+.course-sidebar .enroll-panel .btn-gold { border-radius: 14px; box-shadow: 0 10px 22px -10px rgba(201,142,0,0.7); }
+.course-sidebar .enroll-panel .btn-gold:hover { box-shadow: 0 12px 26px -10px rgba(201,142,0,0.8); }
+
+.or-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.or-divider::before, .or-divider::after { content: ""; height: 1px; background: var(--border); flex: 1; }
+.course-sidebar .btn-installments {
+  background: transparent; color: var(--ink); border: 1px solid var(--border-strong); box-shadow: none;
+  border-radius: 14px; padding: 14px 16px; align-items: stretch; text-align: left;
+}
+.course-sidebar .btn-installments:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, white); transform: none; box-shadow: none; }
+.course-sidebar .btn-installments-title { font-size: 14px; font-weight: 700; }
+.course-sidebar .btn-installments-detail { font-size: 12.5px; opacity: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.btn-installments-split { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 10px; }
+.btn-installments-split i { height: 6px; border-radius: 3px; background: var(--border); }
+.btn-installments-split i:first-child { background: var(--accent); }
+
+.course-sidebar .coupon-box { margin-top: 12px !important; text-align: center; }
+.course-sidebar .coupon-toggle { font-size: 12.5px; font-weight: 600; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 3px; }
+.course-sidebar .enroll-panel ul.perks { margin-top: 22px; padding-top: 20px; gap: 12px; font-size: 13.5px; }
+.course-sidebar .enroll-panel ul.perks li svg { width: 16px; height: 16px; }
+.course-sidebar .enroll-trust {
+  margin: 22px -26px 0; padding: 14px 26px; border-top: 1px solid var(--border); background: var(--surface);
+  flex-direction: row-reverse; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 14px;
+}
+.course-sidebar .enroll-trust .secure-note { font-weight: 600; color: var(--ink); }
+.course-sidebar .enroll-trust .pay-badge { background: transparent; }
+
 /* ---------- curriculum accordion ---------- */
 .curriculum-list { display:flex; flex-direction:column; gap:12px; }
 .module-block { border: 1px solid var(--border); border-radius: var(--radius); overflow:hidden; background:#fff; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
@@ -2717,91 +2781,93 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
   .tmod-card, .tmod-chevron, .tmod-body-outer, .tlesson { transition: none; }
 }
 
-/* ---------- course detail page: premium reviews ----------
-   Same reasoning as above: new class names, .rating-summary/.review-card
-   above are left untouched (unused once view.php switches away from them,
-   but harmless — nothing else references them). */
-.reviews-grid { display: grid; grid-template-columns: 240px 1fr; gap: 28px; margin-top: 16px; align-items: start; }
-@media (max-width: 620px) { .reviews-grid { grid-template-columns: 1fr; } }
-.rsummary {
-  border-radius: var(--radius-lg); padding: 26px 22px; text-align: center;
-  background: linear-gradient(165deg, var(--brand-950), var(--brand-900) 60%, var(--brand-800));
-  color: #fff; box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--brand-900) 55%, transparent);
-}
-.rsummary .num { font-size: 48px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-.rsummary .stars { color: var(--gold); font-size: 17px; margin-top: 8px; letter-spacing: 2px; }
-.rsummary .count { font-size: 12.5px; color: rgba(255,255,255,0.68); font-weight: 600; margin-top: 6px; }
-.rsummary .bars { margin-top: 22px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-.rbar-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.7); }
-.rbar-row .label { width: 30px; flex-shrink: 0; }
-.rbar-track { flex: 1; height: 6px; border-radius: var(--radius-full); background: rgba(255,255,255,0.14); overflow: hidden; }
-/* Bar starts empty and fills to its real --pct once .rsummary scrolls into
-   view — reuses the sitewide .reveal/IntersectionObserver system (see
-   main.js) rather than a bespoke observer just for this one component. */
-.rbar-fill { display: block; height: 100%; border-radius: var(--radius-full); background: var(--gold); width: 0; transition: width 1.1s cubic-bezier(.16,1,.3,1); }
-.rsummary.in-view .rbar-fill { width: var(--pct); }
-.rbar-row .count { width: 16px; text-align: right; flex-shrink: 0; color: rgba(255,255,255,0.85); }
+/* ---------- course detail page: shared raised panel + reviews ----------
+   One raised surface per area (reviews, discussion) instead of many
+   separate boxed cards; rows inside are separated by hairlines. */
+.cpanel { background: #fff; border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+.rev-top { display: grid; gap: 22px; padding: 26px; border-bottom: 1px solid var(--border); }
+@media (min-width: 640px) { .rev-top { grid-template-columns: 170px 1fr; align-items: center; } }
+.rev-score { text-align: center; }
+.rev-score .n { font-size: 52px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.rev-score .stars, .rev .stars { color: var(--gold); letter-spacing: 3px; font-size: 15px; margin-top: 8px; }
+.rev-score .c { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.rev-empty { margin: 0; font-size: 14px; line-height: 1.6; color: var(--muted); text-align: center; }
+@media (min-width: 640px) { .rev-empty { text-align: left; } }
+.rbars { display: grid; gap: 9px; }
+.rbar-row { display: grid; grid-template-columns: 28px 1fr 24px; align-items: center; gap: 12px; font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rbar-track { height: 7px; border-radius: var(--radius-full); background: var(--border); overflow: hidden; }
+/* Bars start empty and fill to their real --pct once .rbars scrolls into
+   view — .rbars carries .reveal so the sitewide IntersectionObserver in
+   main.js adds .in-view to it directly. */
+.rbar-fill { display: block; height: 100%; border-radius: var(--radius-full); background: linear-gradient(90deg, var(--gold-dark), var(--gold)); width: 0; transition: width 1.1s cubic-bezier(.16,1,.3,1); }
+.rbars.in-view .rbar-fill { width: var(--pct); }
+.rbar-row .count { text-align: right; color: var(--ink); }
 
-.rform { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; background: #fff; box-shadow: var(--shadow); }
-.rform .star-input { display: flex; gap: 3px; margin-top: 8px; }
+.rform { padding: 24px 26px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.rform h3 { margin: 0; font-size: 16px; font-weight: 800; }
+.rform .small { margin-top: 4px; }
+.rform .star-input { display: flex; gap: 3px; margin-top: 10px; }
 .rform .star-input button {
   background: none; border: none; cursor: pointer; padding: 2px; font-size: 26px; line-height: 1; color: var(--gold); font-family: inherit;
   transition: transform 0.15s cubic-bezier(.34,1.56,.64,1);
 }
 .rform .star-input button:hover { transform: scale(1.18) rotate(-4deg); }
 .rform textarea {
-  width: 100%; margin-top: 14px; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px;
+  width: 100%; margin-top: 14px; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; background: #fff;
   font-family: inherit; font-size: 14.5px; resize: vertical; color: var(--ink); transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .rform textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
 .rform .btn { margin-top: 14px; }
 
-.rlist { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
-.rcard {
-  position: relative; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px 20px 26px; background: #fff;
-  box-shadow: var(--shadow); overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+.rev { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 22px 26px; }
+.rev + .rev { border-top: 1px solid var(--border); }
+.rev-av {
+  width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(145deg, var(--brand-700), var(--brand-950)); color: #fff; font-weight: 700; font-size: 14px;
 }
-.rcard:hover { transform: translateY(-2px); box-shadow: 0 16px 32px -16px rgba(20,24,27,0.18); }
-.rcard::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(var(--gold), var(--brand-700)); }
-.rcard .quote { position: absolute; right: 18px; top: 10px; font-size: 46px; font-weight: 900; color: var(--surface); line-height: 1; font-family: Georgia, serif; }
-.rcard .head { display: flex; align-items: center; gap: 12px; }
-.rcard .avatar {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(145deg, var(--brand-700), var(--brand-950)); color: #fff;
-  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-700) 14%, transparent); overflow: hidden;
-}
-.rcard .avatar img { width: 100%; height: 100%; object-fit: cover; }
-.rcard .name { font-weight: 700; font-size: 14.5px; }
-.rcard .stars { color: var(--gold); font-size: 13px; margin-top: 1px; }
-.rcard .comment { margin-top: 12px; font-size: 15.5px; line-height: 1.7; color: var(--ink); position: relative; z-index: 1; }
+.rev-av img { width: 100%; height: 100%; object-fit: cover; }
+.rev-main { min-width: 0; }
+.rev-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.rev-head b { font-size: 14.5px; }
+.rev-head time { font-size: 12px; color: var(--muted); }
+.rev .stars { font-size: 12px; margin-top: 3px; letter-spacing: 2px; }
+.rev p { margin: 10px 0 0; font-size: 14.5px; line-height: 1.7; color: var(--ink); max-width: 62ch; overflow-wrap: anywhere; }
+.rev-verified { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 11px; font-weight: 600; color: var(--success); }
+.rev-verified svg { width: 12px; height: 12px; }
 /* ---------- comments (course/event discussion) ----------
    Its own component, not a review — open to any member, no rating, and
    built for back-and-forth (replies, reply-to-anyone within a thread). */
-.comments-heading { display: flex; align-items: center; gap: 10px; }
-.comments-heading-icon {
-  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
-  background: color-mix(in srgb, var(--accent) 12%, white); color: var(--accent);
-  display: flex; align-items: center; justify-content: center;
-}
-.comments-heading-icon svg { width: 16px; height: 16px; }
+.disc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 22px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+.disc-head b { font-size: 14px; color: var(--ink); font-weight: 700; }
+/* overflow stays visible here (unlike the reviews panel) so the emoji/GIF
+   pickers, which open upward from the composer, never get clipped; the
+   corners are rounded on the first/last children instead. */
+.comments-panel { overflow: visible; }
+.comments-panel .disc-head { border-radius: 20px 20px 0 0; }
+.comments-panel .comment-form, .comments-panel .comment-login { border-radius: 0 0 20px 20px; }
+.comment-login { margin: 0; padding: 18px 22px; border-top: 1px solid var(--border); font-size: 13.5px; color: var(--muted); }
+.comment-login a { color: var(--accent); font-weight: 600; }
 
 /* ---------- comment composer — single shared pill bar ---------- */
-.comment-form {
-  margin-top: 16px; border: 1px solid var(--border); border-radius: var(--radius-lg);
-  background: #fff; box-shadow: var(--shadow); padding: 8px 10px 8px 14px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+/* Docked at the foot of the discussion panel rather than a card of its
+   own; the pill input inside is what gets the focus ring. */
+.comment-form { margin: 0; border-top: 1px solid var(--border); background: #fff; padding: 12px 14px; }
+.comment-form-bar {
+  background: var(--surface); border: 1px solid transparent; border-radius: 22px; padding: 4px 6px 4px 6px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
-.comment-form:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
+.comment-form:focus-within .comment-form-bar { background: #fff; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
 .comment-form-bar { display: flex; align-items: flex-end; gap: 8px; position: relative; }
 .comment-form textarea {
   flex: 1; min-width: 0; border: none; background: transparent; resize: none;
-  font-family: inherit; font-size: 14px; line-height: 1.4; color: var(--ink); padding: 8px 0; max-height: 120px;
+  font-family: inherit; font-size: 14px; line-height: 1.4; color: var(--ink); padding: 8px 0; min-height: 38px; max-height: 120px;
 }
 .comment-form textarea:focus { outline: none; }
 .comment-char-count { align-self: center; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 .comment-char-count-low { color: var(--danger); font-weight: 700; }
+/* Only worth showing once the limit is actually near (wireCharCount adds
+   -low under 100 left) — otherwise it just crowds the row on phones. */
+.comment-char-count:not(.comment-char-count-low) { display: none; }
 .send-btn {
   width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--accent); color: #fff;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;
@@ -2895,8 +2961,9 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 }
 
 .comment-empty {
-  margin-top: 18px; padding: 28px 20px; text-align: center; border: 1.5px dashed var(--border);
-  border-radius: var(--radius-lg); display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted);
+  margin: 0; padding: 36px 20px; text-align: center;
+  background: color-mix(in srgb, var(--surface) 60%, white);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); font-size: 13.5px;
 }
 .comment-empty svg { width: 26px; height: 26px; opacity: 0.5; }
 
@@ -2905,7 +2972,8 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    convention as your own messages in a WhatsApp group), everyone else's
    align left with avatar + name. A reply shows a quoted snippet of what
    it's addressing instead of visual nesting. ---------- */
-.clist { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+.clist { margin: 0; padding: 22px; display: flex; flex-direction: column; gap: 10px; background: color-mix(in srgb, var(--surface) 60%, white); }
+@media (max-width: 480px) { .clist { padding: 16px 12px; } }
 
 .crow { display: flex; gap: 8px; max-width: 86%; position: relative; touch-action: pan-y; transition: transform 0.15s ease; }
 .crow.theirs { align-self: flex-start; }
@@ -2980,13 +3048,14 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .crow.swiping .reply-affordance { opacity: 1; }
 .reply-affordance svg { width: 14px; height: 14px; }
 
-.swipe-caption { text-align: center; font-size: 11px; color: var(--muted); margin-top: 10px; }
+.swipe-caption { margin: 0; padding: 0 0 14px; text-align: center; font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--surface) 60%, white); }
+.comment-form-bar .comment-emoji-toggle, .comment-form-bar .comment-gif-toggle { background: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
   .crow { transition: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rbar-fill, .rform .star-input button, .rcard { transition: none; }
+  .rbar-fill, .rform .star-input button { transition: none; }
 }
 
 /* ---------- instructor card ---------- */

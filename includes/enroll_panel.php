@@ -71,20 +71,13 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     $loginUrl = base_url('login.php?redirect=' . urlencode('/courses/view.php?slug=' . $course['slug']));
     ?>
     <div class="enroll-panel reveal reveal-delay-2">
-      <div class="thumb">
-        <?php if (!empty($course['thumbnail_url'])): ?>
-          <img src="<?= e(asset_src($course['thumbnail_url'])) ?>" alt="">
-        <?php else: ?>
-          <div class="placeholder"><?php dash_icon('graduation-cap'); ?><span>Obin Academy</span></div>
-        <?php endif; ?>
-        <?php if (!$isSubscriptionIncluded && $hasSale): ?><span class="badge-pill badge-sale">🔥 <?= $saleDaysLeft !== null ? $saleDaysLeft . ' day' . ($saleDaysLeft === 1 ? '' : 's') . ' left' : 'On Sale' ?></span><?php endif; ?>
-      </div>
       <div class="pad">
         <?php $liveViewerCount = $isPublished ? get_live_viewer_count($course['slug']) : 0; ?>
         <?php if ($liveViewerCount >= 2): ?>
           <span class="live-pill" style="margin-bottom:12px;"><span class="live-dot"></span><?= (int) $liveViewerCount ?> people viewing right now</span>
         <?php endif; ?>
         <?php if ($isSubscriptionIncluded): ?>
+          <div class="price-label">Monthly subscription</div>
           <div class="price-row">
             <div class="price"><?= e(format_money($monthlyPrice)) ?></div>
             <span class="price-note" data-price-note>per month</span>
@@ -99,6 +92,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
             </p>
           <?php endif; ?>
         <?php else: ?>
+          <div class="price-label">
+            Course price
+            <?php if ($hasSale): ?><span class="sale-pill">🔥 <?= $saleDaysLeft !== null ? $saleDaysLeft . ' day' . ($saleDaysLeft === 1 ? '' : 's') . ' left' : 'On sale' ?></span><?php endif; ?>
+          </div>
           <div class="price-row">
             <div class="price">
               <?php if ($hasSale): ?><span class="price-strike"><?= e(format_money($price)) ?></span><?php endif; ?>
@@ -273,14 +270,16 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
                 : default_first_installment_amount($price);
             $secondInstallmentAmount = round($price - $firstInstallmentAmount, 2);
           ?>
-            <div style="margin-top:14px;" data-payment-widget
+            <div class="or-divider">or</div>
+            <div style="margin-top:0;" data-payment-widget
                  data-course-id="<?= (int) $course['id'] ?>"
                  data-initiate-url="<?= e(base_url('api/initiate-installment-payment.php')) ?>"
                  data-success-redirect="<?= e(base_url('learn.php?slug=' . $course['slug'])) ?>">
               <div data-state="idle">
                 <button class="btn btn-primary btn-block btn-installments" data-action="start">
-                  <span class="btn-installments-title">Or pay in 2 installments</span>
+                  <span class="btn-installments-title">Pay in 2 installments</span>
                   <span class="btn-installments-detail"><?= e(format_money($firstInstallmentAmount)) ?> now &middot; <?= e(format_money($secondInstallmentAmount)) ?> later</span>
+                  <span class="btn-installments-split" aria-hidden="true"><i></i><i></i></span>
                 </button>
               </div>
               <div data-state="phone" class="hidden guest-form">
