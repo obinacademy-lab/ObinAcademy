@@ -75,15 +75,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $accessDurationDays = $accessDurationRaw === 'lifetime' ? null : (int) $accessDurationRaw;
         $premiumPriceRaw = post('premiumPrice');
         $premiumPrice = $premiumPriceRaw === '' ? null : (float) $premiumPriceRaw;
-        // Every paid course offers a 2-installment plan automatically — no
-        // per-course opt-in. The creator may still pick their own first
-        // amount here; leaving it blank falls back to half the price (see
-        // default_first_installment_amount()).
+        // A payment plan is the creator's choice per course: off unless they tick the box.
+        // When on, they may pick their own first amount; leaving it blank falls back to
+        // half the price (see default_first_installment_amount()).
         $installmentCount = 2;
         $installmentIntervalDays = in_array(post('installmentIntervalDays'), ['7', '14', '30'], true) ? (int) post('installmentIntervalDays') : 14;
         $firstInstallmentAmountRaw = post('firstInstallmentAmount');
         $firstInstallmentAmount = $firstInstallmentAmountRaw === '' ? null : (float) $firstInstallmentAmountRaw;
-        $installmentsEnabled = ($creatorHasSubscription && $subscriptionIncluded === 1) ? 0 : ($price > 0 ? 1 : 0);
+        $installmentsEnabled = (($creatorHasSubscription && $subscriptionIncluded === 1) || $price <= 0) ? 0 : (post('installmentsEnabled') === '1' ? 1 : 0);
+        // Switched off: keep whatever split they had saved, and don't validate it.
+        if (!$installmentsEnabled) $firstInstallmentAmount = $course['first_installment_amount'] !== null ? (float) $course['first_installment_amount'] : null;
 
         if (strlen($title) < 4) $errors[] = 'Title must be at least 4 characters.';
         if (strlen($summary) < 10) $errors[] = 'Summary must be at least 10 characters.';
@@ -91,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($creatorHasSubscription && $subscriptionIncluded === 0 && $price <= 0) {
             $errors[] = 'Set a price for this course, since you\'re selling it separately from your subscription.';
         }
-        if ($firstInstallmentAmount !== null) {
+        if ($installmentsEnabled && $firstInstallmentAmount !== null) {
             if ($firstInstallmentAmount <= 0) {
                 $errors[] = 'The first installment amount must be greater than 0.';
             } elseif ($price > 0 && $firstInstallmentAmount >= $price) {
@@ -390,9 +391,14 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       </div>
       <div class="field"><label>Premium Download Price (UGX, optional)</label><input name="premiumPrice" type="number" min="0" step="1" value="<?= e($course['premium_price'] !== null ? (string) $course['premium_price'] : '') ?>" placeholder="Leave blank to disable downloads"></div>
     </div>
+    <?php $installmentsOn = (int) ($course['installments_enabled'] ?? 0) === 1; ?>
     <div class="field" data-installment-field style="<?= $creatorHasSubscription && !$soldSeparately ? 'display:none;' : '' ?>">
-      <label class="small" style="font-weight:600; display:block; margin-bottom:6px;">Payment Plan — Pay in 2 Installments</label>
-      <p class="help" style="margin-top:0; margin-bottom:8px;">Every paid course automatically offers this. By default the first payment is half the price — set your own split below if you'd rather.</p>
+      <label class="row gap-2" style="align-items:flex-start; font-weight:600; cursor:pointer;">
+        <input type="checkbox" name="installmentsEnabled" value="1" data-installments-toggle <?= $installmentsOn ? 'checked' : '' ?> style="margin-top:3px;">
+        <span>Let learners pay in 2 installments<br><span class="help" style="font-weight:400;">Off by default: learners pay the full price at once. Tick this only if you want to offer a payment plan.</span></span>
+      </label>
+      <div data-installment-detail style="<?= $installmentsOn ? '' : 'display:none;' ?> margin-top:10px;">
+      <p class="help" style="margin-top:0; margin-bottom:8px;">By default the first payment is half the price — set your own split below if you'd rather.</p>
       <div class="row gap-2" style="flex-wrap:wrap;">
         <input type="number" name="firstInstallmentAmount" min="1" step="1" style="max-width:180px;" value="<?= e($course['first_installment_amount'] !== null ? (string) $course['first_installment_amount'] : '') ?>" placeholder="e.g. 25000 (optional)">
         <select name="installmentIntervalDays">
@@ -403,11 +409,20 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         </select>
       </div>
       <p class="help">Full access unlocks after the first payment. The learner pays the rest on the schedule you pick, with a short grace period before access pauses if it's missed.</p>
+      </div>
     </div>
     <div class="field"><label>Replace Thumbnail (optional)</label><input name="thumbnail" type="file" accept="image/*"></div>
     <button type="submit" class="btn btn-primary">Save Changes</button>
   </form>
 </details>
+<script>
+  document.querySelectorAll('[data-installments-toggle]').forEach((box) => {
+    box.addEventListener('change', () => {
+      const detail = document.querySelector('[data-installment-detail]');
+      if (detail) detail.style.display = box.checked ? '' : 'none';
+    });
+  });
+</script>
 <?php if ($creatorHasSubscription): ?>
   <script>
     (() => {

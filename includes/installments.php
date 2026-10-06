@@ -15,10 +15,21 @@ const INSTALLMENT_GRACE_DAYS = 5;
 const INSTALLMENT_REMINDER_WINDOW_DAYS = 3;
 
 /**
- * Every paid course offers a 2-installment plan — no per-course opt-in.
- * A creator may still set courses.first_installment_amount to pick their
- * own split; this is the fallback (half the price, rounded to a clean
- * UGX 500 step) used whenever they haven't.
+ * Whether a course offers the 2-installment plan to NEW buyers: only when the
+ * creator switched it on (courses.installments_enabled) and the course has a
+ * price. Off by default, so a creator who wants payment in full gets exactly
+ * that. A learner who already started a plan keeps it regardless — plans are
+ * looked up by their own row, never by this flag.
+ */
+function course_offers_installments(array $course): bool {
+    return (float) ($course['price'] ?? 0) > 0 && (int) ($course['installments_enabled'] ?? 0) === 1;
+}
+
+/**
+ * For a course that offers installments, a creator may set
+ * courses.first_installment_amount to pick their own split; this is the
+ * fallback (half the price, rounded to a clean UGX 500 step) used whenever
+ * they haven't.
  */
 function default_first_installment_amount(float $price): float {
     return max(500, round($price / 2 / 500) * 500);
@@ -106,6 +117,9 @@ function initiate_installment_payment(int $learnerId, int $courseId, string $pho
     }
 
     $plan = get_installment_plan($learnerId, $courseId);
+    if (!$plan && !course_offers_installments($course)) {
+        return ['error' => 'This course is sold as a single payment.'];
+    }
     if ($plan && $plan['status'] === 'COMPLETED') return ['error' => 'You already own this course.'];
     if (!$plan) {
         $alreadyOwned = db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$learnerId, $courseId]);

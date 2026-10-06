@@ -100,8 +100,8 @@ try {
                 if (($in['kind'] ?? '') === 'free' || ($creatorHasSubscription && $included === 1)) $price = 0.0;
                 $sets[] = 'subscription_included = ?'; $params[] = $included;
                 $sets[] = 'price = ?'; $params[] = $price;
-                // Paid courses get the automatic 2-installment plan (same rule as course-manage.php).
-                $sets[] = 'installments_enabled = ?'; $params[] = ($price > 0 && !($creatorHasSubscription && $included === 1)) ? 1 : 0;
+                // Installments are the creator's choice (course page); here they can only be switched off.
+                if ($price <= 0 || ($creatorHasSubscription && $included === 1)) $sets[] = 'installments_enabled = 0';
                 $sets[] = 'installment_count = ?'; $params[] = 2;
                 if ($price <= 0 || ($course['sale_price'] !== null && (float) $course['sale_price'] >= $price)) {
                     $sets[] = 'sale_price = NULL'; $sets[] = 'sale_ends_at = NULL';

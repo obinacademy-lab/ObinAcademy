@@ -47,10 +47,10 @@ function render_enroll_panel(array $course, ?array $user, bool $isOwner, bool $i
     // (it would create a second, conflicting plan), and this is the only
     // place left that offers a way to pay.
     $showInstallmentResume = $installmentPlan && !$hasAccess;
-    // Every paid course offers a 2-installment plan — see
-    // default_first_installment_amount() for the fallback split when the
-    // creator hasn't set their own first-payment amount.
-    $courseSupportsInstallments = $price > 0;
+    // The 2-installment plan is the creator's choice per course (off unless they
+    // switched it on) — see course_offers_installments(). default_first_installment_amount()
+    // is the fallback split when they didn't set their own first-payment amount.
+    $courseSupportsInstallments = $price > 0 && course_offers_installments($course);
     $schoolLabel = $course['creator_school_name'] ?: $course['creator_name'];
     $monthlyPrice = (float) ($course['creator_school_monthly_price'] ?? 0);
     // A subscription unlocks only ONE course at a time per creator — if this
