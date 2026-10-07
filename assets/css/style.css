@@ -4058,3 +4058,20 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 
 .home-pager a[rel="prev"], .home-pager a[rel="next"] { font-weight: 700; color: var(--ink); }
 .home-pager a[rel="prev"]:hover, .home-pager a[rel="next"]:hover { background: var(--brand-800); color: #fff; }
+
+/* Slim course bar (course pages): back, title, log in — in place of the full site header. */
+.course-bar { position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid var(--border); }
+.course-bar-in { max-width: 1180px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+.course-bar-back { width: 36px; height: 36px; border-radius: 12px; background: var(--surface); color: var(--ink); display: grid; place-items: center; flex: none; transition: background .15s; }
+.course-bar-back:hover { background: var(--brand-tint, #eeeeff); color: var(--brand-800); }
+.course-bar-back svg { width: 18px; height: 18px; }
+.course-bar-title { flex: 1; min-width: 0; font-weight: 700; font-size: 15px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.course-bar-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.course-bar-link { font-weight: 600; font-size: 14px; padding: 8px 10px; color: var(--ink-2, #44445a); }
+.course-bar-link:hover { color: var(--brand-800); }
+.course-bar-cta { background: var(--brand-800); color: #fff; font-weight: 700; font-size: 14px; padding: 10px 16px; border-radius: 12px; }
+.course-bar-cta:hover { background: var(--brand-900); color: #fff; }
+.course-bar-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--lime); color: var(--lime-ink); font-weight: 800; display: grid; place-items: center; }
+@media (max-width: 560px) { .course-bar-link { display: none; } .course-bar-title { font-size: 14px; } }
+
+.course-bar a { text-decoration: none; }

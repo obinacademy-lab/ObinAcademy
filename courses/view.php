@@ -125,6 +125,8 @@ if (!empty($course['creator_name'])) {
     ];
 }
 
+$courseBar = $course['title'];
+$courseBarRedirect = '/courses/view.php?slug=' . $course['slug'];
 require __DIR__ . '/../includes/header.php';
 ?>
 
