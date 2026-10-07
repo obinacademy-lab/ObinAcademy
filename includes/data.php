@@ -299,11 +299,17 @@ function search_schools(string $query = '', string $categorySlug = '', string $s
         $where[] = "EXISTS (SELECT 1 FROM courses cc JOIN categories cat ON cat.id = cc.category_id WHERE cc.creator_id = u.id AND cc.status = 'PUBLISHED' AND cat.slug = ?)";
         $params[] = $categorySlug;
     }
-    if ($query) {
-        $where[] = "(u.name LIKE ? OR u.school_name LIKE ? OR EXISTS (SELECT 1 FROM courses cq WHERE cq.creator_id = u.id AND cq.status = 'PUBLISHED' AND cq.title LIKE ?))";
-        $params[] = "%$query%";
-        $params[] = "%$query%";
-        $params[] = "%$query%";
+    // Every word must match somewhere: the creator's or school's name, their headline, or one of
+    // their published courses (title, summary or topic/category) — so "finance uganda" or
+    // "tiktok marketing" find schools, creators and topics, not just exact course titles.
+    $terms = array_slice(array_values(array_filter(preg_split('/\s+/', trim($query)), fn($t) => $t !== '')), 0, 5);
+    foreach ($terms as $term) {
+        $like = '%' . addcslashes($term, '%_\\') . '%';
+        $where[] = "(u.name LIKE ? OR u.school_name LIKE ? OR u.headline LIKE ?
+                     OR EXISTS (SELECT 1 FROM courses cq JOIN categories cqc ON cqc.id = cq.category_id
+                                WHERE cq.creator_id = u.id AND cq.status = 'PUBLISHED'
+                                  AND (cq.title LIKE ? OR cq.summary LIKE ? OR cqc.name LIKE ?)))";
+        array_push($params, $like, $like, $like, $like, $like, $like);
     }
     $orderBy = SCHOOL_SORT_OPTIONS[$sort]['order'] ?? SCHOOL_SORT_OPTIONS['popular']['order'];
     return get_school_cards(implode(' AND ', $where), $params, $orderBy);

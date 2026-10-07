@@ -16,15 +16,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $expertise = post('expertise');
         $motivation = post('motivation');
+        // A public profile (TikTok, YouTube, Instagram, Facebook, LinkedIn or a website) so the
+        // application can be checked against a real presence. https:// is added if they leave it off.
+        $socialLink = post('socialLink');
+        if ($socialLink !== '' && !preg_match('#^https?://#i', $socialLink)) $socialLink = 'https://' . $socialLink;
+        $socialHost = (string) parse_url($socialLink, PHP_URL_HOST);
+        if ($socialLink === '' || !filter_var($socialLink, FILTER_VALIDATE_URL) || !str_contains($socialHost, '.') || strlen($socialLink) > 500) {
+            $errors[] = 'Add a link to your TikTok, YouTube, Instagram or other public profile so we can verify you.';
+        }
         if (strlen($expertise) < 10) $errors[] = "Tell us what you'd like to teach (at least 10 characters).";
         if (strlen($motivation) < 20) $errors[] = 'Tell us a bit more about why you want to teach (at least 20 characters).';
 
         if (!$errors) {
             $existing = db_one('SELECT id FROM creator_applications WHERE user_id = ?', [$user['id']]);
-            if ($existing) {
-                db_run("UPDATE creator_applications SET status='PENDING', expertise=?, motivation=?, rejection_reason=NULL, reviewed_at=NULL WHERE id=?", [$expertise, $motivation, $existing['id']]);
-            } else {
-                db_insert('INSERT INTO creator_applications (user_id, expertise, motivation) VALUES (?, ?, ?)', [$user['id'], $expertise, $motivation]);
+            try {
+                if ($existing) {
+                    db_run("UPDATE creator_applications SET status='PENDING', expertise=?, motivation=?, social_link=?, rejection_reason=NULL, reviewed_at=NULL WHERE id=?", [$expertise, $motivation, $socialLink, $existing['id']]);
+                } else {
+                    db_insert('INSERT INTO creator_applications (user_id, expertise, motivation, social_link) VALUES (?, ?, ?, ?)', [$user['id'], $expertise, $motivation, $socialLink]);
+                }
+            } catch (Throwable $e) {
+                // The social_link column isn't there yet (migration not applied): keep the link inside
+                // the motivation text so no application is ever lost.
+                $motivation .= "\n\nProfile: " . $socialLink;
+                if ($existing) {
+                    db_run("UPDATE creator_applications SET status='PENDING', expertise=?, motivation=?, rejection_reason=NULL, reviewed_at=NULL WHERE id=?", [$expertise, $motivation, $existing['id']]);
+                } else {
+                    db_insert('INSERT INTO creator_applications (user_id, expertise, motivation) VALUES (?, ?, ?)', [$user['id'], $expertise, $motivation]);
+                }
             }
             $submitted = true;
         }
@@ -218,6 +237,7 @@ require __DIR__ . '/includes/header.php';
           <?= csrf_field() ?>
           <div class="field"><label for="expertise">What would you like to teach?</label><textarea id="expertise" name="expertise" rows="3" required placeholder="e.g. Personal finance, digital marketing, farming techniques..."><?= e($myApplication['expertise'] ?? '') ?></textarea></div>
           <div class="field"><label for="motivation">Why do you want to teach on Obin Academy?</label><textarea id="motivation" name="motivation" rows="4" required placeholder="Tell us about your experience and what makes you a great teacher."><?= e($myApplication['motivation'] ?? '') ?></textarea></div>
+          <div class="field"><label for="socialLink">Your TikTok, YouTube or Instagram link</label><input id="socialLink" name="socialLink" type="text" inputmode="url" required placeholder="e.g. tiktok.com/@yourname" value="<?= e($_POST['socialLink'] ?? ($myApplication['social_link'] ?? '')) ?>"><p class="help">We use this to verify your creator presence. Any public profile or page where people can see your work is fine.</p></div>
           <button type="submit" class="btn btn-primary btn-block btn-lg">Submit Application</button>
         </form>
       <?php endif; ?>

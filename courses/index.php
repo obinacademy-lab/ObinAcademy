@@ -61,7 +61,7 @@ require __DIR__ . '/../includes/header.php';
 
     <form method="get" class="hero-search-v3">
       <?php dash_icon('search'); ?>
-      <input type="text" name="q" placeholder="What do you want to learn today?" value="<?= e($q) ?>">
+      <input type="text" name="q" placeholder="Search courses, creators or topics" value="<?= e($q) ?>">
       <?php if ($categorySlug): ?><input type="hidden" name="category" value="<?= e($categorySlug) ?>"><?php endif; ?>
       <?php if ($sort !== 'popular'): ?><input type="hidden" name="sort" value="<?= e($sort) ?>"><?php endif; ?>
       <button type="submit">Search</button>

@@ -53,9 +53,21 @@ require __DIR__ . '/includes/header.php';
   <div class="home-discover-search">
     <form action="<?= e(base_url('courses/index.php')) ?>" method="get" class="hero-search-v3 home-search-bare" style="margin:0;">
       <?php dash_icon('search'); ?>
-      <input type="search" name="q" placeholder="Search for anything" aria-label="Search schools and courses" enterkeyhint="search">
+      <input type="search" name="q" placeholder="Search courses, creators or topics" aria-label="Search courses, creators and topics" enterkeyhint="search">
     </form>
   </div>
+
+  <?php
+    // Real totals from the database (rounded down once they pass 100), shown under the search.
+    $homeStats = get_platform_stats();
+    $tidy = fn(int $n): string => $n >= 100 ? number_format(intdiv($n, 10) * 10) . '+' : (string) $n;
+  ?>
+  <p class="home-discover-stats" aria-label="Obin Academy in numbers">
+    <span><strong><?= e($tidy((int) $homeStats['course_count'])) ?></strong> courses</span><i aria-hidden="true"></i>
+    <span><strong><?= e($tidy((int) $homeStats['learner_count'])) ?></strong> learners</span><i aria-hidden="true"></i>
+    <span><strong><?= e($tidy((int) $schoolsTotal)) ?></strong> schools</span><i aria-hidden="true"></i>
+    <span>Pay with <strong>MTN</strong> or <strong>Airtel Money</strong></span>
+  </p>
 
   <nav class="home-discover-chips" data-home-chips aria-label="Categories">
     <a href="<?= e(base_url('courses/index.php')) ?>" class="home-discover-chip active">🔥 Trending</a>

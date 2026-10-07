@@ -72,6 +72,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <div class="application-body">
           <div class="application-field"><span class="label">Expertise</span><p><?= e($a['expertise']) ?></p></div>
           <div class="application-field"><span class="label">Motivation</span><p><?= e($a['motivation']) ?></p></div>
+          <?php if (!empty($a['social_link'])): ?>
+            <div class="application-field"><span class="label">Profile to verify</span><p><a href="<?= e($a['social_link']) ?>" target="_blank" rel="noopener noreferrer nofollow" style="color:var(--accent); font-weight:600; overflow-wrap:anywhere;"><?= e($a['social_link']) ?></a></p></div>
+          <?php endif; ?>
         </div>
 
         <div class="row gap-2" style="margin-top:16px;">
