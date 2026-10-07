@@ -43,6 +43,7 @@ const SALE_DURATION_OPTIONS = [
  * of truth to generate this from).
  */
 const DASHBOARD_THEMES = [
+    'blue'   => ['label' => 'Blue',   'swatch' => '#0b00ff'],
     'purple' => ['label' => 'Purple', 'swatch' => '#8b5cf6'],
     'gold'   => ['label' => 'Gold',   'swatch' => '#f5b301'],
     'red'    => ['label' => 'Red',    'swatch' => '#dc2626'],
@@ -51,14 +52,13 @@ const DASHBOARD_THEMES = [
 
 /**
  * The theme every role opens with before the learner/creator/admin ever picks
- * one for themselves: the platform's own brand red, the same for students,
- * creators and admins. Blue and Slate used to be offered (and were the old
- * learner/creator and admin defaults); they were retired with the red rebrand,
- * so a user who still has one stored simply falls through to this default via
- * dashboard_theme_for_user() rather than needing a data migration.
+ * one for themselves: the platform's own brand blue, the same for students,
+ * creators and admins. Anyone who explicitly chose Red, Gold, Purple or Green
+ * keeps it; a user with nothing stored (or a retired theme) gets this default
+ * via dashboard_theme_for_user(), so no data migration is needed.
  */
 function dashboard_theme_default(string $role): string {
-    return 'red';
+    return 'blue';
 }
 
 /** @return string a valid DASHBOARD_THEMES key — never trusts a stored value blindly, in case it predates a theme being renamed/removed. */

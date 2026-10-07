@@ -20,7 +20,7 @@ $deviceLabels = ['desktop' => 'Desktop', 'mobile' => 'Mobile', 'tablet' => 'Tabl
 
 
 $sourceLabels = [
-    'google' => ['label' => 'Google / Search', 'color' => '#dc2626'],
+    'google' => ['label' => 'Google / Search', 'color' => '#0b00ff'],
     'social' => ['label' => 'Social Media', 'color' => '#f5b301'],
     'direct' => ['label' => 'Direct / Shared Link', 'color' => '#10b981'],
     'other' => ['label' => 'Other Websites', 'color' => '#8b5cf6'],
@@ -72,7 +72,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#dc2626;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#0b00ff;">
     <div class="icon"><?php dash_icon('globe'); ?></div>
     <div class="value"><?= number_format($summary['visits']) ?></div><div class="label">Total Visits</div>
   </div>

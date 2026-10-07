@@ -45,8 +45,10 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="home-discover">
+  <div class="home-hero-blue">
   <div class="home-discover-hero">
-    <h1>Discover schools</h1>
+    <span class="home-hero-pill">Uganda's creator platform</span>
+    <h1>Discover <em>schools</em></h1>
     <p class="sub">or <a href="<?= e(base_url('become-creator.php')) ?>">create your own school</a></p>
   </div>
 
@@ -82,6 +84,7 @@ require __DIR__ . '/includes/header.php';
       Filter
     </a>
   </nav>
+  </div>
 
   <?php if ($schoolsPreview): ?>
     <div class="home-discover-grid-wrap">
@@ -105,6 +108,14 @@ require __DIR__ . '/includes/header.php';
       <?php endif; ?>
     </div>
   <?php endif; ?>
+
+  <section class="home-band">
+    <div>
+      <h2>Teach what you know. <em>Keep 90%</em> of every sale.</h2>
+      <p>Open your own school, upload your courses and get paid instantly with MTN or Airtel Money.</p>
+    </div>
+    <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-gold btn-lg">Create Your School</a>
+  </section>
 </div>
 
 <script src="<?= e(versioned_asset('assets/js/home-discover.js')) ?>"></script>

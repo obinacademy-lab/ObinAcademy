@@ -5,7 +5,7 @@
   --dash-panel: #ffffff;
   --dash-border: #e4e7ec;
   --dash-border-soft: #edeef2;
-  --dash-tint: #fef2f2;
+  --dash-tint: #eeeeff;
   --dash-good: #059669; --dash-good-bg: #ecfdf5;
   --dash-warn: #d97706; --dash-warn-bg: #fffaeb;
   --dash-bad: #dc2626; --dash-bad-bg: #fef2f2;
@@ -513,6 +513,13 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   --accent: #f5b301; --accent-dark: #c98e00; --dash-accent-text: #ffd873;
   --ink: #f8f3e8; --muted: #a99a7c;
 }
+.dash-premium.theme-blue {
+  --dash-bg: #07051f; --dash-panel: #0f0c45; --dash-panel-2: #16125a;
+  --dash-border: rgba(107,102,255,0.24); --dash-border-soft: rgba(107,102,255,0.11);
+  --dash-tint: rgba(59,51,255,0.24); --dash-shadow: 0 1px 2px rgba(3,2,20,0.45), 0 16px 40px -20px rgba(3,2,20,0.75);
+  --accent: #5f59ff; --accent-dark: #3b33ff; --dash-accent-text: #b4b2ff;
+  --ink: #f1f1ff; --muted: #9c9ad0;
+}
 .dash-premium.theme-red {
   --dash-bg: #150a0b; --dash-panel: #221012; --dash-panel-2: #2b1416;
   --dash-border: rgba(220,38,38,0.20); --dash-border-soft: rgba(220,38,38,0.10);
@@ -614,7 +621,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-notif-row:hover { background: #f4f5f8; }
 .dash-notif-row p { font-size: 13px; line-height: 1.45; color: #14181b; margin: 0; }
 .dash-notif-row .muted { font-size: 11px; margin-top: 4px; display: block; color: #5b6670; }
-.dash-notif-row.unread { background: #fef2f2; }
+.dash-notif-row.unread { background: #eeeeff; }
 .dash-notif-row.unread p { font-weight: 600; }
 
 /* Every plain <input>/<select>/<textarea> across the dashboard (search

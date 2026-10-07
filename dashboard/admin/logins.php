@@ -28,7 +28,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <p class="muted" style="margin-top:6px;">Every sign-in to the platform, most recent first.</p>
 
 <div class="grid md:grid-3" style="margin-top:20px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#dc2626;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#0b00ff;">
     <div class="icon"><?php dash_icon('users'); ?></div>
     <div class="value"><?= (int) ($statCounts['today_count'] ?? 0) ?></div><div class="label">Logins Today</div>
   </div>

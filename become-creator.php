@@ -62,7 +62,7 @@ $stats = get_platform_stats();
 // by hand (this codebase doesn't share content arrays across pages), not
 // duplicated by accident.
 $creatorBenefits = [
-    ['♾️', '#dc2626', 'Unlimited Courses', 'Create as many online courses as you want — there\'s no cap on what you can teach.'],
+    ['♾️', '#0b00ff', 'Unlimited Courses', 'Create as many online courses as you want — there\'s no cap on what you can teach.'],
     ['🎥', '#f5b301', 'Video & Materials', 'Upload video lessons, PDFs, and learning materials your students can revisit anytime.'],
     ['💵', '#10b981', 'Set Your Own Pricing', 'You decide what your expertise is worth — full control over every course price.'],
     ['✨', '#8b5cf6', 'Build Your Brand', 'Grow a personal brand and reputation as a trusted expert in your field.'],

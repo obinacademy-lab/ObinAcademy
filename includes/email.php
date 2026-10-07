@@ -34,10 +34,10 @@ function resend_send(string $to, string $subject, string $html): void {
 function send_password_reset_email(string $to, string $resetUrl): void {
     resend_send($to, 'Reset your Obin Academy password', <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Reset your password</h2>
+          <h2 style="color: #06007a;">Reset your password</h2>
           <p>We received a request to reset the password for your Obin Academy account.</p>
           <p>
-            <a href="{$resetUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$resetUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Reset Password
             </a>
           </p>
@@ -55,7 +55,7 @@ function send_withdrawal_approved_email(string $to, float $amount): void {
     $formatted = format_money($amount);
     resend_send($to, 'Your Obin Academy Withdrawal Has Been Approved', <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Withdrawal Approved</h2>
+          <h2 style="color: #06007a;">Withdrawal Approved</h2>
           <p>
             Your withdrawal of <strong>{$formatted}</strong> has been approved. You will
             receive your earnings in less than 30 minutes.
@@ -70,14 +70,14 @@ function send_withdrawal_approved_email(string $to, float $amount): void {
 function send_guest_access_email(string $to, string $name, string $courseTitle, string $accessUrl): void {
     resend_send($to, "Your Access Link for \"{$courseTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">You're in, {$name}!</h2>
+          <h2 style="color: #06007a;">You're in, {$name}!</h2>
           <p>
             Thanks for getting <strong>{$courseTitle}</strong> on Obin Academy. Use the
             button below any time to get back into your course — no account or
             password needed.
           </p>
           <p>
-            <a href="{$accessUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$accessUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Access Your Course
             </a>
           </p>
@@ -99,14 +99,14 @@ function send_guest_access_email(string $to, string $name, string $courseTitle, 
 function send_school_subscription_renewal_email(string $to, string $name, string $schoolLabel, string $courseTitle, string $renewUrl): void {
     resend_send($to, "Your subscription to {$courseTitle} renews soon — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Hi {$name}, your subscription is ending soon</h2>
+          <h2 style="color: #06007a;">Hi {$name}, your subscription is ending soon</h2>
           <p>
             Your monthly subscription to <strong>{$courseTitle}</strong> ({$schoolLabel}) on
             Obin Academy is about to end. Mobile money can't renew automatically — approve a
             new payment below to keep your access to this course.
           </p>
           <p>
-            <a href="{$renewUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$renewUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Renew Your Subscription
             </a>
           </p>
@@ -150,18 +150,18 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
 
     resend_send($to, "Receipt for \"{$courseTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #dc2626;">
+          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #0b00ff;">
             <table role="presentation" style="margin: 0 auto;"><tr>
               <td style="vertical-align: middle; padding-right: 8px;">
-                <div style="width: 34px; height: 34px; border-radius: 9px; background: #991b1b; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 34px; height: 34px; border-radius: 9px; background: #06007a; display: flex; align-items: center; justify-content: center;">
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"></path></svg>
                 </div>
               </td>
-              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #dc2626;">Academy</span></span></td>
+              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #0b00ff;">Academy</span></span></td>
             </tr></table>
           </div>
 
-          <h2 style="color: #991b1b; text-align: center; margin-top: 24px;">Payment Receipt</h2>
+          <h2 style="color: #06007a; text-align: center; margin-top: 24px;">Payment Receipt</h2>
           <p style="text-align: center; color: #5b6670;">Thanks, {$name} — here's your receipt for this purchase.</p>
 
           <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
@@ -170,11 +170,11 @@ function send_payment_receipt_email(array $payment, bool $isGuestPayment, string
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$courseTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">{$itemLabel}</span></td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Payment Method</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">Mobile Money</td></tr>
             {$discountRow}
-            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #991b1b; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
+            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #06007a; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
           </table>
 
           <p style="text-align: center; margin-top: 28px;">
-            <a href="{$courseUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$courseUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               {$ctaLabel}
             </a>
           </p>
@@ -258,7 +258,7 @@ function send_admin_sale_notification_email(string $itemTitle, string $itemLabel
     $subject = "New Sale: {$itemTitle} — {$amount}";
     $html = <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">New Sale</h2>
+          <h2 style="color: #06007a;">New Sale</h2>
           <p><strong>{$buyerLabel}</strong> just bought <strong>{$itemTitle}</strong> ({$itemLabel}) from <strong>{$creatorName}</strong>.</p>
           <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px;">
             <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Amount Paid</td><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 700;">{$amount}</td></tr>
@@ -287,7 +287,7 @@ function send_creator_sale_notification_email(string $creatorEmail, string $crea
     $dashboardUrl = base_url('dashboard/creator/earnings.php');
     resend_send($creatorEmail, "You Made a Sale: {$itemTitle}", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">You Made a Sale!</h2>
+          <h2 style="color: #06007a;">You Made a Sale!</h2>
           <p>Hi {$creatorName},</p>
           <p><strong>{$buyerLabel}</strong> just bought <strong>"{$itemTitle}"</strong> ({$itemLabel}).</p>
           <p style="margin-top: 18px;">
@@ -295,7 +295,7 @@ function send_creator_sale_notification_email(string $creatorEmail, string $crea
           </p>
           <p style="color: #5b6670; font-size: 13px;">This is your net earning after the platform fee — it's already added to your Earnings balance.</p>
           <p style="margin-top: 24px;">
-            <a href="{$dashboardUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$dashboardUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               View Earnings
             </a>
           </p>
@@ -322,18 +322,18 @@ function send_bundle_receipt_email(array $payment, bool $isGuestPayment, string 
 
     resend_send($to, "Receipt for \"{$bundleTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #dc2626;">
+          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #0b00ff;">
             <table role="presentation" style="margin: 0 auto;"><tr>
               <td style="vertical-align: middle; padding-right: 8px;">
-                <div style="width: 34px; height: 34px; border-radius: 9px; background: #991b1b; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 34px; height: 34px; border-radius: 9px; background: #06007a; display: flex; align-items: center; justify-content: center;">
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"></path></svg>
                 </div>
               </td>
-              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #dc2626;">Academy</span></span></td>
+              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #0b00ff;">Academy</span></span></td>
             </tr></table>
           </div>
 
-          <h2 style="color: #991b1b; text-align: center; margin-top: 24px;">Payment Receipt</h2>
+          <h2 style="color: #06007a; text-align: center; margin-top: 24px;">Payment Receipt</h2>
           <p style="text-align: center; color: #5b6670;">Thanks, {$name} — here's your receipt for this purchase.</p>
 
           <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
@@ -341,11 +341,11 @@ function send_bundle_receipt_email(array $payment, bool $isGuestPayment, string 
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Date</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$date}</td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$bundleTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">{$itemLabel}</span></td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Payment Method</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">Mobile Money</td></tr>
-            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #991b1b; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
+            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #06007a; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
           </table>
 
           <p style="text-align: center; margin-top: 28px;">
-            <a href="{$bundleUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$bundleUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               {$ctaLabel}
             </a>
           </p>
@@ -390,18 +390,18 @@ function send_installment_receipt_email(array $payment): void {
 
     resend_send($to, "Receipt for \"{$courseTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #dc2626;">
+          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #0b00ff;">
             <table role="presentation" style="margin: 0 auto;"><tr>
               <td style="vertical-align: middle; padding-right: 8px;">
-                <div style="width: 34px; height: 34px; border-radius: 9px; background: #991b1b; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 34px; height: 34px; border-radius: 9px; background: #06007a; display: flex; align-items: center; justify-content: center;">
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"></path></svg>
                 </div>
               </td>
-              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #dc2626;">Academy</span></span></td>
+              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #0b00ff;">Academy</span></span></td>
             </tr></table>
           </div>
 
-          <h2 style="color: #991b1b; text-align: center; margin-top: 24px;">Payment Receipt</h2>
+          <h2 style="color: #06007a; text-align: center; margin-top: 24px;">Payment Receipt</h2>
           <p style="text-align: center; color: #5b6670;">Thanks, {$name} — here's your receipt for this installment.</p>
 
           <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
@@ -409,13 +409,13 @@ function send_installment_receipt_email(array $payment): void {
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Date</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$date}</td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$courseTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">Installment {$installmentNumber} of {$installmentCount}</span></td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Payment Method</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">Mobile Money</td></tr>
-            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #991b1b; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
+            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #06007a; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
           </table>
 
           <p style="text-align: center; color: #5b6670; margin-top: 20px; font-size: 14px;">{$progressNote}</p>
 
           <p style="text-align: center; margin-top: 20px;">
-            <a href="{$courseUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$courseUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               {$ctaLabel}
             </a>
           </p>
@@ -436,14 +436,14 @@ function send_installment_reminder_email(string $to, string $name, string $cours
     $amountLabel = format_money($amount);
     resend_send($to, "Your next payment for \"{$courseTitle}\" is due soon — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Hi {$name}, your next installment is due soon</h2>
+          <h2 style="color: #06007a;">Hi {$name}, your next installment is due soon</h2>
           <p>
             Installment {$nextNumber} of {$installmentCount} ({$amountLabel}) for <strong>{$courseTitle}</strong> on
             Obin Academy is coming up. Mobile money can't charge you automatically — approve a
             new payment below to keep your access.
           </p>
           <p>
-            <a href="{$payUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$payUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Pay Next Installment
             </a>
           </p>
@@ -472,14 +472,14 @@ function send_gift_claim_email(string $to, string $recipientName, string $buyerN
     resend_send($to, "{$buyerName} gifted you a course on Obin Academy!", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
           <div style="font-size: 40px;">🎁</div>
-          <h2 style="color: #991b1b; margin-top: 10px;">Hi {$recipientName}, you've been gifted a course!</h2>
+          <h2 style="color: #06007a; margin-top: 10px;">Hi {$recipientName}, you've been gifted a course!</h2>
           <p>
             <strong>{$buyerName}</strong> {$accessLine}.
             Claim it below to start learning — you'll need a free account first if you don't already have one.
           </p>
           {$messageBlock}
           <p style="margin-top: 24px;">
-            <a href="{$claimUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$claimUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Claim Your Course
             </a>
           </p>
@@ -512,18 +512,18 @@ function send_gift_purchase_receipt_email(array $payment): void {
 
     resend_send($to, "Receipt for your gift of \"{$courseTitle}\" — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #dc2626;">
+          <div style="text-align: center; padding-bottom: 20px; border-bottom: 3px solid #0b00ff;">
             <table role="presentation" style="margin: 0 auto;"><tr>
               <td style="vertical-align: middle; padding-right: 8px;">
-                <div style="width: 34px; height: 34px; border-radius: 9px; background: #991b1b; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 34px; height: 34px; border-radius: 9px; background: #06007a; display: flex; align-items: center; justify-content: center;">
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"></path></svg>
                 </div>
               </td>
-              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #dc2626;">Academy</span></span></td>
+              <td style="vertical-align: middle;"><span style="font-size: 19px; font-weight: 800; color: #14181b;">Obin <span style="color: #0b00ff;">Academy</span></span></td>
             </tr></table>
           </div>
 
-          <h2 style="color: #991b1b; text-align: center; margin-top: 24px;">Gift Receipt</h2>
+          <h2 style="color: #06007a; text-align: center; margin-top: 24px;">Gift Receipt</h2>
           <p style="text-align: center; color: #5b6670;">Thanks, {$name} — here's your receipt for this gift.</p>
 
           <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
@@ -531,7 +531,7 @@ function send_gift_purchase_receipt_email(array $payment): void {
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Date</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$date}</td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Item</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">{$courseTitle}<br><span style="font-weight: 400; color: #5b6670; font-size: 12.5px;">{$itemLabel}</span></td></tr>
             <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #5b6670;">Payment Method</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">Mobile Money</td></tr>
-            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #991b1b; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
+            <tr><td style="padding: 14px 0 0; color: #14181b; font-weight: 800; font-size: 16px;">Amount Paid</td><td style="padding: 14px 0 0; text-align: right; color: #06007a; font-weight: 800; font-size: 16px;">{$amount}</td></tr>
           </table>
 
           <p style="text-align: center; color: #5b6670; margin-top: 20px; font-size: 14px;">We've emailed {$recipientName} their claim link.</p>
@@ -548,13 +548,13 @@ function send_certificate_email(string $to, string $name, string $courseTitle, s
     resend_send($to, "You Earned a Certificate for \"{$courseTitle}\"! — Obin Academy", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
           <div style="font-size: 40px;">🎓</div>
-          <h2 style="color: #991b1b; margin-top: 10px;">Congratulations, {$name}!</h2>
+          <h2 style="color: #06007a; margin-top: 10px;">Congratulations, {$name}!</h2>
           <p>
             You've completed <strong>{$courseTitle}</strong> on Obin Academy. Your Certificate
             of Completion is ready — view it, download it, or add it straight to your LinkedIn profile.
           </p>
           <p style="margin-top: 20px;">
-            <a href="{$certificateUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$certificateUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               View Your Certificate
             </a>
           </p>
@@ -590,7 +590,7 @@ function send_lead_welcome_email(string $to, string $name, array $courses, strin
 
     resend_send($to, "Welcome to Obin Academy, {$name}!", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Welcome, {$name}! 🎓</h2>
+          <h2 style="color: #06007a;">Welcome, {$name}! 🎓</h2>
           <p>
             Thanks for your interest in Obin Academy — East Africa's learning marketplace for
             practical, real-world skills. As promised, here's a head start: a few courses learners
@@ -600,7 +600,7 @@ function send_lead_welcome_email(string $to, string $name, array $courses, strin
             {$courseRows}
           </table>
           <p style="margin-top: 24px;">
-            <a href="{$exploreUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$exploreUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Explore All Courses
             </a>
           </p>
@@ -617,7 +617,7 @@ function send_lead_creator_invitation_email(string $to, string $name, string $un
     $applyUrl = base_url('become-creator.php');
     resend_send($to, "Let's get you set up as a creator, {$name}", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Ready to teach, {$name}? 🚀</h2>
+          <h2 style="color: #06007a;">Ready to teach, {$name}? 🚀</h2>
           <p>
             You told us you're interested in becoming a creator on Obin Academy — share what you know,
             earn income from mobile money payments, and build a real following of learners across
@@ -655,11 +655,11 @@ function send_lead_day3_email(string $to, string $name, string $leadType, string
 
     resend_send($to, $subject, <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Hey {$name}, quick follow-up 👋</h2>
+          <h2 style="color: #06007a;">Hey {$name}, quick follow-up 👋</h2>
           <p>Here's what makes Obin Academy worth a closer look:</p>
           <ul style="padding-left: 20px; color: #14181b; font-size: 14px;">{$bullets}</ul>
           <p style="margin-top: 20px;">
-            <a href="{$ctaUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">{$ctaLabel}</a>
+            <a href="{$ctaUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">{$ctaLabel}</a>
           </p>
           <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
             You're receiving this because you asked to hear from us on obinacademy.site.
@@ -687,11 +687,11 @@ function send_lead_day5_email(string $to, string $name, array $courses, string $
 
     resend_send($to, "What other learners are taking right now", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Still deciding, {$name}?</h2>
+          <h2 style="color: #06007a;">Still deciding, {$name}?</h2>
           <p>Here's what's popular on Obin Academy this week:</p>
           <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 8px;">{$courseRows}</table>
           <p style="margin-top: 24px;">
-            <a href="{$exploreUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">See All Courses</a>
+            <a href="{$exploreUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">See All Courses</a>
           </p>
           <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
             You're receiving this because you asked to hear from us on obinacademy.site.
@@ -713,13 +713,13 @@ function send_lead_day7_email(string $to, string $name, array $onSaleCourses, st
     if (!$onSaleCourses) {
         resend_send($to, "Still thinking it over, {$name}?", <<<HTML
             <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-              <h2 style="color: #991b1b;">No pressure, {$name} — we'll be here</h2>
+              <h2 style="color: #06007a;">No pressure, {$name} — we'll be here</h2>
               <p>
                 If now isn't the right time, that's completely fine. Whenever you're ready, Obin Academy's
                 courses are just a click away.
               </p>
               <p style="margin-top: 20px;">
-                <a href="{$exploreUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">Browse Courses</a>
+                <a href="{$exploreUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">Browse Courses</a>
               </p>
               <p style="color: #5b6670; font-size: 12px; text-align: center; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
                 You're receiving this because you asked to hear from us on obinacademy.site.
@@ -750,7 +750,7 @@ function send_lead_day7_email(string $to, string $name, array $onSaleCourses, st
 
     resend_send($to, "These courses are on sale right now", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">A few courses are on sale, {$name}</h2>
+          <h2 style="color: #06007a;">A few courses are on sale, {$name}</h2>
           <p>These are genuinely discounted right now — not a countdown gimmick, just real pricing from the creators:</p>
           <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 8px;">{$courseRows}</table>
           <p style="margin-top: 24px;">
@@ -775,10 +775,10 @@ function send_retention_nudge_email(string $to, string $subject, string $emoji, 
     resend_send($to, $subject, <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
           <div style="font-size: 34px;">{$emoji}</div>
-          <h2 style="color: #991b1b; margin-top: 8px;">{$headline}</h2>
+          <h2 style="color: #06007a; margin-top: 8px;">{$headline}</h2>
           <p style="color: #14181b; font-size: 15px; line-height: 1.6;">{$body}</p>
           <p style="margin-top: 22px;">
-            <a href="{$ctaUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$ctaUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               {$ctaLabel}
             </a>
           </p>
@@ -808,7 +808,7 @@ function send_course_interest_reminder_email(string $to, string $name, string $c
 
     resend_send($to, $subject, <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Hey {$firstName},</h2>
+          <h2 style="color: #06007a;">Hey {$firstName},</h2>
           <p>
             You asked to be kept updated on <strong>{$courseTitle}</strong> by {$creatorName},
             but you haven't enrolled yet. It's still right there waiting for you.
@@ -817,7 +817,7 @@ function send_course_interest_reminder_email(string $to, string $name, string $c
             {$priceHtml}
           </p>
           <p style="margin-top: 20px;">
-            <a href="{$courseUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$courseUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               View Course
             </a>
           </p>
@@ -841,14 +841,14 @@ function send_payment_recovery_email(string $to, string $name, string $itemTitle
 
     resend_send($to, "Complete your purchase of {$itemTitle}", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Hey {$firstName}, your payment didn't go through</h2>
+          <h2 style="color: #06007a;">Hey {$firstName}, your payment didn't go through</h2>
           <p>
             You started buying the {$label} <strong>{$itemTitle}</strong> ({$amountLabel}), but the mobile
             money payment wasn't completed — this usually means the prompt timed out, the PIN was wrong, or
             there wasn't enough balance at that moment. Nothing was charged.
           </p>
           <p style="margin-top: 20px;">
-            <a href="{$resumeUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$resumeUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Try Again
             </a>
           </p>
@@ -871,13 +871,13 @@ function send_review_nudge_email(string $to, string $name, string $courseTitle, 
     resend_send($to, "How was {$courseTitle}?", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
           <div style="font-size: 34px;">🎉</div>
-          <h2 style="color: #991b1b; margin-top: 8px;">You finished the course!</h2>
+          <h2 style="color: #06007a; margin-top: 8px;">You finished the course!</h2>
           <p style="color: #14181b; font-size: 15px; line-height: 1.6;">
             Nice work, {$firstName} — you've completed <strong>{$courseTitle}</strong>. Got a minute to share what
             you thought? It genuinely helps other learners decide, and helps the creator know what's working.
           </p>
           <p style="margin-top: 22px;">
-            <a href="{$reviewUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$reviewUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Leave a Review
             </a>
           </p>
@@ -891,7 +891,7 @@ function send_affiliate_application_approved_email(string $to, string $name, str
     $shareUrl = base_url('') . '?aff=' . $refCode;
     resend_send($to, "You're Approved as an Obin Academy Affiliate Partner!", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Congratulations, {$name}!</h2>
+          <h2 style="color: #06007a;">Congratulations, {$name}!</h2>
           <p>
             Your application to become an affiliate partner on Obin Academy has been approved.
             Your affiliate link is ready right now — share it anywhere, and you'll earn 2%
@@ -901,7 +901,7 @@ function send_affiliate_application_approved_email(string $to, string $name, str
             {$shareUrl}
           </p>
           <p>
-            <a href="{$dashboardUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$dashboardUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Sign In &amp; View Your Affiliate Dashboard
             </a>
           </p>
@@ -916,13 +916,13 @@ function send_creator_application_approved_email(string $to, string $name): void
     $loginUrl = base_url('login.php?redirect=' . urlencode('/dashboard/creator/index.php'));
     resend_send($to, "You're Approved as an Obin Academy Creator!", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #991b1b;">Congratulations, {$name}!</h2>
+          <h2 style="color: #06007a;">Congratulations, {$name}!</h2>
           <p>
             Your application to become a creator on Obin Academy has been approved. You can now
             start building courses and sharing your knowledge with learners.
           </p>
           <p>
-            <a href="{$loginUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$loginUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Sign In &amp; Start Creating
             </a>
           </p>
@@ -941,13 +941,13 @@ function send_course_live_email_to_creator(string $to, string $name, string $cou
     resend_send($to, "Your Course \"{$courseTitle}\" Is Now Live!", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; text-align: center;">
           <div style="font-size: 34px;">🎉</div>
-          <h2 style="color: #991b1b; margin-top: 8px;">You're live, {$name}!</h2>
+          <h2 style="color: #06007a; margin-top: 8px;">You're live, {$name}!</h2>
           <p style="color: #14181b; font-size: 15px; line-height: 1.6;">
             <strong>{$courseTitle}</strong> has been approved and is now published on Obin Academy —
             learners can find it and enroll right now.
           </p>
           <p style="margin-top: 22px;">
-            <a href="{$courseUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$courseUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               View Your Course
             </a>
           </p>
@@ -965,13 +965,13 @@ function send_new_course_announcement_email(string $to, string $name, string $co
     resend_send($to, "New on Obin Academy: \"{$courseTitle}\"", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <div style="text-align: center; font-size: 30px;">🆕</div>
-          <h2 style="color: #991b1b; text-align: center; margin-top: 8px;">A new course just went live</h2>
+          <h2 style="color: #06007a; text-align: center; margin-top: 8px;">A new course just went live</h2>
           <p style="color: #14181b; font-size: 15px; line-height: 1.6;">
             Hey {$firstName} — <strong>{$courseTitle}</strong> by {$creatorName} just published on Obin Academy.
           </p>
           <p style="color: #5b6670; font-size: 14px; line-height: 1.6;">{$courseSummary}</p>
           <p style="text-align: center; margin-top: 22px;">
-            <a href="{$courseUrl}" style="display: inline-block; background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
+            <a href="{$courseUrl}" style="display: inline-block; background: #0b00ff; color: #fff; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 600;">
               Check It Out
             </a>
           </p>

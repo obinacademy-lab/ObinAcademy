@@ -53,7 +53,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <div class="grid md:grid-3 reveal" style="margin-top:22px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#dc2626;">
+  <div class="stat-card" data-hoverable="true" style="--hover-color:#0b00ff;">
     <div class="icon"><?php dash_icon('layout-dashboard'); ?></div>
     <div class="value"><?= count($bundles) ?></div>
     <div class="label">Total bundles</div>

@@ -34,6 +34,11 @@ function render_school_card(array $school): void {
         <?php else: ?>
           <div class="placeholder">Obin Academy</div>
         <?php endif; ?>
+        <span class="price-tag">
+          <?php if ($isSubscription): ?><?= e(format_money((float) $school['school_monthly_price'])) ?>/mo
+          <?php elseif (!empty($school['min_price']) && (float) $school['min_price'] > 0): ?>From <?= e(format_money((float) $school['min_price'])) ?>
+          <?php else: ?>Free<?php endif; ?>
+        </span>
       </div>
       <div class="body">
         <div class="school-id">

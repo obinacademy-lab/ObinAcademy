@@ -40,7 +40,7 @@ $paidToAffiliates = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM wi
 $stats = get_platform_stats();
 
 $affiliateBenefits = [
-    ['🔗', '#dc2626', 'Your Own Tracked Link', 'Get a unique referral link that credits you automatically for every sale it brings in.'],
+    ['🔗', '#0b00ff', 'Your Own Tracked Link', 'Get a unique referral link that credits you automatically for every sale it brings in.'],
     ['🛍️', '#f5b301', 'Every Course, Every Creator', "You're not limited to one course — earn commission across the entire Obin Academy catalog."],
     ['💵', '#10b981', '2% Commission', 'Earn 2% on every course purchase made through your link, no matter the price.'],
     ['⏱️', '#8b5cf6', '30-Day Tracking Window', "Referred someone who buys later? You're still credited if it's within 30 days of their click."],

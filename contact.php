@@ -141,7 +141,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <div class="grid sm:grid-2 lg:grid-4">
       <div class="contact-card reveal reveal-delay-1">
-        <span class="icon-badge" style="--tint:#dc2626;"><?= ci('mail') ?></span>
+        <span class="icon-badge" style="--tint:#0b00ff;"><?= ci('mail') ?></span>
         <h3>Email Support</h3>
         <p class="desc">General inquiries and platform support.</p>
         <span class="meta-label">Email</span>
@@ -222,7 +222,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <div class="grid sm:grid-2 lg:grid-4">
       <div class="persona-card reveal reveal-delay-1">
-        <span class="icon-badge" style="--tint:#dc2626;"><?= ci('graduation-cap') ?></span>
+        <span class="icon-badge" style="--tint:#0b00ff;"><?= ci('graduation-cap') ?></span>
         <h3>I'm a Learner</h3>
         <ul class="check-list">
           <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Course access</span></li>
@@ -323,7 +323,7 @@ require __DIR__ . '/includes/header.php';
         <h2 class="h2" style="margin-top:10px;">Head Office</h2>
         <div class="stack gap-3" style="margin-top:22px;">
           <div class="row gap-3" style="align-items:flex-start;">
-            <span class="icon-badge" style="--tint:#dc2626; width:42px; height:42px; font-size:18px;"><?= ci('map-pin') ?></span>
+            <span class="icon-badge" style="--tint:#0b00ff; width:42px; height:42px; font-size:18px;"><?= ci('map-pin') ?></span>
             <div>
               <div style="font-weight:700; color:var(--ink);">Location</div>
               <p class="muted" style="margin-top:2px;">Kampala, Uganda</p>
@@ -373,7 +373,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <div class="grid sm:grid-2 lg:grid-4">
       <div class="value-card reveal reveal-delay-1">
-        <span class="icon-badge" style="--tint:#dc2626;"><?= ci('credit-card') ?></span>
+        <span class="icon-badge" style="--tint:#0b00ff;"><?= ci('credit-card') ?></span>
         <h3>Secure Payments</h3>
         <p>Your payments are protected, every time.</p>
       </div>
@@ -415,7 +415,7 @@ require __DIR__ . '/includes/header.php';
 <div id="newsletter" class="section" style="scroll-margin-top:90px;">
   <div class="container" style="max-width:640px;">
     <div class="newsletter-panel reveal">
-      <span class="icon-badge" style="--tint:#dc2626; margin:0 auto;"><?= ci('mail') ?></span>
+      <span class="icon-badge" style="--tint:#0b00ff; margin:0 auto;"><?= ci('mail') ?></span>
       <h2 class="h2" style="margin-top:18px;">Stay Updated</h2>
       <p class="lede" style="margin:10px auto 0; max-width:440px;">Receive updates on new courses, creator opportunities, platform improvements, and learning resources.</p>
       <form method="post" class="newsletter-form" data-loading-submit>

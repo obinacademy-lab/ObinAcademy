@@ -81,7 +81,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 
 <div class="grid md:grid-2 lg:grid-4" style="margin-top:24px;">
-  <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#dc2626;">
+  <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#0b00ff;">
     <div class="icon"><?php dash_icon('graduation-cap'); ?></div>
     <div class="value" data-count-up data-count-value="<?= $enrolledCount ?>" data-count-suffix="">0</div><div class="label">Enrolled Courses</div>
   </div>
@@ -193,7 +193,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <h3 class="dash-section-label" style="margin-top:40px;">Quick Actions</h3>
 <div class="quick-actions">
   <a href="<?= e(base_url('courses/index.php')) ?>" class="quick-action">
-    <span class="qa-icon" style="--tint:#dc2626;"><?php dash_icon('book-open'); ?></span>
+    <span class="qa-icon" style="--tint:#0b00ff;"><?php dash_icon('book-open'); ?></span>
     <span class="qa-text">Browse Courses</span>
     <?php dash_icon('arrow-right', 'qa-arrow'); ?>
   </a>

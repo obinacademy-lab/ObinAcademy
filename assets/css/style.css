@@ -1,25 +1,30 @@
 /* Obin Academy — design tokens + responsive system (mobile-first) */
 
 :root {
-  --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", "Sora", ui-sans-serif, system-ui, sans-serif;
 
-  /* Brand ramp — red, matching obitickets.site (main #dc2626). 800 is the
-     accent used for buttons/links; 900/950 are the deeper header, hover and
-     footer shades; 700/600 the lighter ones. White on 800 and darker passes AA. */
-  --brand-950: #991b1b;
-  --brand-900: #b91c1c;
-  --brand-800: #dc2626;
-  --brand-700: #ef4444;
-  --brand-600: #f87171;
+  /* Brand ramp — electric blue with a lime accent, the look of obinacademy.com
+     (main #0b00ff). 800 is the accent used for buttons/links; 900/950 are the
+     deeper header, hover and footer shades; 700/600 the lighter ones. White on
+     800 and darker passes AA. --lime is the call-to-action colour; danger and
+     error states stay red (see --danger below). */
+  --brand-950: #06007a;
+  --brand-900: #0800c9;
+  --brand-800: #0b00ff;
+  --brand-700: #3b33ff;
+  --brand-600: #6b66ff;
+  --lime: #cdfb5e;
+  --lime-dark: #b6e445;
+  --lime-ink: #0a0a14;
 
   --ink: #16181a;
   --muted: #5b6670;
   /* A warm flat cream instead of the old cool grey — the Skool reference's
      entire background is this kind of off-white, not a "card floating on
      grey" SaaS surface. */
-  --surface: #f7f6f2;
-  --border: #e7e4dc;
-  --border-strong: #d8d4c8;
+  --surface: #f5f5f7;
+  --border: #e8e8f0;
+  --border-strong: #d0d0e8;
 
   --accent: var(--brand-800);
   --accent-dark: var(--brand-900);
@@ -323,7 +328,7 @@ h1 { font-size: clamp(38px, 6.6vw, 68px); line-height: 0.99; }
 @media (min-width: 900px) { .mobile-menu-scrim { display: none; } }
 .mobile-menu-account {
   display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 6px; border-radius: 16px;
-  background: linear-gradient(135deg, var(--brand-tint, #fef2f2), #fee2e2); border: 1px solid #fecaca;
+  background: linear-gradient(135deg, var(--brand-tint, #eeeeff), #dddeff); border: 1px solid #cfcdff;
 }
 .mobile-menu-account .account-avatar { width: 42px; height: 42px; font-size: 15px; }
 .mobile-menu-account .name { font-weight: 700; font-size: 14.5px; color: var(--ink); }
@@ -882,8 +887,8 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
 .hero h1 .lock { white-space: nowrap; }
 
 @keyframes blink-glow-badge {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55); }
-  50% { box-shadow: 0 0 0 9px rgba(220, 38, 38, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(11,0,255, 0.55); }
+  50% { box-shadow: 0 0 0 9px rgba(11,0,255, 0); }
 }
 .animate-blink-badge { animation: blink-glow-badge 1.6s ease-in-out infinite; }
 
@@ -1094,7 +1099,7 @@ table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 3%, var(-
    wrapping just the headline text, rather than styling .home-hero-v3 h1
    directly, so any page using that hero class can opt in per-headline. */
 .hero-shine {
-  background: linear-gradient(100deg, var(--accent-dark) 35%, #fecaca 50%, var(--accent-dark) 65%);
+  background: linear-gradient(100deg, var(--accent-dark) 35%, #a5a3ff 50%, var(--accent-dark) 65%);
   background-size: 220% auto;
   -webkit-background-clip: text; background-clip: text;
   color: transparent; -webkit-text-fill-color: transparent;
@@ -2580,12 +2585,12 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 .map-placeholder .pin {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%);
   width: 46px; height: 46px; border-radius: 50% 50% 50% 0; background: var(--accent);
-  display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px -8px rgba(220,38,38,0.5);
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px -8px rgba(11,0,255,0.5);
 }
 .map-placeholder .pin svg { width: 22px; height: 22px; color: #fff; transform: rotate(45deg); }
 .map-placeholder .pin::after {
   content: ""; position: absolute; bottom: -14px; left: 50%; width: 10px; height: 10px; border-radius: 50%;
-  background: rgba(220,38,38,0.28); transform: translateX(-50%) scale(0.6);
+  background: rgba(11,0,255,0.28); transform: translateX(-50%) scale(0.6);
   animation: map-pulse 2.2s ease-out infinite;
 }
 @keyframes map-pulse { 0% { transform: translateX(-50%) scale(0.6); opacity: 0.8; } 100% { transform: translateX(-50%) scale(3.2); opacity: 0; } }
@@ -3139,7 +3144,7 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 
 .auth-card {
   width: 100%; max-width: 900px; min-height: 540px; background: #fff; border-radius: 28px; overflow: hidden;
-  box-shadow: 0 30px 70px -30px rgba(153,27,27,.35), 0 10px 30px -15px rgba(20,24,27,.15);
+  box-shadow: 0 30px 70px -30px rgba(6,0,122,.35), 0 10px 30px -15px rgba(20,24,27,.15);
   display: flex;
 }
 
@@ -3193,9 +3198,9 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
   background: linear-gradient(135deg, var(--brand-700), var(--brand-900)); border: none; color: #fff;
   border-radius: 12px; padding: 15px; font-size: 13.5px; font-weight: 700; letter-spacing: .03em; margin-top: 6px;
-  box-shadow: 0 14px 28px -12px rgba(220,38,38,.5); cursor: pointer; text-decoration: none;
+  box-shadow: 0 14px 28px -12px rgba(11,0,255,.5); cursor: pointer; text-decoration: none;
 }
-.auth-card .btn-primary:hover { box-shadow: 0 18px 32px -12px rgba(220,38,38,.6); }
+.auth-card .btn-primary:hover { box-shadow: 0 18px 32px -12px rgba(11,0,255,.6); }
 
 .auth-card .switch-line { margin-top: 18px; text-align: center; font-size: 12.5px; color: var(--muted); }
 .auth-card .switch-line a { color: var(--brand-800); font-weight: 700; text-decoration: none; }
@@ -3295,7 +3300,7 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 .lead-modal-close:hover { background: var(--border); color: var(--ink); }
-.lead-modal-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--dash-tint, #fef2f2); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.lead-modal-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--dash-tint, #eeeeff); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 24px; }
 .lead-modal[data-lead-variant="creator"] .lead-modal-icon,
 .lead-modal-success .lead-modal-icon { background: color-mix(in srgb, var(--gold) 18%, white); }
 .lead-modal h2 { margin-top: 16px; font-size: 22px; line-height: 1.15; }
@@ -3448,7 +3453,7 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 .feed-post-head .name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .feed-post-head .author { font-weight: 700; font-size: 14px; color: var(--ink); text-decoration: none; }
 .feed-post-head .author:hover { text-decoration: underline; }
-.role-badge { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--brand-800); background: rgba(220,38,38,0.09); padding: 2px 7px; border-radius: var(--radius-full); }
+.role-badge { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--brand-800); background: rgba(11,0,255,0.09); padding: 2px 7px; border-radius: var(--radius-full); }
 .feed-post-head .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
 .feed-post-head .pin-flag { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
 .feed-post-body { margin-top: 12px; font-size: 14.5px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; word-wrap: break-word; }
@@ -3538,7 +3543,7 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 .profile-tag-group { margin-top: 16px; }
 .profile-tag-group h4 { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); margin-bottom: 8px; }
 .profile-chip { display: inline-flex; align-items: center; border: 1px solid var(--border); color: var(--ink); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: var(--radius-full); }
-.profile-chip.looking-for { border-color: rgba(220,38,38,0.3); color: var(--brand-800); background: rgba(220,38,38,0.06); }
+.profile-chip.looking-for { border-color: rgba(11,0,255,0.3); color: var(--brand-800); background: rgba(11,0,255,0.06); }
 
 .profile-section { margin-top: 44px; }
 .profile-section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px; }
@@ -3809,7 +3814,7 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 .member-directory-row:last-child { border-bottom: none; }
 .member-directory-row .name { font-weight: 700; font-size: 13.5px; color: var(--ink); }
 .member-directory-row .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
-.member-directory-row .role-tag { margin-left: auto; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--brand-800); background: rgba(220,38,38,0.09); padding: 3px 9px; border-radius: var(--radius-full); flex-shrink: 0; }
+.member-directory-row .role-tag { margin-left: auto; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--brand-800); background: rgba(11,0,255,0.09); padding: 3px 9px; border-radius: var(--radius-full); flex-shrink: 0; }
 
 /* ---------- followers page (school-followers.php) ---------- */
 .followers-back-link {
@@ -3907,7 +3912,7 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 .site-notif-mark-read { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; }
 .site-notif-row { display: block; padding: 10px 14px; border-radius: 0; text-decoration: none; }
 .site-notif-row:hover { background: var(--surface); }
-.site-notif-row.unread { background: rgba(220,38,38,0.05); }
+.site-notif-row.unread { background: rgba(11,0,255,0.05); }
 .site-notif-row p { font-size: 13px; color: var(--ink); line-height: 1.5; }
 .site-notif-row span { font-size: 11px; color: var(--muted); display: block; margin-top: 3px; }
 .site-notif-see-all { display: block; text-align: center; padding: 10px; font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; border-top: 1px solid var(--border); margin-top: 4px; }
@@ -3924,7 +3929,7 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 .leaderboard-rank { width: 22px; text-align: center; font-size: 14px; font-weight: 800; color: var(--muted); flex-shrink: 0; }
 .leaderboard-name { font-weight: 700; font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaderboard-streak { font-size: 11px; color: var(--muted); margin-top: 1px; }
-.leaderboard-xp { margin-left: auto; font-size: 11px; font-weight: 800; color: var(--brand-800); background: rgba(220,38,38,0.08); padding: 3px 9px; border-radius: var(--radius-full); flex-shrink: 0; white-space: nowrap; }
+.leaderboard-xp { margin-left: auto; font-size: 11px; font-weight: 800; color: var(--brand-800); background: rgba(11,0,255,0.08); padding: 3px 9px; border-radius: var(--radius-full); flex-shrink: 0; white-space: nowrap; }
 
 .trending-strip { background: linear-gradient(160deg, #fff8e6 0%, #fff 65%); border: 2px solid rgba(245,179,1,0.4); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 20px; }
 .trending-strip-head { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #8a5c05; }
@@ -3977,3 +3982,76 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 }
 .share-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 @media (prefers-reduced-motion: reduce) { .btn-share, .share-menu, .share-row, .share-toast { transition: none; } }
+
+
+/* ====================================================================
+   Blue and lime skin (from obinacademy.com). Everything above already follows
+   the --brand-* / --accent tokens; this block only adds the finishing touches
+   tokens can't express: lime call-to-action buttons, a flat blue header, a deep
+   navy footer, the blue homepage hero and the price tag on school cards.
+   ==================================================================== */
+.btn-gold { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+.btn-gold:hover { background: var(--lime-dark); border-color: var(--lime-dark); box-shadow: 0 8px 0 0 color-mix(in srgb, var(--lime) 55%, black 15%); }
+.hero-search-v3 button { background: var(--brand-800); color: #fff; }
+.hero-search-v3 button:hover { background: var(--brand-900); }
+
+.site-header { background: var(--brand-800); border-bottom-color: rgba(255,255,255,0.10); }
+.logo-mark { background: var(--lime); color: var(--lime-ink); box-shadow: none; }
+.logo-text .accent { color: var(--lime); }
+.logo.dark .logo-mark { background: var(--brand-800); color: #fff; }
+.logo.dark .logo-text .accent { color: var(--brand-800); }
+
+.site-footer { background: var(--brand-950); }
+.site-footer::before { background: linear-gradient(to right, var(--brand-700), var(--lime), var(--brand-600), var(--brand-700)); }
+.footer-glow-a { background: var(--brand-700); opacity: 0.22; }
+.footer-glow-b { background: var(--lime); opacity: 0.07; }
+
+/* Homepage: the hero, search, numbers and topic chips sit on one electric-blue block. */
+.home-hero-blue {
+  background: radial-gradient(1200px 420px at 85% -10%, var(--brand-700) 0%, transparent 60%), var(--brand-800);
+  color: #fff; padding-bottom: 34px;
+}
+.home-hero-blue .home-discover-hero { padding-top: 48px; }
+.home-hero-pill {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 7px 14px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff;
+  background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.30);
+}
+.home-hero-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); }
+.home-hero-blue .home-discover-hero h1 { color: #fff; }
+.home-hero-blue .home-discover-hero h1 em { font-style: normal; color: var(--lime); }
+.home-hero-blue .home-discover-hero .sub { color: rgba(255,255,255,0.80); }
+.home-hero-blue .home-discover-hero .sub a { color: var(--lime); font-weight: 700; }
+.home-hero-blue .hero-search-v3 { border-radius: 14px; box-shadow: 0 10px 34px -14px rgba(0,0,0,0.5); }
+.home-hero-blue .home-discover-stats { color: rgba(255,255,255,0.76); }
+.home-hero-blue .home-discover-stats strong { color: #fff; }
+.home-hero-blue .home-discover-chips { margin-top: 24px; }
+.home-hero-blue .home-discover-chip, .home-hero-blue .home-discover-chip-filter {
+  background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.28); font-weight: 600;
+}
+.home-hero-blue .home-discover-chip:hover, .home-hero-blue .home-discover-chip-filter:hover { border-color: rgba(255,255,255,0.6); color: #fff; }
+.home-hero-blue .home-discover-chip.active { background: var(--lime); color: var(--lime-ink); border-color: transparent; }
+
+/* School cards: round logo and a dark price tag on the banner (price leaves the meta row). */
+.home-discover-card .avatar { border-radius: 50%; }
+.home-discover-card .thumb .price-tag {
+  position: absolute; top: 10px; right: 10px; z-index: 2; padding: 3px 9px; border-radius: 6px;
+  background: #1a1a1a; color: #fff; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.home-discover-card .school-meta > span.price { display: none; }
+.home-pager .on { background: var(--brand-800); }
+
+/* Invitation to open a school, above the footer on the homepage. */
+.home-band {
+  max-width: 1100px; margin: 8px auto 0; padding: 30px; border-radius: 18px; display: flex; align-items: center;
+  justify-content: space-between; gap: 20px; flex-wrap: wrap; background: var(--brand-800); color: #fff;
+}
+.home-band h2 { margin: 0; max-width: 24ch; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+.home-band h2 em { font-style: normal; color: var(--lime); }
+.home-band p { margin: 8px 0 0; max-width: 50ch; color: rgba(255,255,255,0.8); }
+@media (max-width: 1160px) { .home-band { margin-left: 24px; margin-right: 24px; } }
+@media (max-width: 560px) { .home-band { padding: 22px; margin-left: 16px; margin-right: 16px; } .home-band h2 { font-size: 22px; } }
+
+/* On the dark dashboard sidebar the (otherwise dark-surface) logo uses the lime accent. */
+.dash .logo.dark .logo-text .accent { color: var(--lime); }
+.dash .logo.dark .logo-mark { background: var(--lime); color: var(--lime-ink); }
