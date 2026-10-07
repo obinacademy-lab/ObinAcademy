@@ -26,7 +26,7 @@ $pageTitle = 'Log In — Obin Academy';
 $authTab = 'login';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1 class="auth-headline">Welcome Back</h1>
+  <h1 class="auth-headline">Welcome back</h1>
   <p class="auth-sub">Log in to continue learning or managing your courses.</p>
 
   <?php if ($errors): ?>
@@ -38,11 +38,11 @@ require __DIR__ . '/includes/auth_header.php';
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Email address">
+      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="you@email.com">
     </div>
     <div class="field">
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" required placeholder="Password">
+      <input id="password" name="password" type="password" required placeholder="Your password">
       <div class="field-row">
         <a href="<?= e(base_url('forgot-password.php')) ?>" class="forgot-link">Forgot password?</a>
       </div>
