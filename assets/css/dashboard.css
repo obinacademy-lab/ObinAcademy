@@ -104,7 +104,7 @@
 .dash-widget {
   margin: auto 2px 4px; padding: 15px;
   border-radius: var(--radius); border: none;
-  background: linear-gradient(160deg, var(--brand-900), #450a0a);
+  background: linear-gradient(160deg, var(--brand-900), #04004d);
   flex-shrink: 0;
   box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--brand-900) 55%, transparent);
 }
@@ -235,7 +235,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .dash-hero {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
   padding: 26px 28px; border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--brand-900), #450a0a 65%, var(--brand-800));
+  background: linear-gradient(135deg, var(--brand-900), #04004d 65%, var(--brand-800));
   box-shadow: 0 20px 40px -24px color-mix(in srgb, var(--brand-900) 55%, transparent);
 }
 .dash-hero .status-pill { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.2); color: #fff; }
