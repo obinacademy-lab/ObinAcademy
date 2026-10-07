@@ -41,7 +41,7 @@ $pageTitle = 'Affiliate Dashboard — Obin Academy';
 require __DIR__ . '/../includes/dashboard_header.php';
 ?>
 <h1 class="h2">Affiliate Dashboard</h1>
-<p class="muted" style="margin-top:6px;">Share your link — earn 2% commission on any course, from any creator, that anyone buys through it.</p>
+<p class="muted" style="margin-top:6px;">Share your link — earn 5% commission on any course, from any creator, that anyone buys through it.</p>
 
 <div class="card card-pad row between wrap gap-3" style="margin-top:24px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--dash-panel)), var(--dash-panel)); border-color: var(--dash-border);">
   <div style="min-width:240px; flex:1;">

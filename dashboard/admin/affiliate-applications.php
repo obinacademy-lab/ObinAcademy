@@ -34,7 +34,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="row between wrap gap-3" style="align-items:flex-end;">
   <div>
     <h1 class="h2">Affiliate Applications</h1>
-    <p class="muted" style="margin-top:6px;">Review requests from learners who want to earn 2% commission sharing Obin Academy.</p>
+    <p class="muted" style="margin-top:6px;">Review requests from learners who want to earn 5% commission sharing Obin Academy.</p>
   </div>
 </div>
 

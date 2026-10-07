@@ -894,7 +894,7 @@ function send_affiliate_application_approved_email(string $to, string $name, str
           <h2 style="color: #06007a;">Congratulations, {$name}!</h2>
           <p>
             Your application to become an affiliate partner on Obin Academy has been approved.
-            Your affiliate link is ready right now — share it anywhere, and you'll earn 2%
+            Your affiliate link is ready right now — share it anywhere, and you'll earn 5%
             commission whenever someone buys any course, from any creator, through it.
           </p>
           <p style="text-align: center; background: #f7f6f2; border-radius: 12px; padding: 14px; font-weight: 700; word-break: break-all; margin: 20px 0;">

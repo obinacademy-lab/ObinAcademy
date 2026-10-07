@@ -42,7 +42,7 @@ $stats = get_platform_stats();
 $affiliateBenefits = [
     ['🔗', '#0b00ff', 'Your Own Tracked Link', 'Get a unique referral link that credits you automatically for every sale it brings in.'],
     ['🛍️', '#f5b301', 'Every Course, Every Creator', "You're not limited to one course — earn commission across the entire Obin Academy catalog."],
-    ['💵', '#10b981', '2% Commission', 'Earn 2% on every course purchase made through your link, no matter the price.'],
+    ['💵', '#10b981', '5% Commission', 'Earn 5% on every course purchase made through your link, no matter the price.'],
     ['⏱️', '#8b5cf6', '30-Day Tracking Window', "Referred someone who buys later? You're still credited if it's within 30 days of their click."],
     ['📱', '#06b6d4', 'Share Anywhere', 'WhatsApp, social media, your blog, your community — share your link wherever your audience already is.'],
     ['📊', '#ec4899', 'Track Every Click and Sale', 'See clicks, conversions, and earnings in real time from your affiliate dashboard.'],
@@ -53,25 +53,25 @@ $affiliateSteps = [
     ['Apply to Become an Affiliate', 'Tell us how you plan to share Obin Academy and submit your application for review.'],
     ['Get Your Affiliate Link', 'Once approved, your unique referral link is ready in your Affiliate Dashboard.'],
     ['Share It With Your Audience', 'Post it on WhatsApp, social media, or anywhere your audience already trusts you.'],
-    ['Earn on Every Sale', 'Get 2% commission automatically whenever someone buys through your link, paid to mobile money.'],
+    ['Earn on Every Sale', 'Get 5% commission automatically whenever someone buys through your link, paid to mobile money.'],
 ];
 
 // Illustrative only, not tied to any real affiliate's numbers — a plain
-// example so "2% commission" means something concrete on the page.
+// example so "5% commission" means something concrete on the page.
 $exampleReferredSalePrice = 50000.0;
 $exampleReferredSalesCount = 100;
 $exampleReferredGross = $exampleReferredSalePrice * $exampleReferredSalesCount;
 $exampleAffiliateCommission = $exampleReferredGross * AFFILIATE_COMMISSION_RATE;
 
 $pageTitle = 'Become an Affiliate Partner — Obin Academy';
-$pageDescription = 'Earn 2% commission on every course purchase you refer through your own affiliate link, on any course from any creator on Obin Academy.';
+$pageDescription = 'Earn 5% commission on every course purchase you refer through your own affiliate link, on any course from any creator on Obin Academy.';
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="course-hero">
   <div class="container" style="max-width:720px; text-align:center;">
     <span class="pill">Earn by Sharing Obin Academy</span>
     <h1 style="margin-top:14px;">Turn Your Network Into Income</h1>
-    <p class="summary" style="margin:14px auto 0;">Apply to become an affiliate partner. Once approved, you get your own link to share — earn 2% commission whenever someone buys any course, from any creator, through your link.</p>
+    <p class="summary" style="margin:14px auto 0;">Apply to become an affiliate partner. Once approved, you get your own link to share — earn 5% commission whenever someone buys any course, from any creator, through your link.</p>
 
     <?php if ($paidToAffiliates > 0): ?>
       <div class="hero-trust-stat">
@@ -101,7 +101,7 @@ require __DIR__ . '/includes/header.php';
         </p>
         <div class="mission-callout" style="margin-top:24px;">
           <span class="tag">The Affiliate Split</span>
-          <p>Earn 2% commission on every sale your link brings in — tracked for 30 days after someone clicks, paid straight to your mobile money.</p>
+          <p>Earn 5% commission on every sale your link brings in — tracked for 30 days after someone clicks, paid straight to your mobile money.</p>
         </div>
       </div>
       <div class="why-exist-photo reveal reveal-delay-2">
@@ -154,11 +154,11 @@ require __DIR__ . '/includes/header.php';
       <div class="how-panel panel-creators reveal reveal-delay-2">
         <span class="how-panel-tag tag-gold">📊 Your Earnings</span>
         <p class="how-panel-desc" style="margin-top:24px; position:relative; z-index:1;">
-          See what 2% commission looks like in practice. Say your link drives <?= $exampleReferredSalesCount ?> course purchases this month, averaging <?= e(format_money($exampleReferredSalePrice)) ?> each:
+          See what 5% commission looks like in practice. Say your link drives <?= $exampleReferredSalesCount ?> course purchases this month, averaging <?= e(format_money($exampleReferredSalePrice)) ?> each:
         </p>
         <div class="earnings-example">
           <div class="earnings-row"><span>Sales referred (<?= $exampleReferredSalesCount ?> &times; <?= e(format_money($exampleReferredSalePrice)) ?>)</span><strong><?= e(format_money($exampleReferredGross)) ?></strong></div>
-          <div class="earnings-row earnings-total"><span>You earn (2% commission)</span><strong><?= e(format_money($exampleAffiliateCommission)) ?></strong></div>
+          <div class="earnings-row earnings-total"><span>You earn (5% commission)</span><strong><?= e(format_money($exampleAffiliateCommission)) ?></strong></div>
         </div>
         <p class="small muted" style="margin-top:14px; position:relative; z-index:1;">Paid straight to your MTN or Airtel Mobile Money — no waiting for a payout cycle.</p>
       </div>
@@ -172,7 +172,7 @@ require __DIR__ . '/includes/header.php';
     <div class="cta-panel-premium reveal">
       <span class="eyebrow" style="background:rgba(255,255,255,0.1); color:var(--gold);">Your Network Has Value</span>
       <h2 class="h2" style="margin-top:14px; color:#fff;">Ready to Earn by Sharing What You Already Love?</h2>
-      <p style="margin-top:12px; color:rgba(255,255,255,0.7); max-width:520px; margin-left:auto; margin-right:auto; line-height:1.7;">Join affiliates across East Africa already earning from their community on Obin Academy — no cost to join, no cap on referrals, just a transparent 2% commission paid instantly.</p>
+      <p style="margin-top:12px; color:rgba(255,255,255,0.7); max-width:520px; margin-left:auto; margin-right:auto; line-height:1.7;">Join affiliates across East Africa already earning from their community on Obin Academy — no cost to join, no cap on referrals, just a transparent 5% commission paid instantly.</p>
       <div class="row gap-2" style="justify-content:center; margin-top:28px;">
         <a href="#apply" class="btn btn-gold btn-lg">Apply Now <span class="btn-arrow">→</span></a>
       </div>
