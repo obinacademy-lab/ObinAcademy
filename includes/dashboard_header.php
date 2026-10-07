@@ -24,7 +24,7 @@ $navByRole = [
     ],
     'CREATOR' => [
         'Courses' => [
-            ['/dashboard/creator/index.php', 'My Courses', 'book-open'],
+            ['/dashboard/creator/index.php', 'Studio', 'layout-dashboard'],
             ['/dashboard/creator/course-build.php', 'Create Course', 'plus-circle'],
             ['/dashboard/creator/bundles.php', 'Bundles', 'layout-dashboard'],
         ],

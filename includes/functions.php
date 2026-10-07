@@ -43,6 +43,7 @@ const SALE_DURATION_OPTIONS = [
  * of truth to generate this from).
  */
 const DASHBOARD_THEMES = [
+    'light'  => ['label' => 'Light',  'swatch' => '#e8e8f0'],
     'blue'   => ['label' => 'Blue',   'swatch' => '#0b00ff'],
     'purple' => ['label' => 'Purple', 'swatch' => '#8b5cf6'],
     'gold'   => ['label' => 'Gold',   'swatch' => '#f5b301'],
@@ -58,7 +59,8 @@ const DASHBOARD_THEMES = [
  * via dashboard_theme_for_user(), so no data migration is needed.
  */
 function dashboard_theme_default(string $role): string {
-    return 'blue';
+    // Creators open to the light Studio look (as on obinacademy.com); learners and admins keep the blue shell.
+    return $role === 'CREATOR' ? 'light' : 'blue';
 }
 
 /** @return string a valid DASHBOARD_THEMES key — never trusts a stored value blindly, in case it predates a theme being renamed/removed. */

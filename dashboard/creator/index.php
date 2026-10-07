@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/bootstrap.php';
+require __DIR__ . '/../../includes/data.php';
 $user = require_role(['CREATOR', 'ADMIN']);
 
 $courses = db_all('
@@ -9,70 +10,98 @@ $courses = db_all('
 ', [$user['id']]);
 
 $totalEarnings = (float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM earnings WHERE creator_id = ?', [$user['id']])['n'] ?? 0);
+$last30 = array_sum(array_column(get_creator_daily_earnings_series((int) $user['id'], 30), 'collected'));
+
 $publishedCount = 0;
 $totalEnrollments = 0;
+$totalViews = 0;
 foreach ($courses as $c) {
     if ($c['status'] === 'PUBLISHED') $publishedCount++;
     $totalEnrollments += (int) $c['student_count'];
+    $totalViews += (int) $c['view_count'];
 }
 
-$badgeClass = ['DRAFT' => 'badge-draft', 'PENDING_REVIEW' => 'badge-pending', 'PUBLISHED' => 'badge-published', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected'];
-$statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending Review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by Admin'];
+$statusLabel = ['DRAFT' => 'Draft', 'PENDING_REVIEW' => 'Pending review', 'PUBLISHED' => 'Published', 'REJECTED' => 'Rejected', 'REMOVED' => 'Removed by admin'];
+$statusTone = ['DRAFT' => 'draft', 'PENDING_REVIEW' => 'warn', 'PUBLISHED' => 'good', 'REJECTED' => 'bad', 'REMOVED' => 'bad'];
 
 $hasSocialLinks = $user['facebook_url'] || $user['instagram_url'] || $user['youtube_url'] || $user['tiktok_url'] || $user['linkedin_url'];
+$studioName = trim((string) ($user['school_name'] ?? '')) !== '' ? $user['school_name'] : $user['name'];
 
-$pageTitle = 'My Courses — Obin Academy';
+$pageTitle = 'Studio — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="dash-hero reveal">
+<div class="st-head reveal">
   <div>
-    <h1 class="h2" style="color:#fff;">Welcome back, <?= e(explode(' ', trim($user['name']))[0]) ?></h1>
-    <p style="margin-top:6px; color:rgba(255,255,255,0.72);">Manage your courses and track how they're performing.</p>
+    <h1 class="st-title"><?= e($studioName) ?> Studio</h1>
+    <p class="st-sub">Your creator dashboard</p>
   </div>
-  <a href="<?= e(base_url('dashboard/creator/course-build.php')) ?>" class="btn btn-gold" style="border-radius:999px;">+ Create Course</a>
+  <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>" class="st-btn st-btn-ghost"><?php dash_icon('globe'); ?>View public school</a>
 </div>
 
 <?php if (!$hasSocialLinks): ?>
-  <div class="card card-pad row between wrap gap-3 reveal" style="margin-top:20px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--dash-panel)), var(--dash-panel)); border-color: var(--dash-border);">
-    <div class="row gap-2" style="align-items:center;">
-      <span class="icon-badge" style="--tint:#0b00ff;"><?php dash_icon('share'); ?></span>
-      <div>
-        <h3 class="small" style="font-weight:700;">Connect your social accounts</h3>
-        <p class="small muted" style="margin-top:2px;">Add your Facebook, Instagram, YouTube, TikTok, and LinkedIn — they'll show right on your course pages so learners can follow you.</p>
-      </div>
-    </div>
-    <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="btn btn-outline btn-sm" style="white-space:nowrap;">Add Links</a>
+  <div class="st-nudge reveal">
+    <span class="st-nudge-ic"><?php dash_icon('share'); ?></span>
+    <p class="st-nudge-tx"><b>Connect your social accounts</b>They show on your course pages so learners can follow you.</p>
+    <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="st-btn st-btn-soft">Add links</a>
   </div>
 <?php endif; ?>
 
-<div class="grid md:grid-3" style="margin-top:24px;">
-  <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#f5b301;"><div class="icon"><?php dash_icon('banknote'); ?></div><div class="value"><?= e(format_money($totalEarnings)) ?></div><div class="label">Total Earnings</div></div>
-  <div class="stat-card accent-top reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#6b66ff;"><div class="icon"><?php dash_icon('book-open'); ?></div><div class="value" data-count-up data-count-value="<?= $publishedCount ?>" data-count-suffix="">0</div><div class="label">Published Courses</div></div>
-  <div class="stat-card accent-top reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#34d399;"><div class="icon"><?php dash_icon('graduation-cap'); ?></div><div class="value" data-count-up data-count-value="<?= $totalEnrollments ?>" data-count-suffix="">0</div><div class="label">Total Enrollments</div></div>
-</div>
+<section class="st-stats reveal" aria-label="At a glance">
+  <div class="st-card st-stat"><span class="st-ic tone-blue"><?php dash_icon('book-open'); ?></span><b><?= count($courses) ?></b><span>Course<?= count($courses) === 1 ? '' : 's' ?></span></div>
+  <div class="st-card st-stat"><span class="st-ic tone-good"><?php dash_icon('trending-up'); ?></span><b><?= $publishedCount ?></b><span>Published</span></div>
+  <div class="st-card st-stat"><span class="st-ic tone-lime"><?php dash_icon('users'); ?></span><b><?= number_format($totalEnrollments) ?></b><span>Student<?= $totalEnrollments === 1 ? '' : 's' ?></span></div>
+  <div class="st-card st-stat"><span class="st-ic tone-warn"><?php dash_icon('eye'); ?></span><b><?= number_format($totalViews) ?></b><span>Course view<?= $totalViews === 1 ? '' : 's' ?></span></div>
+</section>
 
-<?php if (!$courses): ?>
-  <div class="card card-pad reveal" style="margin-top:24px; text-align:center; border-style:dashed;">
-    <p class="muted">You haven't created any courses yet.</p>
-    <a href="<?= e(base_url('dashboard/creator/course-build.php')) ?>" class="btn btn-primary" style="margin-top:14px;">Create Your First Course</a>
+<section class="st-card st-earn reveal" aria-label="Earnings">
+  <span class="st-earn-ic"><?php dash_icon('banknote'); ?></span>
+  <div><small>My all-time earnings</small><b><?= e(format_money($totalEarnings)) ?></b></div>
+  <div class="st-earn-mid"><div><small>Last 30 days</small><b><?= e(format_money($last30)) ?></b></div></div>
+  <a class="st-more" href="<?= e(base_url('dashboard/creator/earnings.php')) ?>">View details <?php dash_icon('chevron-right'); ?></a>
+</section>
+
+<section class="st-card reveal" aria-labelledby="st-courses">
+  <div class="st-sec-h">
+    <div><h2 id="st-courses">Your courses</h2><small><?= count($courses) ?> total</small></div>
+    <a href="<?= e(base_url('dashboard/creator/course-build.php')) ?>" class="st-btn st-btn-lime"><?php dash_icon('plus-circle'); ?>New course</a>
   </div>
-<?php else: ?>
-  <div class="activity-feed reveal" style="margin-top:24px;">
-    <?php foreach ($courses as $c): ?>
-      <div class="list-row">
-        <div class="list-row-main">
-          <span class="activity-dot tone-neutral" style="flex-shrink:0;"><?php dash_icon('book-open'); ?></span>
-          <div style="min-width:0;">
-            <div style="font-weight:700;"><?= e($c['title']) ?></div>
-            <div class="small muted" style="margin-top:2px;"><?= e($c['category_name']) ?> &middot; <?= e(format_money((float) $c['price'])) ?> &middot; <?= (int) $c['student_count'] ?> student<?= (int) $c['student_count'] === 1 ? '' : 's' ?></div>
-          </div>
+  <?php if (!$courses): ?>
+    <div class="st-empty">
+      <?php dash_icon('book-open'); ?>
+      <p>No courses yet. Create your first course to start earning.</p>
+      <a class="st-more" href="<?= e(base_url('dashboard/creator/course-build.php')) ?>">Create your first course <?php dash_icon('arrow-right'); ?></a>
+    </div>
+  <?php else: ?>
+    <?php foreach ($courses as $c): $draft = $c['status'] === 'DRAFT'; ?>
+      <div class="st-row">
+        <div class="st-th">
+          <?php if (!empty($c['thumbnail_url'])): ?>
+            <img src="<?= e(asset_src($c['thumbnail_url'])) ?>" alt="" loading="lazy">
+          <?php else: ?>
+            <span><?= e(mb_strimwidth($c['title'], 0, 18, '…')) ?></span>
+          <?php endif; ?>
         </div>
-        <div class="list-row-meta">
-          <span class="badge <?= $badgeClass[$c['status']] ?>"><?= $statusLabel[$c['status']] ?></span>
-          <a href="<?= e(base_url('dashboard/creator/course-manage.php?id=' . $c['id'])) ?>" class="btn btn-dark btn-sm">Manage</a>
+        <div class="st-row-main">
+          <div class="st-row-n"><?= e($c['title']) ?></div>
+          <div class="st-row-m"><?= e($c['category_name']) ?> &middot; <?= (float) $c['price'] > 0 ? e(format_money((float) $c['price'])) : 'Free' ?> &middot; <?= (int) $c['student_count'] ?> student<?= (int) $c['student_count'] === 1 ? '' : 's' ?> &middot; <?= number_format((int) $c['view_count']) ?> view<?= (int) $c['view_count'] === 1 ? '' : 's' ?></div>
+        </div>
+        <div class="st-row-act">
+          <span class="st-pill tone-<?= e($statusTone[$c['status']] ?? 'draft') ?>"><?= e($statusLabel[$c['status']] ?? $c['status']) ?></span>
+          <?php if ($draft): ?>
+            <a href="<?= e(base_url('dashboard/creator/course-build.php?id=' . $c['id'])) ?>" class="st-btn st-btn-blue">Continue</a>
+          <?php else: ?>
+            <a href="<?= e(base_url('dashboard/creator/course-manage.php?id=' . $c['id'])) ?>" class="st-btn st-btn-blue">Manage</a>
+          <?php endif; ?>
         </div>
       </div>
     <?php endforeach; ?>
-  </div>
-<?php endif; ?>
+  <?php endif; ?>
+</section>
+
+<section class="st-quick reveal" aria-label="Shortcuts">
+  <a class="st-card st-q" href="<?= e(base_url('dashboard/creator/course-build.php')) ?>"><span class="st-ic tone-blue"><?php dash_icon('book-open'); ?></span><h3>Create a course</h3><p>Upload your lessons, set a price and publish.</p><span class="st-more">Start building <?php dash_icon('chevron-right'); ?></span></a>
+  <a class="st-card st-q" href="<?= e(base_url('dashboard/creator/students.php')) ?>"><span class="st-ic tone-lime"><?php dash_icon('users'); ?></span><h3>Your students</h3><p>See who joined and how far they have got.</p><span class="st-more">View students <?php dash_icon('chevron-right'); ?></span></a>
+  <a class="st-card st-q" href="<?= e(base_url('dashboard/creator/viewers.php')) ?>"><span class="st-ic tone-warn"><?php dash_icon('eye'); ?></span><h3>Course viewers</h3><p>Reach out to people who looked at your courses.</p><span class="st-more">See viewers <?php dash_icon('chevron-right'); ?></span></a>
+  <a class="st-card st-q" href="<?= e(base_url('dashboard/creator/earnings.php')) ?>"><span class="st-ic tone-good"><?php dash_icon('wallet'); ?></span><h3>Earnings</h3><p>Track sales, growth and your payout history.</p><span class="st-more">View earnings <?php dash_icon('chevron-right'); ?></span></a>
+</section>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
