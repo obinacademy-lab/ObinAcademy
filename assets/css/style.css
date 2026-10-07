@@ -4075,3 +4075,14 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 @media (max-width: 560px) { .course-bar-link { display: none; } .course-bar-title { font-size: 14px; } }
 
 .course-bar a { text-decoration: none; }
+
+/* Footer: the slim white bar from obinacademy.com (logo, three links, copyright). Replaces the blue footer above. */
+.site-footer-minimal { background: #fff; border-top: 1px solid var(--border); padding: 20px 0; margin-top: 40px; }
+.site-footer-minimal .footer-minimal-inner { gap: 16px 28px; }
+.site-footer-minimal .logo { font-size: 17px; }
+.site-footer-minimal .logo-mark { width: 30px; height: 30px; border-radius: 9px; }
+.site-footer-minimal .logo-mark svg { width: 17px; height: 17px; }
+.site-footer-minimal .footer-minimal-links { gap: 8px 22px; }
+.site-footer-minimal .footer-minimal-links a { font-size: 13px; font-weight: 600; color: var(--muted, #7a7a90); }
+.site-footer-minimal .footer-minimal-links a:hover { color: var(--brand-800); }
+.site-footer-minimal .footer-minimal-copy { margin: 0; font-size: 12px; color: #a3a3b5; }
