@@ -177,6 +177,26 @@ function paginate_window(int $current, int $total, int $window = 1): array {
 }
 
 /**
+ * "← Previous  1 2 3 … 9  Next →" for the school lists (homepage and Explore). Only the links that
+ * lead somewhere are shown, so page 1 reads "1 2 Next →". Prints nothing for a single page.
+ * $urlFor(int $page) returns the link for that page.
+ */
+function render_school_pager(int $page, int $pages, callable $urlFor): void {
+    if ($pages < 2) return;
+    ?>
+    <nav class="home-pager" aria-label="Pages of schools">
+      <?php if ($page > 1): ?><a href="<?= e($urlFor($page - 1)) ?>" rel="prev">&larr; Previous</a><?php endif; ?>
+      <?php foreach (paginate_window($page, $pages) as $n): ?>
+        <?php if ($n === null): ?><i>…</i>
+        <?php elseif ($n === $page): ?><span class="on" aria-current="page"><?= (int) $n ?></span>
+        <?php else: ?><a href="<?= e($urlFor($n)) ?>"><?= (int) $n ?></a><?php endif; ?>
+      <?php endforeach; ?>
+      <?php if ($page < $pages): ?><a href="<?= e($urlFor($page + 1)) ?>" rel="next">Next &rarr;</a><?php endif; ?>
+    </nav>
+    <?php
+}
+
+/**
  * Splits a sale into gross/fee/affiliate_cut/net. $hasAffiliate carves the
  * affiliate's 2% out of what would otherwise be the creator's share — the
  * platform's own 10% fee is identical either way.

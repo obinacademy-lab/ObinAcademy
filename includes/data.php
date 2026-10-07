@@ -292,7 +292,8 @@ function get_trending_schools(int $take = 3): array {
  * @param string $categorySlug schools with at least one published course in
  *   this category.
  */
-function search_schools(string $query = '', string $categorySlug = '', string $sort = 'popular'): array {
+/** The WHERE clause (and its params) shared by search_schools() and count_search_schools(). @return array{0:string,1:array} */
+function school_search_filter(string $query, string $categorySlug): array {
     $where = [];
     $params = [];
     if ($categorySlug) {
@@ -311,8 +312,19 @@ function search_schools(string $query = '', string $categorySlug = '', string $s
                                   AND (cq.title LIKE ? OR cq.summary LIKE ? OR cqc.name LIKE ?)))";
         array_push($params, $like, $like, $like, $like, $like, $like);
     }
+    return [implode(' AND ', $where), $params];
+}
+
+function search_schools(string $query = '', string $categorySlug = '', string $sort = 'popular', ?int $limit = null, ?int $offset = null): array {
+    [$whereSql, $params] = school_search_filter($query, $categorySlug);
     $orderBy = SCHOOL_SORT_OPTIONS[$sort]['order'] ?? SCHOOL_SORT_OPTIONS['popular']['order'];
-    return get_school_cards(implode(' AND ', $where), $params, $orderBy);
+    return get_school_cards($whereSql, $params, $orderBy, $limit, $offset);
+}
+
+/** How many schools search_schools() would return in total — for paging. */
+function count_search_schools(string $query = '', string $categorySlug = ''): int {
+    [$whereSql, $params] = school_search_filter($query, $categorySlug);
+    return count_school_cards($whereSql, $params);
 }
 
 function get_course_by_slug(string $slug): ?array {

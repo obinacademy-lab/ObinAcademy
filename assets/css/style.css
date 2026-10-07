@@ -4055,3 +4055,6 @@ button.home-discover-chip { font-family: inherit; cursor: pointer; }
 /* On the dark dashboard sidebar the (otherwise dark-surface) logo uses the lime accent. */
 .dash .logo.dark .logo-text .accent { color: var(--lime); }
 .dash .logo.dark .logo-mark { background: var(--lime); color: var(--lime-ink); }
+
+.home-pager a[rel="prev"], .home-pager a[rel="next"] { font-weight: 700; color: var(--ink); }
+.home-pager a[rel="prev"]:hover, .home-pager a[rel="next"]:hover { background: var(--brand-800); color: #fff; }

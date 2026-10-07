@@ -5,7 +5,7 @@ require __DIR__ . '/includes/school_card.php';
 
 // Skool-style discover list: a page of schools at a time with numbered
 // pagination underneath (hidden while everything fits on one page).
-$schoolsPerPage = 12;
+$schoolsPerPage = 9; // three full rows of three
 $schoolsTotal = count_school_cards();
 $schoolsPages = max(1, (int) ceil($schoolsTotal / $schoolsPerPage));
 $schoolsPage = min($schoolsPages, max(1, (int) query_param('page', '1')));
@@ -91,21 +91,7 @@ require __DIR__ . '/includes/header.php';
       <div class="home-discover-grid">
         <?php foreach ($schoolsPreview as $school) render_school_card($school); ?>
       </div>
-      <?php if ($schoolsPages > 1):
-        // 1 … (page-1) page (page+1) … last, Skool-style.
-        $pageLink = fn(int $n): string => base_url($n === 1 ? 'index.php' : 'index.php?page=' . $n);
-        $nums = array_values(array_unique(array_filter([1, $schoolsPage - 1, $schoolsPage, $schoolsPage + 1, $schoolsPages], fn($n) => $n >= 1 && $n <= $schoolsPages)));
-        sort($nums);
-      ?>
-        <nav class="home-pager" aria-label="Pages of schools">
-          <?php if ($schoolsPage > 1): ?><a href="<?= e($pageLink($schoolsPage - 1)) ?>" rel="prev">Previous</a><?php else: ?><span class="dis">Previous</span><?php endif; ?>
-          <?php $prev = 0; foreach ($nums as $n): ?>
-            <?php if ($n - $prev > 1): ?><i>…</i><?php endif; ?>
-            <?php if ($n === $schoolsPage): ?><span class="on" aria-current="page"><?= $n ?></span><?php else: ?><a href="<?= e($pageLink($n)) ?>"><?= $n ?></a><?php endif; ?>
-            <?php $prev = $n; endforeach; ?>
-          <?php if ($schoolsPage < $schoolsPages): ?><a href="<?= e($pageLink($schoolsPage + 1)) ?>" rel="next">Next</a><?php else: ?><span class="dis">Next</span><?php endif; ?>
-        </nav>
-      <?php endif; ?>
+      <?php render_school_pager($schoolsPage, $schoolsPages, fn(int $n): string => base_url($n === 1 ? 'index.php' : 'index.php?page=' . $n)); ?>
     </div>
   <?php endif; ?>
 

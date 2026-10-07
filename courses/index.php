@@ -12,11 +12,15 @@ $categorySlug = query_param('category');
 $sort = query_param('sort', 'popular');
 if (!isset(SCHOOL_SORT_OPTIONS[$sort])) $sort = 'popular';
 
-$schools = search_schools($q, $categorySlug, $sort);
-$categories = get_categories();
+// 9 schools per page (three full rows); the page number rides along with the search, topic and sort.
+$perPage = 9;
+$totalSchools = count_search_schools($q, $categorySlug);
+$pages = max(1, (int) ceil($totalSchools / $perPage));
+$page = min($pages, max(1, (int) query_param('page', '1')));
+$schools = search_schools($q, $categorySlug, $sort, $perPage, ($page - 1) * $perPage);$categories = get_categories();
 $stats = get_platform_stats();
 $hasFilters = $q !== '' || $categorySlug !== '' || $sort !== 'popular';
-$trending = !$hasFilters ? get_trending_schools(3) : [];
+$trending = (!$hasFilters && $page === 1) ? get_trending_schools(3) : [];
 
 $activeCategoryName = null;
 foreach ($categories as $cat) {
@@ -37,7 +41,7 @@ $categoryEmoji = [
 
 /** Rebuilds the browse URL with one param overridden, keeping the others intact. */
 function browse_url(string $q, string $category, string $sort, array $override = []): string {
-    $params = array_merge(['q' => $q, 'category' => $category, 'sort' => $sort], $override);
+    $params = array_merge(['q' => $q, 'category' => $category, 'sort' => $sort, 'page' => ''], $override);
     $params = array_filter($params, fn($v) => $v !== '' && $v !== 'popular');
     return base_url('courses/index.php') . ($params ? '?' . http_build_query($params) : '');
 }
@@ -114,6 +118,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="grid sm:grid-2 lg:grid-3" style="margin-top:<?= $trending ? '20' : '32' ?>px;">
       <?php foreach ($schools as $school) render_school_card($school); ?>
     </div>
+    <?php render_school_pager($page, $pages, fn(int $n): string => browse_url($q, $categorySlug, $sort, ['page' => $n > 1 ? (string) $n : ''])); ?>
   <?php else: ?>
     <div class="empty-browse">
       <div class="empty-browse-icon">🔍</div>
