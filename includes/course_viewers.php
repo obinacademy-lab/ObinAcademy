@@ -71,7 +71,7 @@ function get_course_viewers(int $creatorId, array $f = [], int $limit = 400): ar
         array_push($params, $like, $like, $like);
     }
     $rows = db_all(
-        "SELECT v.id, v.course_id, v.user_id, v.view_count, v.first_viewed_at, v.last_viewed_at,
+        "SELECT v.id, v.course_id, v.user_id, v.visitor_id, v.view_count, v.first_viewed_at, v.last_viewed_at,
                 c.title AS course_title, c.slug AS course_slug,
                 u.name, u.email, u.phone, u.avatar_url, u.contact_visible_to_creators AS contact_ok,
                 (u.id IS NOT NULL AND EXISTS (SELECT 1 FROM enrollments e WHERE e.course_id = v.course_id AND e.user_id = v.user_id)) AS enrolled,
