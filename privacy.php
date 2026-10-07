@@ -32,7 +32,7 @@ require __DIR__ . '/includes/header.php';
       </div>
       <div>
         <h2 class="h3">5. Sharing Your Information</h2>
-        <p class="muted" style="margin-top:12px; line-height:1.75;">We don't sell your data. We share only what's necessary with our payment processor to complete transactions, and with course creators for enrollment records (name and progress) for courses you've bought.</p>
+        <p class="muted" style="margin-top:12px; line-height:1.75;">We don't sell your data. We share only what's necessary with our payment processor to complete transactions, and with course creators: enrollment records (name and progress) for courses you've bought, and, unless you switch it off in Settings, your name, email and phone number when you view one of their courses, so they can follow up with you about that course. Visitors without an account are shown to creators only as anonymous "Guest viewers" (device type, rough location and where they came from), never with contact details.</p>
       </div>
       <div>
         <h2 class="h3">6. Data Retention</h2>

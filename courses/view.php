@@ -5,6 +5,7 @@ require __DIR__ . '/../includes/enroll_panel.php';
 require __DIR__ . '/../includes/enrollment.php';
 require __DIR__ . '/../includes/course_card.php';
 require __DIR__ . '/../includes/comments.php';
+require __DIR__ . '/../includes/course_viewers.php';
 
 $slug = query_param('slug');
 $course = get_course_by_slug($slug);
@@ -34,6 +35,9 @@ $isInterested = $user ? is_interested_in_course((int) $user['id'], (int) $course
 if ($course['status'] === 'PUBLISHED' && !$isOwner && !$isAdmin) {
     db_run('UPDATE courses SET view_count = view_count + 1 WHERE id = ?', [$course['id']]);
     $course['view_count']++;
+    // Who viewed it, for the creator's "Course Viewers" page: members by account, guests by
+    // their cookie (only present once they accepted cookies). Never for the owner or admins.
+    record_course_view((int) $course['id'], $user ? (int) $user['id'] : null, $_COOKIE[VISITOR_COOKIE] ?? null);
 }
 
 // If this visit arrived via a tracked share link (?ref=<token>), attribute

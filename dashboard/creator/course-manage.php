@@ -444,7 +444,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php endif; ?>
 
 <h2 class="h3" style="margin-top:36px;">Views &amp; Interest</h2>
-<p class="muted small" style="margin-top:6px;">Aggregate numbers only — no visitor is ever identified from views alone. The list below is only learners who opted in themselves.</p>
+<p class="muted small" style="margin-top:6px;">Totals for this course. To see who viewed it, and to contact them, open <a href="<?= e(base_url('dashboard/creator/viewers.php?course=' . $courseId)) ?>" style="color:var(--accent); font-weight:600;">Course Viewers</a>. The list below is learners who tapped "Interested" themselves.</p>
 <div class="grid sm:grid-2 lg:grid-4" style="margin-top:16px; gap:14px;">
   <div class="card card-pad">
     <div class="small muted" style="font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Views</div>

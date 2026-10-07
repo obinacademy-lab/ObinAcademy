@@ -6,6 +6,17 @@ $user = require_login();
 $errors = [];
 $isCreator = in_array($user['role'], ['CREATOR', 'ADMIN'], true);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('formName') === 'privacy') {
+    csrf_verify();
+    try {
+        db_run('UPDATE users SET contact_visible_to_creators = ? WHERE id = ?', [post('contactVisible') === '1' ? 1 : 0, $user['id']]);
+        flash_set('success', 'Your privacy setting has been saved.');
+    } catch (Throwable $e) {
+        flash_set('error', 'That setting is not available yet. Please try again shortly.');
+    }
+    redirect('/dashboard/settings.php');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('formName') === 'theme') {
     csrf_verify();
     $theme = post('dashboardThemeColor');
@@ -104,6 +115,18 @@ require __DIR__ . '/../includes/dashboard_header.php';
 <?php if ($errors): ?>
   <div class="alert alert-error" style="margin-top:16px;"><?= e(implode(' ', $errors)) ?></div>
 <?php endif; ?>
+
+<?php $contactVisible = !array_key_exists('contact_visible_to_creators', $user) || (int) $user['contact_visible_to_creators'] === 1; ?>
+<form method="post" class="card card-pad" style="margin-top:20px; max-width:560px;">
+  <?= csrf_field() ?>
+  <input type="hidden" name="formName" value="privacy">
+  <h2 class="h3">Privacy</h2>
+  <label class="row gap-2" style="align-items:flex-start; cursor:pointer; margin-top:12px;">
+    <input type="checkbox" name="contactVisible" value="1" <?= $contactVisible ? 'checked' : '' ?> style="margin-top:3px;">
+    <span style="font-weight:600;">Let creators contact me about courses I view<br><span class="help" style="font-weight:400;">When you view a creator's course, they can see your name, email and phone number so they can follow up with you about it. Untick this to stay private: they will only see that someone viewed the course.</span></span>
+  </label>
+  <button type="submit" class="btn btn-outline btn-sm" style="margin-top:14px;">Save privacy setting</button>
+</form>
 
 <div class="card card-pad" style="margin-top:20px; max-width:560px;">
   <label style="display:block;">Dashboard Theme</label>

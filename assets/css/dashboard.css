@@ -945,3 +945,14 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   .cm-table td { min-width: 0; }
   .cm-who, .cm-course { min-width: 0; }
 }
+
+/* Course Viewers (creator/viewers.php): contact action buttons */
+.vw-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.vw-btn {
+  display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+  text-decoration: none; color: var(--ink); background: var(--dash-panel); border: 1px solid var(--dash-border); white-space: nowrap;
+}
+.vw-btn:hover { border-color: var(--accent); color: var(--accent); }
+.vw-btn.vw-wa { background: #16a34a; border-color: #16a34a; color: #fff; }
+.vw-btn.vw-wa:hover { background: #15803d; border-color: #15803d; color: #fff; }
+@media (max-width: 760px) { .cm-table td .vw-actions { justify-content: flex-end; } }
