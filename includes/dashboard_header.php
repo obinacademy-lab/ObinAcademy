@@ -51,6 +51,7 @@ $navByRole = [
         ],
         'Manage' => [
             ['/dashboard/admin/users.php', 'Users', 'users'],
+            ['/dashboard/admin/creators.php', 'Creators', 'graduation-cap'],
             ['/dashboard/admin/creator-applications.php', 'Creator Applications', 'user-plus'],
             ['/dashboard/admin/affiliate-applications.php', 'Affiliate Applications', 'tag'],
             ['/dashboard/admin/courses.php', 'Courses', 'book-open'],
