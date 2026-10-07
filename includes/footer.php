@@ -21,6 +21,7 @@
       <nav class="footer-minimal-links" aria-label="Footer">
         <a href="<?= e(WHATSAPP_COMMUNITY_URL) ?>" target="_blank" rel="noopener noreferrer">Community</a>
         <a href="<?= e(base_url('become-creator.php')) ?>">Become a teacher</a>
+        <a href="<?= e(base_url('become-affiliate.php')) ?>">Become an affiliate</a>
         <?php if (!empty($user)): ?>
           <a href="<?= e(base_url('dashboard.php')) ?>">Dashboard</a>
         <?php else: ?>
