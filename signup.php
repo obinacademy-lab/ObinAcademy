@@ -40,7 +40,7 @@ $pageTitle = 'Sign Up — Obin Academy';
 $authTab = 'signup';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1 class="auth-headline">Create an account</h1>
+  <h1 class="auth-headline">Start your learning journey</h1>
   <p class="auth-sub">Learn from African creators. Free to join.</p>
 
   <?php if ($errors): ?>
@@ -52,21 +52,21 @@ require __DIR__ . '/includes/auth_header.php';
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
       <label for="name">Full Name</label>
-      <input id="name" name="name" type="text" required value="<?= e($name) ?>" placeholder="Eg. Grace Nakato">
+      <input id="name" name="name" type="text" required value="<?= e($name) ?>" placeholder="Full name">
     </div>
     <div class="field">
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="you@email.com">
+      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Email">
     </div>
     <div class="field">
       <label for="phone">Phone Number (optional)</label>
-      <input id="phone" name="phone" type="tel" placeholder="07XX XXX XXX" value="<?= e($phone) ?>">
+      <input id="phone" name="phone" type="tel" placeholder="Phone number (optional)" value="<?= e($phone) ?>">
     </div>
     <div class="field">
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" required minlength="8" placeholder="At least 8 characters">
+      <input id="password" name="password" type="password" required minlength="8" placeholder="Password (min. 8 characters)">
     </div>
-    <button type="submit" class="btn btn-primary">Create Account <span class="btn-arrow">→</span></button>
+    <button type="submit" class="btn btn-primary">Start <span class="btn-arrow">→</span></button>
   </form>
 
   <p class="switch-line">

@@ -38,7 +38,7 @@ require __DIR__ . '/includes/auth_header.php';
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
     <div class="field">
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="you@email.com">
+      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Email">
     </div>
     <div class="field">
       <label for="password">Password</label>
