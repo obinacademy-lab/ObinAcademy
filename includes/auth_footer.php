@@ -12,7 +12,7 @@
     <section class="auth-right" aria-label="Why Obin Academy">
       <div class="auth-stage">
         <?php foreach ($authSlides as $i => $slide): ?>
-          <img class="auth-slide<?= $i === 0 ? ' on' : '' ?>" src="<?= e(base_url('assets/img/' . $slide['img'])) ?>" alt="" <?= $i === 0 ? '' : 'loading="lazy"' ?>>
+          <img class="auth-slide<?= $i === 0 ? ' on' : '' ?>" src="<?= e(versioned_asset('assets/img/' . $slide['img'])) ?>" alt="" <?= $i === 0 ? '' : 'loading="lazy"' ?>>
         <?php endforeach; ?>
         <div class="auth-notch"><span class="auth-pill"><i></i><span data-auth-pill><?= e($authSlides[0]['pill']) ?></span></span></div>
         <div class="auth-cap"><h2 data-auth-h><?= e($authSlides[0]['h']) ?></h2><p data-auth-p><?= e($authSlides[0]['p']) ?></p></div>
