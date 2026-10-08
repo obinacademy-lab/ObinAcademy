@@ -414,25 +414,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }, { passive: false });
 })();
 
-// "Install the app" links (footer + mobile menu). They stay hidden unless the browser says the site can be
-// installed — Chrome/Edge/Android fire beforeinstallprompt; iPhone Safari never does, so there we show the
-// manual "Add to Home Screen" steps instead. Already running as an installed app: nothing to offer.
+// "Install the app": a card that slides in at the top of the screen on phones and tablets, plus the
+// footer / mobile-menu links. Chrome/Edge/Android fire beforeinstallprompt when the site is installable;
+// iPhone Safari never does, so there the button opens the manual "Add to Home Screen" steps instead.
+// Already running as an installed app: nothing to offer. "Not now" snoozes the card for a week.
 (function () {
-  var links = document.querySelectorAll('[data-install-app]');
-  if (!links.length) return;
   if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
 
+  var links = document.querySelectorAll('[data-install-app]');
   var deferred = null;
   var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  function setVisible(on) { links.forEach(function (l) { l.hidden = !on; }); }
+  var isHandheld = window.matchMedia('(max-width: 900px)').matches || window.matchMedia('(pointer: coarse)').matches;
+  var onAuthPage = document.body.classList.contains('auth-body');
+  var KEY = 'obinInstallPromptUntil';
+  var loadedAt = Date.now();
+  var card = null;
 
-  window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault();
-    deferred = e;
-    setVisible(true);
-  });
-  window.addEventListener('appinstalled', function () { deferred = null; setVisible(false); });
-  if (isIOS) setVisible(true);
+  function setLinksVisible(on) { links.forEach(function (l) { l.hidden = !on; }); }
+  function snoozed() { try { return Number(localStorage.getItem(KEY) || 0) > Date.now(); } catch (e) { return false; } }
+  function snooze(days) { try { localStorage.setItem(KEY, String(Date.now() + days * 864e5)); } catch (e) {} }
+  function canOffer() { return !!deferred || isIOS; }
 
   function showIosSteps() {
     var sheet = document.createElement('div');
@@ -449,15 +450,75 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(sheet);
   }
 
+  function hideCard(remove) {
+    if (!card) return;
+    var c = card;
+    c.classList.remove('show');
+    if (remove) { card = null; setTimeout(function () { c.remove(); }, 400); }
+  }
+
+  // The one place an install is started — the card's button and the footer / menu links all land here.
+  function startInstall() {
+    if (deferred) {
+      var d = deferred;
+      deferred = null;
+      d.prompt();
+      d.userChoice.then(function (choice) {
+        if (choice && choice.outcome !== 'accepted') snooze(3);
+        setLinksVisible(false);
+      });
+    } else if (isIOS) {
+      showIosSteps();
+    }
+  }
+
+  function buildCard(tries) {
+    if (card || !canOffer() || snoozed()) return;
+    // Don't stack on top of another popup (e.g. the "create a free account" modal on a course page).
+    if (document.querySelector('.lead-overlay.open') && (tries || 0) < 6) { setTimeout(function () { buildCard((tries || 0) + 1); }, 4000); return; }
+
+    card = document.createElement('div');
+    card.className = 'install-pop';
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-label', 'Install Obin Academy');
+    card.innerHTML =
+      '<div class="install-pop-top">' +
+        '<img src="' + (window.OBIN_BASE_URL || '') + '/assets/icons/icon-192.png" alt="" width="48" height="48">' +
+        '<div><strong>Install Obin Academy</strong><span>Get the app on your phone. It opens fast, with no app store needed.</span></div>' +
+      '</div>' +
+      '<div class="install-pop-actions">' +
+        '<button type="button" class="install-pop-go">Install app</button>' +
+        '<button type="button" class="install-pop-later">Not now</button>' +
+      '</div>';
+    card.querySelector('.install-pop-go').addEventListener('click', function () { hideCard(true); startInstall(); });
+    card.querySelector('.install-pop-later').addEventListener('click', function () { snooze(7); hideCard(true); });
+    document.body.appendChild(card);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { if (card) card.classList.add('show'); }); });
+  }
+
+  function offerCard() {
+    if (!isHandheld || onAuthPage || card || !canOffer() || snoozed()) return;
+    setTimeout(function () { buildCard(0); }, Math.max(0, 2500 - (Date.now() - loadedAt)));
+  }
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    setLinksVisible(true);
+    offerCard();
+  });
+  window.addEventListener('appinstalled', function () {
+    deferred = null;
+    setLinksVisible(false);
+    hideCard(true);
+    snooze(365);
+  });
+  if (isIOS) { setLinksVisible(true); offerCard(); }
+
   links.forEach(function (l) {
     l.addEventListener('click', function (e) {
       e.preventDefault();
-      if (deferred) {
-        deferred.prompt();
-        deferred.userChoice.then(function () { deferred = null; setVisible(false); });
-      } else if (isIOS) {
-        showIosSteps();
-      }
+      startInstall();
     });
   });
 })();

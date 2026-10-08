@@ -4079,3 +4079,22 @@ body.auth-body::before { content: ""; position: fixed; inset: -30px; background:
 .install-sheet-card h3 { margin: 0 0 8px; font-size: 1.1rem; }
 .install-sheet-card p { margin: 0 0 18px; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
 .install-sheet-card .btn { width: 100%; justify-content: center; }
+
+/* "Install Obin Academy" card: slides down from the top of the screen on phones and tablets. */
+.install-pop {
+  position: fixed; z-index: 260; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top, 0px));
+  max-width: 440px; margin: 0 auto; padding: 16px; background: #fff; color: var(--ink);
+  border: 1px solid var(--border); border-radius: 22px;
+  box-shadow: 0 24px 60px -16px rgba(6,0,60,0.45), 0 4px 14px -4px rgba(6,0,60,0.18);
+  transform: translateY(calc(-100% - 30px)); opacity: 0; transition: transform .45s cubic-bezier(.19,1,.22,1), opacity .3s ease;
+}
+.install-pop.show { transform: translateY(0); opacity: 1; }
+.install-pop-top { display: flex; align-items: center; gap: 14px; }
+.install-pop-top img { border-radius: 13px; flex: none; box-shadow: 0 8px 18px -8px rgba(11,0,255,.6); }
+.install-pop-top strong { display: block; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+.install-pop-top span { display: block; margin-top: 2px; font-size: 13.5px; line-height: 1.4; color: var(--muted); }
+.install-pop-actions { display: flex; gap: 10px; margin-top: 14px; }
+.install-pop-go { flex: 1; border: 0; cursor: pointer; font: inherit; font-weight: 700; font-size: 15px; padding: 13px 18px; border-radius: 999px; background: var(--brand-800); color: #fff; }
+.install-pop-go:active { transform: scale(.98); }
+.install-pop-later { border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 14px; padding: 13px 18px; border-radius: 999px; background: var(--surface); color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .install-pop { transition: opacity .2s ease; transform: none; } }
