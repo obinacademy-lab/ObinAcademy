@@ -21,6 +21,8 @@
       <nav class="footer-minimal-links" aria-label="Footer">
         <a href="<?= e(base_url('about.php')) ?>">About us</a>
         <a href="<?= e(base_url('contact.php')) ?>">Contact us</a>
+        <a href="<?= e(base_url('terms.php')) ?>">Terms</a>
+        <a href="<?= e(base_url('privacy.php')) ?>">Privacy</a>
         <a href="<?= e(WHATSAPP_COMMUNITY_URL) ?>" target="_blank" rel="noopener noreferrer">Community</a>
         <a href="<?= e(base_url('become-creator.php')) ?>">Become a teacher</a>
         <a href="<?= e(base_url('become-affiliate.php')) ?>">Become an affiliate</a>
