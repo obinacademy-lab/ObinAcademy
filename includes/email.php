@@ -1,9 +1,14 @@
 <?php
 
-function resend_send(string $to, string $subject, string $html): void {
+/**
+ * Sends one email through Resend. Returns true only when Resend accepted it. Existing callers ignore the result
+ * (a failed send is logged, never fatal); the admin outreach buttons use it to tell the admin the truth.
+ * $opts: 'bcc' (a copy to this address) and 'reply_to' (where the recipient's reply should go).
+ */
+function resend_send(string $to, string $subject, string $html, array $opts = []): bool {
     if (!RESEND_API_KEY) {
         error_log("[email] RESEND_API_KEY is not set — skipping send to $to. Subject: $subject");
-        return;
+        return false;
     }
 
     $ch = curl_init('https://api.resend.com/emails');
@@ -13,12 +18,14 @@ function resend_send(string $to, string $subject, string $html): void {
             'Authorization: Bearer ' . RESEND_API_KEY,
             'Content-Type: application/json',
         ],
-        CURLOPT_POSTFIELDS => json_encode([
+        CURLOPT_POSTFIELDS => json_encode(array_filter([
             'from' => EMAIL_FROM,
             'to' => $to,
             'subject' => $subject,
             'html' => $html,
-        ]),
+            'bcc' => $opts['bcc'] ?? null,
+            'reply_to' => $opts['reply_to'] ?? null,
+        ])),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 20,
     ]);
@@ -28,7 +35,9 @@ function resend_send(string $to, string $subject, string $html): void {
 
     if ($status < 200 || $status >= 300) {
         error_log("[email] Resend rejected the email to $to ($status): $body");
+        return false;
     }
+    return true;
 }
 
 function send_password_reset_email(string $to, string $resetUrl): void {
@@ -834,12 +843,12 @@ function send_course_interest_reminder_email(string $to, string $name, string $c
  * includes/payment_recovery.php. $itemType is 'course' or 'bundle', only
  * ever used for the one word in the body copy.
  */
-function send_payment_recovery_email(string $to, string $name, string $itemTitle, string $itemType, string $resumeUrl, float $amount): void {
+function send_payment_recovery_email(string $to, string $name, string $itemTitle, string $itemType, string $resumeUrl, float $amount, array $opts = []): bool {
     $firstName = trim(explode(' ', $name)[0] ?? '') ?: 'there';
     $label = $itemType === 'bundle' ? 'bundle' : 'course';
     $amountLabel = format_money($amount);
 
-    resend_send($to, "Complete your purchase of {$itemTitle}", <<<HTML
+    return resend_send($to, "Complete your purchase of {$itemTitle}", <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <h2 style="color: #06007a;">Hey {$firstName}, your payment didn't go through</h2>
           <p>
@@ -856,7 +865,7 @@ function send_payment_recovery_email(string $to, string $name, string $itemTitle
             If you keep having trouble, reach us on WhatsApp and we'll help you sort it out.
           </p>
         </div>
-        HTML);
+        HTML, $opts);
 }
 
 /**

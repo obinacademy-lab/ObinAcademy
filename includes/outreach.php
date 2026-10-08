@@ -76,11 +76,15 @@ function get_lead_contacts(int $leadId, int $limit = 20): array {
     }
 }
 
-function send_lead_message_email(array $lead, string $subject, string $bodyText): void {
+/**
+ * $copyTo is the admin who is sending: they get a copy in their own inbox (so it can be found in Gmail, since the
+ * message leaves from the platform address, not from their mailbox) and replies are routed to them.
+ */
+function send_lead_message_email(array $lead, string $subject, string $bodyText, ?string $copyTo = null): bool {
     $unsubscribeUrl = base_url('unsubscribe.php?token=' . unsubscribe_token((int) $lead['id']));
     $body = nl2br(e($bodyText));
     $unsub = e($unsubscribeUrl);
-    resend_send($lead['email'], $subject, <<<HTML
+    return resend_send($lead['email'], $subject, <<<HTML
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; line-height: 1.55; color: #16181a;">
           <p>{$body}</p>
           <p style="color: #5b6670; font-size: 12px; margin-top: 28px;">
@@ -88,7 +92,7 @@ function send_lead_message_email(array $lead, string $subject, string $bodyText)
             <a href="{$unsub}" style="color: #5b6670;">Unsubscribe from marketing emails</a>.
           </p>
         </div>
-        HTML);
+        HTML, $copyTo ? ['bcc' => $copyTo, 'reply_to' => $copyTo] : []);
 }
 
 // ---------------------------------------------------------------- failed / stuck payments

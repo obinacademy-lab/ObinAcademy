@@ -56,10 +56,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$target['email']) {
                 flash_set('error', 'This buyer left no email address.');
             } else {
-                send_payment_recovery_email($target['email'], $target['name'], $target['title'], $target['kind'], $target['url'], (float) $row['amount']);
-                log_payment_reminder((int) $row['id'], (int) $user['id'], 'email');
-                log_admin_action((int) $user['id'], $user['name'], 'payment.reminded', 'Payment', '#' . $row['id'], 'email');
-                flash_set('success', 'Reminder emailed to ' . $target['email'] . '.');
+                if (send_payment_recovery_email($target['email'], $target['name'], $target['title'], $target['kind'], $target['url'], (float) $row['amount'], ['bcc' => $user['email'], 'reply_to' => $user['email']])) {
+                    log_payment_reminder((int) $row['id'], (int) $user['id'], 'email');
+                    log_admin_action((int) $user['id'], $user['name'], 'payment.reminded', 'Payment', '#' . $row['id'], 'email');
+                    flash_set('success', 'Reminder emailed to ' . $target['email'] . '. A copy is in your inbox (' . $user['email'] . ').');
+                } else {
+                    flash_set('error', 'The reminder was not sent. The email service refused it, so nothing was recorded. Try again, or use WhatsApp.');
+                }
             }
         }
     }

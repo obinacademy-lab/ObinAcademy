@@ -35,10 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!$lead['consent_marketing'] || $lead['unsubscribed']) {
             flash_set('error', 'This lead has not agreed to marketing email or has unsubscribed, so no email was sent.');
         } else {
-            send_lead_message_email($lead, $templates[$tplKey]['subject'], $text);
-            log_lead_contact($leadId, (int) $user['id'], 'email', $tplKey);
-            log_admin_action((int) $user['id'], $user['name'], 'lead.contacted', 'Lead', $lead['name'], 'email');
-            flash_set('success', 'Email sent to ' . $lead['email'] . '. The lead is now marked Contacted.');
+            if (send_lead_message_email($lead, $templates[$tplKey]['subject'], $text, $user['email'])) {
+                log_lead_contact($leadId, (int) $user['id'], 'email', $tplKey);
+                log_admin_action((int) $user['id'], $user['name'], 'lead.contacted', 'Lead', $lead['name'], 'email');
+                flash_set('success', 'Email sent to ' . $lead['email'] . '. A copy is in your inbox (' . $user['email'] . ') and their replies come to you there. The lead is now marked Contacted.');
+            } else {
+                flash_set('error', 'The email was not sent. The email service refused it, so nothing was recorded. Try again, or use WhatsApp.');
+            }
         }
         redirect('/dashboard/admin/leads.php?id=' . $leadId);
     } elseif ($lead && $action === 'add_note') {
@@ -112,7 +115,7 @@ if ($detailId) {
           <span class="small muted">
             <?php if (!$msgWa): ?>No phone number on file, so WhatsApp is off.<?php endif; ?>
             <?php if (!$msgCanEmail): ?><?= $msgWa ? '' : ' ' ?>This lead unsubscribed, so email is off.<?php endif; ?>
-            <?php if ($msgWa && $msgCanEmail): ?>WhatsApp opens in a new tab with the message ready. Email goes from Obin Academy.<?php endif; ?>
+            <?php if ($msgWa && $msgCanEmail): ?>WhatsApp opens in a new tab with the message ready. Email goes from Obin Academy, with a copy to your inbox.<?php endif; ?>
           </span>
         </div>
       </form>
