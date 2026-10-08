@@ -25,11 +25,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $w = db_one('SELECT ' . WITHDRAWAL_PAYEE_SELECT . ' WHERE w.id=?', [$id]);
 
     if ($w && $w['status'] === 'PENDING' && $action === 'approve') {
-        db_run("UPDATE withdrawal_requests SET status='APPROVED', resolved_at=NOW() WHERE id=?", [$id]);
+        // The mobile-money reference of the payout, if given, is kept on the request (the creator sees it too).
+        $ref = mb_substr(post('note'), 0, 120);
+        db_run("UPDATE withdrawal_requests SET status='APPROVED', resolved_at=NOW(), note=? WHERE id=?", [$ref !== '' ? 'Paid. Reference: ' . $ref : null, $id]);
         log_admin_action((int) $user['id'], $user['name'], 'withdrawal.approved', 'Withdrawal', $w['payee_name'], format_money((float) $w['amount']));
         send_withdrawal_approved_email($w['payee_email'], (float) $w['amount']);
     } elseif ($w && $w['status'] === 'PENDING' && $action === 'reject') {
-        db_run("UPDATE withdrawal_requests SET status='REJECTED', resolved_at=NOW(), note=? WHERE id=?", [post('note'), $id]);
+        // The creator reads this note on their Earnings page, so a reason is required.
+        if (strlen(post('note')) < 3) {
+            flash_set('error', 'Give a short reason for rejecting, because the creator will see it.');
+            redirect('/dashboard/admin/withdrawals.php');
+        }
+        db_run("UPDATE withdrawal_requests SET status='REJECTED', resolved_at=NOW(), note=? WHERE id=?", [mb_substr(post('note'), 0, 300), $id]);
         log_admin_action((int) $user['id'], $user['name'], 'withdrawal.rejected', 'Withdrawal', $w['payee_name']);
     }
     redirect('/dashboard/admin/withdrawals.php');
@@ -84,8 +91,16 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           </div>
         </div>
         <div class="list-row-meta">
-          <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="approve"><input type="hidden" name="withdrawalId" value="<?= (int) $w['id'] ?>"><button class="btn btn-primary btn-sm">Approve</button></form>
-          <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="reject"><input type="hidden" name="withdrawalId" value="<?= (int) $w['id'] ?>"><button class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Reject</button></form>
+          <form method="post" class="row gap-2" style="align-items:center;" data-confirm="Confirm you have already sent <?= e(format_money((float) $w['amount'])) ?> to <?= e($w['phone']) ?> (<?= e($w['payee_name']) ?>). They will be emailed that it was paid.">
+            <?= csrf_field() ?><input type="hidden" name="_action" value="approve"><input type="hidden" name="withdrawalId" value="<?= (int) $w['id'] ?>">
+            <input type="text" name="note" maxlength="120" placeholder="MoMo reference (optional)" aria-label="Mobile money reference" style="width:170px; padding:7px 10px; font-size:13px;">
+            <button class="btn btn-primary btn-sm">Mark as paid</button>
+          </form>
+          <form method="post" class="row gap-2" style="align-items:center;" data-confirm="Reject this withdrawal? The creator will see your reason.">
+            <?= csrf_field() ?><input type="hidden" name="_action" value="reject"><input type="hidden" name="withdrawalId" value="<?= (int) $w['id'] ?>">
+            <input type="text" name="note" required minlength="3" maxlength="300" placeholder="Reason (creator sees it)" aria-label="Reason for rejecting" style="width:170px; padding:7px 10px; font-size:13px;">
+            <button class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Reject</button>
+          </form>
         </div>
       </div>
     <?php endforeach; ?>
@@ -108,7 +123,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
               <?= e($w['payee_name']) ?>
               <span class="badge <?= $typeBadgeClass[$w['payee_type']] ?>"><?= e(ucfirst(strtolower($w['payee_type']))) ?></span>
             </div>
-            <div class="small muted" style="margin-top:2px;"><?= e(format_money((float) $w['amount'])) ?> &middot; resolved <?= e(format_date($w['resolved_at'])) ?></div>
+            <div class="small muted" style="margin-top:2px;"><?= e(format_money((float) $w['amount'])) ?> &middot; <?= e($w['phone']) ?> &middot; resolved <?= e(format_date($w['resolved_at'])) ?><?= !empty($w['note']) ? ' &middot; ' . e($w['note']) : '' ?></div>
           </div>
         </div>
         <div class="list-row-meta">
@@ -118,4 +133,5 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?php endforeach; ?>
   </div>
 <?php endif; ?>
+<script>document.querySelectorAll('form[data-confirm]').forEach(function (f) { f.addEventListener('submit', function (e) { if (!confirm(f.dataset.confirm)) e.preventDefault(); }); });</script>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

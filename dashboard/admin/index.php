@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/data.php';
+require __DIR__ . '/../../includes/admin_payments.php';
 $user = require_role(['ADMIN']);
 
 $userCount = (int) db_one('SELECT COUNT(*) AS n FROM users')['n'];
@@ -12,16 +13,23 @@ $pendingApplicationCount = (int) db_one("SELECT COUNT(*) AS n FROM creator_appli
 
 $recentActivity = db_all('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 8');
 
+// Money that needs a human: failed or stuck payments, plans past their due date.
+$payHealth = admin_payment_health();
+$planHealth = admin_plan_health();
+$failedPayments24h = (int) $payHealth['failed_24h'];
+$stuckPayments = (int) $payHealth['stuck'];
+$latePlans = (int) $planHealth['overdue'] + (int) $planHealth['subs_in_grace'];
+
 /** Buckets an audit_log action string into a visual tone for the activity feed. */
 function activity_tone(string $action): string {
-    if (str_contains($action, 'REJECTED')) return 'danger';
-    if (str_contains($action, 'APPROVED') || str_contains($action, 'PUBLISHED')) return 'success';
+    $a = strtolower($action); // audit actions are stored lower-case ("withdrawal.approved")
+    if (str_contains($a, 'reject') || str_contains($a, 'deleted') || str_contains($a, 'removed')) return 'danger';
+    if (str_contains($a, 'approved') || str_contains($a, 'published') || str_contains($a, 'granted')) return 'success';
     return 'neutral';
 }
 function activity_icon(string $action): string {
-    if (str_contains($action, 'REJECTED')) return 'x-circle';
-    if (str_contains($action, 'APPROVED') || str_contains($action, 'PUBLISHED')) return 'check-circle';
-    return 'clock';
+    $tone = activity_tone($action);
+    return $tone === 'danger' ? 'x-circle' : ($tone === 'success' ? 'check-circle' : 'clock');
 }
 
 // ---------------------------------------------------------------------
@@ -54,7 +62,7 @@ $labelIdxs = $n > 1 ? [0, (int) round(($n - 1) * 0.2), (int) round(($n - 1) * 0.
 $pageTitle = 'Admin Overview — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<?php $totalPending = $pendingCount + $pendingWithdrawalCount + $pendingApplicationCount; ?>
+<?php $totalPending = $pendingCount + $pendingWithdrawalCount + $pendingApplicationCount + ($failedPayments24h > 0 ? 1 : 0) + ($stuckPayments > 0 ? 1 : 0) + ($latePlans > 0 ? 1 : 0); ?>
 <div class="dash-hero">
   <div>
     <h1 class="h2" style="color:#fff;">Welcome back, <?= e(explode(' ', trim($user['name']))[0]) ?></h1>
@@ -105,6 +113,27 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             <?php dash_icon('arrow-right', 'qa-arrow'); ?>
           </a>
         <?php endif; ?>
+        <?php if ($stuckPayments > 0): ?>
+          <a href="<?= e(base_url('dashboard/admin/payments.php?status=STUCK')) ?>" class="quick-action">
+            <span class="qa-icon" style="--tint:#ef4444;"><?php dash_icon('wallet'); ?></span>
+            <span class="qa-text"><span class="qa-count"><?= $stuckPayments ?></span> payment<?= $stuckPayments === 1 ? '' : 's' ?> stuck, buyer may be waiting for access</span>
+            <?php dash_icon('arrow-right', 'qa-arrow'); ?>
+          </a>
+        <?php endif; ?>
+        <?php if ($failedPayments24h > 0): ?>
+          <a href="<?= e(base_url('dashboard/admin/payments.php?status=FAILED')) ?>" class="quick-action">
+            <span class="qa-icon" style="--tint:#f43f5e;"><?php dash_icon('x-circle'); ?></span>
+            <span class="qa-text"><span class="qa-count"><?= $failedPayments24h ?></span> payment<?= $failedPayments24h === 1 ? '' : 's' ?> failed in the last 24 hours</span>
+            <?php dash_icon('arrow-right', 'qa-arrow'); ?>
+          </a>
+        <?php endif; ?>
+        <?php if ($latePlans > 0): ?>
+          <a href="<?= e(base_url('dashboard/admin/payment-plans.php')) ?>" class="quick-action">
+            <span class="qa-icon" style="--tint:#eab308;"><?php dash_icon('clock'); ?></span>
+            <span class="qa-text"><span class="qa-count"><?= $latePlans ?></span> installment plan<?= $latePlans === 1 ? '' : 's' ?> or subscription<?= $latePlans === 1 ? '' : 's' ?> late</span>
+            <?php dash_icon('arrow-right', 'qa-arrow'); ?>
+          </a>
+        <?php endif; ?>
         <?php if ($pendingApplicationCount > 0): ?>
           <a href="<?= e(base_url('dashboard/admin/creator-applications.php')) ?>" class="quick-action">
             <span class="qa-icon" style="--tint:#ec4899;"><?php dash_icon('user-plus'); ?></span>
@@ -116,7 +145,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?php else: ?>
       <div class="all-caught-up" style="margin-top:0;">
         <?php dash_icon('check-circle'); ?>
-        <div><strong>You're all caught up.</strong> No pending reviews, withdrawals, or applications right now.</div>
+        <div><strong>You're all caught up.</strong> No pending reviews, withdrawals, applications, stuck payments or late plans right now.</div>
       </div>
     <?php endif; ?>
   </div>

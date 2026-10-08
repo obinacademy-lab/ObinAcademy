@@ -57,6 +57,8 @@ $navByRole = [
             ['/dashboard/admin/affiliate-applications.php', 'Affiliate Applications', 'tag'],
             ['/dashboard/admin/courses.php', 'Courses', 'book-open'],
             ['/dashboard/admin/revenue.php', 'Revenue', 'trending-up'],
+            ['/dashboard/admin/payments.php', 'Payments', 'wallet'],
+            ['/dashboard/admin/payment-plans.php', 'Payment Plans', 'clock'],
             ['/dashboard/admin/categories.php', 'Categories', 'tag'],
             ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
             ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
@@ -205,10 +207,15 @@ if ($user['role'] === 'ADMIN') {
       <div class="dash-header-left">
         <button data-dash-open class="dash-hamburger" aria-label="Open menu">☰</button>
         <?php render_logo(true, 'dash-header-logo'); ?>
-        <div class="dash-search">
+        <?php
+          // Admins search people, courses and payments; creators search their students; learners search courses.
+          $searchAction = $user['role'] === 'ADMIN' ? 'dashboard/admin/search.php' : ($user['role'] === 'CREATOR' ? 'dashboard/creator/students.php' : 'courses/index.php');
+          $searchHint = $user['role'] === 'ADMIN' ? 'Search people, courses, payments…' : ($user['role'] === 'CREATOR' ? 'Search your students…' : 'Search courses and creators…');
+        ?>
+        <form class="dash-search" method="get" action="<?= e(base_url($searchAction)) ?>" role="search">
           <?php dash_icon('search'); ?>
-          <input type="text" placeholder="Search learners, courses, payments…">
-        </div>
+          <input type="search" name="q" value="" placeholder="<?= e($searchHint) ?>" aria-label="<?= e($searchHint) ?>" autocomplete="off" enterkeyhint="search">
+        </form>
       </div>
       <div class="dash-header-right">
         <?php if ($user['role'] === 'ADMIN'): ?>
