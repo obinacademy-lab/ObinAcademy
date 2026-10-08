@@ -153,6 +153,7 @@ if ($user['role'] === 'ADMIN') {
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/dashboard.css')) ?>">
+  <?php require __DIR__ . '/pwa-head.php'; ?>
 </head>
 <body>
 <div class="dash dash-premium theme-<?= e(dashboard_theme_for_user($user)) ?>">

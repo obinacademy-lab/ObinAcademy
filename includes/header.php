@@ -32,7 +32,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
   <link rel="icon" href="<?= e(versioned_asset('favicon.svg')) ?>" type="image/svg+xml">
   <link rel="icon" href="<?= e(versioned_asset('favicon-32x32.png')) ?>" type="image/png" sizes="32x32">
   <link rel="icon" href="<?= e(versioned_asset('favicon-16x16.png')) ?>" type="image/png" sizes="16x16">
-  <link rel="apple-touch-icon" href="<?= e(versioned_asset('apple-touch-icon.png')) ?>" sizes="180x180">
+  <?php require __DIR__ . '/pwa-head.php'; ?>
 
   <meta property="og:site_name" content="Obin Academy">
   <meta property="og:type" content="<?= e($seoType) ?>">
@@ -170,6 +170,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <a href="<?= e(base_url('become-affiliate.php')) ?>" class="mm-cta mm-cta-gold">Become an Affiliate</a>
         <a href="<?= e(base_url('become-creator.php')) ?>" class="mm-cta">Create Your School →</a>
       <?php endif; ?>
+      <a href="#" data-install-app hidden><span class="mm-icon">📲</span>Install the app</a>
     </div>
   </div>
   <div class="mobile-menu-scrim" data-mobile-scrim></div>

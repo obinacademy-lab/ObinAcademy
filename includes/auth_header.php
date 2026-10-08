@@ -30,6 +30,7 @@ $authSlides = [
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
+  <?php require __DIR__ . '/pwa-head.php'; ?>
   <style>body.auth-body::before { background-image: url('<?= e(versioned_asset('assets/img/auth-bg.jpg')) ?>'); }</style>
 </head>
 <body class="auth-body">
