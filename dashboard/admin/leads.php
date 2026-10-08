@@ -133,10 +133,11 @@ if ($detailId) {
 // -------------------- List view --------------------
 $filters = ['q' => query_param('q'), 'status' => query_param('status'), 'type' => query_param('type'), 'source' => query_param('source')];
 $page = max(1, (int) (query_param('page') ?: 1));
-$result = get_leads($filters, $page, 25);
+$perPage = 25;
+$result = get_leads($filters, $page, $perPage);
 $leads = $result['rows'];
 $totalLeads = $result['total'];
-$totalPages = max(1, (int) ceil($totalLeads / 25));
+$totalPages = max(1, (int) ceil($totalLeads / $perPage));
 
 $statCounts = db_one(
     "SELECT COUNT(*) AS total,
@@ -145,6 +146,11 @@ $statCounts = db_one(
             SUM(status = 'ENROLLED') AS enrolled_count
      FROM leads"
 );
+$allLeads = (int) ($statCounts['total'] ?? 0);
+$newCount = (int) ($statCounts['new_count'] ?? 0);
+$creatorCount = (int) ($statCounts['creator_count'] ?? 0);
+$enrolledCount = (int) ($statCounts['enrolled_count'] ?? 0);
+$pctOf = fn(int $n): int => $allLeads ? (int) round($n / $allLeads * 100) : 0;
 
 $leadsSeries = get_leads_daily_series(30);
 $dailyCounts = array_column($leadsSeries, 'count');
@@ -153,86 +159,92 @@ $last7 = array_sum(array_slice($dailyCounts, -7));
 $prev7 = array_sum(array_slice($dailyCounts, -14, 7));
 $trendPct = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : null;
 
-$chartW = 700; $chartH = 220; $padTop = 16; $padBottom = 4;
+// The chart: a y-axis that rounds up to a multiple of 4 so the four gridlines carry whole numbers.
+$chartW = 640; $chartH = 190; $padL = 0; $padTop = 12; $padBottom = 6;
+$yTop = max(4, (int) (ceil($bestDay / 4) * 4));
 $n = count($leadsSeries);
-$yMax = ($bestDay ?: 1) * 1.15; // headroom so the peak doesn't touch the ceiling
-$xStep = $n > 1 ? $chartW / ($n - 1) : 0;
+$xStep = $n > 1 ? ($chartW - 8) / ($n - 1) : 0;
 $points = [];
 foreach ($leadsSeries as $i => $row) {
-    $x = $i * $xStep;
-    $y = $padTop + ($chartH - $padTop - $padBottom) * (1 - $row['count'] / $yMax);
-    $points[] = [$x, $y];
+    $points[] = [$i * $xStep, $padTop + ($chartH - $padTop - $padBottom) * (1 - $row['count'] / $yTop)];
 }
 $linePath = smooth_svg_path($points);
-$areaPath = $points ? $linePath . sprintf(' L%.2f,%d L0,%d Z', end($points)[0], $chartH, $chartH) : '';
+$areaPath = $points ? $linePath . sprintf(' L%.2f,%d L0,%d Z', end($points)[0], $chartH - $padBottom, $chartH - $padBottom) : '';
 $labelIdxs = $n > 1 ? [0, (int) round(($n - 1) * 0.2), (int) round(($n - 1) * 0.4), (int) round(($n - 1) * 0.6), (int) round(($n - 1) * 0.8), $n - 1] : [0];
 
 $statusBreakdown = get_lead_status_breakdown();
 $sourceBreakdown = get_lead_source_breakdown();
 
 $exportQuery = http_build_query(array_filter($filters));
+$leadsUrl = fn(array $over = []): string => base_url('dashboard/admin/leads.php' . (($p = array_filter(array_merge($filters, ['page' => ''], $over), fn($v) => $v !== '' && $v !== null)) ? '?' . http_build_query($p) : ''));
+
 $pageTitle = 'Leads — Admin — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <div class="dash-page-head">
   <div>
     <h1 class="h2">Leads</h1>
-    <p class="muted" style="margin-top:6px;">Everyone who's voluntarily shared their details — track, follow up, and convert.</p>
+    <p class="muted" style="margin-top:6px;">Everyone who has shared their details. Follow up, track, and convert.</p>
   </div>
-  <a href="<?= e(base_url('api/export-leads.php?' . $exportQuery)) ?>" class="btn btn-outline">⬇ Export CSV</a>
+  <a href="<?= e(base_url('api/export-leads.php?' . $exportQuery)) ?>" class="ld-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Export CSV</a>
 </div>
 
-<div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#0b00ff;">
-    <div class="icon"><?php dash_icon('sparkle'); ?></div>
-    <div class="value"><?= number_format((int) ($statCounts['total'] ?? 0)) ?></div><div class="label">Total Leads</div>
-  </div>
-  <a href="<?= e(base_url('dashboard/admin/leads.php?status=NEW')) ?>" class="stat-card-link">
-    <div class="stat-card" data-hoverable="true" style="--hover-color:#8b5cf6;">
-      <div class="icon"><?php dash_icon('user-plus'); ?></div>
-      <div class="value"><?= number_format((int) ($statCounts['new_count'] ?? 0)) ?></div><div class="label">New — Not Yet Contacted</div>
-    </div>
-  </a>
-  <a href="<?= e(base_url('dashboard/admin/leads.php?type=creator')) ?>" class="stat-card-link">
-    <div class="stat-card" data-hoverable="true" style="--hover-color:#ec4899;">
-      <div class="icon"><?php dash_icon('crown'); ?></div>
-      <div class="value"><?= number_format((int) ($statCounts['creator_count'] ?? 0)) ?></div><div class="label">Creator Leads</div>
-    </div>
-  </a>
-  <a href="<?= e(base_url('dashboard/admin/leads.php?status=ENROLLED')) ?>" class="stat-card-link">
-    <div class="stat-card" data-hoverable="true" style="--hover-color:#10b981;">
-      <div class="icon"><?php dash_icon('check-circle'); ?></div>
-      <div class="value"><?= number_format((int) ($statCounts['enrolled_count'] ?? 0)) ?></div><div class="label">Converted to Enrolled</div>
-    </div>
-  </a>
+<div class="ld-panel ld-strip" style="margin-top:20px;">
+  <div><b><?= number_format($allLeads) ?></b><span>Total leads</span></div>
+  <div class="<?= $newCount > 0 ? 'warn' : '' ?>"><b><?= number_format($newCount) ?></b><span>Not yet contacted</span><small><?= $pctOf($newCount) ?>% of all leads</small></div>
+  <div><b><?= number_format($creatorCount) ?></b><span>Creator leads</span><small><?= $pctOf($creatorCount) ?>% of all leads</small></div>
+  <div><b><?= number_format($enrolledCount) ?></b><span>Became students</span><small><?= $pctOf($enrolledCount) ?>% conversion</small></div>
 </div>
 
-<div class="growth-layout" style="margin-top:20px;">
-  <div class="chart-card">
-    <div class="chart-card-head">
+<?php if ($newCount > 0): ?>
+  <div class="ld-alert" role="note" style="margin-top:16px;">
+    <?php dash_icon('clock'); ?>
+    <span><strong><?= $newCount === $allLeads ? 'None of your ' . number_format($allLeads) . ' leads have been contacted yet.' : number_format($newCount) . ' lead' . ($newCount === 1 ? ' has' : 's have') . ' not been contacted yet.' ?></strong> Leads that hear back within a day are far more likely to enrol.</span>
+    <a href="<?= e(base_url('dashboard/admin/leads.php?status=NEW')) ?>">Show new leads</a>
+  </div>
+<?php endif; ?>
+
+<div class="ld-sec" style="margin-top:28px;"><h2>Pipeline</h2><p>Where every lead stands today</p></div>
+<div class="ld-panel ld-pipe">
+  <?php foreach ($statusLabels as $key => $label): $c = (int) ($statusBreakdown[$key] ?? 0); ?>
+    <a href="<?= e(base_url('dashboard/admin/leads.php?status=' . $key)) ?>" style="--c:<?= e($statusTint[$key]) ?>;">
+      <div class="lb"><i></i><?= e($label) ?></div>
+      <b><?= number_format($c) ?></b>
+      <div class="bar"><u style="width:<?= $pctOf($c) ?>%"></u></div>
+      <small><?= $pctOf($c) ?>% of leads</small>
+    </a>
+  <?php endforeach; ?>
+</div>
+
+<div class="ld-two" style="margin-top:20px;">
+  <div class="ld-panel ld-card">
+    <div class="ld-chead">
       <div>
-        <h2 class="h3">Leads Captured</h2>
-        <p class="muted small" style="margin-top:4px;">New leads per day &middot; last 30 days</p>
+        <h2>Leads captured</h2>
+        <p class="sub">New leads per day, last 30 days</p>
       </div>
       <?php if ($trendPct !== null): ?>
-        <div class="chart-trend <?= $trendPct >= 0 ? 'up' : 'down' ?>">
-          <?php dash_icon('trending-up'); ?><?= $trendPct >= 0 ? '+' : '' ?><?= $trendPct ?>% vs previous week
-        </div>
+        <span class="ld-trend <?= $trendPct >= 0 ? 'up' : 'down' ?>"><?= $trendPct >= 0 ? '+' : '' ?><?= $trendPct ?>% vs previous week</span>
       <?php endif; ?>
     </div>
-    <div class="chart-wrap">
-      <svg viewBox="0 0 <?= $chartW ?> <?= $chartH ?>" preserveAspectRatio="none" class="revenue-chart">
+    <div class="ld-chart chart-wrap">
+      <div class="ld-yaxis" aria-hidden="true">
+        <?php for ($g = 4; $g >= 0; $g--): ?><span><?= (int) ($yTop / 4 * $g) ?></span><?php endfor; ?>
+      </div>
+      <svg viewBox="0 0 <?= $chartW ?> <?= $chartH ?>" preserveAspectRatio="none" role="img" aria-label="Leads captured per day">
         <defs>
-          <linearGradient id="dashAreaFill" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="ldAreaFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.22"/>
             <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
           </linearGradient>
         </defs>
-        <?php for ($g = 1; $g <= 3; $g++): $gy = $padTop + ($chartH - $padTop - $padBottom) * ($g / 4); ?>
-          <line x1="0" y1="<?= round($gy, 1) ?>" x2="<?= $chartW ?>" y2="<?= round($gy, 1) ?>" class="chart-gridline"></line>
+        <?php for ($g = 0; $g <= 4; $g++): $gy = $padTop + ($chartH - $padTop - $padBottom) * ($g / 4); ?>
+          <line x1="0" y1="<?= round($gy, 1) ?>" x2="<?= $chartW ?>" y2="<?= round($gy, 1) ?>" class="ld-gl"></line>
         <?php endfor; ?>
-        <path d="<?= e($areaPath) ?>" class="chart-area-blue"></path>
-        <path d="<?= e($linePath) ?>" class="chart-line chart-line-blue"></path>
+        <?php if ($points): ?>
+          <path d="<?= e($areaPath) ?>" fill="url(#ldAreaFill)"></path>
+          <path d="<?= e($linePath) ?>" class="ld-line" vector-effect="non-scaling-stroke"></path>
+        <?php endif; ?>
         <?php foreach ($points as $i => [$px, $py]): ?>
           <circle cx="<?= round($px, 1) ?>" cy="<?= round($py, 1) ?>" class="chart-point" tabindex="0"
             data-chart-label="<?= e(format_date($leadsSeries[$i]['date'] . ' 00:00:00')) ?>"
@@ -242,87 +254,78 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <circle cx="<?= round($lx, 1) ?>" cy="<?= round($ly, 1) ?>" r="5" class="chart-end-dot chart-end-dot-blue" style="pointer-events:none;"></circle>
         <?php endif; ?>
       </svg>
-      <div class="chart-x-labels">
-        <?php foreach ($labelIdxs as $idx): ?>
-          <span><?= e(date('M j', strtotime($leadsSeries[$idx]['date']))) ?></span>
-        <?php endforeach; ?>
-      </div>
+    </div>
+    <div class="ld-xl">
+      <?php foreach ($labelIdxs as $idx): if (!isset($leadsSeries[$idx])) continue; ?>
+        <span><?= e(date('M j', strtotime($leadsSeries[$idx]['date']))) ?></span>
+      <?php endforeach; ?>
     </div>
   </div>
 
-  <div class="growth-side">
-    <div class="chart-card">
-      <h2 class="h3">By Status</h2>
-      <?php render_bar_list($statusBreakdown, $statusLabels); ?>
-    </div>
-    <div class="chart-card">
-      <h2 class="h3">By Source</h2>
-      <?php render_bar_list($sourceBreakdown, $sourceLabels); ?>
+  <div class="ld-panel ld-card">
+    <h2>Where leads come from</h2>
+    <p class="sub">Share of all <?= number_format($allLeads) ?> lead<?= $allLeads === 1 ? '' : 's' ?></p>
+    <div class="ld-src">
+      <?php foreach ($sourceLabels as $key => $label): $c = (int) ($sourceBreakdown[$key] ?? 0); ?>
+        <div class="r"><span><?= e($label) ?></span><em><?= number_format($c) ?> &middot; <?= $pctOf($c) ?>%</em><div class="bar"><u style="width:<?= $pctOf($c) ?>%"></u></div></div>
+      <?php endforeach; ?>
     </div>
   </div>
 </div>
 
-<h3 class="dash-section-label" style="margin-top:32px;">All Leads</h3>
-<div class="chart-card" style="margin-top:14px; padding:18px 20px;">
-  <form method="get" class="leads-filter-bar">
-    <div class="field-icon" style="flex:1 1 220px; max-width:280px; margin:0;">
-      <?php dash_icon('search'); ?>
-      <input type="text" name="q" placeholder="Search by name or email" value="<?= e($filters['q']) ?>">
-    </div>
-    <select name="status" style="flex:0 1 160px;">
-      <option value="">All Statuses</option>
-      <?php foreach ($statusLabels as $val => $label): ?>
-        <option value="<?= $val ?>" <?= $filters['status'] === $val ? 'selected' : '' ?>><?= e($label) ?></option>
-      <?php endforeach; ?>
-    </select>
-    <select name="type" style="flex:0 1 140px;">
-      <option value="">All Types</option>
+<div class="ld-sec" style="margin-top:28px;"><h2>All leads</h2></div>
+<div class="ld-panel" style="overflow:hidden;">
+  <form method="get" class="ld-tools">
+    <label class="ld-field ld-grow"><?php dash_icon('search'); ?><input type="search" name="q" placeholder="Search by name or email" aria-label="Search leads" value="<?= e($filters['q']) ?>"></label>
+    <label class="ld-field"><select name="status" aria-label="Status" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      <?php foreach ($statusLabels as $val => $label): ?><option value="<?= $val ?>" <?= $filters['status'] === $val ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
+    </select></label>
+    <label class="ld-field"><select name="type" aria-label="Type" onchange="this.form.submit()">
+      <option value="">All types</option>
       <option value="learner" <?= $filters['type'] === 'learner' ? 'selected' : '' ?>>Learner</option>
       <option value="creator" <?= $filters['type'] === 'creator' ? 'selected' : '' ?>>Creator</option>
-    </select>
-    <select name="source" style="flex:0 1 170px;">
-      <option value="">All Sources</option>
-      <?php foreach ($sourceLabels as $val => $label): ?>
-        <option value="<?= $val ?>" <?= $filters['source'] === $val ? 'selected' : '' ?>><?= e($label) ?></option>
-      <?php endforeach; ?>
-    </select>
-    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+    </select></label>
+    <label class="ld-field"><select name="source" aria-label="Source" onchange="this.form.submit()">
+      <option value="">All sources</option>
+      <?php foreach ($sourceLabels as $val => $label): ?><option value="<?= $val ?>" <?= $filters['source'] === $val ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
+    </select></label>
     <?php if (array_filter($filters)): ?><a href="<?= e(base_url('dashboard/admin/leads.php')) ?>" class="small muted">Clear</a><?php endif; ?>
-    <span class="muted small" style="margin-left:auto; white-space:nowrap;"><?= number_format($totalLeads) ?> lead<?= $totalLeads === 1 ? '' : 's' ?></span>
+    <span class="ld-count"><?= number_format($totalLeads) ?> lead<?= $totalLeads === 1 ? '' : 's' ?></span>
   </form>
-</div>
 
-<?php if ($leads): ?>
-  <div class="activity-feed" style="margin-top:14px;">
-    <?php foreach ($leads as $l): $rowLocation = trim(($l['city'] ?? '') . ($l['city'] && $l['country'] ? ', ' : '') . ($l['country'] ? country_name($l['country']) : ''), ' ,'); ?>
-      <div class="list-row">
-        <div class="list-row-main">
-          <div class="row-avatar" style="--tint:<?= e($statusTint[$l['status']]) ?>; background:color-mix(in srgb, var(--tint) 20%, transparent); color:var(--tint); flex-shrink:0;"><?= e(mb_substr($l['name'], 0, 1)) ?></div>
-          <div style="min-width:0;">
-            <div style="font-weight:700;"><?= e($l['name']) ?></div>
-            <div class="small muted" style="margin-top:2px;">
-              <?= e($l['email']) ?> &middot; <?= $l['lead_type'] === 'creator' ? '🚀 Creator' : '🎓 Learner' ?> &middot; <?= e($sourceLabels[$l['source']] ?? $l['source']) ?><?= $rowLocation ? ' &middot; ' . e($rowLocation) : '' ?>
-            </div>
-          </div>
+  <?php if ($leads): ?>
+    <div class="ld-grid ld-th"><span>Lead</span><span>Type</span><span>Source</span><span>Activity</span><span>Status</span><span></span></div>
+    <?php foreach ($leads as $l): $isCreator = $l['lead_type'] === 'creator'; $viewUrl = base_url('dashboard/admin/leads.php?id=' . (int) $l['id']); ?>
+      <div class="ld-grid ld-row" style="--c:<?= e($statusTint[$l['status']] ?? '#94a3b8') ?>;">
+        <div class="ld-who">
+          <div class="ld-av"><?= e(mb_strtoupper(mb_substr($l['name'], 0, 1))) ?></div>
+          <div style="min-width:0;"><a href="<?= e($viewUrl) ?>" class="nm"><?= e($l['name']) ?></a><small><?= e($l['email']) ?></small></div>
         </div>
-        <div class="list-row-meta">
-          <span class="role-pill" style="--tint:<?= e($statusTint[$l['status']]) ?>;"><?= e($statusLabels[$l['status']]) ?></span>
-          <span class="small muted" style="white-space:nowrap;"><?= (int) $l['visit_count'] ?> visit<?= (int) $l['visit_count'] === 1 ? '' : 's' ?> &middot; <?= e(format_date($l['last_visit_at'])) ?></span>
-          <a href="<?= e(base_url('dashboard/admin/leads.php?id=' . $l['id'])) ?>" class="btn btn-outline btn-sm">View</a>
-        </div>
+        <span class="ld-type <?= $isCreator ? 'creator' : '' ?>"><?= $isCreator ? 'Creator' : 'Learner' ?></span>
+        <span class="ld-srcc"><?= e($sourceLabels[$l['source']] ?? $l['source']) ?></span>
+        <div class="ld-seen"><b><?= (int) $l['visit_count'] ?> visit<?= (int) $l['visit_count'] === 1 ? '' : 's' ?></b><?= e(format_date($l['last_visit_at'])) ?></div>
+        <span class="ld-pill"><i></i><?= e($statusLabels[$l['status']] ?? $l['status']) ?></span>
+        <a href="<?= e($viewUrl) ?>" class="ld-view">View</a>
       </div>
     <?php endforeach; ?>
-  </div>
-<?php else: ?>
-  <div class="card" style="margin-top:14px; padding:36px; text-align:center; border-style:dashed; color:var(--muted);">No leads match these filters yet.</div>
-<?php endif; ?>
+  <?php else: ?>
+    <div class="ld-none">No leads match these filters yet.</div>
+  <?php endif; ?>
 
-<?php if ($totalPages > 1): ?>
-  <div class="row gap-2" style="margin-top:16px; justify-content:center; flex-wrap:wrap; row-gap:8px;">
-    <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-      <a href="<?= e(base_url('dashboard/admin/leads.php?' . http_build_query(array_filter($filters) + ['page' => $p]))) ?>"
-         class="btn btn-sm <?= $p === $page ? 'btn-primary' : 'btn-outline' ?>"><?= $p ?></a>
-    <?php endfor; ?>
+  <div class="ld-foot">
+    <span><?= $totalLeads ? 'Showing ' . number_format(($page - 1) * $perPage + 1) . ' to ' . number_format(min($totalLeads, $page * $perPage)) . ' of ' . number_format($totalLeads) : 'No leads to show' ?></span>
+    <?php if ($totalPages > 1):
+        $shown = array_unique(array_filter([1, $page - 1, $page, $page + 1, $totalPages], fn($p) => $p >= 1 && $p <= $totalPages));
+        sort($shown); $prevN = 0; ?>
+      <nav class="ld-pager" aria-label="Pages">
+        <?php if ($page > 1): ?><a href="<?= e($leadsUrl(['page' => $page - 1])) ?>">Previous</a><?php else: ?><a class="dis" aria-disabled="true">Previous</a><?php endif; ?>
+        <?php foreach ($shown as $p): if ($prevN && $p - $prevN > 1): ?><span class="gap">&hellip;</span><?php endif; $prevN = $p; ?>
+          <a href="<?= e($leadsUrl(['page' => $p])) ?>" class="<?= $p === $page ? 'on' : '' ?>" <?= $p === $page ? 'aria-current="page"' : '' ?>><?= $p ?></a>
+        <?php endforeach; ?>
+        <?php if ($page < $totalPages): ?><a href="<?= e($leadsUrl(['page' => $page + 1])) ?>">Next</a><?php else: ?><a class="dis" aria-disabled="true">Next</a><?php endif; ?>
+      </nav>
+    <?php endif; ?>
   </div>
-<?php endif; ?>
+</div>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
