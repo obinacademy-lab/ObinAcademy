@@ -1255,7 +1255,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .st-bar i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
 .st-n { text-align: right; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
 .st-n small { font-weight: 500; }
-.st-empty { margin-top: 12px; padding: 22px; border: 1px dashed var(--dash-border); border-radius: 16px; display: flex; gap: 14px; align-items: center; color: var(--muted); background: var(--dash-panel); }
+.st-empty { text-align: left; margin-top: 12px; padding: 22px; border: 1px dashed var(--dash-border); border-radius: 16px; display: flex; gap: 14px; align-items: center; color: var(--muted); background: var(--dash-panel); }
 .st-empty svg { width: 22px; height: 22px; color: var(--accent); flex-shrink: 0; }
 .st-empty strong { color: var(--ink); }
 .st-bar-row { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -1421,4 +1421,33 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   .ld-count { margin-left: 0; width: 100%; }
   .ld-alert { flex-wrap: wrap; }
   .ld-alert a { margin-left: 30px; }
+}
+
+/* Admin Login Activity: reuses the Leads panel/strip/table styles; adds the day headings and its own column layout */
+.ld-strip.cols3 { grid-template-columns: repeat(3, 1fr); }
+.lg-grid { display: grid; grid-template-columns: minmax(0, 2.2fr) 92px 130px minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--dash-border-soft, var(--dash-border)); }
+.lg-th { padding-block: 10px; background: var(--dash-bg); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.lg-day { padding: 9px 20px; background: color-mix(in srgb, var(--dash-tint) 55%, var(--dash-panel)); font-size: 12px; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--dash-border-soft, var(--dash-border)); }
+.lg-row:hover { background: color-mix(in srgb, var(--dash-tint) 40%, transparent); }
+.lg-time { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lg-time small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.lg-dev { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.lg-dev svg { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+.lg-dev span { font-size: 13px; line-height: 1.3; }
+.lg-dev small { display: block; color: var(--muted); font-size: 12px; }
+.lg-place { font-size: 13px; color: var(--muted); }
+@media (max-width: 760px) {
+  .ld-strip.cols3 { grid-template-columns: repeat(3, 1fr); }
+  .ld-strip.cols3 > div { padding: 14px; border-bottom: 0; }
+  .ld-strip.cols3 > div:nth-child(2) { border-right: 1px solid var(--dash-border-soft, var(--dash-border)); }
+  .ld-strip.cols3 b { font-size: 22px; }
+  .ld-strip.cols3 span { font-size: 11.5px; }
+  .lg-th { display: none; }
+  .lg-grid { grid-template-columns: 1fr auto; gap: 7px 12px; padding: 13px 16px; }
+  .lg-grid .ld-who { grid-column: 1 / -1; }
+  .lg-grid .ld-pill { grid-column: 2; grid-row: 2; justify-self: end; }
+  .lg-grid .lg-time { grid-column: 1; grid-row: 2; }
+  .lg-grid .lg-time small { display: inline; margin-left: 6px; }
+  .lg-grid .lg-dev, .lg-grid .lg-place { grid-column: 1 / -1; }
+  .lg-day { padding-inline: 16px; }
 }
