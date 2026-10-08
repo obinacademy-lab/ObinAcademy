@@ -1217,3 +1217,15 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   .er-ic { width: 38px; height: 38px; border-radius: 12px; }
   .er-ic svg { width: 18px; height: 18px; }
 }
+
+/* withdrawal history reuses the .er-* card; status-coloured icon, pill and optional note */
+.er-row-first { border-top: 1px solid var(--dash-border); }
+.er-ic.tone-good { background: var(--dash-good-bg); color: var(--dash-good); }
+.er-ic.tone-warn { background: var(--dash-warn-bg); color: var(--dash-warn); }
+.er-ic.tone-bad { background: var(--dash-bad-bg); color: var(--dash-bad); }
+.er-title-amount { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.er-pill { display: inline-block; font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 5px 13px; white-space: nowrap; }
+.er-pill.tone-good { background: var(--dash-good-bg); color: var(--dash-good); }
+.er-pill.tone-warn { background: var(--dash-warn-bg); color: var(--dash-warn); }
+.er-pill.tone-bad { background: var(--dash-bad-bg); color: var(--dash-bad); }
+.er-note { margin: 8px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--dash-panel-2); font-size: 13px; line-height: 1.45; color: var(--muted); }

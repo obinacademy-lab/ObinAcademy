@@ -216,25 +216,42 @@ $earnShownTotal = array_sum(array_column($recentEarnings, 'amount'));
   </div>
 <?php endif; ?>
 
-<h2 class="h3" style="margin-top:36px;">Withdrawal History</h2>
-<?php if (!$withdrawals): ?>
-  <div class="card card-pad reveal" style="margin-top:14px; border-style:dashed; text-align:center;">
-    <p class="muted">No withdrawal requests yet.</p>
+<?php
+$wdTone = ['PENDING' => 'warn', 'APPROVED' => 'good', 'REJECTED' => 'bad'];
+$wdLabel = ['PENDING' => 'Pending', 'APPROVED' => 'Approved', 'REJECTED' => 'Rejected'];
+$wdIcon = ['PENDING' => 'clock', 'APPROVED' => 'check-circle', 'REJECTED' => 'x-circle'];
+$wdPaid = 0.0;
+foreach ($withdrawals as $w) if ($w['status'] === 'APPROVED') $wdPaid += (float) $w['amount'];
+?>
+<section class="er-card reveal" aria-labelledby="wd-title">
+  <div class="er-head">
+    <div>
+      <h2 id="wd-title">Withdrawal history</h2>
+      <p>Your payout requests to mobile money<?= $withdrawals ? ' &middot; ' . count($withdrawals) . ' total' : '' ?></p>
+    </div>
+    <?php if ($withdrawals): ?>
+      <div class="er-sum"><small>Paid out so far</small><b><?= e(format_money($wdPaid)) ?></b></div>
+    <?php endif; ?>
   </div>
-<?php else: ?>
-  <div class="activity-feed reveal" style="margin-top:14px;">
-    <?php foreach ($withdrawals as $w): ?>
-      <div class="list-row">
-        <div class="list-row-main">
-          <span style="font-weight:600;"><?= e(format_money((float) $w['amount'])) ?></span>
-          <span class="small muted"><?= e($w['phone']) ?></span>
+
+  <?php if (!$withdrawals): ?>
+    <div class="er-empty"><?php dash_icon('wallet'); ?><p>No withdrawal requests yet. When you request a payout, it will show up here with its status.</p></div>
+  <?php else: ?>
+    <?php foreach ($withdrawals as $i => $w): $tone = $wdTone[$w['status']] ?? 'warn'; ?>
+      <div class="er-row <?= $i === 0 ? 'er-row-first' : '' ?>">
+        <span class="er-ic tone-<?= e($tone) ?>"><?php dash_icon($wdIcon[$w['status']] ?? 'clock'); ?></span>
+        <div class="er-main">
+          <div class="er-title er-title-amount"><?= e(format_money((float) $w['amount'])) ?></div>
+          <div class="er-meta">
+            <span>To <?= e($w['phone']) ?></span>
+            <span>Requested <?= e(format_date($w['requested_at'])) ?></span>
+            <?php if (!empty($w['resolved_at'])): ?><span><?= $w['status'] === 'REJECTED' ? 'Declined' : 'Paid' ?> <?= e(format_date($w['resolved_at'])) ?></span><?php endif; ?>
+          </div>
+          <?php if (!empty($w['note'])): ?><p class="er-note"><?= e($w['note']) ?></p><?php endif; ?>
         </div>
-        <div class="list-row-meta">
-          <span class="badge <?= $badgeClass[$w['status']] ?>"><?= e($w['status']) ?></span>
-          <span class="small muted"><?= e(format_date($w['requested_at'])) ?></span>
-        </div>
+        <div class="er-amt"><span class="er-pill tone-<?= e($tone) ?>"><?= e($wdLabel[$w['status']] ?? $w['status']) ?></span></div>
       </div>
     <?php endforeach; ?>
-  </div>
-<?php endif; ?>
+  <?php endif; ?>
+</section>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
