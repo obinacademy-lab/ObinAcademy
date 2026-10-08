@@ -1376,7 +1376,7 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .ld-field select option { background: var(--dash-panel); color: var(--ink); }
 .ld-grow { flex: 1 1 240px; }
 .ld-count { margin-left: auto; font-size: 12.5px; color: var(--muted); font-weight: 600; white-space: nowrap; }
-.ld-grid { display: grid; grid-template-columns: minmax(0, 2.2fr) 92px minmax(0, 1.25fr) 112px 104px 62px; gap: 16px; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--dash-border-soft, var(--dash-border)); }
+.ld-grid { display: grid; grid-template-columns: minmax(0, 2.2fr) 92px minmax(0, 1.25fr) 112px 104px 78px; gap: 16px; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--dash-border-soft, var(--dash-border)); }
 .ld-th { padding-block: 10px; background: var(--dash-bg); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .ld-row:hover { background: color-mix(in srgb, var(--dash-tint) 45%, transparent); }
 .ld-who { display: flex; gap: 12px; align-items: center; min-width: 0; }
@@ -1450,4 +1450,39 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   .lg-grid .lg-time small { display: inline; margin-left: 6px; }
   .lg-grid .lg-dev, .lg-grid .lg-place { grid-column: 1 / -1; }
   .lg-day { padding-inline: 16px; }
+}
+
+/* Admin outreach: message a lead, remind a failed payment */
+.ot-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--dash-border); background: var(--dash-panel); color: var(--ink); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.ot-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.ot-btn.wa { color: var(--dash-good, #047857); border-color: color-mix(in srgb, #059669 40%, var(--dash-border)); background: color-mix(in srgb, #059669 8%, var(--dash-panel)); }
+.ot-btn.wa:hover:not(:disabled) { border-color: #059669; color: var(--dash-good, #047857); background: color-mix(in srgb, #059669 14%, var(--dash-panel)); }
+.ot-btn.big { height: 42px; padding: 0 20px; font-size: 14px; border-radius: 12px; }
+.ot-btn:disabled { opacity: .45; cursor: not-allowed; }
+.ot-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; margin-top: 6px; }
+.ot-actions form { margin: 0; }
+.ot-seen { margin-top: 5px; text-align: right; }
+.ot-card { padding: 22px 24px; }
+.ot-card h2 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+.ot-card .sub { margin: 3px 0 0; font-size: 12.5px; color: var(--muted); }
+.ot-form { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+.ot-tpls { display: flex; gap: 8px; flex-wrap: wrap; }
+.ot-tpl { position: relative; margin: 0; }
+.ot-tpl input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.ot-tpl span { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 99px; border: 1px solid var(--dash-border); background: var(--dash-panel); font-size: 13px; font-weight: 700; color: var(--muted); }
+.ot-tpl input:checked + span { background: var(--dash-tint); border-color: color-mix(in srgb, var(--accent) 45%, var(--dash-border)); color: var(--accent); }
+.ot-tpl input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ot-form textarea { width: 100%; resize: vertical; min-height: 140px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--dash-border); background: var(--dash-bg); color: var(--ink); font: inherit; line-height: 1.55; }
+.ot-form textarea:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
+.ot-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ot-row .small { flex: 1 1 220px; }
+.ot-history { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--dash-border-soft, var(--dash-border)); }
+.ot-history h3 { margin: 0 0 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.ot-hrow { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 6px 0; font-size: 13px; }
+.ot-chan { padding: 2px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 700; background: var(--dash-tint); color: var(--accent); }
+.ot-chan.wa { background: color-mix(in srgb, #059669 13%, transparent); color: var(--dash-good, #047857); }
+@media (max-width: 760px) {
+  .ot-card { padding: 18px 16px; }
+  .ot-actions, .ot-seen { justify-content: flex-start; text-align: left; }
+  .ot-btn.big { flex: 1 1 140px; }
 }

@@ -68,10 +68,20 @@ function admin_count_payments(array $f): int {
 function admin_get_payments(array $f, int $limit, int $offset = 0): array {
     [$sql, $params] = admin_payment_where($f);
     return db_all(
-        'SELECT p.*, u.name AS payer_name, u.email AS payer_email, c.title AS course_title, b.title AS bundle_title,
+        'SELECT p.*, u.name AS payer_name, u.email AS payer_email, c.title AS course_title, c.slug AS course_slug, b.title AS bundle_title, b.slug AS bundle_slug,
                 COALESCE(sc.school_name, sc.name) AS school_label '
         . ADMIN_PAYMENT_FROM . ' WHERE ' . $sql . ' ORDER BY p.created_at DESC, p.id DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset,
         $params
+    );
+}
+
+/** One payment with the same joined columns as the list (used by the reminder buttons). */
+function admin_get_payment(int $id): ?array {
+    return db_one(
+        'SELECT p.*, u.name AS payer_name, u.email AS payer_email, c.title AS course_title, c.slug AS course_slug, b.title AS bundle_title, b.slug AS bundle_slug,
+                COALESCE(sc.school_name, sc.name) AS school_label '
+        . ADMIN_PAYMENT_FROM . ' WHERE p.id = ?',
+        [$id]
     );
 }
 

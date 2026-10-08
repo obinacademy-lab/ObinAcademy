@@ -2,6 +2,7 @@
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/leads.php';
 require __DIR__ . '/../../includes/audit.php';
+require __DIR__ . '/../../includes/outreach.php';
 $user = require_role(['ADMIN']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,6 +16,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (set_lead_status($leadId, $status)) {
             log_admin_action((int) $user['id'], $user['name'], 'lead.status_changed', 'Lead', $lead['name'], "status -> $status");
         }
+    } elseif ($lead && in_array($action, ['message_whatsapp', 'message_email'], true)) {
+        // One-tap outreach: WhatsApp opens the admin's own WhatsApp with the text written; email is sent from the platform.
+        $templates = lead_message_templates();
+        $tplKey = isset($templates[post('template')]) ? post('template') : lead_message_default_for($lead);
+        $text = trim(mb_substr((string) post('message'), 0, 1500));
+        if ($text === '') {
+            flash_set('error', 'Write a message first.');
+        } elseif ($action === 'message_whatsapp') {
+            $wa = whatsapp_number($lead['phone']);
+            if (!$wa) {
+                flash_set('error', 'This lead has no usable phone number, so WhatsApp cannot be opened.');
+            } else {
+                log_lead_contact($leadId, (int) $user['id'], 'whatsapp', $tplKey);
+                log_admin_action((int) $user['id'], $user['name'], 'lead.contacted', 'Lead', $lead['name'], 'WhatsApp');
+                redirect('https://wa.me/' . $wa . '?text=' . rawurlencode($text));
+            }
+        } elseif (!$lead['consent_marketing'] || $lead['unsubscribed']) {
+            flash_set('error', 'This lead has not agreed to marketing email or has unsubscribed, so no email was sent.');
+        } else {
+            send_lead_message_email($lead, $templates[$tplKey]['subject'], $text);
+            log_lead_contact($leadId, (int) $user['id'], 'email', $tplKey);
+            log_admin_action((int) $user['id'], $user['name'], 'lead.contacted', 'Lead', $lead['name'], 'email');
+            flash_set('success', 'Email sent to ' . $lead['email'] . '. The lead is now marked Contacted.');
+        }
+        redirect('/dashboard/admin/leads.php?id=' . $leadId);
     } elseif ($lead && $action === 'add_note') {
         add_lead_note($leadId, (int) $user['id'], (string) post('note'));
         log_admin_action((int) $user['id'], $user['name'], 'lead.note_added', 'Lead', $lead['name']);
@@ -59,6 +85,57 @@ if ($detailId) {
       <div class="mini-stat"><span class="mini-stat-value"><?= (int) $lead['visit_count'] ?></span><span class="mini-stat-label">Visits</span></div>
       <div class="mini-stat"><span class="mini-stat-value"><?= e(format_date($lead['first_visit_at'])) ?></span><span class="mini-stat-label">First Seen</span></div>
     </div>
+
+    <?php
+      $msgTemplates = lead_message_templates();
+      $msgDefault = lead_message_default_for($lead);
+      $msgWa = whatsapp_number($lead['phone']);
+      $msgCanEmail = $lead['consent_marketing'] && !$lead['unsubscribed'];
+      $msgHistory = get_lead_contacts($detailId);
+    ?>
+    <div class="ld-panel ot-card" id="message" style="margin-top:24px;">
+      <div class="ot-head">
+        <div><h2>Message <?= e(lead_first_name($lead)) ?></h2><p class="sub">Pick a template, change the words if you like, then send it. The lead moves to Contacted for you.</p></div>
+      </div>
+      <form method="post" class="ot-form" id="otForm">
+        <?= csrf_field() ?>
+        <input type="hidden" name="leadId" value="<?= $detailId ?>">
+        <div class="ot-tpls" role="radiogroup" aria-label="Template">
+          <?php foreach ($msgTemplates as $key => $t): ?>
+            <label class="ot-tpl"><input type="radio" name="template" value="<?= e($key) ?>" data-text="<?= e(lead_message_render($t['text'], $lead, $key)) ?>" <?= $key === $msgDefault ? 'checked' : '' ?>><span><?= e($t['label']) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <textarea name="message" id="otMessage" rows="7" maxlength="1500" aria-label="Message"><?= e(lead_message_render($msgTemplates[$msgDefault]['text'], $lead, $msgDefault)) ?></textarea>
+        <div class="ot-row">
+          <button type="submit" name="_action" value="message_whatsapp" formtarget="_blank" class="ot-btn wa big" <?= $msgWa ? '' : 'disabled' ?>>Open WhatsApp</button>
+          <button type="submit" name="_action" value="message_email" class="ot-btn big" <?= $msgCanEmail ? 'data-confirm="Email this message to ' . e($lead['email']) . '?"' : 'disabled' ?>>Send email</button>
+          <span class="small muted">
+            <?php if (!$msgWa): ?>No phone number on file, so WhatsApp is off.<?php endif; ?>
+            <?php if (!$msgCanEmail): ?><?= $msgWa ? '' : ' ' ?>This lead unsubscribed, so email is off.<?php endif; ?>
+            <?php if ($msgWa && $msgCanEmail): ?>WhatsApp opens in a new tab with the message ready. Email goes from Obin Academy.<?php endif; ?>
+          </span>
+        </div>
+      </form>
+      <?php if ($msgHistory): ?>
+        <div class="ot-history">
+          <h3>Already contacted</h3>
+          <?php foreach ($msgHistory as $h): ?>
+            <div class="ot-hrow"><span class="ot-chan <?= $h['channel'] === 'whatsapp' ? 'wa' : '' ?>"><?= $h['channel'] === 'whatsapp' ? 'WhatsApp' : 'Email' ?></span><span><?= e($msgTemplates[$h['template']]['label'] ?? 'Message') ?></span><span class="muted"><?= e($h['admin_name'] ?: 'Admin') ?> &middot; <?= e(format_date($h['created_at'])) ?></span></div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById('otMessage');
+        document.querySelectorAll('#otForm input[name=template]').forEach(function (r) {
+          r.addEventListener('change', function () { if (r.checked) box.value = r.dataset.text; });
+        });
+        document.querySelectorAll('#otForm [data-confirm]').forEach(function (b) {
+          b.addEventListener('click', function (e) { if (!confirm(b.dataset.confirm)) e.preventDefault(); });
+        });
+      })();
+    </script>
 
     <div class="growth-layout" style="margin-top:24px;">
       <div class="chart-card">
@@ -306,7 +383,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <span class="ld-srcc"><?= e($sourceLabels[$l['source']] ?? $l['source']) ?></span>
         <div class="ld-seen"><b><?= (int) $l['visit_count'] ?> visit<?= (int) $l['visit_count'] === 1 ? '' : 's' ?></b><?= e(format_date($l['last_visit_at'])) ?></div>
         <span class="ld-pill"><i></i><?= e($statusLabels[$l['status']] ?? $l['status']) ?></span>
-        <a href="<?= e($viewUrl) ?>" class="ld-view">View</a>
+        <a href="<?= e($viewUrl) ?>#message" class="ld-view" title="Message <?= e(lead_first_name($l)) ?>">Message</a>
       </div>
     <?php endforeach; ?>
   <?php else: ?>

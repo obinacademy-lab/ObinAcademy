@@ -7,6 +7,7 @@ require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/audit.php';
 require __DIR__ . '/../../includes/admin_payments.php';
 require __DIR__ . '/../../includes/payments.php'; // fetch_payment_by_id() and resolve_payment_with_iotec() for the re-check button
+require __DIR__ . '/../../includes/outreach.php'; // one-tap reminders for failed and stuck payments
 $user = require_role(['ADMIN']);
 
 $filters = admin_payment_filters($_GET);
@@ -36,6 +37,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 : ($result['status'] === 'FAILED' ? 'The provider says payment #' . $payment['id'] . ' failed. It is now marked failed.'
                 : 'The provider has not confirmed payment #' . $payment['id'] . ' yet. It is still pending.')
             );
+        }
+    }
+    if (in_array(post('_action'), ['remind_whatsapp', 'remind_email'], true)) {
+        $row = admin_get_payment((int) post('paymentId'));
+        $target = $row ? payment_reminder_target($row) : null;
+        if (!$target) {
+            flash_set('error', 'There is nothing to remind about for that payment. It may have succeeded, or the buyer already has the course.');
+        } elseif (post('_action') === 'remind_whatsapp') {
+            if (!$target['wa']) {
+                flash_set('error', 'This payment has no usable phone number to open WhatsApp with.');
+            } else {
+                log_payment_reminder((int) $row['id'], (int) $user['id'], 'whatsapp');
+                log_admin_action((int) $user['id'], $user['name'], 'payment.reminded', 'Payment', '#' . $row['id'], 'WhatsApp');
+                redirect('https://wa.me/' . $target['wa'] . '?text=' . rawurlencode(payment_reminder_whatsapp_text($target)));
+            }
+        } else {
+            if (!$target['email']) {
+                flash_set('error', 'This buyer left no email address.');
+            } else {
+                send_payment_recovery_email($target['email'], $target['name'], $target['title'], $target['kind'], $target['url'], (float) $row['amount']);
+                log_payment_reminder((int) $row['id'], (int) $user['id'], 'email');
+                log_admin_action((int) $user['id'], $user['name'], 'payment.reminded', 'Payment', '#' . $row['id'], 'email');
+                flash_set('success', 'Reminder emailed to ' . $target['email'] . '.');
+            }
         }
     }
     redirect(safe_local_redirect_path(post('back'), '/dashboard/admin/payments.php'));
@@ -125,9 +150,12 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <table class="cm-table">
       <thead><tr><th>When</th><th>Buyer</th><th>For</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        <?php foreach ($payments as $p):
+        <?php $reminders = get_payment_reminder_summary(array_column($payments, 'id'));
+        foreach ($payments as $p):
             $isStuck = $p['status'] === 'PENDING' && strtotime($p['created_at']) < time() - ADMIN_STUCK_PAYMENT_MINUTES * 60;
             $canRecheck = $p['status'] === 'PENDING' && !empty($p['iotec_transaction_id']);
+            $remindTarget = payment_reminder_target($p);
+            $reminded = $reminders[(int) $p['id']] ?? null;
         ?>
           <tr>
             <td data-label="When"><?= e(format_date($p['created_at'])) ?><small class="cm-sub"><?= e(date('g:i A', strtotime($p['created_at']))) ?> · #<?= (int) $p['id'] ?></small></td>
@@ -152,6 +180,28 @@ require __DIR__ . '/../../includes/dashboard_header.php';
                   <button class="btn btn-outline btn-sm" type="submit">Re-check</button>
                 </form>
               <?php endif; ?>
+              <?php if ($remindTarget): ?>
+                <div class="ot-actions">
+                  <?php if ($remindTarget['wa']): ?>
+                    <form method="post" target="_blank">
+                      <?= csrf_field() ?><input type="hidden" name="_action" value="remind_whatsapp"><input type="hidden" name="paymentId" value="<?= (int) $p['id'] ?>"><input type="hidden" name="back" value="<?= e($listUrl) ?>">
+                      <button class="ot-btn wa" type="submit" title="Opens WhatsApp with the message written for you">WhatsApp</button>
+                    </form>
+                  <?php endif; ?>
+                  <?php if ($remindTarget['email']): ?>
+                    <form method="post" data-confirm="Email a reminder to <?= e($remindTarget['email']) ?>?">
+                      <?= csrf_field() ?><input type="hidden" name="_action" value="remind_email"><input type="hidden" name="paymentId" value="<?= (int) $p['id'] ?>"><input type="hidden" name="back" value="<?= e($listUrl) ?>">
+                      <button class="ot-btn" type="submit">Email</button>
+                    </form>
+                  <?php endif; ?>
+                </div>
+                <small class="cm-sub ot-seen"><?php
+                  $auto = !empty($p['recovery_email_sent_at']);
+                  if ($reminded) echo 'Reminded ' . $reminded['n'] . '&times; &middot; ' . e(time_ago($reminded['last']));
+                  elseif ($auto) echo 'Auto email sent ' . e(time_ago($p['recovery_email_sent_at']));
+                  else echo 'Not reminded yet';
+                ?></small>
+              <?php endif; ?>
             </td>
           </tr>
         <?php endforeach; ?>
@@ -166,7 +216,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <?php if ($page < $pages): ?><a href="<?= e($url(['page' => $page + 1])) ?>">Next</a><?php else: ?><span class="dis">Next</span><?php endif; ?>
     </nav>
   <?php endif; ?>
-  <p class="small muted" style="margin-top:10px;">"Stuck" means still pending after <?= ADMIN_STUCK_PAYMENT_MINUTES ?> minutes. Re-check asks MTN or Airtel what actually happened and, if the money arrived, grants access exactly as if the buyer had waited.</p>
+  <p class="small muted" style="margin-top:10px;">"Stuck" means still pending after <?= ADMIN_STUCK_PAYMENT_MINUTES ?> minutes. Re-check asks MTN or Airtel what actually happened and, if the money arrived, grants access exactly as if the buyer had waited. For failed or stuck course and bundle payments, WhatsApp opens your WhatsApp with a ready message and the link to try again, and Email sends the same reminder.</p>
 <?php endif; ?>
 <script>
   document.querySelectorAll('[data-autosubmit]').forEach(function (el) { el.addEventListener('change', function () { el.form.submit(); }); });
