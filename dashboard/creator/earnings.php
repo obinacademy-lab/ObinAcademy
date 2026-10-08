@@ -149,26 +149,53 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </form>
 </div>
 
-<h2 class="h3" style="margin-top:36px;">Recent Earnings</h2>
-<?php if (!$recentEarnings): ?>
-  <div class="card card-pad reveal" style="margin-top:14px; border-style:dashed; text-align:center;">
-    <p class="muted">No earnings yet.</p>
+<?php
+// Recent sales grouped by day, newest first: each day gets a small header with its sale count and total.
+$earnDays = [];
+foreach ($recentEarnings as $row) {
+    $day = date('Y-m-d', strtotime($row['created_at']));
+    $earnDays[$day]['rows'][] = $row;
+    $earnDays[$day]['total'] = ($earnDays[$day]['total'] ?? 0.0) + (float) $row['amount'];
+}
+$earnShownTotal = array_sum(array_column($recentEarnings, 'amount'));
+?>
+<section class="er-card reveal" aria-labelledby="er-title">
+  <div class="er-head">
+    <div>
+      <h2 id="er-title">Recent earnings</h2>
+      <p>Your latest sales, after fees<?= $recentEarnings ? ' &middot; last ' . count($recentEarnings) : '' ?></p>
+    </div>
+    <?php if ($recentEarnings): ?>
+      <div class="er-sum"><small>Total shown</small><b><?= e(format_money((float) $earnShownTotal)) ?></b></div>
+    <?php endif; ?>
   </div>
-<?php else: ?>
-  <div class="activity-feed reveal" style="margin-top:14px;">
-    <?php foreach ($recentEarnings as $e): ?>
-      <div class="list-row">
-        <div class="list-row-main"><span style="font-weight:600;"><?= e($e['title']) ?></span></div>
-        <div class="list-row-meta">
-          <span class="small muted">gross <?= e(format_money((float) $e['gross_amount'])) ?> &middot; fee <?= e(format_money((float) $e['platform_fee'])) ?></span>
-          <span style="font-weight:700;"><?= e(format_money((float) $e['amount'])) ?></span>
-          <span class="small muted"><?= e(format_date($e['created_at'])) ?></span>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-<?php endif; ?>
 
+  <?php if (!$recentEarnings): ?>
+    <div class="er-empty"><?php dash_icon('banknote'); ?><p>No earnings yet. Your sales will show up here as soon as someone buys.</p></div>
+  <?php else: ?>
+    <?php foreach ($earnDays as $day => $group): $n = count($group['rows']); ?>
+      <div class="er-day">
+        <span class="er-day-d"><?= e(format_date($day)) ?></span>
+        <span class="er-day-m"><?= $n ?> sale<?= $n === 1 ? '' : 's' ?> &middot; <?= e(format_money((float) $group['total'])) ?></span>
+      </div>
+      <?php foreach ($group['rows'] as $row):
+        $aff = max(0.0, round((float) $row['gross_amount'] - (float) $row['platform_fee'] - (float) $row['amount'])); ?>
+        <div class="er-row">
+          <span class="er-ic"><?php dash_icon('graduation-cap'); ?></span>
+          <div class="er-main">
+            <div class="er-title"><?= e($row['title']) ?></div>
+            <div class="er-meta">
+              <span>Sale <?= e(format_money((float) $row['gross_amount'])) ?></span>
+              <span>Fee <?= e(format_money((float) $row['platform_fee'])) ?></span>
+              <?php if ($aff > 0): ?><span class="er-aff">Affiliate <?= e(format_money($aff)) ?></span><?php endif; ?>
+            </div>
+          </div>
+          <div class="er-amt"><b>+<?= e(format_money((float) $row['amount'])) ?></b><small><?= e(date('g:i A', strtotime($row['created_at']))) ?></small></div>
+        </div>
+      <?php endforeach; ?>
+    <?php endforeach; ?>
+  <?php endif; ?>
+</section>
 <h2 class="h3" style="margin-top:36px;">Subscription Pool Payouts</h2>
 <p class="muted small" style="margin-top:4px;">One payout per settled month, split across every creator by that month's watch-time share of the subscription pool.</p>
 <?php if (!$subscriptionPayouts): ?>
