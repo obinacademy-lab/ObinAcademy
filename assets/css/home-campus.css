@@ -241,8 +241,11 @@ a.hx-cc:hover .pic img { transform: scale(1.05); }
     .hx-you-close { animation: hxFocusSoft linear both; animation-timeline: view(); animation-range: entry 10% entry 90%; }
 
     /* old way steps back while the campus way wipes across */
-    .hx-vs .old { animation: hxRecede linear both; animation-timeline: view(); animation-range: contain 0% contain 60%; }
-    .hx-vs .new { animation: hxWipe linear both; animation-timeline: view(); animation-range: entry 20% cover 45%; }
+    /* only when the two sides sit next to each other; stacked on phones, both stay fully readable */
+    @media (min-width: 761px) {
+      .hx-vs .old { animation: hxRecede linear both; animation-timeline: view(); animation-range: contain 0% contain 60%; }
+      .hx-vs .new { animation: hxWipe linear both; animation-timeline: view(); animation-range: entry 20% cover 45%; }
+    }
 
     /* campus photos open like a shutter */
     .hx-cc { animation: hxRise linear both; animation-timeline: view(); animation-range: entry 0% entry 85%; }
@@ -277,3 +280,8 @@ a.hx-cc:hover .pic img { transform: scale(1.05); }
 @keyframes hxRoll { from { transform: translateY(.6em) rotateX(-80deg); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes hxStroke { from { stroke-dashoffset: 120; } to { stroke-dashoffset: 0; } }
 @keyframes hxWord { from { opacity: .14; filter: blur(4px); } to { opacity: 1; filter: blur(0); } }
+
+/* odometer digits must not pick up the stat labels' span styling */
+.hx-stats b .hx-odo { display: inline-flex; height: 1em; overflow: hidden; margin: 0; font-size: inherit; color: inherit; line-height: 1; vertical-align: top; }
+.hx-stats b .hx-odo > span { display: inline-flex; flex-direction: column; margin: 0; font-size: inherit; color: inherit; line-height: 1; }
+.hx-stats b .hx-odo > span > span { display: block; height: 1em; margin: 0; font-size: inherit; color: inherit; line-height: 1; }
