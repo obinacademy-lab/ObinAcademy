@@ -19,6 +19,9 @@ $priced = $published ?: $all;
 $monthly = $priced ? min(array_map(fn($c) => (float) $c['monthly_price'], $priced)) : 100000;
 $yearly = $priced ? min(array_map(fn($c) => (float) $c['yearly_price'], $priced)) : 1000000;
 $saving = max(0, $monthly * 12 - $yearly);
+// Each campus sets its own prices. When they differ, show the lowest as "From ..." and only promise a saving that is true for every campus.
+$samePrices = count(array_unique(array_map(fn($c) => (float) $c['monthly_price'] . '|' . (float) $c['yearly_price'], $priced ?: [['monthly_price' => $monthly, 'yearly_price' => $yearly]]))) === 1;
+$from = $samePrices ? '' : 'From ';
 $perDay = fn(float $v, int $days) => 'UGX ' . number_format(round($v / $days / 100) * 100);
 $firstLink = $published ? base_url('campus.php?slug=' . $published[0]['slug'] . '#join') : '#campuses';
 
@@ -163,19 +166,19 @@ require __DIR__ . '/includes/header.php';
 
   <section class="hx-deep hx-sec" id="pricing">
     <div class="hx-wrap">
-      <div class="hx-head c"><span class="hx-eyebrow">Pricing</span><h2>Less than a cup of tea <em>a day.</em></h2><p>Prices are per campus. Pay with MTN or Airtel Money. Nothing is charged automatically.</p></div>
+      <div class="hx-head c"><span class="hx-eyebrow">Pricing</span><h2>Less than a cup of tea <em>a day.</em></h2><p><?= $samePrices ? 'Prices are per campus.' : 'Each campus has its own price, shown on its card and its page.' ?> Pay with MTN or Airtel Money. Nothing is charged automatically.</p></div>
       <div class="hx-plans">
         <div class="hx-plan">
           <div class="nm">Monthly</div>
-          <div class="amt"><?= e(format_money($monthly)) ?> <small>/ month</small></div>
+          <div class="amt"><?php if ($from): ?><small>From</small> <?php endif; ?><?= e(format_money($monthly)) ?> <small>/ month</small></div>
           <p class="eq">About <?= e($perDay($monthly, 30)) ?> a day</p>
           <ul><li><?= $check ?>Full access for 30 days</li><li><?= $check ?>Every lesson, live class and PDF</li><li><?= $check ?>A reminder before your month ends</li></ul>
           <a class="hx-ghost" href="<?= e($firstLink) ?>">Start monthly</a>
         </div>
         <div class="hx-plan best">
-          <div class="nm">Yearly <?php if ($saving > 0): ?><span class="tag">Save <?= e(format_money($saving)) ?></span><?php endif; ?></div>
-          <div class="amt"><?= e(format_money($yearly)) ?> <small>/ year</small></div>
-          <p class="eq"><?= $saving >= $monthly ? floor($saving / $monthly) . ' month' . (floor($saving / $monthly) >= 2 ? 's' : '') . ' free · ' : '' ?>about <?= e($perDay($yearly, 365)) ?> a day</p>
+          <div class="nm">Yearly <?php if ($samePrices && $saving > 0): ?><span class="tag">Save <?= e(format_money($saving)) ?></span><?php elseif (!$samePrices): ?><span class="tag">Best value</span><?php endif; ?></div>
+          <div class="amt"><?php if ($from): ?><small>From</small> <?php endif; ?><?= e(format_money($yearly)) ?> <small>/ year</small></div>
+          <p class="eq"><?= $samePrices && $saving >= $monthly ? floor($saving / $monthly) . ' month' . (floor($saving / $monthly) >= 2 ? 's' : '') . ' free · ' : '' ?>about <?= e($perDay($yearly, 365)) ?> a day</p>
           <ul><li><?= $check ?>Full access for 12 months</li><li><?= $check ?>Pay once, nothing to renew</li><li><?= $check ?>Your certificate at the end</li></ul>
           <a class="hx-cta" href="<?= e($firstLink) ?>">Start yearly</a>
         </div>
