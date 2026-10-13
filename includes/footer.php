@@ -19,7 +19,7 @@
     <div class="container footer-minimal-inner">
       <?php render_logo(true); ?>
       <nav class="footer-minimal-links" aria-label="Footer">
-        <a href="<?= e(base_url('campuses.php')) ?>">Campuses</a>
+        <a href="<?= e(base_url('index.php#campuses')) ?>">Campuses</a>
         <a href="<?= e(base_url('about.php')) ?>">About us</a>
         <a href="<?= e(base_url('contact.php')) ?>">Contact us</a>
         <a href="<?= e(base_url('terms.php')) ?>">Terms</a>

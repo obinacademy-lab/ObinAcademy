@@ -14,7 +14,7 @@ if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) {
     http_response_code(404);
     $pageTitle = 'Campus not found — Obin Academy';
     require __DIR__ . '/includes/header.php';
-    echo '<main class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Campus not found</h1><p class="muted" style="margin-top:8px;"><a href="' . e(base_url('campuses.php')) . '">See all campuses</a></p></main>';
+    echo '<main class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Campus not found</h1><p class="muted" style="margin-top:8px;"><a href="' . e(base_url('index.php#campuses')) . '">See all campuses</a></p></main>';
     require __DIR__ . '/includes/footer.php';
     exit;
 }
@@ -45,7 +45,7 @@ require __DIR__ . '/includes/header.php';
     <?php $photo = campus_photo($campus); ?>
     <div class="cx-wrap cx-cphead<?= $photo ? ' has-photo' : '' ?>">
       <div>
-      <p class="cx-crumb"><a href="<?= e(base_url('campuses.php')) ?>">Campuses</a> &nbsp;/&nbsp; <?= e($campus['name']) ?></p>
+      <p class="cx-crumb"><a href="<?= e(base_url('index.php#campuses')) ?>">Campuses</a> &nbsp;/&nbsp; <?= e($campus['name']) ?></p>
       <h1><?= e($campus['name']) ?> Campus</h1>
       <p class="lede"><?= e($campus['description'] ?: $campus['tagline']) ?></p>
       <div class="cx-meta">

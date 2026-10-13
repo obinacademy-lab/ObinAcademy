@@ -80,7 +80,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?php if ($nextUp): ?>
       <a href="<?= e(base_url('learn.php?slug=' . $nextUp['slug'])) ?>" class="btn btn-gold" style="border-radius:999px;">▶ Resume Learning</a>
     <?php endif; ?>
-    <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-outline" style="border-radius:999px;">Explore Campuses</a>
+    <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-outline" style="border-radius:999px;">Explore Campuses</a>
   </div>
 </div>
 
@@ -107,7 +107,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <?php if (!$myCampuses): ?>
   <div class="card card-pad" style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
     <div><strong>Join a campus</strong><p class="muted small" style="margin-top:4px;">A year-long programme with a professor: lessons, PDF guides and a live class every week, ending with a certificate.</p></div>
-    <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-primary">See the campuses</a>
+    <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-primary">See the campuses</a>
   </div>
 <?php else: ?>
   <div class="ld-panel" style="margin-top:14px; overflow:hidden;">
@@ -207,7 +207,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
 <h3 class="dash-section-label" style="margin-top:40px;">Quick Actions</h3>
 <div class="quick-actions">
-  <a href="<?= e(base_url('campuses.php')) ?>" class="quick-action">
+  <a href="<?= e(base_url('index.php#campuses')) ?>" class="quick-action">
     <span class="qa-icon" style="--tint:#0b00ff;"><?php dash_icon('book-open'); ?></span>
     <span class="qa-text">Explore Campuses</span>
     <?php dash_icon('arrow-right', 'qa-arrow'); ?>

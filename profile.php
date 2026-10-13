@@ -13,7 +13,7 @@ $user = current_user();
 $isMe = $user && (int) $user['id'] === $profileId;
 $isCreator = in_array($profile['role'], ['CREATOR', 'ADMIN'], true);
 // Obin Academy now runs as campuses: creators' school pages are no longer public (the creator and admins can still open them).
-if ($isCreator && !$isMe && !($user && $user['role'] === 'ADMIN')) redirect('/campuses.php');
+if ($isCreator && !$isMe && !($user && $user['role'] === 'ADMIN')) redirect('/index.php#campuses');
 
 $teachingSummary = $isCreator ? get_courses_teaching($profileId, 50) : [];
 $stats = [

@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../includes/bootstrap.php';
 // Obin Academy now runs as campuses: the course and school catalogue is no longer public.
-redirect('/campuses.php');
+redirect('/index.php#campuses');
 require __DIR__ . '/../includes/data.php';
 require __DIR__ . '/../includes/school_card.php';
 

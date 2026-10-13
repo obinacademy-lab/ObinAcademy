@@ -82,7 +82,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <p class="muted" style="margin-top:6px;">Money collected, members and renewals across every campus. Professors are paid by you.</p>
   </div>
   <div class="row gap-2 wrap">
-    <a class="ld-btn" href="<?= e(base_url('campuses.php')) ?>" target="_blank" rel="noopener">View public page</a>
+    <a class="ld-btn" href="<?= e(base_url('index.php#campuses')) ?>" target="_blank" rel="noopener">View public page</a>
   </div>
 </div>
 

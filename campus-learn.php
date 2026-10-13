@@ -12,7 +12,7 @@ $slug = query_param('campus');
 if (!$user) redirect('/login.php?redirect=' . urlencode('/campus-learn.php?campus=' . $slug));
 $campus = get_campus_by_slug($slug);
 $isAdmin = $user['role'] === 'ADMIN';
-if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) redirect('/campuses.php');
+if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) redirect('/index.php#campuses');
 
 $campusId = (int) $campus['id'];
 $membership = get_campus_membership($campusId, (int) $user['id']);
@@ -130,7 +130,7 @@ $flash = function_exists('flash_get') ? (flash_get('success') ?: null) : null;
       <small class="g">Account</small>
       <nav aria-label="Account">
         <a href="<?= e($self(['view' => 'membership'])) ?>"<?= $view === 'membership' ? ' aria-current="page"' : '' ?>><?= $svg('membership') ?>Membership</a>
-        <a href="<?= e(base_url('campuses.php')) ?>"><?= $svg('campuses') ?>All campuses</a>
+        <a href="<?= e(base_url('index.php#campuses')) ?>"><?= $svg('campuses') ?>All campuses</a>
         <a href="<?= e(base_url('dashboard.php')) ?>"><?= $svg('home') ?>Dashboard</a>
       </nav>
     </div>

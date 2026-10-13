@@ -104,7 +104,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
 
         <div class="nav-actions">
         <?php if ($user): ?>
-          <a href="<?= e(base_url('campuses.php')) ?>" class="link nav-campuses<?= $currentPath === '/campuses.php' ? ' active' : '' ?>">Campuses</a>
+          <a href="<?= e(base_url('index.php#campuses')) ?>" class="link nav-campuses<?= $currentPath === '/campuses.php' ? ' active' : '' ?>">Campuses</a>
           <div class="account-menu">
             <button class="account-trigger" aria-haspopup="true">
               <span class="account-avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></span>
@@ -136,7 +136,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         <?php else: ?>
           <a href="<?= e(base_url('login.php')) ?>" class="btn btn-ink btn-sm shine">Log In</a>
-          <a href="<?= e(base_url('campuses.php#campuses')) ?>" class="btn btn-gold btn-sm shine">Join a Campus <span class="btn-arrow">→</span></a>
+          <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-gold btn-sm shine">Join a Campus <span class="btn-arrow">→</span></a>
         <?php endif; ?>
         </div>
 
@@ -159,7 +159,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         </div>
       <?php endif; ?>
-      <a href="<?= e(base_url('campuses.php')) ?>"><span class="mm-icon">🎓</span>Campuses</a>
+      <a href="<?= e(base_url('index.php#campuses')) ?>"><span class="mm-icon">🎓</span>Campuses</a>
       <?php if ($user): $mmPath = current_path(); ?>
         <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>" class="<?= $mmPath === '/profile.php' ? 'active' : '' ?>"><span class="mm-icon">👤</span><?= in_array($user['role'], ['CREATOR', 'ADMIN'], true) ? 'My School' : 'My Profile' ?></a>
         <a href="<?= e(base_url('dashboard.php')) ?>" class="<?= str_starts_with($mmPath, '/dashboard') && $mmPath !== '/dashboard/settings.php' ? 'active' : '' ?>"><span class="mm-icon">📊</span>Dashboard</a>
@@ -168,7 +168,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>
       <?php else: ?>
         <a href="<?= e(base_url('login.php')) ?>" class="mm-cta mm-cta-ink">Log In</a>
-        <a href="<?= e(base_url('campuses.php#campuses')) ?>" class="mm-cta mm-cta-gold">Join a Campus →</a>
+        <a href="<?= e(base_url('index.php#campuses')) ?>" class="mm-cta mm-cta-gold">Join a Campus →</a>
       <?php endif; ?>
       <a href="#" data-install-app hidden><span class="mm-icon">📲</span>Install the app</a>
     </div>
