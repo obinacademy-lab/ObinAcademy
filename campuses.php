@@ -56,7 +56,8 @@ require __DIR__ . '/includes/header.php';
       <?php endif; ?>
       <?php foreach ($campuses as $c): $href = base_url('campus.php?slug=' . $c['slug']); ?>
         <a class="cx-row" href="<?= e($href) ?>">
-          <span class="cx-gl"><?= campus_icon($c['icon']) ?></span>
+          <?php $photo = campus_photo($c); ?>
+          <?php if ($photo): ?><span class="cx-gl ph"><img src="<?= e($photo) ?>" alt="" loading="lazy"></span><?php else: ?><span class="cx-gl"><?= campus_icon($c['icon']) ?></span><?php endif; ?>
           <h3><?= e($c['name']) ?></h3>
           <span class="d"><?= e($c['tagline']) ?></span>
           <span class="pr"><?= e(format_money((float) $c['monthly_price'])) ?><small>per month</small></span>

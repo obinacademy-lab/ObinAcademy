@@ -39,6 +39,16 @@ function campus_icon(string $key, float $stroke = 1.6): string {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' . $stroke . '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $paths . '</svg>';
 }
 
+/** The campus photo URL (assets/img/campuses/{slug}.jpg), or null when that campus has none yet. */
+function campus_photo(array $campus): ?string {
+    $rel = 'assets/img/campuses/' . $campus['slug'] . '.jpg';
+    // public/ locally, the web root itself on the live server.
+    foreach ([__DIR__ . '/../public/' . $rel, __DIR__ . '/../' . $rel] as $path) {
+        if (is_file($path)) return versioned_asset($rel);
+    }
+    return null;
+}
+
 /** True once the campus tables exist (migration/add-campuses.sql applied). */
 function campuses_ready(): bool {
     static $ready = null;

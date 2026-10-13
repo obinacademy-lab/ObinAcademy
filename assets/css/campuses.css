@@ -264,3 +264,11 @@
 .cx-cert .foot b { display: block; color: var(--cx-ink); font-size: 14px; }
 @media (max-width: 640px) { .cx-cert { padding: 36px 22px; margin: 24px 16px; } .cx-cert h1 { font-size: 32px; } .cx-cert .to { font-size: 26px; } .cx-cert .foot { flex-direction: column; } }
 @media print { .cx-cert { margin: 0 auto; border: 1px solid #ccc; } .site-header, .site-footer-minimal, .cx-noprint { display: none !important; } }
+
+/* Campus photos: list thumbnails and the campus page header */
+.cx-gl.ph { width: 52px; height: 52px; border-radius: 12px; border: 0; overflow: hidden; }
+.cx-gl.ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cx-cphead.has-photo { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 56px; align-items: center; }
+.cx-cphoto { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 4 / 5; max-width: 100%; box-shadow: 0 40px 80px -40px rgba(0,0,0,.7); border: 1px solid var(--cx-deep-line); }
+.cx-cphoto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 900px) { .cx-cphead.has-photo { grid-template-columns: 1fr; gap: 32px; } .cx-cphoto { aspect-ratio: 16 / 10; } }

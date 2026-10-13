@@ -42,7 +42,9 @@ require __DIR__ . '/includes/header.php';
     <div style="background:#fff6e6; color:#a75a00; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600;">Preview: this campus is a draft and only admins can see it. <a href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . $campus['id'])) ?>" style="text-decoration:underline;">Edit and publish</a></div>
   <?php endif; ?>
   <section class="cx-deep">
-    <div class="cx-wrap cx-cphead">
+    <?php $photo = campus_photo($campus); ?>
+    <div class="cx-wrap cx-cphead<?= $photo ? ' has-photo' : '' ?>">
+      <div>
       <p class="cx-crumb"><a href="<?= e(base_url('campuses.php')) ?>">Campuses</a> &nbsp;/&nbsp; <?= e($campus['name']) ?></p>
       <h1><?= e($campus['name']) ?> Campus</h1>
       <p class="lede"><?= e($campus['description'] ?: $campus['tagline']) ?></p>
@@ -52,6 +54,8 @@ require __DIR__ . '/includes/header.php';
         <div><small>Materials</small><b>Video and PDF</b></div>
         <div><small>Awarded</small><b>Certificate</b></div>
       </div>
+      </div>
+      <?php if ($photo): ?><div class="cx-cphoto"><img src="<?= e($photo) ?>" alt=""></div><?php endif; ?>
     </div>
   </section>
 

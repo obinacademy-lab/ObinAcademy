@@ -158,3 +158,16 @@ a.hx-cc:hover { border-color: rgba(205,251,94,.5); transform: translateY(-3px); 
   .hx { padding-bottom: 78px; }
 }
 @media (prefers-reduced-motion: reduce) { .hx-marquee div { animation: none; } .hx-cta, .hx-cc { transition: none; } }
+
+/* Campus photos on the cards */
+.hx-cc { padding: 0; gap: 0; }
+.hx-cc .body { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 26px 28px 26px; }
+.hx-cc .pic { position: relative; display: block; height: 210px; overflow: hidden; }
+.hx-cc .pic img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.hx-cc .pic::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,11,36,0) 40%, rgba(14,21,64,.92) 100%); }
+.hx-cc .pic .ic { position: absolute; left: 22px; bottom: 16px; z-index: 1; background: rgba(7,11,36,.62); backdrop-filter: blur(6px); }
+a.hx-cc:hover .pic img { transform: scale(1.05); }
+.hx-cc.wide .pic { height: 260px; }
+.hx-cc.has-pic::after { display: none; }
+@media (max-width: 600px) { .hx-cc .pic, .hx-cc.wide .pic { height: 200px; } .hx-cc .body { padding: 22px; } }
+@media (prefers-reduced-motion: reduce) { .hx-cc .pic img { transition: none; } }

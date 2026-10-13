@@ -116,14 +116,18 @@ require __DIR__ . '/includes/header.php';
             $wide = ($i === 0 && $extra >= 1) || ($i === count($grid) - 1 && $extra >= 2);
             $cls = 'hx-cc' . ($wide ? ' wide' : '') . ($i === 0 && $open ? ' feature' : '');
             $tag = $open ? 'a' : 'div';
+            $photo = campus_photo($c);
         ?>
-          <<?= $tag ?> class="<?= $cls ?>"<?= $open ? ' href="' . e(base_url('campus.php?slug=' . $c['slug'])) . '"' : '' ?>>
-            <span class="ic"><?= campus_icon($c['icon'], 1.7) ?></span>
-            <h3><?= e($c['name']) ?> Campus</h3>
-            <p><?= e($c['tagline']) ?></p>
-            <span class="ft">
-              <?php if ($open): ?><b><?= e(format_money((float) $c['monthly_price'])) ?> / month</b><span>Join now →</span>
-              <?php else: ?><b>Opening soon</b><?php endif; ?>
+          <<?= $tag ?> class="<?= $cls ?><?= $photo ? ' has-pic' : '' ?>"<?= $open ? ' href="' . e(base_url('campus.php?slug=' . $c['slug'])) . '"' : '' ?>>
+            <?php if ($photo): ?><span class="pic"><img src="<?= e($photo) ?>" alt="" loading="lazy"><span class="ic"><?= campus_icon($c['icon'], 1.7) ?></span></span><?php endif; ?>
+            <span class="body">
+              <?php if (!$photo): ?><span class="ic"><?= campus_icon($c['icon'], 1.7) ?></span><?php endif; ?>
+              <h3><?= e($c['name']) ?> Campus</h3>
+              <p><?= e($c['tagline']) ?></p>
+              <span class="ft">
+                <?php if ($open): ?><b><?= e(format_money((float) $c['monthly_price'])) ?> / month</b><span>Join now →</span>
+                <?php else: ?><b>Opening soon</b><?php endif; ?>
+              </span>
             </span>
           </<?= $tag ?>>
         <?php endforeach; ?>
