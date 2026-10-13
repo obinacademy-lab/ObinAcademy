@@ -1,6 +1,6 @@
 <?php
 // Serves a campus lesson's video or PDF from private-uploads/, only to a member whose access is open and whose
-// year has reached that lesson's month (or an admin). Same byte-range streaming as stream.php.
+// year has reached that lesson's month (or an admin).
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/campuses.php';

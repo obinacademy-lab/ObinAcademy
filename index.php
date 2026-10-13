@@ -211,7 +211,7 @@ require __DIR__ . '/includes/header.php';
         <details><summary>How do I pay?</summary><p>With MTN or Airtel Mobile Money. A prompt arrives on your phone; enter your PIN to confirm. Pay monthly (30 days at a time) or once for the year.</p></details>
         <details><summary>What if I miss a live class?</summary><p>Every live class is recorded and added to your lessons, so you can watch it later.</p></details>
         <details><summary>Can I stop any time?</summary><p>Yes. Nothing is charged automatically. If you are on the monthly plan and don't pay again, your access simply ends. Your progress is kept if you come back.</p></details>
-        <details><summary>I already bought a course on Obin Academy. Do I keep it?</summary><p>Yes. Every course you paid for stays yours. Find it under My Courses on your dashboard.</p></details>
+        <details><summary>Can I join more than one campus?</summary><p>Yes. Each campus has its own membership, so you can join a second one whenever you are ready.</p></details>
         <details><summary>Will I make money?</summary><p>The campuses teach practical skills that people use to earn. Your results depend on how much you practise and apply what you learn. We don't promise any income.</p></details>
       </div>
     </div>

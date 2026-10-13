@@ -1,9 +1,8 @@
 <?php
 /**
- * Admin notifications — created on real events (a new lead, a creator
- * request — see includes/leads.php) plus two background signals swept
- * periodically by cron/track-maintenance.php: a visitor circling a course's
- * page more than once, and someone who keeps coming back without ever
+ * Admin notifications — created on real events (a new lead, a teach
+ * application) plus two background signals swept periodically by
+ * cron/track-maintenance.php: a visitor circling campus pages more than once, and someone who keeps coming back without ever
  * leaving their details.
  */
 
@@ -36,12 +35,12 @@ function mark_notifications_read(): void {
 function sweep_visitor_notifications(): array {
     $counts = ['pricing_revisit' => 0, 'stale_returning_visitor' => 0];
 
-    // Someone viewed 2+ course detail pages (in the same or different
-    // sessions) in the last 24h and still isn't a lead.
+    // Someone viewed 2+ campus pages (in the same or different sessions)
+    // in the last 24h and still isn't a lead.
     $revisitors = db_all(
         "SELECT vp.visitor_id, COUNT(*) AS views
          FROM visitor_pageviews vp
-         WHERE vp.entered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) AND vp.path LIKE '%/courses/view.php?%'
+         WHERE vp.entered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) AND vp.path LIKE '%/campus.php?%'
          GROUP BY vp.visitor_id HAVING views >= 2"
     );
     foreach ($revisitors as $r) {
@@ -52,7 +51,7 @@ function sweep_visitor_notifications(): array {
             ['%' . $r['visitor_id'] . '%']
         );
         if ($alreadyNotified) continue;
-        create_admin_notification('pricing_revisit', "A visitor (id {$r['visitor_id']}) viewed {$r['views']} course pages in the last day without leaving their details.");
+        create_admin_notification('pricing_revisit', "A visitor (id {$r['visitor_id']}) viewed {$r['views']} campus pages in the last day without leaving their details.");
         $counts['pricing_revisit']++;
     }
 

@@ -20,7 +20,7 @@ require __DIR__ . '/includes/header.php';
       </div>
       <div>
         <h2 class="h3">2. How We Use Your Information</h2>
-        <p class="muted" style="margin-top:12px; line-height:1.75;">We use your information to run your account, process payments, deliver course access, send important updates (like payment confirmations), and improve the platform.</p>
+        <p class="muted" style="margin-top:12px; line-height:1.75;">We use your information to run your account, process payments, deliver campus access, send important updates (like payment confirmations), and improve the platform.</p>
       </div>
       <div>
         <h2 class="h3">3. Payments</h2>
@@ -32,11 +32,11 @@ require __DIR__ . '/includes/header.php';
       </div>
       <div>
         <h2 class="h3">5. Sharing Your Information</h2>
-        <p class="muted" style="margin-top:12px; line-height:1.75;">We don't sell your data. We share only what's necessary with our payment processor to complete transactions, and with course creators: enrollment records (name and progress) for courses you've bought, and, unless you switch it off in Settings, your name, email and phone number when you view one of their courses, so they can follow up with you about that course. Visitors without an account are shown to creators only as anonymous "Guest viewers" (device type, rough location and where they came from), never with contact details.</p>
+        <p class="muted" style="margin-top:12px; line-height:1.75;">We don't sell your data. We share only what's necessary with our payment processor to complete transactions. Your campus professor sees your name and your posts in the campus community, and the payments made in their campus, so they can teach and support you.</p>
       </div>
       <div>
         <h2 class="h3">6. Data Retention</h2>
-        <p class="muted" style="margin-top:12px; line-height:1.75;">We keep your account and purchase history for as long as your account is active, so you retain access to courses you've paid for. You can request account deletion at any time.</p>
+        <p class="muted" style="margin-top:12px; line-height:1.75;">We keep your account and purchase history for as long as your account is active, so your campus memberships, progress and certificates stay with you. You can request account deletion at any time.</p>
       </div>
       <div>
         <h2 class="h3">7. Your Rights</h2>

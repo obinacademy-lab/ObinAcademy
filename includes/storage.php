@@ -1,7 +1,7 @@
 <?php
 
 // Videos/PDFs are saved outside the web root (private-uploads/) and are only
-// ever reachable through stream.php, which checks auth + enrollment first.
+// ever reachable through campus-media.php, which checks the campus membership first.
 // Thumbnails/avatars are marketing images and stay under public/uploads/,
 // directly web-accessible.
 
@@ -34,7 +34,7 @@ function format_max_size(int $bytes): string {
  * Saves an uploaded file ($_FILES['field']) and returns a reference to it:
  * a web-relative URL for thumbnails, or an opaque private storage key
  * (e.g. "videos/<uuid>.mp4") for lesson videos/pdfs — resolved later via
- * resolve_private_path() and served only through stream.php.
+ * resolve_private_path() and served only through campus-media.php.
  *
  * @throws RuntimeException on validation or filesystem failure.
  */

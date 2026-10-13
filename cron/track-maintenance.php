@@ -17,13 +17,7 @@ if (PHP_SAPI !== 'cli') {
 require __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/leads.php';
 require_once __DIR__ . '/../includes/notifications.php';
-require_once __DIR__ . '/../includes/retention.php';
-require_once __DIR__ . '/../includes/interest.php';
-require_once __DIR__ . '/../includes/payment_recovery.php';
-require_once __DIR__ . '/../includes/review_nudges.php';
-require_once __DIR__ . '/../includes/email.php';
-require_once __DIR__ . '/../includes/school_subscriptions.php';
-require_once __DIR__ . '/../includes/installments.php';
+require_once __DIR__ . '/../includes/payments.php';
 require_once __DIR__ . '/../includes/campuses.php';
 
 function cron_section(string $label, callable $fn): void {
@@ -58,46 +52,6 @@ cron_section('notification_sweep', function () {
 cron_section('stale_payment_reconciliation', function () {
     $counts = sweep_stale_pending_payments();
     echo '[' . date('Y-m-d H:i:s') . "] stale payment reconciliation: success={$counts['success']} failed={$counts['failed']} still_pending={$counts['still_pending']}\n";
-});
-
-cron_section('payment_recovery_emails', function () {
-    $counts = send_due_payment_recovery_emails();
-    echo '[' . date('Y-m-d H:i:s') . "] payment recovery emails: course={$counts['course']} bundle={$counts['bundle']}\n";
-});
-
-cron_section('review_nudges', function () {
-    $sent = send_due_review_nudges();
-    echo '[' . date('Y-m-d H:i:s') . "] review nudges: {$sent} sent\n";
-});
-
-cron_section('learner_retention', function () {
-    $retentionCounts = send_due_retention_notifications();
-    echo '[' . date('Y-m-d H:i:s') . "] learner retention: 5h={$retentionCounts['5h']} 24h={$retentionCounts['24h']} 72h={$retentionCounts['72h']}\n";
-});
-
-cron_section('course_interest_reminders', function () {
-    $reminded = send_due_interest_reminders();
-    echo '[' . date('Y-m-d H:i:s') . "] course interest reminders: {$reminded} sent\n";
-});
-
-cron_section('school_subscription_renewal_reminders', function () {
-    $reminded = send_due_school_subscription_renewal_reminders();
-    echo '[' . date('Y-m-d H:i:s') . "] school subscription renewal reminders: {$reminded} sent\n";
-});
-
-cron_section('school_subscription_expiry_sweep', function () {
-    $swept = sweep_school_subscription_expirations();
-    echo '[' . date('Y-m-d H:i:s') . "] school subscription expiry sweep: to_grace={$swept['to_grace']} to_expired={$swept['to_expired']}\n";
-});
-
-cron_section('installment_reminders', function () {
-    $reminded = send_due_installment_reminders();
-    echo '[' . date('Y-m-d H:i:s') . "] installment reminders: {$reminded} sent\n";
-});
-
-cron_section('installment_expiry_sweep', function () {
-    $swept = sweep_installment_expirations();
-    echo '[' . date('Y-m-d H:i:s') . "] installment expiry sweep: to_grace={$swept['to_grace']} to_defaulted={$swept['to_defaulted']}\n";
 });
 
 cron_section('campus_renewal_reminders', function () {

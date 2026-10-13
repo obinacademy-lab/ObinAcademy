@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin outreach: one-tap follow-ups to leads and to buyers whose payment failed.
+ * Admin outreach: one-tap follow-ups to leads and to people whose campus payment failed.
  *
  * WhatsApp has no bulk API on this platform, so a "WhatsApp" action opens the admin's own WhatsApp with the
  * message already written (wa.me link) and records that it was done. Email is sent through Resend. Both are
@@ -13,27 +13,21 @@ require_once __DIR__ . '/leads.php';
 
 /** Ready-made lead messages. {name} is the lead's first name, {link} a page to send them to. */
 function lead_message_templates(): array {
-    $creatorShare = (int) round((1 - PLATFORM_FEE_RATE) * 100);
     return [
         'welcome' => [
             'label' => 'Welcome',
             'subject' => 'Welcome to Obin Academy',
-            'text' => "Hi {name}, this is Obin Academy. Thanks for signing up with us.\n\nHave you found a course you like yet? Tell me what you want to learn and I will point you to the right one.\n\nBrowse courses: {link}",
+            'text' => "Hi {name}, this is Obin Academy. Thanks for signing up with us.\n\nWhich skill would you like to master this year? Tell me and I will point you to the right campus.\n\nSee the campuses: {link}",
         ],
         'follow_up' => [
             'label' => 'Follow-up',
             'subject' => 'Can we help you get started?',
-            'text' => "Hi {name}, just checking in from Obin Academy.\n\nIs anything stopping you from starting your first course? If you are stuck on payment or choosing a course, reply here and we will sort it out with you.\n\nCourses: {link}",
+            'text' => "Hi {name}, just checking in from Obin Academy.\n\nIs anything stopping you from joining a campus? If you are stuck on payment or choosing a campus, reply here and we will sort it out with you.\n\nCampuses: {link}",
         ],
-        'courses' => [
-            'label' => 'Recommend courses',
-            'subject' => 'Courses people are learning right now',
-            'text' => "Hi {name}, here are the courses people on Obin Academy are learning right now. You can pay with mobile money and start straight away.\n\n{link}",
-        ],
-        'creator' => [
-            'label' => 'Become a creator',
-            'subject' => 'Teach on Obin Academy',
-            'text' => "Hi {name}, thanks for your interest in teaching on Obin Academy. You can open your own school, set your own prices and keep {$creatorShare}% of every sale, paid to your mobile money.\n\nWant me to walk you through it? Start here: {link}",
+        'campuses' => [
+            'label' => 'Recommend campuses',
+            'subject' => 'Which campus is right for you?',
+            'text' => "Hi {name}, here are the Obin Academy campuses: a year-long programme each, with lessons every month and a live class every week. You can pay monthly or yearly with mobile money.\n\n{link}",
         ],
     ];
 }
@@ -43,11 +37,11 @@ function lead_first_name(array $lead): string {
 }
 
 function lead_message_default_for(array $lead): string {
-    return $lead['lead_type'] === 'creator' ? 'creator' : 'welcome';
+    return 'welcome';
 }
 
 function lead_message_link(array $lead, string $template): string {
-    return $template === 'creator' ? base_url('become-creator.php') : base_url('courses/index.php');
+    return base_url('index.php#campuses');
 }
 
 function lead_message_render(string $text, array $lead, string $template): string {
@@ -98,43 +92,45 @@ function send_lead_message_email(array $lead, string $subject, string $bodyText,
 // ---------------------------------------------------------------- failed / stuck payments
 
 /**
- * Who to remind about a payment, or null when a reminder makes no sense (not a first-time course or bundle
- * purchase, already successful, or the buyer has since got the course by another payment).
- * Expects a row from admin_get_payments() (needs course_slug / bundle_slug).
+ * Who to remind about a campus payment, or null when a reminder makes no sense (already successful, still
+ * fresh, or the person has since joined that campus by another payment). Expects a row from admin_get_payments().
  */
 function payment_reminder_target(array $p): ?array {
+    if ($p['type'] !== 'CAMPUS_MEMBERSHIP' || empty($p['campus_slug']) || !$p['user_id']) return null;
     if (!in_array($p['status'], ['FAILED', 'PENDING'], true)) return null;
     if ($p['status'] === 'PENDING' && strtotime($p['created_at']) > time() - ADMIN_STUCK_PAYMENT_MINUTES * 60) return null;
-
-    if ($p['type'] === 'COURSE_PURCHASE' && $p['course_id'] && !empty($p['course_slug'])) {
-        $title = $p['course_title'];
-        $url = base_url('courses/view.php?slug=' . $p['course_slug']);
-        $owned = db_one(
-            'SELECT 1 FROM enrollments WHERE course_id = ? AND ((? IS NOT NULL AND user_id = ?) OR (? IS NULL AND guest_email = ?)) LIMIT 1',
-            [$p['course_id'], $p['user_id'], $p['user_id'], $p['user_id'], $p['guest_email']]
-        );
-        if ($owned) return null;
-    } elseif ($p['type'] === 'BUNDLE_PURCHASE' && $p['bundle_id'] && !empty($p['bundle_slug'])) {
-        $title = $p['bundle_title'];
-        $url = base_url('bundle.php?slug=' . $p['bundle_slug']);
-    } else {
-        return null;
-    }
+    $joined = db_one('SELECT 1 FROM campus_memberships WHERE campus_id = ? AND user_id = ? AND access_until > NOW()', [$p['campus_id'], $p['user_id']]);
+    if ($joined) return null;
 
     return [
-        'name' => $p['user_id'] ? $p['payer_name'] : ($p['guest_name'] ?: 'there'),
-        'email' => $p['user_id'] ? $p['payer_email'] : $p['guest_email'],
+        'name' => $p['payer_name'],
+        'email' => $p['payer_email'],
         'wa' => whatsapp_number($p['phone']),
-        'title' => $title,
-        'url' => $url,
-        'kind' => $p['type'] === 'BUNDLE_PURCHASE' ? 'bundle' : 'course',
+        'title' => $p['campus_name'] . ' Campus',
+        'url' => base_url('campus.php?slug=' . $p['campus_slug'] . '#join'),
     ];
 }
 
 function payment_reminder_whatsapp_text(array $target): string {
     $first = trim(explode(' ', trim((string) $target['name']))[0] ?? '') ?: 'there';
-    return "Hi {$first}, this is Obin Academy. Your payment for \"{$target['title']}\" did not go through, and nothing was charged.\n\n"
+    return "Hi {$first}, this is Obin Academy. Your payment for the {$target['title']} did not go through, and nothing was charged.\n\n"
         . "You can try again here: {$target['url']}\n\nIf it keeps failing, reply here and we will help you finish.";
+}
+
+/** The email version of the same reminder. */
+function send_payment_reminder_email(array $target, float $amount, array $opts = []): bool {
+    $first = e(trim(explode(' ', trim((string) $target['name']))[0] ?? '') ?: 'there');
+    $title = e($target['title']);
+    $url = e($target['url']);
+    $amountLabel = e(format_money($amount));
+    return resend_send($target['email'], 'Finish joining the ' . $target['title'], <<<HTML
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; line-height: 1.55; color: #16181a;">
+          <h2 style="color: #0a0f2c;">Hi {$first}, your payment didn't go through</h2>
+          <p>You started joining the <strong>{$title}</strong> ({$amountLabel}), but the mobile money payment wasn't completed. This usually means the prompt timed out, the PIN was wrong, or there wasn't enough balance at that moment. Nothing was charged.</p>
+          <p style="margin-top: 20px;"><a href="{$url}" style="display: inline-block; background: #0a0f2c; color: #fff; padding: 12px 22px; border-radius: 8px; text-decoration: none; font-weight: 600;">Try again</a></p>
+          <p style="color: #5b6670; font-size: 13px; margin-top: 20px;">If it keeps failing, reply to this email and we will help you finish.</p>
+        </div>
+        HTML, $opts);
 }
 
 function log_payment_reminder(int $paymentId, int $adminId, string $channel): void {

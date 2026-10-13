@@ -27,18 +27,18 @@ $testimonials = get_published_testimonials();
 $stats = get_platform_stats();
 
 $pageTitle = 'Stories — Obin Academy';
-$pageDescription = 'Real stories from learners and creators building real skills — and real income — on Obin Academy.';
+$pageDescription = 'Real stories from learners building real skills — and real income — at Obin Academy.';
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="home-hero-v3">
   <div class="container" style="text-align:center;">
     <h1>Stories From Our Community</h1>
-    <p class="summary" style="margin-left:auto; margin-right:auto;">Hear from learners and creators building real skills and real income on Obin Academy.</p>
+    <p class="summary" style="margin-left:auto; margin-right:auto;">Hear from learners building real skills and real income at Obin Academy.</p>
 
     <?php if ($testimonials): ?>
       <div class="hero-trust-stat" style="justify-content:center; color:var(--ink); background:color-mix(in srgb, var(--gold) 12%, white); border:1px solid color-mix(in srgb, var(--gold) 30%, var(--border));">
         <?php dash_icon('check-circle'); ?>
-        <span style="color:#92660a;"><?= count($testimonials) ?></span> verified <?= count($testimonials) === 1 ? 'story' : 'stories' ?> from real learners and creators
+        <span style="color:#92660a;"><?= count($testimonials) ?></span> verified <?= count($testimonials) === 1 ? 'story' : 'stories' ?> from real learners
       </div>
     <?php endif; ?>
   </div>
@@ -96,7 +96,7 @@ require __DIR__ . '/includes/header.php';
         <span class="eyebrow">Join the Community</span>
         <h2 class="h2" style="margin-top:14px;">Share Your Story</h2>
         <p class="lede" style="margin-top:14px; max-width:none; font-size:16px; line-height:1.75; color:var(--muted);">
-          Finished a course, landed a client, or grew your income with a skill you learned here? Your story could be the reason someone else takes the leap.
+          Finished a stage, landed a client, or grew your income with a skill you learned here? Your story could be the reason someone else takes the leap.
         </p>
         <ul class="check-list" style="margin-top:26px;">
           <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span class="label-text">Takes less than a minute to submit</span></li>

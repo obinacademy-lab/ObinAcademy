@@ -5,18 +5,16 @@
  * this file:
  *   $redirectTo   — kept for callers that pass it; the pages build their own switch links.
  */
-require_once __DIR__ . '/data.php';
-
-// One slide = a photo, a bottom pill and two glass callouts (all real: real course, real fee split, real payment methods).
+// One slide = a photo, a bottom pill and two glass callouts, all true of every campus.
 $authSlides = [
     ['img' => 'auth-slide-1.jpg', 'pill' => 'Free to join',
-     'a' => ['Tutor Elvis', 'Business Growth Mastery'], 'b' => ['UGX 30,000', 'one-time payment']],
-    ['img' => 'auth-slide-2.jpg', 'pill' => 'Open your school',
-     'a' => ['For creators', 'Set your own prices'], 'b' => ['Keep 90%', 'of every sale']],
+     'a' => ['7 campuses', 'One skill, mastered in a year'], 'b' => ['Monthly or yearly', 'you choose']],
+    ['img' => 'auth-slide-2.jpg', 'pill' => 'Live every week',
+     'a' => ['Your professor', 'Teaching live'], 'b' => ['52 classes', 'in a year']],
     ['img' => 'auth-slide-3.jpg', 'pill' => 'Learn anywhere',
-     'a' => ['On your phone', 'Stream or download'], 'b' => ['MTN + Airtel', 'Mobile Money']],
+     'a' => ['On your phone', 'Videos and PDF guides'], 'b' => ['MTN + Airtel', 'Mobile Money']],
     ['img' => 'auth-slide-4.jpg', 'pill' => 'Earn a certificate',
-     'a' => ['On completion', 'Share it anywhere'], 'b' => ['Included', 'with every course']],
+     'a' => ['After 12 months', 'Share it anywhere'], 'b' => ['Included', 'with every campus']],
 ];
 ?><!DOCTYPE html>
 <html lang="en">

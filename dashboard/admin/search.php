@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin: one search across people, courses and payments — what the box at the top of every admin
+ * Admin: one search across people, campuses and payments — what the box at the top of every admin
  * page opens. Each group shows the closest matches and a link to the full list.
  */
 require __DIR__ . '/../../includes/bootstrap.php';
@@ -9,24 +9,22 @@ $user = require_role(['ADMIN']);
 
 $q = trim(query_param('q'));
 $like = '%' . addcslashes($q, '%_\\') . '%';
-$people = $courses = $payments = [];
+$people = $campuses = $payments = [];
 
 if (mb_strlen($q) >= 2) {
     $people = db_all(
-        'SELECT id, name, email, phone, role, created_at FROM users WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? OR school_name LIKE ? ORDER BY created_at DESC LIMIT 12',
-        [$like, $like, $like, $like]
+        'SELECT id, name, email, phone, role, created_at FROM users WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? ORDER BY created_at DESC LIMIT 12',
+        [$like, $like, $like]
     );
-    $courses = db_all(
-        "SELECT c.id, c.title, c.status, c.price, COALESCE(u.school_name, u.name) AS creator_label
-         FROM courses c JOIN users u ON u.id = c.creator_id WHERE c.title LIKE ? OR c.slug LIKE ? ORDER BY c.created_at DESC LIMIT 12",
-        [$like, $like]
-    );
+    try {
+        $campuses = db_all('SELECT id, name, status, professor_name FROM campuses WHERE name LIKE ? OR slug LIKE ? OR professor_name LIKE ? ORDER BY sort_order, name LIMIT 12', [$like, $like, $like]);
+    } catch (Throwable $e) {}
     $payments = admin_get_payments(['status' => '', 'type' => '', 'q' => $q, 'from' => '', 'to' => ''], 8, 0);
 }
 $paymentTotal = mb_strlen($q) >= 2 ? admin_count_payments(['status' => '', 'type' => '', 'q' => $q, 'from' => '', 'to' => '']) : 0;
 $badge = ['PUBLISHED' => 'badge-published', 'PENDING_REVIEW' => 'badge-pending', 'DRAFT' => 'badge-draft', 'REJECTED' => 'badge-rejected', 'REMOVED' => 'badge-rejected', 'SUCCESS' => 'badge-published', 'FAILED' => 'badge-rejected', 'PENDING' => 'badge-pending'];
-$roleLabel = ['LEARNER' => 'Learner', 'CREATOR' => 'Creator', 'ADMIN' => 'Admin'];
-$none = !$people && !$courses && !$payments;
+$roleLabel = ['LEARNER' => 'Learner', 'ADMIN' => 'Admin'];
+$none = !$people && !$campuses && !$payments;
 
 $pageTitle = 'Search — Admin — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
@@ -34,12 +32,12 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="vw-top">
   <div>
     <h1 class="h2">Search</h1>
-    <p class="muted" style="margin-top:4px;"><?= mb_strlen($q) >= 2 ? 'Results for “' . e($q) . '”' : 'Type at least two letters in the box at the top to find people, courses and payments.' ?></p>
+    <p class="muted" style="margin-top:4px;"><?= mb_strlen($q) >= 2 ? 'Results for “' . e($q) . '”' : 'Type at least two letters in the box at the top to find people, campuses and payments.' ?></p>
   </div>
 </div>
 
 <?php if (mb_strlen($q) >= 2 && $none): ?>
-  <div class="card card-pad" style="margin-top:20px; border-style:dashed; text-align:center;"><p class="muted">Nothing found for “<?= e($q) ?>”. Try a name, an email, a phone number, a course title or a payment reference.</p></div>
+  <div class="card card-pad" style="margin-top:20px; border-style:dashed; text-align:center;"><p class="muted">Nothing found for “<?= e($q) ?>”. Try a name, an email, a phone number, a campus or a payment reference.</p></div>
 <?php endif; ?>
 
 <?php if ($people): ?>
@@ -57,16 +55,14 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 <?php endif; ?>
 
-<?php if ($courses): ?>
-  <h3 class="dash-section-label" style="margin-top:24px;">Courses</h3>
+<?php if ($campuses): ?>
+  <h3 class="dash-section-label" style="margin-top:24px;">Campuses</h3>
   <div class="card cm-wrap" style="margin-top:12px;">
     <table class="cm-table"><tbody>
-      <?php foreach ($courses as $c):
-          $to = $c['status'] === 'PENDING_REVIEW' ? 'dashboard/admin/course-review.php?id=' : 'dashboard/creator/course-manage.php?id='; ?>
-        <tr class="cm-row" data-href="<?= e(base_url($to . (int) $c['id'])) ?>">
-          <td data-label="Course"><a href="<?= e(base_url($to . (int) $c['id'])) ?>" style="color:inherit; font-weight:700;"><?= e($c['title']) ?></a><small class="cm-sub">by <?= e($c['creator_label']) ?></small></td>
-          <td data-label="Status"><span class="badge <?= $badge[$c['status']] ?? 'badge-draft' ?>"><?= e(ucwords(strtolower(str_replace('_', ' ', $c['status'])))) ?></span></td>
-          <td class="num" data-label="Price"><?= (float) $c['price'] > 0 ? e(format_money((float) $c['price'])) : 'Free / subscription' ?></td>
+      <?php foreach ($campuses as $c): $to = base_url('dashboard/admin/campus-edit.php?id=' . (int) $c['id']); ?>
+        <tr class="cm-row" data-href="<?= e($to) ?>">
+          <td data-label="Campus"><a href="<?= e($to) ?>" style="color:inherit; font-weight:700;"><?= e($c['name']) ?> Campus</a><small class="cm-sub"><?= $c['professor_name'] ? e($c['professor_name']) : 'No professor yet' ?></small></td>
+          <td data-label="Status"><span class="badge <?= $c['status'] === 'PUBLISHED' ? 'badge-published' : 'badge-draft' ?>"><?= $c['status'] === 'PUBLISHED' ? 'Open' : 'Draft' ?></span></td>
         </tr>
       <?php endforeach; ?>
     </tbody></table>

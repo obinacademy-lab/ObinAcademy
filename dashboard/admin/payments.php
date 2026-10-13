@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $row = admin_get_payment((int) post('paymentId'));
         $target = $row ? payment_reminder_target($row) : null;
         if (!$target) {
-            flash_set('error', 'There is nothing to remind about for that payment. It may have succeeded, or the buyer already has the course.');
+            flash_set('error', 'There is nothing to remind about for that payment. It may have succeeded, or they have since joined that campus.');
         } elseif (post('_action') === 'remind_whatsapp') {
             if (!$target['wa']) {
                 flash_set('error', 'This payment has no usable phone number to open WhatsApp with.');
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$target['email']) {
                 flash_set('error', 'This buyer left no email address.');
             } else {
-                if (send_payment_recovery_email($target['email'], $target['name'], $target['title'], $target['kind'], $target['url'], (float) $row['amount'], ['bcc' => $user['email'], 'reply_to' => $user['email']])) {
+                if (send_payment_reminder_email($target, (float) $row['amount'], ['bcc' => $user['email'], 'reply_to' => $user['email']])) {
                     log_payment_reminder((int) $row['id'], (int) $user['id'], 'email');
                     log_admin_action((int) $user['id'], $user['name'], 'payment.reminded', 'Payment', '#' . $row['id'], 'email');
                     flash_set('success', 'Reminder emailed to ' . $target['email'] . '. A copy is in your inbox (' . $user['email'] . ').');
@@ -127,7 +127,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <?php if ($filters['status'] !== ''): ?><input type="hidden" name="status" value="<?= e($filters['status']) ?>"><?php endif; ?>
   <label class="vw-field vw-grow">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-    <input type="search" name="q" value="<?= e($filters['q']) ?>" placeholder="Search name, email, phone, course or reference" aria-label="Search payments" autocomplete="off">
+    <input type="search" name="q" value="<?= e($filters['q']) ?>" placeholder="Search name, email, phone, campus or reference" aria-label="Search payments" autocomplete="off">
   </label>
   <label class="vw-field"><select name="type" aria-label="Type" data-autosubmit>
     <option value="">All types</option>
@@ -169,7 +169,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
                 <strong><?= e($p['guest_name'] ?: 'Guest') ?></strong> <span class="badge badge-draft cm-badge" style="display:inline; margin:0 0 0 4px;">Guest</span><small class="cm-sub"><?= e($p['guest_email']) ?></small><small class="cm-sub"><?= e($p['phone']) ?></small>
               <?php endif; ?>
             </td>
-            <td data-label="For"><?= e(admin_payment_what($p)) ?><small class="cm-sub"><?= e(ADMIN_PAYMENT_TYPES[$p['type']] ?? $p['type']) ?><?= $p['coupon_id'] ? ' · coupon used' : '' ?></small></td>
+            <td data-label="For"><?= e(admin_payment_what($p)) ?><small class="cm-sub"><?= e(ADMIN_PAYMENT_TYPES[$p['type']] ?? 'History') ?></small></td>
             <td class="num" data-label="Amount"><?= e(format_money((float) $p['amount'])) ?><?php if ($p['original_amount'] !== null && (float) $p['original_amount'] > (float) $p['amount']): ?><small class="cm-sub">list <?= e(format_money((float) $p['original_amount'])) ?></small><?php endif; ?></td>
             <td data-label="Status">
               <span class="badge <?= $badge[$p['status']] ?? 'badge-draft' ?>"><?= e($isStuck ? 'Stuck' : ucfirst(strtolower($p['status']))) ?></span>
@@ -198,12 +198,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
                     </form>
                   <?php endif; ?>
                 </div>
-                <small class="cm-sub ot-seen"><?php
-                  $auto = !empty($p['recovery_email_sent_at']);
-                  if ($reminded) echo 'Reminded ' . $reminded['n'] . '&times; &middot; ' . e(time_ago($reminded['last']));
-                  elseif ($auto) echo 'Auto email sent ' . e(time_ago($p['recovery_email_sent_at']));
-                  else echo 'Not reminded yet';
-                ?></small>
+                <small class="cm-sub ot-seen"><?= $reminded ? 'Reminded ' . $reminded['n'] . '&times; &middot; ' . e(time_ago($reminded['last'])) : 'Not reminded yet' ?></small>
               <?php endif; ?>
             </td>
           </tr>
@@ -219,7 +214,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <?php if ($page < $pages): ?><a href="<?= e($url(['page' => $page + 1])) ?>">Next</a><?php else: ?><span class="dis">Next</span><?php endif; ?>
     </nav>
   <?php endif; ?>
-  <p class="small muted" style="margin-top:10px;">"Stuck" means still pending after <?= ADMIN_STUCK_PAYMENT_MINUTES ?> minutes. Re-check asks MTN or Airtel what actually happened and, if the money arrived, grants access exactly as if the buyer had waited. For failed or stuck course and bundle payments, WhatsApp opens your WhatsApp with a ready message and the link to try again, and Email sends the same reminder.</p>
+  <p class="small muted" style="margin-top:10px;">"Stuck" means still pending after <?= ADMIN_STUCK_PAYMENT_MINUTES ?> minutes. Re-check asks MTN or Airtel what actually happened and, if the money arrived, grants access exactly as if the buyer had waited. For failed or stuck campus payments, WhatsApp opens your WhatsApp with a ready message and the link to try again, and Email sends the same reminder.</p>
 <?php endif; ?>
 <script>
   document.querySelectorAll('[data-autosubmit]').forEach(function (el) { el.addEventListener('change', function () { el.form.submit(); }); });

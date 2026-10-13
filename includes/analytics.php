@@ -294,62 +294,29 @@ function get_top_login_locations(int $days = 30, int $limit = 8): array {
     );
 }
 
-/**
- * Where a creator's own learners are logging in from, one row per city —
- * each learner counted once, at their most recently known location (same
- * "latest known location" idiom as LEAD_LOCATION_SUBQUERY in leads.php),
- * not once per login. A learner who has never logged in from a resolved
- * location is excluded rather than counted as "unknown".
- */
-function get_top_learner_locations_for_creator(int $creatorId, int $limit = 8): array {
-    $limit = max(1, min(50, $limit));
-    return db_all(
-        "SELECT loc.city, loc.country, COUNT(*) AS n
-         FROM (
-           SELECT e.user_id,
-             (SELECT l.city FROM login_log l WHERE l.user_id = e.user_id AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1) AS city,
-             (SELECT l.country FROM login_log l WHERE l.user_id = e.user_id AND l.city IS NOT NULL ORDER BY l.logged_in_at DESC LIMIT 1) AS country
-           FROM (SELECT DISTINCT user_id FROM enrollments WHERE course_id IN (SELECT id FROM courses WHERE creator_id = ?) AND user_id IS NOT NULL) e
-         ) loc
-         WHERE loc.city IS NOT NULL
-         GROUP BY loc.city, loc.country
-         ORDER BY n DESC LIMIT $limit",
-        [$creatorId]
-    );
-}
-
-/** Most-viewed course detail pages in the last $days days, resolved to real course titles. */
-function get_most_viewed_courses(int $days = 30, int $limit = 8): array {
-    $limit = max(1, min(50, $limit));
-    $rows = db_all(
+/** Most-viewed campus pages in the last $days days, resolved to the campus names. */
+function get_most_viewed_campuses(int $days = 30, int $limit = 8): array {
+    $bySlug = [];
+    foreach (db_all(
         "SELECT path, COUNT(*) AS n FROM visitor_pageviews
-         WHERE entered_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND path LIKE '%/courses/view.php?%'
+         WHERE entered_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND path LIKE '%campus.php?%'
          GROUP BY path ORDER BY n DESC LIMIT 200",
         [$days - 1]
-    );
-
-    $bySlug = [];
-    foreach ($rows as $r) {
-        $query = parse_url($r['path'], PHP_URL_QUERY) ?: '';
-        parse_str($query, $params);
+    ) as $r) {
+        parse_str(parse_url($r['path'], PHP_URL_QUERY) ?: '', $params);
         $slug = $params['slug'] ?? null;
-        if (!$slug) continue;
-        $bySlug[$slug] = ($bySlug[$slug] ?? 0) + (int) $r['n'];
+        if ($slug) $bySlug[$slug] = ($bySlug[$slug] ?? 0) + (int) $r['n'];
     }
     if (!$bySlug) return [];
     arsort($bySlug);
-    $bySlug = array_slice($bySlug, 0, $limit, true);
-
-    $slugs = array_keys($bySlug);
-    $placeholders = implode(',', array_fill(0, count($slugs), '?'));
-    $courses = db_all("SELECT slug, title FROM courses WHERE slug IN ($placeholders)", $slugs);
-    $titleBySlug = [];
-    foreach ($courses as $c) $titleBySlug[$c['slug']] = $c['title'];
-
+    $bySlug = array_slice($bySlug, 0, max(1, min(50, $limit)), true);
+    $names = [];
+    try {
+        $slugs = array_keys($bySlug);
+        $names = array_column(db_all('SELECT slug, name FROM campuses WHERE slug IN (' . implode(',', array_fill(0, count($slugs), '?')) . ')', $slugs), 'name', 'slug');
+    } catch (Throwable $e) {}
     $out = [];
-    foreach ($bySlug as $slug => $n) {
-        $out[] = ['slug' => $slug, 'title' => $titleBySlug[$slug] ?? $slug, 'views' => $n];
-    }
+    foreach ($bySlug as $slug => $n) $out[] = ['slug' => $slug, 'title' => ($names[$slug] ?? $slug) . ' Campus', 'views' => $n];
     return $out;
 }
 
@@ -470,99 +437,4 @@ function geo_lookup_ip(string $ip): ?array {
         'country' => isset($data['countryCode']) ? substr((string) $data['countryCode'], 0, 2) : null,
         'city' => isset($data['city']) && $data['city'] !== '' ? substr((string) $data['city'], 0, 100) : null,
     ];
-}
-
-// ---------------------------------------------------------------------
-// Course-share tracking — who shared a course link, through which channel,
-// and how many distinct people came back through that exact link (see
-// course_shares/course_share_visits in schema.sql for the reasoning).
-// ---------------------------------------------------------------------
-
-/** Totals + channel breakdown for the last $days days. */
-function get_share_summary(int $days = 30, ?int $creatorId = null): array {
-    $creatorFilter = $creatorId ? ' AND c.creator_id = ?' : '';
-    $totals = db_one(
-        "SELECT COUNT(*) AS shares,
-                (SELECT COUNT(*) FROM course_share_visits v JOIN course_shares s ON s.id = v.share_id JOIN courses c ON c.id = s.course_id WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter) AS visits,
-                (SELECT COUNT(DISTINCT v.visitor_id) FROM course_share_visits v JOIN course_shares s ON s.id = v.share_id JOIN courses c ON c.id = s.course_id WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND v.visitor_id IS NOT NULL$creatorFilter) AS reach
-         FROM course_shares s
-         JOIN courses c ON c.id = s.course_id
-         WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter",
-        $creatorId ? [$days - 1, $creatorId, $days - 1, $creatorId, $days - 1, $creatorId] : [$days - 1, $days - 1, $days - 1]
-    );
-
-    $channelRows = db_all(
-        "SELECT s.channel, COUNT(*) AS n FROM course_shares s JOIN courses c ON c.id = s.course_id WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter GROUP BY s.channel",
-        $creatorId ? [$days - 1, $creatorId] : [$days - 1]
-    );
-    $byChannel = [];
-    foreach ($channelRows as $r) $byChannel[$r['channel']] = (int) $r['n'];
-
-    return [
-        'shares' => (int) ($totals['shares'] ?? 0),
-        'visits' => (int) ($totals['visits'] ?? 0),
-        'reach' => (int) ($totals['reach'] ?? 0),
-        'by_channel' => $byChannel,
-    ];
-}
-
-/** Courses ranked by how many visits their share links generated — the ones actually "getting passed around" float to the top. */
-function get_top_shared_courses(int $days = 30, int $limit = 10, ?int $creatorId = null): array {
-    $limit = max(1, min(50, $limit));
-    $creatorFilter = $creatorId ? ' AND c.creator_id = ?' : '';
-    $params = [$days - 1];
-    if ($creatorId) $params[] = $creatorId;
-    return db_all(
-        "SELECT c.id, c.title, c.slug, COUNT(DISTINCT s.id) AS share_count,
-                COUNT(v.id) AS visit_count, COUNT(DISTINCT v.visitor_id) AS reach
-         FROM course_shares s
-         JOIN courses c ON c.id = s.course_id
-         LEFT JOIN course_share_visits v ON v.share_id = s.id
-         WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)$creatorFilter
-         GROUP BY c.id, c.title, c.slug
-         ORDER BY visit_count DESC, share_count DESC
-         LIMIT $limit",
-        $params
-    );
-}
-
-/**
- * Paginated individual share events, newest first — each with how many
- * visits (and distinct visitors) it drove, so a share sitting at 1 visit
- * reads as "opened once by whoever it was sent to" and one sitting at 5+
- * reads as a link that's clearly circulating beyond that first recipient.
- * @param array{q:string,channel:string} $filters
- */
-function get_course_shares(array $filters, int $page, int $perPage = 30, ?int $creatorId = null): array {
-    $where = [];
-    $params = [];
-    if ($creatorId) {
-        $where[] = 'c.creator_id = ?';
-        $params[] = $creatorId;
-    }
-    if ($filters['q']) {
-        $where[] = 'c.title LIKE ?';
-        $params[] = '%' . $filters['q'] . '%';
-    }
-    if ($filters['channel']) {
-        $where[] = 's.channel = ?';
-        $params[] = $filters['channel'];
-    }
-    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-
-    $total = (int) db_one("SELECT COUNT(*) AS n FROM course_shares s JOIN courses c ON c.id = s.course_id $whereSql", $params)['n'];
-
-    $perPage = max(1, min(100, $perPage));
-    $offset = (max(1, $page) - 1) * $perPage;
-    $rows = db_all(
-        "SELECT s.*, c.title AS course_title, c.slug AS course_slug, u.name AS sharer_name,
-                (SELECT COUNT(*) FROM course_share_visits v WHERE v.share_id = s.id) AS visit_count,
-                (SELECT COUNT(DISTINCT visitor_id) FROM course_share_visits v WHERE v.share_id = s.id AND v.visitor_id IS NOT NULL) AS reach
-         FROM course_shares s
-         JOIN courses c ON c.id = s.course_id
-         LEFT JOIN users u ON u.id = s.sharer_id
-         $whereSql ORDER BY s.created_at DESC LIMIT $perPage OFFSET $offset",
-        $params
-    );
-    return ['rows' => $rows, 'total' => $total];
 }

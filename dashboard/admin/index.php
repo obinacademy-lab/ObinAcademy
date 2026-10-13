@@ -5,20 +5,22 @@ require __DIR__ . '/../../includes/admin_payments.php';
 $user = require_role(['ADMIN']);
 
 $userCount = (int) db_one('SELECT COUNT(*) AS n FROM users')['n'];
-$courseCount = (int) db_one('SELECT COUNT(*) AS n FROM courses')['n'];
-$publishedCount = (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PUBLISHED'")['n'];
-$pendingCount = (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW'")['n'];
-$pendingWithdrawalCount = (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'];
-$pendingApplicationCount = (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'];
+$campusCount = 0; $openCampusCount = 0; $activeMembers = 0; $newApplications = 0; $owedProfessors = 0.0; $endingSoon = 0;
+try {
+    $campusCount = (int) db_one('SELECT COUNT(*) AS n FROM campuses')['n'];
+    $openCampusCount = (int) db_one("SELECT COUNT(*) AS n FROM campuses WHERE status='PUBLISHED'")['n'];
+    $activeMembers = (int) db_one('SELECT COUNT(*) AS n FROM campus_memberships WHERE access_until > NOW()')['n'];
+    $endingSoon = (int) db_one('SELECT COUNT(*) AS n FROM campus_memberships WHERE access_until > NOW() AND access_until <= DATE_ADD(NOW(), INTERVAL 7 DAY)')['n'];
+    $newApplications = (int) db_one("SELECT COUNT(*) AS n FROM instructor_applications WHERE status='NEW'")['n'];
+    $owedProfessors = (float) db_one('SELECT COALESCE(SUM(amount),0) AS n FROM campus_professor_earnings WHERE payout_id IS NULL')['n'];
+} catch (Throwable $e) {}
 
 $recentActivity = db_all('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 8');
 
-// Money that needs a human: failed or stuck payments, plans past their due date.
+// Money that needs a human: failed or stuck payments.
 $payHealth = admin_payment_health();
-$planHealth = admin_plan_health();
 $failedPayments24h = (int) $payHealth['failed_24h'];
 $stuckPayments = (int) $payHealth['stuck'];
-$latePlans = (int) $planHealth['overdue'] + (int) $planHealth['subs_in_grace'];
 
 /** Buckets an audit_log action string into a visual tone for the activity feed. */
 function activity_tone(string $action): string {
@@ -33,7 +35,7 @@ function activity_icon(string $action): string {
 }
 
 // ---------------------------------------------------------------------
-// Revenue growth chart data — cumulative platform fee income, last 30 days
+// Revenue growth chart data — cumulative money kept by Obin Academy (campus payments minus professors' share), last 30 days
 // ---------------------------------------------------------------------
 $revenueSeries = get_daily_revenue_series(30);
 $revenueTotal = end($revenueSeries)['cumulative'] ?? 0.0;
@@ -62,7 +64,7 @@ $labelIdxs = $n > 1 ? [0, (int) round(($n - 1) * 0.2), (int) round(($n - 1) * 0.
 $pageTitle = 'Admin Overview — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<?php $totalPending = $pendingCount + $pendingWithdrawalCount + $pendingApplicationCount + ($failedPayments24h > 0 ? 1 : 0) + ($stuckPayments > 0 ? 1 : 0) + ($latePlans > 0 ? 1 : 0); ?>
+<?php $totalPending = $newApplications + ($owedProfessors > 0 ? 1 : 0) + ($failedPayments24h > 0 ? 1 : 0) + ($stuckPayments > 0 ? 1 : 0); ?>
 <div class="dash-hero">
   <div>
     <h1 class="h2" style="color:#fff;">Welcome back, <?= e(explode(' ', trim($user['name']))[0]) ?></h1>
@@ -81,8 +83,8 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <div class="value"><?= $userCount ?></div><div class="label">Total Users</div>
   </div>
   <div class="stat-card accent-top" data-hoverable="true" style="--hover-color:#8b5cf6;">
-    <div class="icon"><?php dash_icon('book-open'); ?></div>
-    <div class="value"><?= $publishedCount ?>/<?= $courseCount ?></div><div class="label">Courses</div><div class="sub">published / total</div>
+    <div class="icon"><?php dash_icon('graduation-cap'); ?></div>
+    <div class="value"><?= $activeMembers ?></div><div class="label">Campus members</div><div class="sub"><?= $openCampusCount ?> of <?= $campusCount ?> campuses open · <?= $endingSoon ?> ending in 7 days</div>
   </div>
   <div class="stat-card accent-top" data-hoverable="true" style="--hover-color:#f5b301;">
     <div class="icon"><?php dash_icon('banknote'); ?></div>
@@ -99,24 +101,24 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <h3 class="dash-section-label" style="margin-bottom:14px;">Needs Your Attention</h3>
     <?php if ($totalPending > 0): ?>
       <div class="quick-actions" style="margin-top:0;">
-        <?php if ($pendingCount > 0): ?>
-          <a href="<?= e(base_url('dashboard/admin/courses.php')) ?>" class="quick-action">
-            <span class="qa-icon" style="--tint:#f59e0b;"><?php dash_icon('clipboard-check'); ?></span>
-            <span class="qa-text"><span class="qa-count"><?= $pendingCount ?></span> course<?= $pendingCount === 1 ? '' : 's' ?> awaiting review</span>
+        <?php if ($newApplications > 0): ?>
+          <a href="<?= e(base_url('dashboard/admin/instructor-applications.php')) ?>" class="quick-action">
+            <span class="qa-icon" style="--tint:#ec4899;"><?php dash_icon('user-plus'); ?></span>
+            <span class="qa-text"><span class="qa-count"><?= $newApplications ?></span> new application<?= $newApplications === 1 ? '' : 's' ?> to teach</span>
             <?php dash_icon('arrow-right', 'qa-arrow'); ?>
           </a>
         <?php endif; ?>
-        <?php if ($pendingWithdrawalCount > 0): ?>
-          <a href="<?= e(base_url('dashboard/admin/withdrawals.php')) ?>" class="quick-action">
+        <?php if ($owedProfessors > 0): ?>
+          <a href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>" class="quick-action">
             <span class="qa-icon" style="--tint:#f97316;"><?php dash_icon('banknote'); ?></span>
-            <span class="qa-text"><span class="qa-count"><?= $pendingWithdrawalCount ?></span> withdrawal<?= $pendingWithdrawalCount === 1 ? '' : 's' ?> to process</span>
+            <span class="qa-text"><span class="qa-count"><?= e(format_money($owedProfessors)) ?></span> owed to professors</span>
             <?php dash_icon('arrow-right', 'qa-arrow'); ?>
           </a>
         <?php endif; ?>
         <?php if ($stuckPayments > 0): ?>
           <a href="<?= e(base_url('dashboard/admin/payments.php?status=STUCK')) ?>" class="quick-action">
             <span class="qa-icon" style="--tint:#ef4444;"><?php dash_icon('wallet'); ?></span>
-            <span class="qa-text"><span class="qa-count"><?= $stuckPayments ?></span> payment<?= $stuckPayments === 1 ? '' : 's' ?> stuck, buyer may be waiting for access</span>
+            <span class="qa-text"><span class="qa-count"><?= $stuckPayments ?></span> payment<?= $stuckPayments === 1 ? '' : 's' ?> stuck, someone may be waiting for campus access</span>
             <?php dash_icon('arrow-right', 'qa-arrow'); ?>
           </a>
         <?php endif; ?>
@@ -127,25 +129,11 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             <?php dash_icon('arrow-right', 'qa-arrow'); ?>
           </a>
         <?php endif; ?>
-        <?php if ($latePlans > 0): ?>
-          <a href="<?= e(base_url('dashboard/admin/payment-plans.php')) ?>" class="quick-action">
-            <span class="qa-icon" style="--tint:#eab308;"><?php dash_icon('clock'); ?></span>
-            <span class="qa-text"><span class="qa-count"><?= $latePlans ?></span> installment plan<?= $latePlans === 1 ? '' : 's' ?> or subscription<?= $latePlans === 1 ? '' : 's' ?> late</span>
-            <?php dash_icon('arrow-right', 'qa-arrow'); ?>
-          </a>
-        <?php endif; ?>
-        <?php if ($pendingApplicationCount > 0): ?>
-          <a href="<?= e(base_url('dashboard/admin/creator-applications.php')) ?>" class="quick-action">
-            <span class="qa-icon" style="--tint:#ec4899;"><?php dash_icon('user-plus'); ?></span>
-            <span class="qa-text"><span class="qa-count"><?= $pendingApplicationCount ?></span> creator application<?= $pendingApplicationCount === 1 ? '' : 's' ?> to review</span>
-            <?php dash_icon('arrow-right', 'qa-arrow'); ?>
-          </a>
-        <?php endif; ?>
       </div>
     <?php else: ?>
       <div class="all-caught-up" style="margin-top:0;">
         <?php dash_icon('check-circle'); ?>
-        <div><strong>You're all caught up.</strong> No pending reviews, withdrawals, applications, stuck payments or late plans right now.</div>
+        <div><strong>You're all caught up.</strong> No new teach applications, professor pay owed, or failed or stuck payments right now.</div>
       </div>
     <?php endif; ?>
   </div>

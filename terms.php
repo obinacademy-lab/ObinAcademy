@@ -23,20 +23,20 @@ require __DIR__ . '/includes/header.php';
         <p class="muted" style="margin-top:12px; line-height:1.75;">You're responsible for keeping your login credentials secure and for all activity under your account. You must provide accurate information when signing up.</p>
       </div>
       <div>
-        <h2 class="h3">3. Course Purchases &amp; Payments</h2>
-        <p class="muted" style="margin-top:12px; line-height:1.75;">Courses are paid for instantly via MTN or Airtel Mobile Money. Once payment is confirmed, you're enrolled and gain access according to the course's stated access duration (or lifetime, where offered). Prices are set by individual creators and shown in Ugandan Shillings (UGX) before purchase.</p>
+        <h2 class="h3">3. Campus Memberships &amp; Payments</h2>
+        <p class="muted" style="margin-top:12px; line-height:1.75;">Campus memberships are paid via MTN or Airtel Mobile Money, monthly (30 days of access) or yearly (twelve months of access). Once payment is confirmed, your access opens immediately. Memberships never renew automatically: you are reminded before your access ends and choose whether to pay again. Prices are shown in Ugandan Shillings (UGX) before you pay.</p>
       </div>
       <div>
-        <h2 class="h3">4. Creator Content &amp; Earnings</h2>
-        <p class="muted" style="margin-top:12px; line-height:1.75;">Creators retain ownership of the courses they upload and are responsible for the accuracy and quality of their content. Obin Academy takes a 10% platform fee on each sale; creators keep the remaining 90%, withdrawable to mobile money once minimum thresholds are met.</p>
+        <h2 class="h3">4. Campus Content</h2>
+        <p class="muted" style="margin-top:12px; line-height:1.75;">Campus lessons, guides and live classes are provided by Obin Academy and its professors for your personal learning. You may not copy, resell or redistribute them.</p>
       </div>
       <div>
         <h2 class="h3">5. Prohibited Conduct</h2>
-        <p class="muted" style="margin-top:12px; line-height:1.75;">You may not upload unlawful, infringing, or harmful content, attempt to circumvent payment or access controls, or share your enrolled course access with people who haven't paid for it.</p>
+        <p class="muted" style="margin-top:12px; line-height:1.75;">You may not upload unlawful, infringing, or harmful content, attempt to circumvent payment or access controls, or share your campus access with people who haven't paid for it.</p>
       </div>
       <div>
         <h2 class="h3">6. Refunds</h2>
-        <p class="muted" style="margin-top:12px; line-height:1.75;">Refund requests are reviewed on a case-by-case basis. Contact us within 48 hours of purchase if a course was materially different from its description or you were charged in error.</p>
+        <p class="muted" style="margin-top:12px; line-height:1.75;">Refund requests are reviewed on a case-by-case basis. Contact us within 48 hours of paying if you were charged in error.</p>
       </div>
       <div>
         <h2 class="h3">7. Changes to These Terms</h2>

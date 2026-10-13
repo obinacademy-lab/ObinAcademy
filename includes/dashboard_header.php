@@ -10,35 +10,8 @@ require_once __DIR__ . '/notifications.php';
 $navByRole = [
     'LEARNER' => [
         'Learning' => [
-            ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
-            ['/index.php#campuses', 'Campuses', 'book-open'],
-            ['/dashboard/learner/following.php', 'Following', 'users'],
-        ],
-        'Payments' => [
-            ['/dashboard/learner/subscriptions.php', 'My Subscriptions', 'wallet'],
-            ['/dashboard/learner/payment-plans.php', 'Payment Plans', 'tag'],
-            ['/dashboard/gifts.php', 'Gifts Sent', 'gift'],
-        ],
-        'Account' => [
-            ['/dashboard/settings.php', 'Settings', 'settings'],
-        ],
-    ],
-    'CREATOR' => [
-        'Courses' => [
-            ['/dashboard/creator/index.php', 'Studio', 'layout-dashboard'],
-            ['/dashboard/creator/course-build.php', 'Create Course', 'plus-circle'],
-            ['/dashboard/creator/bundles.php', 'Bundles', 'layout-dashboard'],
-        ],
-        'Students & Growth' => [
-            ['/dashboard/creator/students.php', 'My Students', 'users'],
-            ['/dashboard/creator/viewers.php', 'Course Viewers', 'eye'],
-            ['/dashboard/creator/leads.php', 'My Leads', 'user-plus'],
-            ['/dashboard/creator/shares.php', 'Course Shares', 'share'],
-            ['/dashboard/creator/coupons.php', 'Coupons', 'tag'],
-        ],
-        'Money' => [
-            ['/dashboard/creator/earnings.php', 'Earnings', 'wallet'],
-            ['/dashboard/gifts.php', 'Gifts Sent', 'gift'],
+            ['/dashboard/learner/index.php', 'My Campuses', 'graduation-cap'],
+            ['/index.php#campuses', 'All campuses', 'book-open'],
         ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],
@@ -50,7 +23,6 @@ $navByRole = [
             ['/dashboard/admin/analytics.php', 'Visitors', 'globe'],
             ['/dashboard/admin/leads.php', 'Leads', 'sparkle'],
             ['/dashboard/admin/logins.php', 'Login Activity', 'shield'],
-            ['/dashboard/admin/shares.php', 'Course Shares', 'share'],
         ],
         'Campuses' => [
             ['/dashboard/admin/campuses.php', 'Campuses', 'graduation-cap'],
@@ -59,40 +31,22 @@ $navByRole = [
         ],
         'Manage' => [
             ['/dashboard/admin/users.php', 'Users', 'users'],
-            ['/dashboard/admin/creators.php', 'Creators', 'graduation-cap'],
-            ['/dashboard/admin/creator-applications.php', 'Creator Applications', 'user-plus'],
-            ['/dashboard/admin/affiliate-applications.php', 'Affiliate Applications', 'tag'],
-            ['/dashboard/admin/courses.php', 'Courses', 'book-open'],
             ['/dashboard/admin/revenue.php', 'Revenue', 'trending-up'],
             ['/dashboard/admin/payments.php', 'Payments', 'wallet'],
-            ['/dashboard/admin/payment-plans.php', 'Payment Plans', 'clock'],
-            ['/dashboard/admin/categories.php', 'Categories', 'tag'],
             ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
-            ['/dashboard/admin/withdrawals.php', 'Withdrawals', 'banknote'],
-            ['/dashboard/admin/comments.php', 'Comments', 'message-square'],
         ],
         'System' => [
-            ['/dashboard/admin/content-health.php', 'Content Health', 'clipboard-check'],
             ['/dashboard/admin/audit-log.php', 'Audit Log', 'scroll-text'],
+            ['/dashboard/admin/storage-cleanup.php', 'Storage', 'trash'],
             ['/dashboard/settings.php', 'Settings', 'settings'],
         ],
     ],
 ];
-$navGroups = $navByRole[$user['role']];
+// Anyone who is not an admin uses the learner dashboard (there are no other roles any more).
+$navGroups = $navByRole[$user['role'] === 'ADMIN' ? 'ADMIN' : 'LEARNER'];
 $currentPath = current_path();
 
-// Affiliate status is independent of role (see includes/affiliates.php) —
-// this appends an extra nav group for any user who's an active affiliate,
-// on top of whatever their role's own groups already are.
-$myAffiliate = get_affiliate_by_user_id((int) $user['id']);
-$isActiveAffiliate = $myAffiliate && $myAffiliate['status'] === 'ACTIVE';
-if ($isActiveAffiliate) {
-    $navGroups['Affiliate'] = [
-        ['/dashboard/affiliate.php', 'Affiliate Dashboard', 'tag'],
-    ];
-}
-
-// Campus professors (linked by account on the campus) get their pay page, whatever their role.
+// Campus professors (linked by account on the campus) get their pay page.
 try {
     if ($user['role'] !== 'ADMIN' && db_one('SELECT 1 FROM campuses WHERE professor_user_id = ? LIMIT 1', [(int) $user['id']])) {
         $navGroups = ['Teaching' => [['/dashboard/professor.php', 'My Campus Pay', 'banknote']]] + $navGroups;
@@ -111,21 +65,7 @@ $unreadNotifCount = 0;
 if ($user['role'] === 'ADMIN') {
     $adminNotifications = get_admin_notifications(8);
     $unreadNotifCount = get_unread_notification_count();
-    $navBadges = [
-        '/dashboard/admin/creator-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM creator_applications WHERE status='PENDING'")['n'],
-        '/dashboard/admin/affiliate-applications.php' => (int) db_one("SELECT COUNT(*) AS n FROM affiliate_applications WHERE status='PENDING'")['n'],
-        '/dashboard/admin/withdrawals.php' => (int) db_one("SELECT COUNT(*) AS n FROM withdrawal_requests WHERE status='PENDING'")['n'],
-        '/dashboard/admin/courses.php' => (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE status='PENDING_REVIEW'")['n'],
-        '/dashboard/admin/leads.php' => (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'],
-    ];
-    // Defensive: this file loads on every admin page, so a missing `comments`
-    // table (deploy landed before its migration ran) must not break the
-    // entire admin nav — just show 0 on this one badge until it exists.
-    try {
-        $navBadges['/dashboard/admin/comments.php'] = (int) db_one("SELECT COUNT(*) AS n FROM comments WHERE status='HIDDEN'")['n'];
-    } catch (Throwable $e) {
-        $navBadges['/dashboard/admin/comments.php'] = 0;
-    }
+    $navBadges['/dashboard/admin/leads.php'] = (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'];
     try {
         $navBadges['/dashboard/admin/instructor-applications.php'] = (int) db_one("SELECT COUNT(*) AS n FROM instructor_applications WHERE status='NEW'")['n'];
     } catch (Throwable $e) {
@@ -135,27 +75,18 @@ if ($user['role'] === 'ADMIN') {
         'title' => 'This Month',
         'icon' => 'trending-up',
         'rows' => [
-            ['label' => 'Platform Revenue', 'value' => format_money((float) (db_one("SELECT COALESCE(SUM(platform_fee),0) AS n FROM earnings WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())")['n'] ?? 0))],
-            ['label' => 'New Signups', 'value' => (string) (int) db_one("SELECT COUNT(*) AS n FROM users WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())")['n']],
+            ['label' => 'Campus payments', 'value' => format_money((float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM payments WHERE type='CAMPUS_MEMBERSHIP' AND status='SUCCESS' AND created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')")['n'] ?? 0))],
+            ['label' => 'New Signups', 'value' => (string) (int) db_one("SELECT COUNT(*) AS n FROM users WHERE created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')")['n']],
         ],
     ];
-} elseif ($user['role'] === 'CREATOR') {
+} else {
+    $mine = db_one('SELECT COUNT(*) AS n, MIN(access_until) AS next_end FROM campus_memberships WHERE user_id = ? AND access_until > NOW()', [$user['id']]);
     $sidebarWidget = [
-        'title' => 'Your Earnings',
-        'icon' => 'wallet',
-        'rows' => [
-            ['label' => 'Total Earned', 'value' => format_money((float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM earnings WHERE creator_id=?', [$user['id']])['n'] ?? 0))],
-            ['label' => 'Published Courses', 'value' => (string) (int) db_one("SELECT COUNT(*) AS n FROM courses WHERE creator_id=? AND status='PUBLISHED'", [$user['id']])['n']],
-        ],
-    ];
-} elseif ($user['role'] === 'LEARNER') {
-    $enrollStats = db_one('SELECT COUNT(*) AS n, COALESCE(AVG(progress),0) AS avg_progress FROM enrollments WHERE user_id=?', [$user['id']]);
-    $sidebarWidget = [
-        'title' => 'Your Progress',
+        'title' => 'Your Campuses',
         'icon' => 'graduation-cap',
         'rows' => [
-            ['label' => 'Enrolled Courses', 'value' => (string) (int) $enrollStats['n']],
-            ['label' => 'Avg. Completion', 'value' => round((float) $enrollStats['avg_progress']) . '%'],
+            ['label' => 'Active campuses', 'value' => (string) (int) ($mine['n'] ?? 0)],
+            ['label' => 'Next access ends', 'value' => !empty($mine['next_end']) ? date('j M Y', strtotime($mine['next_end'])) : '—'],
         ],
     ];
 }
@@ -228,16 +159,10 @@ if ($user['role'] === 'ADMIN') {
       <div class="dash-header-left">
         <button data-dash-open class="dash-hamburger" aria-label="Open menu">☰</button>
         <?php render_logo(true, 'dash-header-logo'); ?>
-        <?php
-          // Admins search people, courses and payments; creators search their students. Learners have no
-          // catalogue to search any more (the platform runs as campuses), so they get no search box.
-          $searchAction = $user['role'] === 'ADMIN' ? 'dashboard/admin/search.php' : 'dashboard/creator/students.php';
-          $searchHint = $user['role'] === 'ADMIN' ? 'Search people, courses, payments…' : 'Search your students…';
-        ?>
-        <?php if ($user['role'] !== 'LEARNER'): ?>
-        <form class="dash-search" method="get" action="<?= e(base_url($searchAction)) ?>" role="search">
+        <?php if ($user['role'] === 'ADMIN'): ?>
+        <form class="dash-search" method="get" action="<?= e(base_url('dashboard/admin/search.php')) ?>" role="search">
           <?php dash_icon('search'); ?>
-          <input type="search" name="q" value="" placeholder="<?= e($searchHint) ?>" aria-label="<?= e($searchHint) ?>" autocomplete="off" enterkeyhint="search">
+          <input type="search" name="q" value="" placeholder="Search people and payments…" aria-label="Search people and payments" autocomplete="off" enterkeyhint="search">
         </form>
         <?php endif; ?>
       </div>

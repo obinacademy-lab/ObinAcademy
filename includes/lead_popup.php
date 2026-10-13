@@ -1,7 +1,6 @@
 <?php
 /**
- * Lead-capture popup markup — one overlay, two form variants (learner/
- * creator) plus a shared success state, all toggled by
+ * Lead-capture popup markup — one overlay, one form plus a success state, toggled by
  * assets/js/lead-capture.js. Rendered once per page (from footer.php) and
  * hidden until a trigger condition fires.
  */
@@ -12,8 +11,8 @@
 
     <div data-lead-panel="learner">
       <div class="lead-modal-icon">🎓</div>
-      <h2 id="lead-modal-title">Start Learning Today</h2>
-      <p class="lead-sub">Join thousands of learners building valuable skills. Enter your details below and receive exclusive offers plus access to our newest courses.</p>
+      <h2 id="lead-modal-title">Get the campus guide</h2>
+      <p class="lead-sub">Leave your details and we will send you what each campus teaches, the prices, and when the next intake opens.</p>
       <form class="guest-form" data-lead-form data-lead-type="learner">
         <div class="field-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -31,33 +30,7 @@
           <input type="checkbox" name="consent" required>
           <span>I agree to receive emails from Obin Academy and accept the <a href="<?= e(base_url('privacy.php')) ?>" target="_blank" rel="noopener">Privacy Policy</a>.</span>
         </label>
-        <button type="submit" class="btn btn-primary btn-block btn-lg">Start Learning</button>
-        <p class="lead-form-error hidden" data-lead-error></p>
-      </form>
-    </div>
-
-    <div data-lead-panel="creator" class="hidden">
-      <div class="lead-modal-icon">🚀</div>
-      <h2>Become a Course Creator</h2>
-      <p class="lead-sub">Share your knowledge. Earn income. Build your personal brand. Create your instructor account today.</p>
-      <form class="guest-form" data-lead-form data-lead-type="creator">
-        <div class="field-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <input type="text" name="name" placeholder="Full Name" required>
-        </div>
-        <div class="field-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
-          <input type="email" name="email" placeholder="Email" required>
-        </div>
-        <div class="field-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          <input type="tel" name="phone" placeholder="Phone" required>
-        </div>
-        <label class="lead-consent">
-          <input type="checkbox" name="consent" required>
-          <span>I agree to receive emails from Obin Academy and accept the <a href="<?= e(base_url('privacy.php')) ?>" target="_blank" rel="noopener">Privacy Policy</a>.</span>
-        </label>
-        <button type="submit" class="btn btn-gold btn-block btn-lg">Become a Creator</button>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Send me the guide</button>
         <p class="lead-form-error hidden" data-lead-error></p>
       </form>
     </div>

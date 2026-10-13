@@ -41,7 +41,7 @@ $authTab = 'signup';
 require __DIR__ . '/includes/auth_header.php';
 ?>
   <h1 class="auth-headline">Start your learning journey</h1>
-  <p class="auth-sub">Learn from African creators. Free to join.</p>
+  <p class="auth-sub">Join a campus and master one skill in a year. Free to sign up.</p>
 
   <?php if ($errors): ?>
     <div class="alert alert-error" style="margin-top:14px;"><?= e(implode(' ', $errors)) ?></div>

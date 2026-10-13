@@ -11,11 +11,13 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate) || $selectedDate > $toda
 
 $daySummary = get_day_collection_summary($selectedDate);
 
-// "Paid" means actually approved/sent, not just accrued in earnings but
-// never withdrawn — see dashboard/admin/withdrawals.php, the only place
-// status flips to APPROVED.
-$totalPaidCreators = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='CREATOR'")['n'] ?? 0);
-$totalPaidAffiliates = (float) (db_one("SELECT COALESCE(SUM(amount),0) AS n FROM withdrawal_requests WHERE status='APPROVED' AND payee_type='AFFILIATE'")['n'] ?? 0);
+// Professor pay: what has been sent (campus_professor_payouts) and what is still owed (unpaid earnings).
+try {
+    $totalPaidProfessors = (float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM campus_professor_payouts')['n'] ?? 0);
+    $owedProfessors = (float) (db_one('SELECT COALESCE(SUM(amount),0) AS n FROM campus_professor_earnings WHERE payout_id IS NULL')['n'] ?? 0);
+} catch (Throwable $e) {
+    $totalPaidProfessors = 0.0; $owedProfessors = 0.0;
+}
 
 // ---------------------------------------------------------------------
 // Daily collections chart — blue-branded, plots each day's actual amount
@@ -51,21 +53,21 @@ $pageTitle = 'Revenue — Admin — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <h1 class="h2">Revenue</h1>
-<p class="muted" style="margin-top:6px;">Look up what the platform collected on a specific day, and track the daily trend.</p>
+<p class="muted" style="margin-top:6px;">Look up what the campuses collected on a specific day, and track the daily trend.</p>
 
-<h3 class="dash-section-label" style="margin-top:24px;">Total Payouts</h3>
+<h3 class="dash-section-label" style="margin-top:24px;">Professor Pay</h3>
 <div class="grid md:grid-2" style="margin-top:14px;">
   <div class="stat-card payout-stat-card" data-hoverable="true" style="--hover-color:#10b981;">
     <div class="icon"><?php dash_icon('banknote'); ?></div>
-    <div class="value" data-count-up data-count-value="<?= (int) round($totalPaidCreators) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
-    <div class="label">Paid to Creators</div>
-    <div class="sub">all-time, approved withdrawals</div>
+    <div class="value"><?= e(format_money($totalPaidProfessors)) ?></div>
+    <div class="label">Paid to professors</div>
+    <div class="sub">all time, recorded on Professor Pay</div>
   </div>
   <div class="stat-card payout-stat-card" data-hoverable="true" style="--hover-color:#f5b301;">
-    <div class="icon"><?php dash_icon('tag'); ?></div>
-    <div class="value" data-count-up data-count-value="<?= (int) round($totalPaidAffiliates) ?>" data-count-prefix="UGX " data-count-grouped data-count-suffix="">UGX 0</div>
-    <div class="label">Paid to Affiliates</div>
-    <div class="sub">all-time, approved withdrawals</div>
+    <div class="icon"><?php dash_icon('clock'); ?></div>
+    <div class="value"><?= e(format_money($owedProfessors)) ?></div>
+    <div class="label">Owed to professors now</div>
+    <div class="sub"><a href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>">Open Professor Pay</a></div>
   </div>
 </div>
 
@@ -90,44 +92,43 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
   <div class="stat-card" data-hoverable="true" style="--hover-color:#f5b301;">
     <div class="icon">🏦</div>
-    <div class="value"><?= e(format_money($daySummary['fee'])) ?></div><div class="label">Platform Fee (10%)</div>
+    <div class="value"><?= e(format_money($daySummary['professors'])) ?></div><div class="label">Professors' share</div>
   </div>
   <div class="stat-card" data-hoverable="true" style="--hover-color:#10b981;">
     <div class="icon">🧾</div>
-    <div class="value"><?= (int) $daySummary['count'] ?></div><div class="label">Sales (<?= e(format_money($daySummary['creator_net'])) ?> to creators)</div>
+    <div class="value"><?= e(format_money($daySummary['kept'])) ?></div><div class="label">Kept by Obin Academy (<?= (int) $daySummary['count'] ?> payment<?= $daySummary['count'] === 1 ? '' : 's' ?>)</div>
   </div>
 </div>
 
-<?php if ($daySummary['sales']): ?>
+<?php if ($daySummary['payments']): ?>
   <div class="activity-feed" style="margin-top:20px;">
-    <?php foreach ($daySummary['sales'] as $s): ?>
+    <?php foreach ($daySummary['payments'] as $s): ?>
       <div class="list-row">
         <div class="list-row-main">
           <span class="activity-dot tone-success" style="flex-shrink:0;"><?php dash_icon('banknote'); ?></span>
           <div style="min-width:0;">
-            <div style="font-weight:700;"><?= e($s['course_title']) ?></div>
-            <div class="small muted" style="margin-top:2px;"><?= e($s['creator_name']) ?> &middot; <?= e(date('g:i A', strtotime($s['created_at']))) ?></div>
+            <div style="font-weight:700;"><?= e(($s['campus_name'] ?: 'A campus') . ' Campus') ?></div>
+            <div class="small muted" style="margin-top:2px;"><?= e($s['learner_name'] ?: 'A member') ?> &middot; <?= $s['campus_plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?> &middot; <?= e(date('g:i A', strtotime($s['created_at']))) ?></div>
           </div>
         </div>
         <div class="list-row-meta">
           <div style="text-align:right;">
-            <div style="font-weight:700;"><?= e(format_money((float) $s['gross_amount'])) ?></div>
-            <div class="small muted" style="margin-top:2px;">fee <?= e(format_money((float) $s['platform_fee'])) ?> &middot; net <?= e(format_money((float) $s['amount'])) ?></div>
+            <div style="font-weight:700;"><?= e(format_money((float) $s['amount'])) ?></div>
           </div>
         </div>
       </div>
     <?php endforeach; ?>
   </div>
 <?php else: ?>
-  <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted); margin-top:20px;">No sales on this date.</div>
+  <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted); margin-top:20px;">No campus payments on this date.</div>
 <?php endif; ?>
 
 <h3 class="dash-section-label" style="margin-top:36px;">Daily Trend</h3>
 <div class="chart-card" style="margin-top:14px;">
   <div class="chart-card-head">
     <div>
-      <h2 class="h3">Platform Collections</h2>
-      <p class="muted small" style="margin-top:4px;">Total money collected from learners (before the platform's 10% cut) &middot; last 30 days</p>
+      <h2 class="h3">Campus Collections</h2>
+      <p class="muted small" style="margin-top:4px;">Money collected from campus payments, before professors' share &middot; last 30 days</p>
     </div>
     <?php if ($trendPct !== null): ?>
       <div class="chart-trend <?= $trendPct >= 0 ? 'up' : 'down' ?>">

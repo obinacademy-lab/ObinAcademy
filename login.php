@@ -27,7 +27,7 @@ $authTab = 'login';
 require __DIR__ . '/includes/auth_header.php';
 ?>
   <h1 class="auth-headline">Welcome back</h1>
-  <p class="auth-sub">Log in to continue learning or managing your courses.</p>
+  <p class="auth-sub">Log in to continue at your campus.</p>
 
   <?php if ($errors): ?>
     <div class="alert alert-error" style="margin-top:14px;"><?= e(implode(' ', $errors)) ?></div>

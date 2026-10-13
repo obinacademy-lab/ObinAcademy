@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $detailId = (int) query_param('id');
-$statusLabels = ['NEW' => 'New', 'CONTACTED' => 'Contacted', 'INTERESTED' => 'Interested', 'ENROLLED' => 'Enrolled', 'CREATOR' => 'Creator', 'LOST' => 'Lost'];
+$statusLabels = ['NEW' => 'New', 'CONTACTED' => 'Contacted', 'INTERESTED' => 'Interested', 'ENROLLED' => 'Joined', 'CREATOR' => 'Wants to teach', 'LOST' => 'Lost'];
 $statusTint = ['NEW' => '#0b00ff', 'CONTACTED' => '#8b5cf6', 'INTERESTED' => '#f5b301', 'ENROLLED' => '#10b981', 'CREATOR' => '#ec4899', 'LOST' => '#94a3b8'];
 $sourceLabels = ['google' => 'Google / Search', 'social' => 'Social Media', 'direct' => 'Direct / Shared Link', 'other' => 'Other'];
 
@@ -62,7 +62,7 @@ if ($detailId) {
     if (!$lead) { flash_set('error', 'Lead not found.'); redirect('/dashboard/admin/leads.php'); }
     $notes = get_lead_notes($detailId);
     $pageHistory = get_lead_page_history($lead['visitor_id']);
-    $coursesViewed = get_lead_courses_viewed($lead['visitor_id']);
+    $campusesViewed = get_lead_campuses_viewed($lead['visitor_id']);
 
     $pageTitle = e($lead['name']) . ' — Leads — Admin — Obin Academy';
     require __DIR__ . '/../../includes/dashboard_header.php';
@@ -83,7 +83,7 @@ if ($detailId) {
     </div>
 
     <div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px;">
-      <div class="mini-stat"><span class="mini-stat-value"><?= $lead['lead_type'] === 'creator' ? '🚀' : '🎓' ?></span><span class="mini-stat-label"><?= $lead['lead_type'] === 'creator' ? 'Creator Lead' : 'Learner Lead' ?></span></div>
+      <div class="mini-stat"><span class="mini-stat-value"><?= $lead['lead_type'] === 'creator' ? '🚀' : '🎓' ?></span><span class="mini-stat-label"><?= $lead['lead_type'] === 'creator' ? 'Teacher Lead' : 'Learner Lead' ?></span></div>
       <div class="mini-stat"><span class="mini-stat-value"><?= e($sourceLabels[$lead['source']] ?? $lead['source']) ?></span><span class="mini-stat-label">Source</span></div>
       <div class="mini-stat"><span class="mini-stat-value"><?= (int) $lead['visit_count'] ?></span><span class="mini-stat-label">Visits</span></div>
       <div class="mini-stat"><span class="mini-stat-value"><?= e(format_date($lead['first_visit_at'])) ?></span><span class="mini-stat-label">First Seen</span></div>
@@ -181,12 +181,12 @@ if ($detailId) {
 
       <div class="growth-side">
         <div class="chart-card">
-          <h2 class="h3">Courses Viewed</h2>
+          <h2 class="h3">Campuses Viewed</h2>
           <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
-            <?php foreach ($coursesViewed as $c): ?>
-              <a href="<?= e(base_url('courses/view.php?slug=' . $c['slug'])) ?>" target="_blank" class="small" style="display:block;"><?= e($c['title']) ?></a>
+            <?php foreach ($campusesViewed as $c): ?>
+              <a href="<?= e(base_url('campus.php?slug=' . $c['slug'])) ?>" target="_blank" class="small" style="display:block;"><?= e($c['name']) ?> Campus</a>
             <?php endforeach; ?>
-            <?php if (!$coursesViewed): ?><p class="muted small">No course views recorded for this visitor.</p><?php endif; ?>
+            <?php if (!$campusesViewed): ?><p class="muted small">No campus pages viewed by this visitor yet.</p><?php endif; ?>
           </div>
         </div>
       </div>
@@ -272,7 +272,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="ld-panel ld-strip" style="margin-top:20px;">
   <div><b><?= number_format($allLeads) ?></b><span>Total leads</span></div>
   <div class="<?= $newCount > 0 ? 'warn' : '' ?>"><b><?= number_format($newCount) ?></b><span>Not yet contacted</span><small><?= $pctOf($newCount) ?>% of all leads</small></div>
-  <div><b><?= number_format($creatorCount) ?></b><span>Creator leads</span><small><?= $pctOf($creatorCount) ?>% of all leads</small></div>
+  <div><b><?= number_format($creatorCount) ?></b><span>Teacher leads</span><small><?= $pctOf($creatorCount) ?>% of all leads</small></div>
   <div><b><?= number_format($enrolledCount) ?></b><span>Became students</span><small><?= $pctOf($enrolledCount) ?>% conversion</small></div>
 </div>
 
@@ -364,7 +364,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <label class="ld-field"><select name="type" aria-label="Type" onchange="this.form.submit()">
       <option value="">All types</option>
       <option value="learner" <?= $filters['type'] === 'learner' ? 'selected' : '' ?>>Learner</option>
-      <option value="creator" <?= $filters['type'] === 'creator' ? 'selected' : '' ?>>Creator</option>
+      <option value="creator" <?= $filters['type'] === 'creator' ? 'selected' : '' ?>>Teacher</option>
     </select></label>
     <label class="ld-field"><select name="source" aria-label="Source" onchange="this.form.submit()">
       <option value="">All sources</option>
@@ -382,7 +382,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <div class="ld-av"><?= e(mb_strtoupper(mb_substr($l['name'], 0, 1))) ?></div>
           <div style="min-width:0;"><a href="<?= e($viewUrl) ?>" class="nm"><?= e($l['name']) ?></a><small><?= e($l['email']) ?></small></div>
         </div>
-        <span class="ld-type <?= $isCreator ? 'creator' : '' ?>"><?= $isCreator ? 'Creator' : 'Learner' ?></span>
+        <span class="ld-type <?= $isCreator ? 'creator' : '' ?>"><?= $isCreator ? 'Teacher' : 'Learner' ?></span>
         <span class="ld-srcc"><?= e($sourceLabels[$l['source']] ?? $l['source']) ?></span>
         <div class="ld-seen"><b><?= (int) $l['visit_count'] ?> visit<?= (int) $l['visit_count'] === 1 ? '' : 's' ?></b><?= e(format_date($l['last_visit_at'])) ?></div>
         <span class="ld-pill"><i></i><?= e($statusLabels[$l['status']] ?? $l['status']) ?></span>

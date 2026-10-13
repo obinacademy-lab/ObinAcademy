@@ -1,50 +1,26 @@
 <?php
+/** A learner's dashboard: their campuses, progress through each year, certificates and what to do next. */
 require __DIR__ . '/../../includes/bootstrap.php';
-require __DIR__ . '/../../includes/data.php';
-require __DIR__ . '/../../includes/course_card.php';
 require __DIR__ . '/../../includes/campuses.php';
 $user = require_login();
 
-$enrollments = db_all('
-    SELECT e.*, c.title, c.slug, c.thumbnail_url, c.category_id, cat.name AS category_name,
-      u.name AS creator_name, cert.code AS certificate_code,
-      (SELECT COUNT(*) FROM lessons l JOIN modules m ON m.id = l.module_id WHERE m.course_id = c.id) AS lesson_count
-    FROM enrollments e
-    JOIN courses c ON c.id = e.course_id
-    JOIN categories cat ON cat.id = c.category_id
-    JOIN users u ON u.id = c.creator_id
-    LEFT JOIN certificates cert ON cert.enrollment_id = e.id
-    WHERE e.user_id = ?
-    ORDER BY e.enrolled_at DESC
-', [$user['id']]);
+$myCampuses = campuses_ready() ? db_all(
+    'SELECT m.*, c.name, c.slug, c.icon, c.live_schedule FROM campus_memberships m JOIN campuses c ON c.id = m.campus_id WHERE m.user_id = ? ORDER BY m.access_until DESC',
+    [$user['id']]
+) : [];
+$open = array_values(array_filter($myCampuses, fn($m) => strtotime($m['access_until']) > time()));
+$certificates = count(array_filter($myCampuses, fn($m) => !empty($m['certificate_code'])));
 
-$completedCount = 0; $inProgressCount = 0; $certificateCount = 0;
-$continuing = [];
-foreach ($enrollments as $en) {
-    $p = (float) $en['progress'];
-    if ($p >= 100) $completedCount++;
-    elseif ($p > 0) { $inProgressCount++; $continuing[] = $en; }
-    if ($en['certificate_code']) $certificateCount++;
-}
-$enrolledCount = count($enrollments);
+// Lessons done across the campuses that are open now.
+$lessonsDone = 0;
+foreach ($open as $m) $lessonsDone += count(campus_completed_lesson_ids((int) $user['id'], (int) $m['campus_id']));
 
-// Recommended: published courses in the same categories the learner is
-// already studying, excluding anything they're already enrolled in — falls
-// back to featured courses for a brand-new learner with no enrollments yet.
-$enrolledCourseIds = array_column($enrollments, 'course_id');
-$enrolledCategoryIds = array_values(array_unique(array_column($enrollments, 'category_id')));
-$recommended = [];
-if ($enrolledCategoryIds) {
-    $catPlaceholders = implode(',', array_fill(0, count($enrolledCategoryIds), '?'));
-    $exclPlaceholders = implode(',', array_fill(0, count($enrolledCourseIds), '?'));
-    $recommended = get_course_cards(
-        "c.category_id IN ($catPlaceholders) AND c.id NOT IN ($exclPlaceholders)",
-        array_merge($enrolledCategoryIds, $enrolledCourseIds),
-        'student_count DESC, c.created_at DESC',
-        3
-    );
+// The next live class in any of their open campuses.
+$nextLive = null;
+foreach ($open as $m) {
+    $l = upcoming_campus_live_classes(14, (int) $m['campus_id'])[0] ?? null;
+    if ($l && (!$nextLive || $l['starts_at'] < $nextLive['starts_at'])) $nextLive = $l;
 }
-if (!$recommended) $recommended = get_featured_courses(3);
 
 $firstName = explode(' ', trim($user['name']))[0];
 $quotes = [
@@ -56,19 +32,7 @@ $quotes = [
 ];
 $quote = $quotes[(int) date('z') % count($quotes)];
 
-// "Almost there" nudge: whichever in-progress course the learner is
-// furthest through — a real, data-driven prompt to come back and finish it,
-// with lessons-remaining estimated from their lesson count and % progress.
-$nextUp = null;
-foreach ($continuing as $en) {
-    if (!$nextUp || (float) $en['progress'] > (float) $nextUp['progress']) $nextUp = $en;
-}
-$lessonsLeft = $nextUp ? max(0, (int) round((float) $nextUp['lesson_count'] * (1 - (float) $nextUp['progress'] / 100))) : 0;
-
-// Campus memberships (the platform's main offer now), newest access first.
-$myCampuses = campuses_ready() ? db_all('SELECT m.*, c.name, c.slug, c.icon FROM campus_memberships m JOIN campuses c ON c.id = m.campus_id WHERE m.user_id = ? ORDER BY m.access_until DESC', [$user['id']]) : [];
-
-$pageTitle = 'My Learning — Obin Academy';
+$pageTitle = 'My Campuses — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <div class="dash-hero reveal">
@@ -77,8 +41,8 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <p style="margin-top:6px; color:rgba(255,255,255,0.72); font-style:italic;">"<?= e($quote) ?>"</p>
   </div>
   <div class="row gap-2" style="flex-wrap:wrap;">
-    <?php if ($nextUp): ?>
-      <a href="<?= e(base_url('learn.php?slug=' . $nextUp['slug'])) ?>" class="btn btn-gold" style="border-radius:999px;">▶ Resume Learning</a>
+    <?php if ($open): ?>
+      <a href="<?= e(base_url('campus-learn.php?campus=' . $open[0]['slug'])) ?>" class="btn btn-gold" style="border-radius:999px;">▶ Go to your campus</a>
     <?php endif; ?>
     <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-outline" style="border-radius:999px;">Explore Campuses</a>
   </div>
@@ -87,19 +51,19 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="grid md:grid-2 lg:grid-4" style="margin-top:24px;">
   <div class="stat-card accent-top reveal" data-hoverable="true" style="--hover-color:#0b00ff;">
     <div class="icon"><?php dash_icon('graduation-cap'); ?></div>
-    <div class="value" data-count-up data-count-value="<?= $enrolledCount ?>" data-count-suffix="">0</div><div class="label">Enrolled Courses</div>
+    <div class="value"><?= count($open) ?></div><div class="label">Active campuses</div>
   </div>
   <div class="stat-card accent-top reveal reveal-delay-1" data-hoverable="true" style="--hover-color:#10b981;">
     <div class="icon"><?php dash_icon('check-circle'); ?></div>
-    <div class="value" data-count-up data-count-value="<?= $completedCount ?>" data-count-suffix="">0</div><div class="label">Completed</div>
+    <div class="value"><?= $lessonsDone ?></div><div class="label">Lessons completed</div>
   </div>
   <div class="stat-card accent-top reveal reveal-delay-2" data-hoverable="true" style="--hover-color:#f5b301;">
-    <div class="icon"><?php dash_icon('clock'); ?></div>
-    <div class="value" data-count-up data-count-value="<?= $inProgressCount ?>" data-count-suffix="">0</div><div class="label">In Progress</div>
+    <div class="icon"><?php dash_icon('calendar'); ?></div>
+    <div class="value" style="font-size:20px;"><?= $nextLive ? e(date('D j M, g:i a', strtotime($nextLive['starts_at']))) : '—' ?></div><div class="label">Next live class</div>
   </div>
   <div class="stat-card accent-top reveal reveal-delay-3" data-hoverable="true" style="--hover-color:#8b5cf6;">
     <div class="icon"><?php dash_icon('award'); ?></div>
-    <div class="value" data-count-up data-count-value="<?= $certificateCount ?>" data-count-suffix="">0</div><div class="label">Certificates</div>
+    <div class="value"><?= $certificates ?></div><div class="label">Certificates</div>
   </div>
 </div>
 
@@ -114,96 +78,12 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?php foreach ($myCampuses as $mc): $mcOpen = strtotime($mc['access_until']) > time(); ?>
       <div class="ca-list" style="padding:0 20px;"><div>
         <span class="ca-ico"><?= campus_icon($mc['icon']) ?></span>
-        <div style="min-width:0;"><b class="t"><?= e($mc['name']) ?> Campus</b><small><?= $mcOpen ? 'Access until ' . e(date('j M Y', strtotime($mc['access_until']))) . ' · month ' . campus_current_month($mc) . ' of 12' : 'Access ended ' . e(date('j M Y', strtotime($mc['access_until']))) ?></small></div>
+        <div style="min-width:0;"><b class="t"><?= e($mc['name']) ?> Campus</b><small><?= $mcOpen ? 'Access until ' . e(date('j M Y', strtotime($mc['access_until']))) . ' · month ' . campus_current_month($mc) . ' of 12' . ($mc['live_schedule'] ? ' · live ' . e($mc['live_schedule']) : '') : 'Access ended ' . e(date('j M Y', strtotime($mc['access_until']))) ?></small></div>
         <?php if ($mcOpen): ?><a class="btn btn-primary btn-sm" href="<?= e(base_url('campus-learn.php?campus=' . $mc['slug'])) ?>">Open campus</a><?php else: ?><a class="btn btn-outline btn-sm" href="<?= e(base_url('campus.php?slug=' . $mc['slug'] . '#join')) ?>">Renew</a><?php endif; ?>
       </div></div>
     <?php endforeach; ?>
   </div>
 <?php endif; ?>
-
-<?php if ($continuing): ?>
-  <h3 class="dash-section-label" style="margin-top:36px;">Continue Learning</h3>
-  <div class="continue-track" style="margin-top:14px;">
-    <?php foreach ($continuing as $i => $en): ?>
-      <div class="continue-card reveal reveal-delay-<?= min($i + 1, 5) ?>">
-        <div class="continue-thumb">
-          <?php if ($en['thumbnail_url']): ?><img src="<?= e(asset_src($en['thumbnail_url'])) ?>" alt="">
-          <?php else: ?><div class="placeholder">Obin Academy</div><?php endif; ?>
-        </div>
-        <div class="continue-body">
-          <div class="cat"><?= e($en['category_name']) ?></div>
-          <h3><?= e($en['title']) ?></h3>
-          <p class="muted small" style="margin-top:2px;">by <?= e($en['creator_name']) ?></p>
-          <div class="continue-progress">
-            <div class="progress-track"><div class="progress-fill" style="width:<?= round((float) $en['progress']) ?>%;"></div></div>
-            <span><?= round((float) $en['progress']) ?>%</span>
-          </div>
-          <p class="muted small" style="margin-top:8px;"><?= (int) $en['lesson_count'] ?> lesson<?= (int) $en['lesson_count'] === 1 ? '' : 's' ?> total</p>
-          <a href="<?= e(base_url('learn.php?slug=' . $en['slug'])) ?>" class="btn btn-primary" style="margin-top:14px;">▶ Resume Learning</a>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-<?php endif; ?>
-
-<div class="row between wrap gap-2" style="margin-top:36px; align-items:baseline;">
-  <h3 class="dash-section-label">My Courses</h3>
-</div>
-<?php if (!$enrollments): ?>
-  <div class="card card-pad" style="margin-top:14px; text-align:center; border-style:dashed;">
-    <p class="muted">Courses you bought before the campuses appear here, and stay yours to keep.</p>
-  </div>
-<?php else: ?>
-  <div class="my-courses-toolbar" style="margin-top:14px;" data-mycourses-toolbar>
-    <div class="search-pill" style="max-width:320px; padding:6px 6px 6px 16px;">
-      <?php dash_icon('search'); ?>
-      <input type="text" placeholder="Search your courses…" data-mycourses-search>
-    </div>
-    <select class="role-select" style="width:auto; border:1px solid var(--border);" data-mycourses-category>
-      <option value="">All Categories</option>
-      <?php foreach (array_unique(array_column($enrollments, 'category_name')) as $catName): ?>
-        <option value="<?= e($catName) ?>"><?= e($catName) ?></option>
-      <?php endforeach; ?>
-    </select>
-    <select class="role-select" style="width:auto; border:1px solid var(--border);" data-mycourses-sort>
-      <option value="recent">Recently Enrolled</option>
-      <option value="progress-high">Progress: High to Low</option>
-      <option value="progress-low">Progress: Low to High</option>
-      <option value="az">Title: A–Z</option>
-    </select>
-  </div>
-
-  <div class="grid sm:grid-2 lg:grid-3" style="margin-top:18px;" data-mycourses-grid>
-    <?php foreach ($enrollments as $i => $en): ?>
-      <div class="enrolled-course-card reveal reveal-delay-<?= min($i % 5 + 1, 5) ?>" data-title="<?= e(mb_strtolower($en['title'])) ?>" data-category="<?= e($en['category_name']) ?>" data-progress="<?= (float) $en['progress'] ?>" data-enrolled="<?= e($en['enrolled_at']) ?>">
-        <div class="ecc-thumb">
-          <?php if ($en['thumbnail_url']): ?><img src="<?= e(asset_src($en['thumbnail_url'])) ?>" alt="">
-          <?php else: ?><div class="placeholder">Obin Academy</div><?php endif; ?>
-          <?php if ((float) $en['progress'] >= 100): ?><span class="ecc-done-badge"><?php dash_icon('check-circle'); ?> Completed</span><?php endif; ?>
-        </div>
-        <div class="ecc-body">
-          <div class="cat"><?= e($en['category_name']) ?></div>
-          <h3><?= e($en['title']) ?></h3>
-          <p class="muted small" style="margin-top:4px;">by <?= e($en['creator_name']) ?></p>
-          <div class="continue-progress" style="margin-top:12px;">
-            <div class="progress-track"><div class="progress-fill" style="width:<?= round((float) $en['progress']) ?>%;"></div></div>
-            <span><?= round((float) $en['progress']) ?>%</span>
-          </div>
-          <div class="row gap-2" style="margin-top:14px;">
-            <a href="<?= e(base_url('learn.php?slug=' . $en['slug'])) ?>" class="btn btn-primary btn-sm" style="flex:1;">
-              <?= (float) $en['progress'] > 0 ? '▶ Continue' : '▶ Start' ?>
-            </a>
-            <?php if ($en['certificate_code']): ?>
-              <a href="<?= e(base_url('certificate.php?code=' . $en['certificate_code'])) ?>" target="_blank" rel="noopener" class="btn btn-gold btn-sm">🎓</a>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-  <p class="muted small" style="margin-top:14px; display:none;" data-mycourses-empty>No courses match your search.</p>
-<?php endif; ?>
-
 
 <h3 class="dash-section-label" style="margin-top:40px;">Quick Actions</h3>
 <div class="quick-actions">

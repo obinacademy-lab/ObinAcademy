@@ -34,7 +34,7 @@ function ci(string $name, string $class = ''): string {
 $inquiryTypes = [
     'general' => 'General Question',
     'student_support' => 'Student Support',
-    'creator_support' => 'Creator Support',
+    'creator_support' => 'Teaching at Obin Academy',
     'technical_support' => 'Technical Support',
     'billing' => 'Billing',
     'partnership' => 'Partnership',
@@ -95,20 +95,20 @@ if (!array_key_exists($presetInquiry, $inquiryTypes)) $presetInquiry = '';
 $whatsappHref = 'https://wa.me/' . $WHATSAPP_NUMBER . '?text=' . urlencode('Hi, I have a question about Obin Academy');
 
 $faqs = [
-    ['How do I enroll in a course?', 'Browse our course catalog, open the course you want, and tap "Enroll." Pay instantly with MTN or Airtel Mobile Money and you\'ll get access the moment payment is confirmed — no waiting, no card required.'],
-    ['Can I learn from my phone?', "Yes. Obin Academy works on any device with a browser — phone, tablet, or laptop. Video and PDF lessons load right in the browser, so there's nothing extra to install."],
-    ['How do creators earn money?', 'Creators set their own course price and keep 90% of every sale. Obin Academy takes a simple, transparent 10% platform fee — nothing hidden. Earnings can be withdrawn straight to mobile money.'],
-    ['How do certificates work?', "Once you complete all lessons in a course, a Certificate of Completion is generated automatically and appears in your learner dashboard, ready to download or share."],
-    ['What payment methods are accepted?', 'We currently accept MTN Mobile Money and Airtel Money. You\'ll get a payment prompt on your phone to approve — no bank account or credit card needed.'],
-    ['Can I request a refund?', "Refund requests are reviewed case-by-case. If a course was materially different from its description, or you were charged in error, contact us within 48 hours of purchase and we'll sort it out."],
-    ['How do I publish my own course?', 'Apply to become a creator, then use the Creator Dashboard to add modules, upload video or PDF lessons, set your price, and submit for review. Once approved, your course goes live to every learner on the platform.'],
-    ['How long does support take to respond?', "Email and contact-form requests are answered within 24 hours. WhatsApp and Live Chat during business hours (Mon–Fri, 8:00 AM–6:00 PM EAT) are usually much faster."],
+    ['How do I join a campus?', 'Open the campus you want, choose monthly or yearly, and pay with MTN or Airtel Mobile Money. You approve a prompt on your phone and your campus opens straight away.'],
+    ['Can I learn from my phone?', "Yes. Lessons, PDF guides, live classes and the community all work in the browser on any phone, tablet or laptop. There's nothing extra to install."],
+    ['What is the difference between monthly and yearly?', 'Monthly gives you 30 days of access at a time. Yearly gives you twelve months at once and costs less overall. Nothing renews by itself: we remind you by email before your access ends.'],
+    ['How do certificates work?', 'Complete every lesson of your campus\'s twelve stages and your certificate is issued automatically, ready to view and share.'],
+    ['What payment methods are accepted?', 'MTN Mobile Money and Airtel Money. You approve a payment prompt on your phone, so no bank account or card is needed.'],
+    ['Can I request a refund?', "Refund requests are reviewed case by case. If you were charged in error, contact us within 48 hours of paying and we'll sort it out."],
+    ['How do I become a professor?', 'Apply on the Teach page. We read every application and call the people who are a fit to talk through the role.'],
+    ['How long does support take to respond?', "Email and contact-form requests are answered within 24 hours. WhatsApp during business hours (Mon–Fri, 8:00 AM–6:00 PM EAT) is usually much faster."],
 ];
 
 $stats = get_platform_stats();
 
 $pageTitle = 'Contact & Support — Obin Academy';
-$pageDescription = "Get in touch with Obin Academy — support for learners, creators, and businesses. Real human support, replies within 24 hours.";
+$pageDescription = "Get in touch with Obin Academy — support for learners, future professors and businesses. Real human support, replies within 24 hours.";
 require __DIR__ . '/includes/header.php';
 ?>
 <!-- 1. Hero -->
@@ -116,10 +116,10 @@ require __DIR__ . '/includes/header.php';
   <div class="container" style="max-width:900px; text-align:center;">
     <span class="pill"><?= ci('headphones') ?> Support &amp; Contact Center</span>
     <h1>We're Here to Help</h1>
-    <p class="summary" style="margin-left:auto; margin-right:auto;">Whether you're a learner, creator, business, or partner, our team is ready to answer your questions and help you get the most out of Obin Academy.</p>
+    <p class="summary" style="margin-left:auto; margin-right:auto;">Whether you're a learner, a future professor, a business or a partner, our team is ready to answer your questions.</p>
     <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:26px;">
       <a href="#contact-form" class="btn btn-gold">Contact Support <span class="btn-arrow">→</span></a>
-      <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-outline">▶ Become a Creator</a>
+      <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-outline">See the campuses</a>
     </div>
     <div class="hero-trust-row">
       <span class="item"><?= ci('shield-check') ?> Secure &amp; Trusted</span>
@@ -225,7 +225,7 @@ require __DIR__ . '/includes/header.php';
         <span class="icon-badge" style="--tint:#0b00ff;"><?= ci('graduation-cap') ?></span>
         <h3>I'm a Learner</h3>
         <ul class="check-list">
-          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Course access</span></li>
+          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Campus access</span></li>
           <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Certificates</span></li>
           <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Learning assistance</span></li>
           <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Payments</span></li>
@@ -234,14 +234,14 @@ require __DIR__ . '/includes/header.php';
       </div>
       <div class="persona-card reveal reveal-delay-2">
         <span class="icon-badge" style="--tint:#f5b301;"><?= ci('award') ?></span>
-        <h3>I'm a Creator</h3>
+        <h3>I Want to Teach</h3>
         <ul class="check-list">
-          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Publish courses</span></li>
-          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Earnings</span></li>
-          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Course approval</span></li>
-          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Creator Dashboard</span></li>
+          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Leading a campus</span></li>
+          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Your application</span></li>
+          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Live classes</span></li>
+          <li><span class="check-icon"><?= ci('check') ?></span><span class="label-text">Professor pay</span></li>
         </ul>
-        <a href="?type=creator_support#contact-form" class="btn btn-outline btn-sm">Creator Support</a>
+        <a href="<?= e(base_url('teach.php')) ?>" class="btn btn-outline btn-sm">Apply to Teach</a>
       </div>
       <div class="persona-card reveal reveal-delay-3">
         <span class="icon-badge" style="--tint:#8b5cf6;"><?= ci('building') ?></span>
@@ -275,12 +275,12 @@ require __DIR__ . '/includes/header.php';
     <div class="text-center reveal" style="max-width:560px; margin:0 auto 32px;">
       <span class="eyebrow">Help Center</span>
       <h2 class="h2" style="margin-top:10px;">Find Answers Instantly</h2>
-      <p class="lede" style="margin-top:10px; max-width:none;">Popular articles our learners and creators search for most.</p>
+      <p class="lede" style="margin-top:10px; max-width:none;">What learners ask us most.</p>
     </div>
     <div class="help-articles reveal">
       <a href="#faq" class="help-article-tile"><?= ci('user') ?> How to Create an Account</a>
-      <a href="#faq" class="help-article-tile"><?= ci('users') ?> How to Become a Creator</a>
-      <a href="#faq" class="help-article-tile"><?= ci('book-open') ?> Upload Your First Course</a>
+      <a href="#faq" class="help-article-tile"><?= ci('users') ?> How to Join a Campus</a>
+      <a href="#faq" class="help-article-tile"><?= ci('book-open') ?> Monthly or Yearly</a>
       <a href="#faq" class="help-article-tile"><?= ci('credit-card') ?> Payment Methods</a>
       <a href="#faq" class="help-article-tile"><?= ci('award') ?> Certificates</a>
       <a href="#faq" class="help-article-tile"><?= ci('key') ?> Reset Your Password</a>
@@ -352,7 +352,7 @@ require __DIR__ . '/includes/header.php';
     <div class="text-center reveal" style="max-width:560px; margin:0 auto;">
       <span class="eyebrow">Stay Connected</span>
       <h2 class="h2" style="margin-top:10px;">Follow Us</h2>
-      <p class="lede" style="margin:10px auto 0; max-width:none;">Get updates on new courses, creator stories, and behind-the-scenes moments from Obin Academy.</p>
+      <p class="lede" style="margin:10px auto 0; max-width:none;">Get updates on new campuses, live classes and behind-the-scenes moments from Obin Academy.</p>
       <div class="social-icons-light" style="justify-content:center; gap:14px; margin-top:28px;">
         <a href="https://www.facebook.com/profile.php?id=61591414895842" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M13.5 21v-7.5h2.5l.5-3H13.5V8.5c0-.9.25-1.5 1.53-1.5H16.5V4.34C16.19 4.3 15.13 4.2 14 4.2c-2.34 0-3.94 1.43-3.94 4.05V10.5H7.5v3H10V21h3.5z"/></svg></a>
         <a href="https://www.instagram.com/obinacademyofficial/?hl=en" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2zM12 2c-2.7 0-3.1 0-4.1.1-1.1 0-1.8.2-2.4.5A4.8 4.8 0 0 0 2.6 5.5c-.3.6-.5 1.3-.5 2.4C2 8.9 2 9.3 2 12s0 3.1.1 4.1c.1 1.1.2 1.8.5 2.4a4.8 4.8 0 0 0 2.9 2.9c.6.3 1.3.5 2.4.5C8.9 22 9.3 22 12 22s3.1 0 4.1-.1c1.1-.1 1.8-.2 2.4-.5a4.8 4.8 0 0 0 2.9-2.9c.3-.6.5-1.3.5-2.4.1-1 .1-1.4.1-4.1s0-3.1-.1-4.1c-.1-1.1-.2-1.8-.5-2.4a4.8 4.8 0 0 0-2.9-2.9c-.6-.3-1.3-.5-2.4-.5C15.1 2 14.7 2 12 2zm0 1.8c2.6 0 3 0 4 .1.9 0 1.5.2 1.8.3.5.2.8.4 1.1.7.3.3.5.6.7 1.1.1.3.3.9.3 1.8.1 1 .1 1.4.1 4s0 3-.1 4c0 .9-.2 1.5-.3 1.8-.2.5-.4.8-.7 1.1-.3.3-.6.5-1.1.7-.3.1-.9.3-1.8.3-1 .1-1.4.1-4 .1s-3 0-4-.1c-.9 0-1.5-.2-1.8-.3a3 3 0 0 1-1.1-.7 3 3 0 0 1-.7-1.1c-.1-.3-.3-.9-.3-1.8-.1-1-.1-1.4-.1-4s0-3 .1-4c0-.9.2-1.5.3-1.8.2-.5.4-.8.7-1.1.3-.3.6-.5 1.1-.7.3-.1.9-.3 1.8-.3 1-.1 1.4-.1 4-.1z"/></svg></a>
@@ -380,7 +380,7 @@ require __DIR__ . '/includes/header.php';
       <div class="value-card reveal reveal-delay-2">
         <span class="icon-badge" style="--tint:#10b981;"><?= ci('book-open') ?></span>
         <h3>Practical Learning</h3>
-        <p>Learn real-world skills from experienced creators.</p>
+        <p>Learn real-world skills from professors who have done the work.</p>
       </div>
       <div class="value-card reveal reveal-delay-3">
         <span class="icon-badge" style="--tint:#8b5cf6;"><?= ci('headphones') ?></span>
@@ -390,34 +390,33 @@ require __DIR__ . '/includes/header.php';
       <div class="value-card reveal reveal-delay-4">
         <span class="icon-badge" style="--tint:#f5b301;"><?= ci('smartphone') ?></span>
         <h3>Learn Anywhere</h3>
-        <p>Access your courses anytime, on any device.</p>
+        <p>Open your campus anytime, on any device.</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 10. Become a Creator CTA -->
+<!-- 10. Teach CTA -->
 <section class="feature-cta-section cta-photo-visible" style="background-image: url('<?= e(versioned_asset('assets/img/abt-video-call.jpg')) ?>');">
   <div class="container">
     <div class="cta-panel-premium reveal">
-      <span class="eyebrow" style="background:rgba(255,255,255,0.1); color:var(--gold);">For Creators &amp; Experts</span>
-      <h2 class="h2" style="margin-top:14px; color:#fff;">Ready to Share Your Knowledge?</h2>
-      <p style="margin-top:12px; color:rgba(255,255,255,0.7); max-width:480px; margin-left:auto; margin-right:auto;">Create your first course today, inspire thousands of learners, and earn income from your expertise.</p>
+      <span class="eyebrow" style="background:rgba(255,255,255,0.1); color:var(--gold);">For Experts</span>
+      <h2 class="h2" style="margin-top:14px; color:#fff;">Teach what you know. Lead a campus.</h2>
+      <p style="margin-top:12px; color:rgba(255,255,255,0.7); max-width:480px; margin-left:auto; margin-right:auto;">We are building a faculty of people who have done the work. Apply, and we will call you to talk it through.</p>
       <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:26px;">
-        <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-gold btn-lg">Become a Creator <span class="btn-arrow">→</span></a>
-        <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline-light btn-lg">Explore Courses</a>
+        <a href="<?= e(base_url('teach.php')) ?>" class="btn btn-gold btn-lg">Apply to Teach <span class="btn-arrow">→</span></a>
+        <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-outline-light btn-lg">See the Campuses</a>
       </div>
     </div>
   </div>
 </section>
-
 <!-- 11. Newsletter -->
 <div id="newsletter" class="section" style="scroll-margin-top:90px;">
   <div class="container" style="max-width:640px;">
     <div class="newsletter-panel reveal">
       <span class="icon-badge" style="--tint:#0b00ff; margin:0 auto;"><?= ci('mail') ?></span>
       <h2 class="h2" style="margin-top:18px;">Stay Updated</h2>
-      <p class="lede" style="margin:10px auto 0; max-width:440px;">Receive updates on new courses, creator opportunities, platform improvements, and learning resources.</p>
+      <p class="lede" style="margin:10px auto 0; max-width:440px;">Get news of new campuses, intake dates and learning resources.</p>
       <form method="post" class="newsletter-form" data-loading-submit>
         <?= csrf_field() ?>
         <input type="hidden" name="form_type" value="newsletter">

@@ -10,7 +10,7 @@ if (!isset($allowedRanges[$days])) $days = 30;
 $summary = get_visit_summary($days);
 $topPages = get_top_landing_pages($days, 8);
 $exitPages = get_top_exit_pages($days, 8);
-$topCourses = get_most_viewed_courses($days, 8);
+$topCourses = get_most_viewed_campuses($days, 8);
 $topCities = get_top_cities($days, 8);
 $deviceBreakdown = get_breakdown('device_type', $days);
 $browserBreakdown = get_breakdown('browser', $days);
@@ -216,7 +216,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </div>
 </div>
 
-<h3 class="dash-section-label" style="margin-top:32px;">Most-Viewed Courses</h3>
+<h3 class="dash-section-label" style="margin-top:32px;">Most-Viewed Campuses</h3>
 <?php if ($topCourses): ?>
   <div class="activity-feed" style="margin-top:14px;">
     <?php foreach ($topCourses as $c): ?>
@@ -227,7 +227,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?php endforeach; ?>
   </div>
 <?php else: ?>
-  <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No course views recorded yet in this range.</div>
+  <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No campus page views recorded yet in this range.</div>
 <?php endif; ?>
 
 <h3 class="dash-section-label" style="margin-top:32px;">Location</h3>

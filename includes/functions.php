@@ -1,37 +1,7 @@
 <?php
 
-const PLATFORM_FEE_RATE = 0.10;
-// Paid only on a sale attributed to an affiliate's link (see
-// includes/affiliates.php) — carved out of the creator's share, not added on
-// top, so the platform's own 10% never changes: 85% creator / 10% platform /
-// 5% affiliate on an affiliate-referred sale, vs. the normal 90% / 10%.
-const AFFILIATE_COMMISSION_RATE = 0.05;
-const MIN_WITHDRAWAL_UGX = 75000;
-const MAX_DAILY_WITHDRAWAL_UGX = 3000000;
-// Sorting the course grid by popularity (see POPULARITY_ORDER) would bury a
-// brand-new course under zero purchases/views — this badge window is what
-// keeps it visible anyway. Measured from reviewed_at (when it actually went
-// PUBLISHED), not created_at (which could be from long before it was ready).
-const NEW_COURSE_BADGE_DAYS = 14;
-// The platform-wide student community — one group for every learner across
-// every school, not per-course. Linked from the homepage and footer.
+// The platform-wide WhatsApp community. Linked from the footer.
 const WHATSAPP_COMMUNITY_URL = 'https://chat.whatsapp.com/F4eY0Gff1Oh5DTlUiLs7Kt';
-
-const ACCESS_DURATION_OPTIONS = [
-    ['label' => '30 days', 'days' => 30],
-    ['label' => '90 days', 'days' => 90],
-    ['label' => '180 days', 'days' => 180],
-    ['label' => '365 days', 'days' => 365],
-    ['label' => 'Lifetime access', 'days' => null],
-];
-
-const SALE_DURATION_OPTIONS = [
-    ['label' => '3 days', 'days' => 3],
-    ['label' => '5 days', 'days' => 5],
-    ['label' => '7 days', 'days' => 7],
-    ['label' => '14 days', 'days' => 14],
-    ['label' => '30 days', 'days' => 30],
-];
 
 /**
  * Every dashboard theme color available to a user (Settings → Dashboard
@@ -59,8 +29,7 @@ const DASHBOARD_THEMES = [
  * via dashboard_theme_for_user(), so no data migration is needed.
  */
 function dashboard_theme_default(string $role): string {
-    // Creators open to the light Studio look (as on obinacademy.com); learners and admins keep the blue shell.
-    return $role === 'CREATOR' ? 'light' : 'blue';
+    return 'blue';
 }
 
 /** @return string a valid DASHBOARD_THEMES key — never trusts a stored value blindly, in case it predates a theme being renamed/removed. */
@@ -70,81 +39,9 @@ function dashboard_theme_for_user(array $user): string {
     return dashboard_theme_default($user['role']);
 }
 
-/**
- * True only for a sale that's a real discount right now — never a fabricated
- * "limited time" claim (see get_courses_on_sale()'s own comment on this same
- * philosophy). A course row needs price/sale_price (any get_course_cards()
- * or get_course_by_slug() row already has both) and, if set, sale_ends_at.
- * sale_ends_at is optional — a NULL end date is an indefinite sale, exactly
- * today's existing behavior, so this is backward compatible with every
- * sale_price already live before this column existed.
- */
-function course_has_active_sale(array $course): bool {
-    if (empty($course['sale_price'])) return false;
-    if ((float) $course['sale_price'] <= 0 || (float) $course['sale_price'] >= (float) $course['price']) return false;
-    if (!empty($course['sale_ends_at']) && strtotime($course['sale_ends_at']) <= time()) return false;
-    return true;
-}
-
-/** Whole days left on an active, time-limited sale — null if inactive or the sale has no end date. */
-function course_sale_days_left(array $course): ?int {
-    if (empty($course['sale_ends_at']) || !course_has_active_sale($course)) return null;
-    $secondsLeft = strtotime($course['sale_ends_at']) - time();
-    return $secondsLeft > 0 ? (int) ceil($secondsLeft / 86400) : null;
-}
-
 /** Escape for safe HTML output. */
 function e(?string $value): string {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
-}
-
-/**
- * Renders a plain-text course/event description (as typed into a textarea —
- * blank-line-separated paragraphs, with "- " or "* " prefixed lines treated
- * as a bullet list) as safe, structured HTML. Keeps creators free of a rich
- * text editor while giving lists real markup instead of raw dashes.
- */
-function format_rich_text(?string $text): string {
-    $text = trim((string) $text);
-    if ($text === '') return '';
-
-    $lines = explode("\n", str_replace("\r\n", "\n", $text));
-    $html = '';
-    $paraLines = [];
-    $listItems = [];
-
-    $flushPara = function () use (&$html, &$paraLines) {
-        if ($paraLines) {
-            $html .= '<p>' . implode('<br>', array_map('e', $paraLines)) . '</p>';
-            $paraLines = [];
-        }
-    };
-    $flushList = function () use (&$html, &$listItems) {
-        if ($listItems) {
-            $html .= '<ul class="rich-text-list">';
-            foreach ($listItems as $item) $html .= '<li>' . e($item) . '</li>';
-            $html .= '</ul>';
-            $listItems = [];
-        }
-    };
-
-    foreach ($lines as $line) {
-        $trimmed = trim($line);
-        if ($trimmed === '') {
-            $flushPara();
-            $flushList();
-        } elseif (preg_match('/^[-*]\s+(.+)/', $trimmed, $m)) {
-            $flushPara();
-            $listItems[] = $m[1];
-        } else {
-            $flushList();
-            $paraLines[] = $trimmed;
-        }
-    }
-    $flushPara();
-    $flushList();
-
-    return $html;
 }
 
 /** UGX has no minor unit — always round to whole shillings. */
@@ -158,115 +55,8 @@ function slugify(string $text): string {
     return trim($slug, '-');
 }
 
-/**
- * Page numbers to render for numbered pagination, with null standing in
- * for an ellipsis gap — e.g. [1, null, 4, 5, 6, null, 34]. Always keeps
- * the first and last page visible plus a small window around the current
- * page, same convention as most "1 2 3 ... 34" paginators.
- * @return array<int|null>
- */
-function paginate_window(int $current, int $total, int $window = 1): array {
-    $pages = [];
-    $last = 0;
-    for ($p = 1; $p <= $total; $p++) {
-        if ($p === 1 || $p === $total || abs($p - $current) <= $window) {
-            if ($last && $p - $last > 1) $pages[] = null;
-            $pages[] = $p;
-            $last = $p;
-        }
-    }
-    return $pages;
-}
-
-/**
- * "← Previous  1 2 3 … 9  Next →" for the school lists (homepage and Explore). Only the links that
- * lead somewhere are shown, so page 1 reads "1 2 Next →". Prints nothing for a single page.
- * $urlFor(int $page) returns the link for that page.
- */
-function render_school_pager(int $page, int $pages, callable $urlFor): void {
-    if ($pages < 2) return;
-    ?>
-    <nav class="home-pager" aria-label="Pages of schools">
-      <?php if ($page > 1): ?><a href="<?= e($urlFor($page - 1)) ?>" rel="prev">&larr; Previous</a><?php endif; ?>
-      <?php foreach (paginate_window($page, $pages) as $n): ?>
-        <?php if ($n === null): ?><i>…</i>
-        <?php elseif ($n === $page): ?><span class="on" aria-current="page"><?= (int) $n ?></span>
-        <?php else: ?><a href="<?= e($urlFor($n)) ?>"><?= (int) $n ?></a><?php endif; ?>
-      <?php endforeach; ?>
-      <?php if ($page < $pages): ?><a href="<?= e($urlFor($page + 1)) ?>" rel="next">Next &rarr;</a><?php endif; ?>
-    </nav>
-    <?php
-}
-
-/**
- * Splits a sale into gross/fee/affiliate_cut/net. $hasAffiliate carves the
- * affiliate's 5% out of what would otherwise be the creator's share — the
- * platform's own 10% fee is identical either way.
- */
-function split_sale(float $price, bool $hasAffiliate = false): array {
-    $gross = round($price);
-    $fee = round($gross * PLATFORM_FEE_RATE);
-    $affiliateCut = $hasAffiliate ? round($gross * AFFILIATE_COMMISSION_RATE) : 0.0;
-    return ['gross' => $gross, 'fee' => $fee, 'affiliate_cut' => $affiliateCut, 'net' => $gross - $fee - $affiliateCut];
-}
-
-function get_profile(int $userId): ?array {
-    return db_one('SELECT * FROM users WHERE id = ?', [$userId]);
-}
-
-/** A learner's finished courses — enrollments.progress is a 0-100 percentage, same convention as the learner dashboard. */
-function get_courses_completed_count(int $userId): int {
-    return (int) db_one('SELECT COUNT(*) AS n FROM enrollments WHERE user_id = ? AND progress >= 100', [$userId])['n'];
-}
-
-function get_courses_teaching(int $userId, int $limit = 20): array {
-    $limit = max(1, min(50, $limit));
-    return db_all(
-        "SELECT c.id, c.title, c.slug, c.thumbnail_url, c.view_count,
-                (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id) AS student_count
-         FROM courses c
-         WHERE c.creator_id = ? AND c.status = 'PUBLISHED'
-         ORDER BY c.created_at DESC LIMIT $limit",
-        [$userId]
-    );
-}
-
-/**
- * Generates a guest access token. Only the hash is ever stored (same pattern
- * as password_reset_tokens) — the plaintext is returned once, to embed in an
- * emailed link or hand back to the browser for a follow-up API call.
- * @return array{0: string, 1: string} [plaintext token, sha256 hash]
- */
-function make_access_token(): array {
-    $token = bin2hex(random_bytes(32));
-    return [$token, hash('sha256', $token)];
-}
-
-/** null days = lifetime access, no expiry. */
-function compute_expires_at(?int $accessDurationDays): ?string {
-    if (!$accessDurationDays) return null;
-    return date('Y-m-d H:i:s', time() + $accessDurationDays * 86400);
-}
-
 function format_date(string $datetime): string {
     return date('M j, Y', strtotime($datetime));
-}
-
-/**
- * "First L." from a full name — for the recent-activity toast
- * (courses/view.php). A bare first name risks a name-collision mix-up: a
- * different learner who shares that first name (or who never enrolled at
- * all) could see it and wonder "wait, is that me? I never paid for this."
- * The last-initial disambiguates without fully identifying anyone — never
- * the full name.
- */
-function display_name_initial(string $fullName): string {
-    $parts = preg_split('/\s+/', trim($fullName), -1, PREG_SPLIT_NO_EMPTY);
-    if (!$parts) return '';
-    $first = mb_substr($parts[0], 0, 30);
-    if (count($parts) === 1) return $first;
-    $initial = mb_strtoupper(mb_substr(end($parts), 0, 1));
-    return "{$first} {$initial}.";
 }
 
 /** A UG-style local number ("0772 123 456") into the digits-only international form wa.me needs. Null if it doesn't look like a real number. */
@@ -441,153 +231,31 @@ function smooth_svg_path(array $points): string {
 }
 
 /**
- * The site-wide blue platform-trust strip (Courses Live / Learners /
- * Creators / Paid to Creators / Paid to Affiliates) — same get_platform_stats()
- * row every caller already has in scope, animated count-up handled by
- * data-count-up in main.js. Shared across every public-facing page so the
- * numbers/animation/styling never drift between pages.
+ * The site-wide blue trust strip (campuses open, learners, the year's shape) from a
+ * get_platform_stats() row. The count-up animation is data-count-up in main.js.
  */
 function render_stat_strip(array $stats): void {
     ?>
     <section class="stat-strip">
       <div class="container stat-strip-grid">
         <div class="stat-strip-item">
-          <div class="value" data-count-up data-count-value="<?= (int) $stats['course_count'] ?>" data-count-suffix="+">0+</div>
-          <div class="label">Courses Live</div>
+          <div class="value" data-count-up data-count-value="<?= (int) $stats['campus_count'] ?>" data-count-suffix="">0</div>
+          <div class="label">Campuses</div>
         </div>
         <div class="stat-strip-item">
           <div class="value" data-count-up data-count-value="<?= (int) $stats['learner_count'] ?>" data-count-suffix="+">0+</div>
           <div class="label">Learners</div>
         </div>
         <div class="stat-strip-item">
-          <div class="value" data-count-up data-count-value="<?= (int) $stats['creator_count'] ?>" data-count-suffix="+">0+</div>
-          <div class="label">Creators</div>
+          <div class="value" data-count-up data-count-value="12" data-count-suffix="">0</div>
+          <div class="label">Months per campus</div>
         </div>
         <div class="stat-strip-item">
-          <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_creators']) ?>" data-count-prefix="UGX " data-count-compact data-count-suffix="">UGX 0</div>
-          <div class="label">Paid to Creators</div>
-        </div>
-        <div class="stat-strip-item">
-          <div class="value" data-count-up data-count-value="<?= (int) round($stats['paid_affiliates']) ?>" data-count-prefix="UGX " data-count-compact data-count-suffix="">UGX 0</div>
-          <div class="label">Paid to Affiliates</div>
+          <div class="value" data-count-up data-count-value="52" data-count-suffix="">0</div>
+          <div class="label">Live classes a year</div>
         </div>
       </div>
     </section>
-    <?php
-}
-
-/**
- * Row of social icons (Facebook/Instagram/YouTube/TikTok/LinkedIn) — shared
- * by the course sidebar's instructor card and public profile pages. Always
- * renders all five, in the same fixed order, on every page — a platform the
- * creator hasn't linked shows as a muted, non-clickable placeholder rather
- * than being dropped, so the row lines up the same way from creator to
- * creator instead of some pages showing 5 icons and others 1 or 2.
- */
-function render_social_links(array $socials): void {
-    $iconPaths = [
-        'facebook' => '<path d="M13.5 21v-7.5h2.5l.5-3H13.5V8.5c0-.9.25-1.5 1.53-1.5H16.5V4.34C16.19 4.3 15.13 4.2 14 4.2c-2.34 0-3.94 1.43-3.94 4.05V10.5H7.5v3H10V21h3.5z"/>',
-        'instagram' => '<path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2zM12 2c-2.7 0-3.1 0-4.1.1-1.1 0-1.8.2-2.4.5A4.8 4.8 0 0 0 2.6 5.5c-.3.6-.5 1.3-.5 2.4C2 8.9 2 9.3 2 12s0 3.1.1 4.1c.1 1.1.2 1.8.5 2.4a4.8 4.8 0 0 0 2.9 2.9c.6.3 1.3.5 2.4.5C8.9 22 9.3 22 12 22s3.1 0 4.1-.1c1.1-.1 1.8-.2 2.4-.5a4.8 4.8 0 0 0 2.9-2.9c.3-.6.5-1.3.5-2.4.1-1 .1-1.4.1-4.1s0-3.1-.1-4.1c-.1-1.1-.2-1.8-.5-2.4a4.8 4.8 0 0 0-2.9-2.9c-.6-.3-1.3-.5-2.4-.5C15.1 2 14.7 2 12 2zm0 1.8c2.6 0 3 0 4 .1.9 0 1.5.2 1.8.3.5.2.8.4 1.1.7.3.3.5.6.7 1.1.1.3.3.9.3 1.8.1 1 .1 1.4.1 4s0 3-.1 4c0 .9-.2 1.5-.3 1.8-.2.5-.4.8-.7 1.1-.3.3-.6.5-1.1.7-.3.1-.9.3-1.8.3-1 .1-1.4.1-4 .1s-3 0-4-.1c-.9 0-1.5-.2-1.8-.3a3 3 0 0 1-1.1-.7 3 3 0 0 1-.7-1.1c-.1-.3-.3-.9-.3-1.8-.1-1-.1-1.4-.1-4s0-3 .1-4c0-.9.2-1.5.3-1.8.2-.5.4-.8.7-1.1.3-.3.6-.5 1.1-.7.3-.1.9-.3 1.8-.3 1-.1 1.4-.1 4-.1z"/>',
-        'youtube' => '<path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.5V8.5l6.3 3.5-6.3 3.5Z"/>',
-        'tiktok' => '<path d="M16.5 2h-3v13.5a2.5 2.5 0 1 1-2.5-2.5c.2 0 .4 0 .6.05V9.9a5.6 5.6 0 0 0-.6 0 5.6 5.6 0 1 0 5.6 5.6V8.4a7.4 7.4 0 0 0 4.4 1.4V6.7a4.4 4.4 0 0 1-4.5-4.4Z"/>',
-        'linkedin' => '<path d="M6.9 8.4H3.6V20h3.3V8.4zM5.3 3.4a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8zM20.4 20h-3.3v-6.1c0-1.5-.5-2.5-1.9-2.5-1 0-1.6.7-1.9 1.4-.1.2-.1.6-.1.9V20H10s0-10.6 0-11.6h3.3v1.6c.4-.7 1.2-1.7 3-1.7 2.2 0 3.8 1.4 3.8 4.5V20z"/>',
-    ];
-    echo '<div class="creator-social">';
-    foreach ($iconPaths as $network => $path) {
-        $url = trim((string) ($socials[$network] ?? ''));
-        if ($url !== '') {
-            echo '<a href="' . e($url) . '" target="_blank" rel="noopener noreferrer" aria-label="' . e(ucfirst($network)) . '"><svg viewBox="0 0 24 24" fill="currentColor">' . $path . '</svg></a>';
-        } else {
-            echo '<span class="is-empty" aria-label="' . e(ucfirst($network)) . ' not linked" title="Not linked yet"><svg viewBox="0 0 24 24" fill="currentColor">' . $path . '</svg></span>';
-        }
-    }
-    echo '</div>';
-}
-
-/**
- * "Share Course" button + popover: WhatsApp/Facebook/X/LinkedIn open a real
- * share-intent URL in a new tab. Instagram and TikTok have no public web
- * share-intent for an arbitrary link (both are app-only for that), so those
- * two copy the link instead and show a hint to paste it in manually — an
- * honest fallback rather than a broken-looking "share" that goes nowhere.
- * @param string $theme 'dark' for a translucent pill on a dark hero (the
- *   default course-hero background), 'light' for a plain-card/dashboard context.
- */
-function render_share_button(string $url, string $title, string $label = 'Share Course', string $theme = 'dark', ?int $courseId = null, string $menuHeading = 'Share this course'): void {
-    // Each channel gets its own token embedded in the URL it actually sends
-    // out (no DB write yet — that only happens if share.js reports the row
-    // was actually clicked). A visit later arriving with that exact token
-    // attributes back to this one share, so the admin "Course Shares" page
-    // can tell a direct single-recipient share from a link that's been
-    // passed around further. $courseId is null on any caller that hasn't
-    // been updated to pass it — those callers just don't get tracking.
-    $tokenFor = function (string $channel) use ($courseId): string {
-        if (!$courseId) return '';
-        return bin2hex(random_bytes(6));
-    };
-    $urlWithRef = function (string $token) use ($url): string {
-        if ($token === '') return $url;
-        return $url . (str_contains($url, '?') ? '&' : '?') . 'ref=' . $token;
-    };
-
-    $tCopy = $tokenFor('copy_link');
-    $tWhatsapp = $tokenFor('whatsapp');
-    $tFacebook = $tokenFor('facebook');
-    $tTwitter = $tokenFor('twitter');
-    $tLinkedin = $tokenFor('linkedin');
-    $tInstagram = $tokenFor('instagram');
-    $tTiktok = $tokenFor('tiktok');
-
-    $urlCopy = $urlWithRef($tCopy);
-    $urlWhatsapp = $urlWithRef($tWhatsapp);
-    $urlFacebook = $urlWithRef($tFacebook);
-    $urlTwitter = $urlWithRef($tTwitter);
-    $urlLinkedin = $urlWithRef($tLinkedin);
-    $urlInstagram = $urlWithRef($tInstagram);
-    $urlTiktok = $urlWithRef($tTiktok);
-
-    $encodedTitle = urlencode($title);
-    $waText = urlencode("$title\n$urlWhatsapp");
-    $linkIcon = '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>';
-    ?>
-    <div class="share-menu-wrap" data-share-wrap data-share-course-id="<?= (int) $courseId ?>">
-      <button type="button" class="btn-share<?= $theme === 'light' ? ' btn-share-light' : '' ?>" data-share-toggle aria-haspopup="true" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><?= $linkIcon ?></svg>
-        <?= e($label) ?>
-      </button>
-      <div class="share-menu" data-share-menu hidden>
-        <div class="share-menu-head"><?= e($menuHeading) ?></div>
-
-        <button type="button" class="share-row" data-share-copy="<?= e($urlCopy) ?>" data-share-hint="Link copied to your clipboard." data-share-token="<?= e($tCopy) ?>" data-share-channel="copy_link">
-          <span class="share-row-icon" style="background:#5b6670;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><?= $linkIcon ?></svg></span>
-          Copy Link
-        </button>
-        <a class="share-row" href="https://wa.me/?text=<?= $waText ?>" target="_blank" rel="noopener noreferrer" data-share-token="<?= e($tWhatsapp) ?>" data-share-channel="whatsapp">
-          <span class="share-row-icon" style="background:#25D366;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.81L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.86 14.02c-.25.7-1.25 1.29-1.98 1.44-.53.11-1.22.2-3.55-.76-2.98-1.24-4.89-4.24-5.04-4.44-.15-.2-1.21-1.6-1.21-3.06 0-1.46.76-2.17 1.03-2.47.27-.3.6-.37.8-.37h.57c.18 0 .43-.07.67.51.25.6.85 2.06.92 2.21.07.15.12.32.02.52-.1.2-.15.32-.3.5-.15.17-.32.38-.45.51-.15.15-.31.31-.13.62.18.3.8 1.32 1.72 2.14 1.18 1.05 2.18 1.38 2.5 1.53.32.15.5.13.68-.08.18-.2.78-.9.99-1.21.2-.3.4-.25.68-.15.27.1 1.73.82 2.03.97.3.15.5.22.57.35.07.13.07.75-.18 1.45z"/></svg></span>
-          WhatsApp
-        </a>
-        <a class="share-row" href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode($urlFacebook) ?>" target="_blank" rel="noopener noreferrer" data-share-token="<?= e($tFacebook) ?>" data-share-channel="facebook">
-          <span class="share-row-icon" style="background:#1877F2;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13.5 21v-7.5h2.5l.5-3H13.5V8.5c0-.9.25-1.5 1.53-1.5H16.5V4.34C16.19 4.3 15.13 4.2 14 4.2c-2.34 0-3.94 1.43-3.94 4.05V10.5H7.5v3H10V21h3.5z"/></svg></span>
-          Facebook
-        </a>
-        <a class="share-row" href="https://twitter.com/intent/tweet?url=<?= urlencode($urlTwitter) ?>&text=<?= $encodedTitle ?>" target="_blank" rel="noopener noreferrer" data-share-token="<?= e($tTwitter) ?>" data-share-channel="twitter">
-          <span class="share-row-icon" style="background:#000;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M18.9 2.3h3.2l-7 8 8.2 10.8h-6.4l-5-6.6-5.8 6.6H2.9l7.5-8.6L2.5 2.3h6.6l4.6 6.1 5.2-6.1zm-1.1 17h1.8L7.3 4.1H5.4l12.4 15.2z"/></svg></span>
-          X (Twitter)
-        </a>
-        <a class="share-row" href="https://www.linkedin.com/sharing/share-offsite/?url=<?= urlencode($urlLinkedin) ?>" target="_blank" rel="noopener noreferrer" data-share-token="<?= e($tLinkedin) ?>" data-share-channel="linkedin">
-          <span class="share-row-icon" style="background:#0A66C2;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M6.9 8.4H3.6V20h3.3V8.4zM5.3 3.4a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8zM20.4 20h-3.3v-6.1c0-1.5-.5-2.5-1.9-2.5-1 0-1.6.7-1.9 1.4-.1.2-.1.6-.1.9V20H10s0-10.6 0-11.6h3.3v1.6c.4-.7 1.2-1.7 3-1.7 2.2 0 3.8 1.4 3.8 4.5V20z"/></svg></span>
-          LinkedIn
-        </a>
-        <button type="button" class="share-row" data-share-copy="<?= e($urlInstagram) ?>" data-share-hint="Link copied — paste it in your Instagram bio, story, or DM." data-share-token="<?= e($tInstagram) ?>" data-share-channel="instagram">
-          <span class="share-row-icon" style="background:radial-gradient(circle at 30% 110%, #fdf497, #fd5949 45%, #d6249f 60%, #285AEB 90%);"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2zM12 2c-2.7 0-3.1 0-4.1.1-1.1 0-1.8.2-2.4.5A4.8 4.8 0 0 0 2.6 5.5c-.3.6-.5 1.3-.5 2.4C2 8.9 2 9.3 2 12s0 3.1.1 4.1c.1 1.1.2 1.8.5 2.4a4.8 4.8 0 0 0 2.9 2.9c.6.3 1.3.5 2.4.5C8.9 22 9.3 22 12 22s3.1 0 4.1-.1c1.1-.1 1.8-.2 2.4-.5a4.8 4.8 0 0 0 2.9-2.9c.3-.6.5-1.3.5-2.4.1-1 .1-1.4.1-4.1s0-3.1-.1-4.1c-.1-1.1-.2-1.8-.5-2.4a4.8 4.8 0 0 0-2.9-2.9c-.6-.3-1.3-.5-2.4-.5C15.1 2 14.7 2 12 2zm0 1.8c2.6 0 3 0 4 .1.9 0 1.5.2 1.8.3.5.2.8.4 1.1.7.3.3.5.6.7 1.1.1.3.3.9.3 1.8.1 1 .1 1.4.1 4s0 3-.1 4c0 .9-.2 1.5-.3 1.8-.2.5-.4.8-.7 1.1-.3.3-.6.5-1.1.7-.3.1-.9.3-1.8.3-1 .1-1.4.1-4 .1s-3 0-4-.1c-.9 0-1.5-.2-1.8-.3a3 3 0 0 1-1.1-.7 3 3 0 0 1-.7-1.1c-.1-.3-.3-.9-.3-1.8-.1-1-.1-1.4-.1-4s0-3 .1-4c0-.9.2-1.5.3-1.8.2-.5.4-.8.7-1.1.3-.3.6-.5 1.1-.7.3-.1.9-.3 1.8-.3 1-.1 1.4-.1 4-.1z"/></svg></span>
-          Instagram
-        </button>
-        <button type="button" class="share-row" data-share-copy="<?= e($urlTiktok) ?>" data-share-hint="Link copied — paste it in your TikTok bio or video caption." data-share-token="<?= e($tTiktok) ?>" data-share-channel="tiktok">
-          <span class="share-row-icon" style="background:#000;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M16.5 2h-3v13.5a2.5 2.5 0 1 1-2.5-2.5c.2 0 .4 0 .6.05V9.9a5.6 5.6 0 0 0-.6 0 5.6 5.6 0 1 0 5.6 5.6V8.4a7.4 7.4 0 0 0 4.4 1.4V6.7a4.4 4.4 0 0 1-4.5-4.4Z"/></svg></span>
-          TikTok
-        </button>
-      </div>
-    </div>
     <?php
 }
 

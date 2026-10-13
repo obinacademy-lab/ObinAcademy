@@ -11,27 +11,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($target && $action === 'set_role') {
         $role = post('role');
-        if (in_array($role, ['LEARNER', 'CREATOR', 'ADMIN'], true)) {
+        if (in_array($role, ['LEARNER', 'ADMIN'], true)) {
             db_run('UPDATE users SET role = ? WHERE id = ?', [$role, $targetId]);
             log_admin_action((int) $user['id'], $user['name'], 'user.role_changed', 'User', $target['name'], "role -> $role");
         }
     } elseif ($target && $action === 'delete' && (int) $target['id'] !== (int) $user['id']) {
-        // The database cascades a user delete into their payments, earnings, courses and plans, so an
-        // account with any money or content attached must never be deleted from here: that would erase
-        // financial records. Only accounts with no history can go.
+        // The database cascades a user delete into their payments and campus memberships, so an account with
+        // any money or membership attached must never be deleted from here: that would erase financial records.
         $history = (int) db_one(
-            "SELECT (SELECT COUNT(*) FROM payments WHERE user_id = ?) + (SELECT COUNT(*) FROM earnings WHERE creator_id = ?)
-                  + (SELECT COUNT(*) FROM courses WHERE creator_id = ?) + (SELECT COUNT(*) FROM enrollments WHERE user_id = ?)
-                  + (SELECT COUNT(*) FROM installment_plans WHERE learner_id = ? OR creator_id = ?)
-                  + (SELECT COUNT(*) FROM withdrawal_requests WHERE creator_id = ?) AS n",
-            [$targetId, $targetId, $targetId, $targetId, $targetId, $targetId, $targetId]
+            'SELECT (SELECT COUNT(*) FROM payments WHERE user_id = ?) + (SELECT COUNT(*) FROM campus_memberships WHERE user_id = ?) AS n',
+            [$targetId, $targetId]
         )['n'];
         if ($history > 0) {
-            flash_set('error', $target['name'] . ' has payments, courses or enrolments attached (' . $history . ' records). Deleting them would erase that history, so it was not done. If this account should not sign in, change its role to Learner or contact support.');
+            flash_set('error', $target['name'] . ' has payments or campus memberships attached (' . $history . ' records). Deleting them would erase that history, so it was not done.');
         } else {
             db_run('DELETE FROM users WHERE id = ?', [$targetId]);
             log_admin_action((int) $user['id'], $user['name'], 'user.deleted', 'User', $target['name']);
-            flash_set('success', 'Deleted ' . $target['name'] . '. They had no payments or courses.');
+            flash_set('success', 'Deleted ' . $target['name'] . '. They had no payments or memberships.');
         }
     }
     redirect('/dashboard/admin/users.php' . (query_param('role') ? '?role=' . urlencode(query_param('role')) : ''));
@@ -39,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $q = query_param('q');
 $roleFilter = strtoupper(query_param('role'));
-if (!in_array($roleFilter, ['LEARNER', 'CREATOR', 'ADMIN'], true)) $roleFilter = '';
+if (!in_array($roleFilter, ['LEARNER', 'ADMIN'], true)) $roleFilter = '';
 $perPage = 40;
 $page = max(1, (int) query_param('page', '1'));
 $where = [];
@@ -58,11 +54,11 @@ $usersUrl = function (array $over = []) use ($q, $roleFilter): string {
 
 $totalUsers = (int) db_one('SELECT COUNT(*) AS n FROM users')['n'];
 $totalLearners = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role='LEARNER'")['n'];
-$totalCreators = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role='CREATOR'")['n'];
+$totalMembers = 0;
+try { $totalMembers = (int) db_one('SELECT COUNT(DISTINCT user_id) AS n FROM campus_memberships WHERE access_until > NOW()')['n']; } catch (Throwable $e) {}
 $totalAdmins = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role='ADMIN'")['n'];
 
-$roleTint = ['ADMIN' => '#f87171', 'CREATOR' => '#fbbf24', 'LEARNER' => '#94a3b8'];
-$roleIcon = ['ADMIN' => 'shield', 'CREATOR' => 'sparkle', 'LEARNER' => 'graduation-cap'];
+$roleTint = ['ADMIN' => '#f87171', 'LEARNER' => '#94a3b8'];
 
 $pageTitle = 'Users — Admin — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
@@ -77,7 +73,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px; gap:14px;">
   <div class="mini-stat"><span class="mini-stat-value"><?= $totalUsers ?></span><span class="mini-stat-label">Total Users</span></div>
   <div class="mini-stat" style="--tint:#94a3b8;"><span class="mini-stat-value"><?= $totalLearners ?></span><span class="mini-stat-label">Learners</span></div>
-  <div class="mini-stat" style="--tint:#fbbf24;"><span class="mini-stat-value"><?= $totalCreators ?></span><span class="mini-stat-label">Creators</span></div>
+  <div class="mini-stat" style="--tint:#fbbf24;"><span class="mini-stat-value"><?= $totalMembers ?></span><span class="mini-stat-label">In a campus now</span></div>
   <div class="mini-stat" style="--tint:#f87171;"><span class="mini-stat-value"><?= $totalAdmins ?></span><span class="mini-stat-label">Admins</span></div>
 </div>
 
@@ -90,7 +86,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <p class="small muted"><?= number_format($matching) ?> user<?= $matching === 1 ? '' : 's' ?><?= $q ? ' matching "' . e($q) . '"' : '' ?></p>
 </div>
 <div class="row gap-2 wrap" style="margin-top:12px;">
-  <?php foreach (['' => 'Everyone', 'LEARNER' => 'Learners', 'CREATOR' => 'Creators', 'ADMIN' => 'Admins'] as $val => $label): ?>
+  <?php foreach (['' => 'Everyone', 'LEARNER' => 'Learners', 'ADMIN' => 'Admins'] as $val => $label): ?>
     <a href="<?= e($usersUrl(['role' => $val])) ?>" class="btn btn-sm <?= $roleFilter === $val ? 'btn-primary' : 'btn-outline' ?>"><?= e($label) ?></a>
   <?php endforeach; ?>
 </div>
@@ -127,7 +123,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             <input type="hidden" name="userId" value="<?= (int) $u['id'] ?>">
             <select name="role" class="role-select" onchange="this.form.submit()" <?= $isSelf ? 'disabled' : '' ?>
               style="--tint:<?= e($roleTint[$u['role']] ?? '#94a3b8') ?>; background-color:color-mix(in srgb, var(--tint) 18%, transparent); color:var(--tint);">
-              <?php foreach (['LEARNER', 'CREATOR', 'ADMIN'] as $r): ?>
+              <?php foreach (['LEARNER', 'ADMIN'] as $r): ?>
                 <option value="<?= $r ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= $r ?></option>
               <?php endforeach; ?>
             </select>

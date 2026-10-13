@@ -7,6 +7,12 @@ Options -Indexes
 </FilesMatch>
 RedirectMatch 404 (?i)/(config|includes|migration|private-uploads)(/|$)
 
+# The old per-course platform was removed: its pages send visitors to the campuses (permanent redirect).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(courses/.*|learn\.php|stream\.php|access\.php|profile\.php|bundle\.php|gift\.php|claim-gift\.php|certificate\.php|skills\.php|school-followers\.php|become-creator\.php|become-affiliate\.php|dashboard/creator/.*|dashboard/affiliate\.php|dashboard/gifts\.php|dashboard/learner/(following|payment-plans|subscriptions)\.php)$ /index.php#campuses [R=301,NE,QSD,L]
+</IfModule>
+
 # PDF.js's viewer.mjs/pdf.mjs/pdf.worker.mjs are loaded as native ES module
 # <script type="module"> — some servers' default MIME map doesn't include
 # .mjs and falls back to text/plain, which combined with the

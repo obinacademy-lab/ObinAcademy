@@ -6,12 +6,10 @@
  *   $pageImage       — absolute or base_url()-relative image for social share previews (falls back to a default photo)
  *   $pageType        — og:type, e.g. 'website' (default) or 'article'
  *   $noindex         — set true on pages that shouldn't be indexed (defaults false)
- *   $courseBar       — set to a title to show the slim course bar (back, title, log in) instead of the site header
  * Usage: require __DIR__ . '/../includes/header.php';
  */
 $user = current_user();
 $currentPath = current_path();
-ensure_affiliate_attribution_cookie();
 
 $seoTitle = $pageTitle ?? 'Obin Academy Campuses — Learn a skill for one year';
 $seoDescription = $pageDescription ?? 'Obin Academy Campuses: year-long programmes in business, trading, content creation, fitness, AI and e-commerce, taught by professors we choose. Lessons, PDF guides and a weekly live class, paid monthly or yearly with MTN or Airtel Mobile Money.';
@@ -55,31 +53,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
 </head>
 <body id="top">
-  <?php if (!empty($courseBar)): ?>
-  <header class="course-bar" data-course-bar>
-    <div class="course-bar-in">
-      <a class="course-bar-back" href="<?= e(base_url('courses/index.php')) ?>" aria-label="Back to courses" data-course-back>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-      </a>
-      <span class="course-bar-title"><?= e($courseBar) ?></span>
-      <div class="course-bar-actions">
-        <?php if ($user): ?>
-          <a class="course-bar-link" href="<?= e(base_url('dashboard.php')) ?>">Dashboard</a>
-          <a class="course-bar-avatar" href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>" aria-label="Your profile"><?= e(mb_substr($user['name'], 0, 1)) ?></a>
-        <?php else: ?>
-          <a class="course-bar-link" href="<?= e(base_url('login.php?redirect=' . urlencode($courseBarRedirect ?? $currentPath))) ?>">Log in</a>
-          <a class="course-bar-cta" href="<?= e(base_url('signup.php?redirect=' . urlencode($courseBarRedirect ?? $currentPath))) ?>">Get started</a>
-        <?php endif; ?>
-      </div>
-    </div>
-  </header>
-  <script>
-    // Back goes to wherever the visitor came from on this site; otherwise the link's own target (all courses).
-    document.querySelector('[data-course-back]').addEventListener('click', function (ev) {
-      if (document.referrer && document.referrer.indexOf(location.origin) === 0 && history.length > 1) { ev.preventDefault(); history.back(); }
-    });
-  </script>
-  <?php else: ?>
   <header class="site-header" data-site-header>    <div class="container">
       <?php render_logo(); ?>
 
@@ -116,10 +89,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
                 <div class="name"><?= e($user['name']) ?></div>
                 <div class="email"><?= e($user['email']) ?></div>
               </div>
-              <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 7-7h2a7 7 0 0 1 7 7v1"></path></svg>
-                <?= in_array($user['role'], ['CREATOR', 'ADMIN'], true) ? 'My School' : 'My Profile' ?>
-              </a>
               <a href="<?= e(base_url('dashboard.php')) ?>">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
                 Dashboard
@@ -161,7 +130,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
       <?php endif; ?>
       <a href="<?= e(base_url('index.php#campuses')) ?>"><span class="mm-icon">🎓</span>Campuses</a>
       <?php if ($user): $mmPath = current_path(); ?>
-        <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>" class="<?= $mmPath === '/profile.php' ? 'active' : '' ?>"><span class="mm-icon">👤</span><?= in_array($user['role'], ['CREATOR', 'ADMIN'], true) ? 'My School' : 'My Profile' ?></a>
         <a href="<?= e(base_url('dashboard.php')) ?>" class="<?= str_starts_with($mmPath, '/dashboard') && $mmPath !== '/dashboard/settings.php' ? 'active' : '' ?>"><span class="mm-icon">📊</span>Dashboard</a>
         <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="<?= $mmPath === '/dashboard/settings.php' ? 'active' : '' ?>"><span class="mm-icon">⚙️</span>Settings</a>
         <hr class="mm-rule">
@@ -174,7 +142,6 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
     </div>
   </div>
   <div class="mobile-menu-scrim" data-mobile-scrim></div>
-  <?php endif; ?>
 
   <?php
     $flashError = flash_get('error');

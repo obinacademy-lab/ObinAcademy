@@ -11,7 +11,6 @@
   if (!overlay) return;
   const panels = {
     learner: overlay.querySelector('[data-lead-panel="learner"]'),
-    creator: overlay.querySelector('[data-lead-panel="creator"]'),
     success: overlay.querySelector('[data-lead-panel="success"]'),
   };
 
@@ -22,17 +21,12 @@
     document.cookie = `${name}=${value}; max-age=${days * 86400}; path=/; SameSite=Lax`;
   }
 
-  function variantForPage() {
-    return location.pathname.indexOf("/become-creator.php") !== -1 ? "creator" : "learner";
-  }
-
   function showPopup() {
     if (shown) return;
     shown = true;
     cleanups.forEach((fn) => fn());
-    const variant = variantForPage();
     Object.values(panels).forEach((p) => p && p.classList.add("hidden"));
-    if (panels[variant]) panels[variant].classList.remove("hidden");
+    if (panels.learner) panels.learner.classList.remove("hidden");
     overlay.classList.add("open");
     requestAnimationFrame(() => overlay.classList.add("visible"));
     setCookie("oa_lead_status", "shown", 7);
@@ -49,15 +43,6 @@
   // --- triggers ---------------------------------------------------------
   const t25s = setTimeout(showPopup, 25000);
   cleanups.push(() => clearTimeout(t25s));
-
-  // Course pages have their own dedicated guest popup (courses/view.php)
-  // nudging signup with that course's own price — this one stays scoped to
-  // become-creator.php so the two don't compete for the same visit.
-  const onCreatorPage = /\/become-creator\.php/.test(location.pathname);
-  if (onCreatorPage) {
-    const tPage = setTimeout(showPopup, 8000);
-    cleanups.push(() => clearTimeout(tPage));
-  }
 
   const pageviewCount = (parseInt(sessionStorage.getItem("oa_pv_count") || "0", 10)) + 1;
   sessionStorage.setItem("oa_pv_count", String(pageviewCount));
@@ -130,13 +115,8 @@
         const successTitle = overlay.querySelector("[data-lead-success-title]");
         const successText = overlay.querySelector("[data-lead-success-text]");
         const waLink = overlay.querySelector("[data-lead-whatsapp]");
-        if (data.leadType === "creator") {
-          successTitle.textContent = "You're on your way!";
-          successText.textContent = "Check your email for how to finish setting up as a creator.";
-        } else {
-          successTitle.textContent = "You're in!";
-          successText.textContent = "Check your email for course recommendations and exclusive offers.";
-        }
+        successTitle.textContent = "You're in!";
+        successText.textContent = "Check your email. We will send you what each campus teaches and when the next intake opens.";
         if (waLink) waLink.href = data.whatsappUrl || "#";
         Object.values(panels).forEach((p) => p && p.classList.add("hidden"));
         if (panels.success) panels.success.classList.remove("hidden");

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/email.php';
 require_once __DIR__ . '/notifications.php';
-require_once __DIR__ . '/data.php';
+require_once __DIR__ . '/campuses.php';
 
 /** Signed, stateless unsubscribe token — no separate token table needed. */
 function unsubscribe_token(int $leadId): string {
@@ -27,12 +27,11 @@ function capture_lead(array $data, ?string $visitorId, string $referrerSource): 
     $email = strtolower(trim((string) ($data['email'] ?? '')));
     $phone = trim((string) ($data['phone'] ?? ''));
     $phone = $phone !== '' ? $phone : null;
-    $leadType = ($data['leadType'] ?? '') === 'creator' ? 'creator' : 'learner';
+    $leadType = 'learner';
     $consent = !empty($data['consent']);
 
     if ($name === '') return ['error' => 'Enter your name.'];
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return ['error' => 'Enter a valid email address.'];
-    if ($leadType === 'creator' && !$phone) return ['error' => 'Enter your phone number.'];
     if (!$consent) return ['error' => 'Please accept to receive emails to continue.'];
 
     $existing = db_one('SELECT id FROM leads WHERE email = ?', [$email]);
@@ -53,13 +52,8 @@ function capture_lead(array $data, ?string $visitorId, string $referrerSource): 
 
     if ($isNewLead) {
         $unsubscribeUrl = base_url('unsubscribe.php?token=' . unsubscribe_token($leadId));
-        send_lead_welcome_email($email, $name, get_trending_courses(3), $unsubscribeUrl);
+        send_lead_welcome_email($email, $name, get_published_campuses(), $unsubscribeUrl);
         create_admin_notification('new_lead', "New lead: {$name} ({$email})", $leadId);
-
-        if ($leadType === 'creator') {
-            send_lead_creator_invitation_email($email, $name, $unsubscribeUrl);
-            create_admin_notification('creator_request', "{$name} wants to become a creator", $leadId);
-        }
     }
 
     return ['ok' => true, 'leadType' => $leadType, 'whatsappUrl' => lead_whatsapp_url($name, $leadType)];
@@ -183,23 +177,17 @@ function get_lead_page_history(?string $visitorId, int $limit = 50): array {
     );
 }
 
-/** Distinct courses a visitor has viewed, resolved to real titles — same slug-parsing approach as the admin analytics page. */
-function get_lead_courses_viewed(?string $visitorId): array {
+/** Campus pages a visitor has viewed, resolved to the campuses themselves. */
+function get_lead_campuses_viewed(?string $visitorId): array {
     if (!$visitorId) return [];
-    $rows = db_all(
-        "SELECT DISTINCT path FROM visitor_pageviews WHERE visitor_id = ? AND path LIKE '%/courses/view.php?%'",
-        [$visitorId]
-    );
     $slugs = [];
-    foreach ($rows as $r) {
-        $query = parse_url($r['path'], PHP_URL_QUERY) ?: '';
-        parse_str($query, $params);
+    foreach (db_all("SELECT DISTINCT path FROM visitor_pageviews WHERE visitor_id = ? AND path LIKE '%campus.php?%'", [$visitorId]) as $r) {
+        parse_str(parse_url($r['path'], PHP_URL_QUERY) ?: '', $params);
         if (!empty($params['slug'])) $slugs[$params['slug']] = true;
     }
     if (!$slugs) return [];
-    $slugList = array_keys($slugs);
-    $placeholders = implode(',', array_fill(0, count($slugList), '?'));
-    return db_all("SELECT slug, title FROM courses WHERE slug IN ($placeholders)", $slugList);
+    $list = array_keys($slugs);
+    return db_all('SELECT slug, name FROM campuses WHERE slug IN (' . implode(',', array_fill(0, count($list), '?')) . ')', $list);
 }
 
 /**
@@ -229,9 +217,9 @@ function send_due_step(int $step): int {
     foreach ($due as $lead) {
         $unsubscribeUrl = base_url('unsubscribe.php?token=' . unsubscribe_token((int) $lead['id']));
         match ($step) {
-            3 => send_lead_day3_email($lead['email'], $lead['name'], $lead['lead_type'], $unsubscribeUrl),
-            5 => send_lead_day5_email($lead['email'], $lead['name'], get_trending_courses(3), $unsubscribeUrl),
-            7 => send_lead_day7_email($lead['email'], $lead['name'], get_courses_on_sale(3), $unsubscribeUrl),
+            3 => send_lead_day3_email($lead['email'], $lead['name'], $unsubscribeUrl),
+            5 => send_lead_day5_email($lead['email'], $lead['name'], get_published_campuses(), $unsubscribeUrl),
+            7 => send_lead_day7_email($lead['email'], $lead['name'], $unsubscribeUrl),
             default => null,
         };
         // Logged whether or not the send actually succeeded (resend_send()
@@ -242,17 +230,7 @@ function send_due_step(int $step): int {
     return count($due);
 }
 
-/** Courses genuinely on sale right now — for the day-7 email. Never a fabricated "limited time" claim. */
-function get_courses_on_sale(int $limit = 3): array {
-    return get_course_cards(
-        'c.sale_price IS NOT NULL AND c.sale_price > 0 AND c.sale_price < c.price AND (c.sale_ends_at IS NULL OR c.sale_ends_at > NOW())',
-        [], 'c.created_at DESC', $limit
-    );
-}
-
 function lead_whatsapp_url(string $name, string $leadType): string {
-    $message = $leadType === 'creator'
-        ? "Hi! I'm {$name} — I just signed up on Obin Academy and I'm interested in becoming a creator."
-        : "Hi! I'm {$name} — I just signed up on Obin Academy and I'd love some help getting started.";
+    $message = "Hi! I'm {$name}. I just signed up on Obin Academy and I'd like help choosing a campus.";
     return 'https://wa.me/256775361998?text=' . urlencode($message);
 }

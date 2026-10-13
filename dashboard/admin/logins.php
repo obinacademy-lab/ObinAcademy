@@ -80,7 +80,6 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <label class="ld-field"><select name="role" aria-label="Role" onchange="this.form.submit()">
       <option value="">All roles</option>
       <option value="LEARNER" <?= $filters['role'] === 'LEARNER' ? 'selected' : '' ?>>Learner</option>
-      <option value="CREATOR" <?= $filters['role'] === 'CREATOR' ? 'selected' : '' ?>>Creator</option>
       <option value="ADMIN" <?= $filters['role'] === 'ADMIN' ? 'selected' : '' ?>>Admin</option>
     </select></label>
     <label class="ld-field"><select name="when" aria-label="When" onchange="this.form.submit()">
