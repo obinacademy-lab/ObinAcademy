@@ -31,6 +31,7 @@ $navByRole = [
         'Students & Growth' => [
             ['/dashboard/creator/students.php', 'My Students', 'users'],
             ['/dashboard/creator/viewers.php', 'Course Viewers', 'eye'],
+            ['/dashboard/creator/leads.php', 'My Leads', 'user-plus'],
             ['/dashboard/creator/shares.php', 'Course Shares', 'share'],
             ['/dashboard/creator/coupons.php', 'Coupons', 'tag'],
         ],

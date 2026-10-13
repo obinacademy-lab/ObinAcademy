@@ -1486,3 +1486,12 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   .ot-actions, .ot-seen { justify-content: flex-start; text-align: left; }
   .ot-btn.big { flex: 1 1 140px; }
 }
+
+/* Creator My Leads: five groups in the summary strip (reuses the Course Viewers cards) */
+.vw-strip.lds-strip { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 860px) {
+  .vw-strip.lds-strip { display: flex; overflow-x: auto; scrollbar-width: none; }
+  .vw-strip.lds-strip::-webkit-scrollbar { display: none; }
+  .vw-strip.lds-strip .vw-tab { flex: 0 0 auto; min-width: 132px; border-bottom: 0; border-right: 1px solid var(--dash-border-soft, var(--dash-border)); }
+  .vw-strip.lds-strip .vw-tab:last-child { border-right: 0; }
+}
