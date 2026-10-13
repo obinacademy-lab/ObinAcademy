@@ -7,6 +7,7 @@ require_once __DIR__ . '/coupons.php';
 require_once __DIR__ . '/bundles.php';
 require_once __DIR__ . '/installments.php';
 require_once __DIR__ . '/gifts.php';
+require_once __DIR__ . '/campuses.php';
 
 function validate_phone(string $phone): bool {
     return strlen($phone) >= 9 && preg_match('/^[0-9+\s-]+$/', $phone);
@@ -40,6 +41,7 @@ function fetch_payment_by_id(int $paymentId): ?array {
     if ($type['type'] === 'BUNDLE_PURCHASE') return fetch_payment_with_bundle($paymentId);
     if ($type['type'] === 'INSTALLMENT_PAYMENT') return fetch_payment_with_installment($paymentId);
     if ($type['type'] === 'COURSE_GIFT') return fetch_payment_with_gift($paymentId);
+    if ($type['type'] === 'CAMPUS_MEMBERSHIP') return fetch_payment_with_campus($paymentId);
     return fetch_payment_with_course($paymentId);
 }
 
@@ -90,6 +92,11 @@ function resolve_payment_with_iotec(array $payment): array {
 
         if ($payment['type'] === 'SCHOOL_SUBSCRIPTION') {
             apply_school_subscription_payment_success($payment);
+            return ['status' => 'SUCCESS'];
+        }
+
+        if ($payment['type'] === 'CAMPUS_MEMBERSHIP') {
+            apply_campus_payment_success($payment);
             return ['status' => 'SUCCESS'];
         }
 

@@ -165,6 +165,8 @@
 
         try {
           const body = { courseId, tier, creatorId, bundleId, phone, csrf_token: csrfToken() };
+          // Campus widget: which campus, and the plan picked at click time (monthly/yearly can change before paying).
+          if (root.dataset.campusId) { body.campusId = root.dataset.campusId; body.plan = root.dataset.plan || "MONTHLY"; }
           if (isGuest) { body.name = name; body.email = email; }
           if (recipientNameInput) { body.recipientName = recipientName; body.recipientEmail = recipientEmail; }
           if (giftMessageInput && giftMessageInput.value.trim()) body.giftMessage = giftMessageInput.value.trim();

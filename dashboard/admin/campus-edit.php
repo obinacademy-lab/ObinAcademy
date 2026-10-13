@@ -1,0 +1,356 @@
+<?php
+/**
+ * Admin: set up one campus. Details and prices, the professor, the twelve-month curriculum, lessons
+ * (video and PDF uploads per month), live classes, and members (including giving access by hand).
+ */
+require __DIR__ . '/../../includes/bootstrap.php';
+require __DIR__ . '/../../includes/audit.php';
+require __DIR__ . '/../../includes/storage.php';
+require __DIR__ . '/../../includes/campuses.php';
+$user = require_role(['ADMIN']);
+
+if (!campuses_ready()) redirect('/dashboard/admin/campuses.php');
+$campus = get_campus((int) query_param('id'));
+if (!$campus) { flash_set('error', 'Campus not found.'); redirect('/dashboard/admin/campuses.php'); }
+$id = (int) $campus['id'];
+$tab = query_param('tab', 'details');
+if (!in_array($tab, ['details', 'professor', 'curriculum', 'lessons', 'live', 'members'], true)) $tab = 'details';
+$here = fn(string $t, array $q = []) => '/dashboard/admin/campus-edit.php?' . http_build_query(['id' => $id, 'tab' => $t] + $q);
+$money = fn(string $v) => (float) str_replace([',', ' ', 'UGX', 'ugx'], '', $v);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
+    $a = post('_action');
+    $log = fn(string $what, string $detail = '') => log_admin_action((int) $user['id'], $user['name'], 'campus.' . $what, 'Campus', $campus['name'], $detail);
+    try {
+        if ($a === 'details') {
+            $monthly = $money(post('monthly_price'));
+            $yearly = $money(post('yearly_price'));
+            if (trim(post('name')) === '' || $monthly <= 0 || $yearly <= 0) throw new RuntimeException('Give the campus a name and a monthly and yearly price above zero.');
+            db_run(
+                'UPDATE campuses SET name = ?, tagline = ?, description = ?, icon = ?, monthly_price = ?, yearly_price = ?, live_schedule = ?, sort_order = ? WHERE id = ?',
+                [mb_substr(trim(post('name')), 0, 120), mb_substr(trim(post('tagline')), 0, 255), trim(post('description')) ?: null,
+                 array_key_exists(post('icon'), CAMPUS_ICON_PATHS) ? post('icon') : 'biz', $monthly, $yearly, mb_substr(trim(post('live_schedule')), 0, 120) ?: null, (int) post('sort_order'), $id]
+            );
+            $log('updated', 'details and prices');
+            flash_set('success', 'Saved.');
+            redirect($here('details'));
+        }
+        if ($a === 'status') {
+            $to = post('to') === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
+            if ($to === 'PUBLISHED') {
+                $c = get_campus($id);
+                $hasMonthOne = (int) (db_one('SELECT COUNT(*) AS n FROM campus_lessons WHERE campus_id = ? AND month_no = 1', [$id])['n'] ?? 0);
+                if (!$c['professor_name'] || !$hasMonthOne) throw new RuntimeException('Before publishing, add the professor and at least one lesson for month 1.');
+            }
+            db_run('UPDATE campuses SET status = ? WHERE id = ?', [$to, $id]);
+            $log($to === 'PUBLISHED' ? 'published' : 'unpublished');
+            flash_set('success', $to === 'PUBLISHED' ? 'The campus is open. Learners can now join and pay.' : 'The campus is back to draft. Members keep their access, but nobody new can join.');
+            redirect($here('details'));
+        }
+        if ($a === 'professor') {
+            $photo = $campus['professor_photo_url'];
+            if (!empty($_FILES['photo']['name'])) $photo = save_upload($_FILES['photo'], 'thumbnails');
+            $fee = trim(post('fee')) === '' ? null : $money(post('fee'));
+            db_run(
+                'UPDATE campuses SET professor_name = ?, professor_title = ?, professor_bio = ?, professor_photo_url = ?, professor_fee_monthly = ? WHERE id = ?',
+                [mb_substr(trim(post('pname')), 0, 120) ?: null, mb_substr(trim(post('ptitle')), 0, 160) ?: null, trim(post('pbio')) ?: null, $photo, $fee, $id]
+            );
+            $log('professor_updated', trim(post('pname')));
+            flash_set('success', 'Professor saved.');
+            redirect($here('professor'));
+        }
+        if ($a === 'curriculum') {
+            for ($m = 1; $m <= CAMPUS_YEAR_MONTHS; $m++) {
+                db_run(
+                    'INSERT INTO campus_stages (campus_id, month_no, title, summary) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE title = VALUES(title), summary = VALUES(summary)',
+                    [$id, $m, mb_substr(trim($_POST['title'][$m] ?? ''), 0, 160), mb_substr(trim($_POST['summary'][$m] ?? ''), 0, 255)]
+                );
+            }
+            $log('curriculum_updated');
+            flash_set('success', 'Curriculum saved.');
+            redirect($here('curriculum'));
+        }
+        if ($a === 'lesson_add') {
+            $month = max(1, min(12, (int) post('month')));
+            $kind = post('kind') === 'PDF' ? 'PDF' : 'VIDEO';
+            if (trim(post('title')) === '') throw new RuntimeException('Give the lesson a title.');
+            if (empty($_FILES['file']['name'])) throw new RuntimeException('Choose the ' . ($kind === 'PDF' ? 'PDF' : 'video') . ' file to upload.');
+            $key = save_upload($_FILES['file'], $kind === 'PDF' ? 'pdfs' : 'videos');
+            $sort = (int) (db_one('SELECT COALESCE(MAX(sort_order), 0) + 1 AS n FROM campus_lessons WHERE campus_id = ? AND month_no = ?', [$id, $month])['n'] ?? 1);
+            db_insert(
+                'INSERT INTO campus_lessons (campus_id, month_no, title, kind, file_url, file_name, duration_label, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [$id, $month, mb_substr(trim(post('title')), 0, 200), $kind, $key, mb_substr($_FILES['file']['name'], 0, 255), mb_substr(trim(post('duration')), 0, 40) ?: null, $sort]
+            );
+            $log('lesson_added', 'month ' . $month . ': ' . trim(post('title')));
+            flash_set('success', 'Lesson added to month ' . $month . '.');
+            redirect($here('lessons', ['month' => $month]));
+        }
+        if ($a === 'lesson_delete') {
+            $l = db_one('SELECT * FROM campus_lessons WHERE id = ? AND campus_id = ?', [(int) post('lesson'), $id]);
+            if ($l) {
+                db_run('DELETE FROM campus_lessons WHERE id = ?', [$l['id']]);
+                $path = resolve_private_path($l['file_url']);
+                if (is_file($path)) @unlink($path);
+                $log('lesson_removed', $l['title']);
+                flash_set('success', 'Lesson removed.');
+            }
+            redirect($here('lessons', ['month' => (int) ($l['month_no'] ?? 1)]));
+        }
+        if ($a === 'lesson_move') {
+            $l = db_one('SELECT * FROM campus_lessons WHERE id = ? AND campus_id = ?', [(int) post('lesson'), $id]);
+            if ($l) {
+                $dir = post('dir') === 'up' ? '<' : '>';
+                $order = $dir === '<' ? 'DESC' : 'ASC';
+                $other = db_one("SELECT * FROM campus_lessons WHERE campus_id = ? AND month_no = ? AND (sort_order $dir ? OR (sort_order = ? AND id $dir ?)) ORDER BY sort_order $order, id $order LIMIT 1", [$id, $l['month_no'], $l['sort_order'], $l['sort_order'], $l['id']]);
+                if ($other) {
+                    db_run('UPDATE campus_lessons SET sort_order = ? WHERE id = ?', [$other['sort_order'], $l['id']]);
+                    db_run('UPDATE campus_lessons SET sort_order = ? WHERE id = ?', [$l['sort_order'] === $other['sort_order'] ? $l['sort_order'] + ($dir === '<' ? 1 : -1) : $l['sort_order'], $other['id']]);
+                }
+            }
+            redirect($here('lessons', ['month' => (int) ($l['month_no'] ?? 1)]));
+        }
+        if ($a === 'live_add') {
+            $when = strtotime(post('date') . ' ' . post('time'));
+            if (trim(post('title')) === '' || !$when) throw new RuntimeException('Give the live class a title, date and time.');
+            $url = trim(post('url'));
+            if ($url !== '' && !preg_match('#^https://#i', $url)) throw new RuntimeException('The join link must start with https:// (a Zoom or Google Meet link).');
+            db_insert(
+                'INSERT INTO campus_live_classes (campus_id, title, starts_at, duration_minutes, join_url) VALUES (?, ?, ?, ?, ?)',
+                [$id, mb_substr(trim(post('title')), 0, 200), date('Y-m-d H:i:s', $when), max(15, min(300, (int) post('minutes') ?: 90)), $url ?: null]
+            );
+            $log('live_class_added', trim(post('title')) . ' on ' . date('j M, g:i a', $when));
+            flash_set('success', 'Live class added. Members see it on their campus page.');
+            redirect($here('live'));
+        }
+        if ($a === 'live_delete') {
+            db_run('DELETE FROM campus_live_classes WHERE id = ? AND campus_id = ?', [(int) post('live'), $id]);
+            flash_set('success', 'Live class removed.');
+            redirect($here('live'));
+        }
+        if ($a === 'grant') {
+            $member = db_one('SELECT id, name, email FROM users WHERE email = ?', [strtolower(trim(post('email')))]);
+            if (!$member) throw new RuntimeException('No account uses that email. The person must sign up first.');
+            if (mb_strlen(trim(post('reason'))) < 5) throw new RuntimeException('Write a short reason, for the audit log.');
+            $plan = post('plan') === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
+            $period = $plan === 'YEARLY' ? '+12 months' : '+' . CAMPUS_MONTH_DAYS . ' days';
+            $m = get_campus_membership($id, (int) $member['id']);
+            if ($m) {
+                $until = date('Y-m-d H:i:s', strtotime($period, max(time(), strtotime($m['access_until']))));
+                db_run('UPDATE campus_memberships SET plan = ?, access_until = ?, last_reminder_days = NULL WHERE id = ?', [$plan, $until, $m['id']]);
+            } else {
+                $until = date('Y-m-d H:i:s', strtotime($period));
+                db_insert('INSERT INTO campus_memberships (campus_id, user_id, plan, started_at, access_until) VALUES (?, ?, ?, NOW(), ?)', [$id, $member['id'], $plan, $until]);
+            }
+            $log('access_granted', $member['email'] . ', ' . strtolower($plan) . ', until ' . date('j M Y', strtotime($until)) . '. Reason: ' . trim(post('reason')));
+            create_user_notification((int) $member['id'], null, 'campus_joined', 'You now have access to the ' . $campus['name'] . ' Campus until ' . date('j M Y', strtotime($until)) . '.', base_url('campus-learn.php?campus=' . $campus['slug']));
+            flash_set('success', $member['name'] . ' has access until ' . date('j M Y', strtotime($until)) . '. No payment was recorded.');
+            redirect($here('members'));
+        }
+    } catch (RuntimeException $e) {
+        flash_set('error', $e->getMessage());
+        redirect($here($tab, $tab === 'lessons' ? ['month' => (int) post('month', '1')] : []));
+    }
+    redirect($here($tab));
+}
+
+$campus = get_campus($id);
+$stages = get_campus_stages($id);
+$byMonth = get_campus_lessons_by_month($id);
+$lessonTotal = array_sum(array_map('count', $byMonth));
+$members = (int) (db_one('SELECT COUNT(*) AS n FROM campus_memberships WHERE campus_id = ? AND access_until > NOW()', [$id])['n'] ?? 0);
+$checks = [
+    'Professor added' => (bool) $campus['professor_name'],
+    'Curriculum written for all 12 months' => campus_curriculum_written($stages),
+    'Lessons in month 1' => !empty($byMonth[1]),
+    'Live class time set' => (bool) $campus['live_schedule'],
+];
+$tabs = ['details' => 'Details and prices', 'professor' => 'Professor', 'curriculum' => 'Curriculum', 'lessons' => 'Lessons (' . $lessonTotal . ')', 'live' => 'Live classes', 'members' => 'Members (' . $members . ')'];
+$iconNames = ['biz' => 'Business', 'crypto' => 'Chart', 'fx' => 'Globe', 'content' => 'Video', 'fit' => 'Fitness', 'ai' => 'Chip', 'shop' => 'Cart', 'book' => 'Book'];
+
+$pageTitle = $campus['name'] . ' — Campuses — Admin — Obin Academy';
+require __DIR__ . '/../../includes/dashboard_header.php';
+?>
+<a href="<?= e(base_url('dashboard/admin/campuses.php')) ?>" class="muted small">&larr; All campuses</a>
+<div class="dash-page-head" style="margin-top:12px;">
+  <div>
+    <h1 class="h2"><?= e($campus['name']) ?> Campus</h1>
+    <p class="muted" style="margin-top:6px;"><?= $campus['status'] === 'PUBLISHED' ? 'Open: learners can join and pay.' : 'Draft: only you can see it.' ?> <?= number_format($members) ?> active member<?= $members === 1 ? '' : 's' ?> · <?= $lessonTotal ?> lesson<?= $lessonTotal === 1 ? '' : 's' ?></p>
+  </div>
+  <div class="row gap-2 wrap">
+    <a class="ld-btn" href="<?= e(base_url('campus.php?slug=' . $campus['slug'])) ?>" target="_blank" rel="noopener">Preview page</a>
+    <a class="ld-btn" href="<?= e(base_url('campus-learn.php?campus=' . $campus['slug'])) ?>" target="_blank" rel="noopener">Preview member area</a>
+    <form method="post" <?= $campus['status'] === 'PUBLISHED' ? 'data-confirm="Move this campus back to draft? Members keep access, but nobody new can join."' : '' ?>>
+      <?= csrf_field() ?><input type="hidden" name="_action" value="status"><input type="hidden" name="to" value="<?= $campus['status'] === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED' ?>">
+      <button class="btn <?= $campus['status'] === 'PUBLISHED' ? 'btn-outline' : 'btn-primary' ?>" type="submit"><?= $campus['status'] === 'PUBLISHED' ? 'Unpublish' : 'Publish campus' ?></button>
+    </form>
+  </div>
+</div>
+
+<?php if ($campus['status'] !== 'PUBLISHED'): ?>
+  <div class="ld-panel ca-checks" style="margin-top:18px;">
+    <?php foreach ($checks as $label => $okc): ?><span class="<?= $okc ? 'ok' : '' ?>"><i><?= $okc ? '&#10003;' : '' ?></i><?= e($label) ?></span><?php endforeach; ?>
+    <small>A professor and at least one lesson in month 1 are needed to publish.</small>
+  </div>
+<?php endif; ?>
+
+<nav class="ca-tabs" aria-label="Campus sections">
+  <?php foreach ($tabs as $k => $label): ?><a href="<?= e(base_url(ltrim($here($k), '/'))) ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><?= e($label) ?></a><?php endforeach; ?>
+</nav>
+
+<?php if ($tab === 'details'): ?>
+  <form method="post" class="ld-panel ca-form">
+    <?= csrf_field() ?><input type="hidden" name="_action" value="details">
+    <div class="ca-f2">
+      <label>Campus name<input name="name" value="<?= e($campus['name']) ?>" maxlength="120" required></label>
+      <label>Icon<select name="icon"><?php foreach ($iconNames as $k => $n): ?><option value="<?= e($k) ?>"<?= $campus['icon'] === $k ? ' selected' : '' ?>><?= e($n) ?></option><?php endforeach; ?></select></label>
+    </div>
+    <label>One-line summary <small>Shown in the campus list</small><input name="tagline" value="<?= e($campus['tagline']) ?>" maxlength="255"></label>
+    <label>Description <small>Shown at the top of the campus page</small><textarea name="description" rows="4"><?= e($campus['description'] ?? '') ?></textarea></label>
+    <div class="ca-f3">
+      <label>Monthly price (UGX)<input name="monthly_price" inputmode="numeric" value="<?= e(number_format((float) $campus['monthly_price'], 0, '.', '')) ?>" required></label>
+      <label>Yearly price (UGX)<input name="yearly_price" inputmode="numeric" value="<?= e(number_format((float) $campus['yearly_price'], 0, '.', '')) ?>" required></label>
+      <label>Order in the list<input name="sort_order" type="number" value="<?= (int) $campus['sort_order'] ?>"></label>
+    </div>
+    <label>Weekly live class time <small>For example: Thursdays, 8 pm</small><input name="live_schedule" value="<?= e($campus['live_schedule'] ?? '') ?>" maxlength="120"></label>
+    <div><button class="btn btn-primary" type="submit">Save details</button></div>
+  </form>
+
+<?php elseif ($tab === 'professor'): ?>
+  <form method="post" enctype="multipart/form-data" class="ld-panel ca-form">
+    <?= csrf_field() ?><input type="hidden" name="_action" value="professor">
+    <div class="ca-prof">
+      <span class="ph"><?php if ($campus['professor_photo_url']): ?><img src="<?= e(asset_src($campus['professor_photo_url'])) ?>" alt=""><?php else: ?>P<?php endif; ?></span>
+      <label>Photo <small>A square photo works best (PNG, JPG or WebP, up to 5MB)</small><input type="file" name="photo" accept="image/*"></label>
+    </div>
+    <div class="ca-f2">
+      <label>Professor's name<input name="pname" value="<?= e($campus['professor_name'] ?? '') ?>" maxlength="120"></label>
+      <label>Title <small>For example: Lead professor, 8 years trading</small><input name="ptitle" value="<?= e($campus['professor_title'] ?? '') ?>" maxlength="160"></label>
+    </div>
+    <label>About the professor <small>Their background and real results</small><textarea name="pbio" rows="5"><?= e($campus['professor_bio'] ?? '') ?></textarea></label>
+    <label style="max-width:320px;">Monthly fee you pay them (UGX) <small>Private. Only used for your payment records.</small><input name="fee" inputmode="numeric" value="<?= $campus['professor_fee_monthly'] !== null ? e(number_format((float) $campus['professor_fee_monthly'], 0, '.', '')) : '' ?>"></label>
+    <div><button class="btn btn-primary" type="submit">Save professor</button></div>
+  </form>
+
+<?php elseif ($tab === 'curriculum'): ?>
+  <form method="post" class="ld-panel ca-form">
+    <?= csrf_field() ?><input type="hidden" name="_action" value="curriculum">
+    <p class="muted small" style="margin:0;">One stage per month. Month 1 opens the day a learner joins, month 2 a month later, and so on.</p>
+    <?php for ($m = 1; $m <= 12; $m++): ?>
+      <div class="ca-stage"><span class="n">Month <?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?></span>
+        <input name="title[<?= $m ?>]" value="<?= e($stages[$m]['title']) ?>" placeholder="Stage title" maxlength="160" aria-label="Month <?= $m ?> title">
+        <input name="summary[<?= $m ?>]" value="<?= e($stages[$m]['summary']) ?>" placeholder="What it covers (optional)" maxlength="255" aria-label="Month <?= $m ?> summary"></div>
+    <?php endfor; ?>
+    <div><button class="btn btn-primary" type="submit">Save curriculum</button></div>
+  </form>
+
+<?php elseif ($tab === 'lessons'): $month = max(1, min(12, (int) query_param('month', '1'))); $ls = $byMonth[$month] ?? []; ?>
+  <nav class="ca-months" aria-label="Months">
+    <?php for ($m = 1; $m <= 12; $m++): ?><a href="<?= e(base_url(ltrim($here('lessons', ['month' => $m]), '/'))) ?>"<?= $m === $month ? ' aria-current="page"' : '' ?>><?= $m ?><small><?= count($byMonth[$m] ?? []) ?></small></a><?php endfor; ?>
+  </nav>
+  <div class="ld-two" style="margin-top:16px;">
+    <div class="ld-panel" style="overflow:hidden;">
+      <div class="ld-card" style="padding-bottom:12px;"><div class="ld-chead"><div><h2>Month <?= $month ?><?= $stages[$month]['title'] !== '' ? ' · ' . e($stages[$month]['title']) : '' ?></h2><p class="sub"><?= count($ls) ?> lesson<?= count($ls) === 1 ? '' : 's' ?>, in the order learners see them</p></div></div></div>
+      <div class="ca-lessons">
+        <?php if (!$ls): ?><p class="muted small" style="padding:0 22px 20px;">No lessons in this month yet. Upload the first one.</p><?php endif; ?>
+        <?php foreach ($ls as $i => $l): ?>
+          <div>
+            <span class="k"><?= $l['kind'] === 'PDF' ? 'PDF' : 'Video' ?></span>
+            <div style="min-width:0;"><b><?= $month ?>.<?= $i + 1 ?> &nbsp;<?= e($l['title']) ?></b><small><?= e($l['file_name'] ?: '') ?><?= $l['duration_label'] ? ' · ' . e($l['duration_label']) : '' ?></small></div>
+            <div class="acts">
+              <a class="ot-btn" href="<?= e(base_url('campus-learn.php?campus=' . $campus['slug'] . '&view=lesson&lesson=' . $l['id'])) ?>" target="_blank" rel="noopener">View</a>
+              <?php foreach (['up' => '&uarr;', 'down' => '&darr;'] as $dir => $sym): ?>
+                <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="lesson_move"><input type="hidden" name="lesson" value="<?= (int) $l['id'] ?>"><input type="hidden" name="dir" value="<?= $dir ?>"><button class="ot-btn" type="submit" aria-label="Move <?= $dir ?>"><?= $sym ?></button></form>
+              <?php endforeach; ?>
+              <form method="post" data-confirm="Remove this lesson and its file? Learners lose access to it."><?= csrf_field() ?><input type="hidden" name="_action" value="lesson_delete"><input type="hidden" name="lesson" value="<?= (int) $l['id'] ?>"><button class="ot-btn" type="submit" style="color:var(--dash-bad, #dc2626);">Remove</button></form>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="ld-panel ca-form" data-upload>
+      <?= csrf_field() ?><input type="hidden" name="_action" value="lesson_add"><input type="hidden" name="month" value="<?= $month ?>">
+      <h2 style="margin:0; font-size:15px;">Add a lesson to month <?= $month ?></h2>
+      <label>Title<input name="title" maxlength="200" required></label>
+      <div class="ca-f2">
+        <label>Type<select name="kind"><option value="VIDEO">Video</option><option value="PDF">PDF guide</option></select></label>
+        <label>Length <small>Optional, e.g. 18 min or 4 pages</small><input name="duration" maxlength="40"></label>
+      </div>
+      <label>File <small>Video up to 3GB (MP4 is best) · PDF up to 500MB</small><input type="file" name="file" accept="video/*,application/pdf" required></label>
+      <div><button class="btn btn-primary" type="submit" data-upload-btn>Upload lesson</button></div>
+      <p class="muted small" data-upload-note hidden style="margin:0;">Uploading… keep this page open until it finishes.</p>
+    </form>
+  </div>
+
+<?php elseif ($tab === 'live'):
+    $up = db_all('SELECT * FROM campus_live_classes WHERE campus_id = ? AND starts_at >= DATE_SUB(NOW(), INTERVAL 3 HOUR) ORDER BY starts_at', [$id]);
+    $past = db_all('SELECT * FROM campus_live_classes WHERE campus_id = ? AND starts_at < DATE_SUB(NOW(), INTERVAL 3 HOUR) ORDER BY starts_at DESC LIMIT 10', [$id]);
+?>
+  <div class="ld-two" style="margin-top:16px;">
+    <div class="ld-panel" style="overflow:hidden;">
+      <div class="ld-card" style="padding-bottom:12px;"><div class="ld-chead"><div><h2>Coming up</h2><p class="sub">Members see these with a Join button</p></div></div></div>
+      <div class="ca-list" style="padding:0 22px 14px;">
+        <?php if (!$up): ?><p class="muted small">No live classes scheduled.</p><?php endif; ?>
+        <?php foreach (array_merge($up, $past) as $l): $isPast = strtotime($l['starts_at']) < time() - 10800; ?>
+          <div><div class="ca-when"><small><?= e(date('M', strtotime($l['starts_at']))) ?></small><b><?= e(date('j', strtotime($l['starts_at']))) ?></b></div>
+            <div style="min-width:0;"><b class="t"><?= e($l['title']) ?></b><small><?= e(date('D j M, g:i a', strtotime($l['starts_at']))) ?> · <?= (int) $l['duration_minutes'] ?> min<?= $l['join_url'] ? '' : ' · no link yet' ?><?= $isPast ? ' · done' : '' ?></small></div>
+            <form method="post" data-confirm="Remove this live class?"><?= csrf_field() ?><input type="hidden" name="_action" value="live_delete"><input type="hidden" name="live" value="<?= (int) $l['id'] ?>"><button class="ot-btn" type="submit">Remove</button></form></div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <form method="post" class="ld-panel ca-form">
+      <?= csrf_field() ?><input type="hidden" name="_action" value="live_add">
+      <h2 style="margin:0; font-size:15px;">Schedule a live class</h2>
+      <label>Topic<input name="title" maxlength="200" required placeholder="e.g. Position sizing on real charts"></label>
+      <div class="ca-f3">
+        <label>Date<input type="date" name="date" required value="<?= e(date('Y-m-d')) ?>"></label>
+        <label>Start time<input type="time" name="time" required value="20:00"></label>
+        <label>Minutes<input type="number" name="minutes" value="90" min="15" max="300"></label>
+      </div>
+      <label>Join link <small>Paste the Zoom or Google Meet link</small><input name="url" type="url" placeholder="https://meet.google.com/..."></label>
+      <div><button class="btn btn-primary" type="submit">Add live class</button></div>
+      <p class="muted small" style="margin:0;">Upload the recording afterwards as a video lesson in the current month.</p>
+    </form>
+  </div>
+
+<?php elseif ($tab === 'members'):
+    $list = db_all(
+        'SELECT m.*, u.name, u.email, u.phone,
+                (SELECT COUNT(*) FROM campus_lesson_progress p JOIN campus_lessons l ON l.id = p.lesson_id WHERE p.user_id = m.user_id AND l.campus_id = m.campus_id) AS done
+         FROM campus_memberships m JOIN users u ON u.id = m.user_id WHERE m.campus_id = ? ORDER BY m.access_until DESC LIMIT 300',
+        [$id]
+    );
+?>
+  <div class="ld-two" style="margin-top:16px;">
+    <div class="ld-panel" style="overflow:hidden;">
+      <div class="ca-tbl"><table class="ca-table">
+        <thead><tr><th>Member</th><th>Plan</th><th>Access until</th><th class="num">Lessons done</th></tr></thead>
+        <tbody>
+          <?php if (!$list): ?><tr><td colspan="4" class="muted">No members yet.</td></tr><?php endif; ?>
+          <?php foreach ($list as $r): $openR = strtotime($r['access_until']) > time(); ?>
+            <tr>
+              <td><a href="<?= e(base_url('dashboard/admin/user.php?id=' . $r['user_id'])) ?>" style="font-weight:600;"><?= e($r['name']) ?></a><small><?= e($r['email']) ?><?= $r['phone'] ? ' · ' . e($r['phone']) : '' ?></small></td>
+              <td><?= $r['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?><small>Joined <?= e(date('j M Y', strtotime($r['started_at']))) ?></small></td>
+              <td><span class="ca-pill <?= $openR ? (strtotime($r['access_until']) - time() < 7 * 86400 ? 'warn' : 'good') : 'mute' ?>"><?= e(date('j M Y', strtotime($r['access_until']))) ?><?= $openR ? '' : ' · ended' ?></span></td>
+              <td class="num"><?= (int) $r['done'] ?> / <?= $lessonTotal ?><?= $r['certificate_code'] ? '<small>Certificate issued</small>' : '' ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table></div>
+    </div>
+    <form method="post" class="ld-panel ca-form">
+      <?= csrf_field() ?><input type="hidden" name="_action" value="grant">
+      <h2 style="margin:0; font-size:15px;">Give access without payment</h2>
+      <p class="muted small" style="margin:0;">For example, a free month for an existing student. Adds time on top of any access they already have, and is written to the audit log.</p>
+      <label>Their account email<input type="email" name="email" required></label>
+      <label>Length<select name="plan"><option value="MONTHLY">30 days</option><option value="YEARLY">12 months</option></select></label>
+      <label>Reason<input name="reason" required minlength="5" maxlength="200" placeholder="e.g. Free first month for existing students"></label>
+      <div><button class="btn btn-primary" type="submit">Give access</button></div>
+    </form>
+  </div>
+<?php endif; ?>
+<script>
+document.querySelectorAll('form[data-confirm]').forEach(function (f) { f.addEventListener('submit', function (e) { if (!confirm(f.dataset.confirm)) e.preventDefault(); }); });
+document.querySelectorAll('form[data-upload]').forEach(function (f) { f.addEventListener('submit', function () { var b = f.querySelector('[data-upload-btn]'); if (b) { b.disabled = true; b.textContent = 'Uploading…'; } var n = f.querySelector('[data-upload-note]'); if (n) n.hidden = false; }); });
+</script>
+<?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

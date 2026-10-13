@@ -12,6 +12,7 @@ const ADMIN_PAYMENT_TYPES = [
     'INSTALLMENT_PAYMENT' => 'Installment',
     'SCHOOL_SUBSCRIPTION' => 'School subscription',
     'COURSE_GIFT' => 'Gift',
+    'CAMPUS_MEMBERSHIP' => 'Campus',
     'PREMIUM_UPGRADE' => 'Downloads',
     'SUBSCRIPTION' => 'Old subscription',
 ];
@@ -94,8 +95,19 @@ function admin_payment_what(array $p): string {
         'COURSE_GIFT' => 'Gift: ' . ($p['course_title'] ?: 'a course'),
         'INSTALLMENT_PAYMENT' => 'Installment: ' . ($p['course_title'] ?: 'a course'),
         'PREMIUM_UPGRADE' => 'Downloads: ' . ($p['course_title'] ?: 'a course'),
+        'CAMPUS_MEMBERSHIP' => admin_campus_payment_label($p),
         default => $p['course_title'] ?: 'Removed course',
     };
+}
+
+/** "Campus: Crypto Trading (yearly)". Looked up per row so the list never depends on the campuses table existing. */
+function admin_campus_payment_label(array $p): string {
+    static $names = null;
+    if ($names === null) {
+        try { $names = array_column(db_all('SELECT id, name FROM campuses'), 'name', 'id'); } catch (Throwable $e) { $names = []; }
+    }
+    $name = $names[(int) ($p['campus_id'] ?? 0)] ?? 'a campus';
+    return 'Campus: ' . $name . (!empty($p['campus_plan']) ? ' (' . strtolower($p['campus_plan']) . ')' : '');
 }
 
 /** Figures for the cards on the Payments page (last 30 days) and the Overview alerts. */

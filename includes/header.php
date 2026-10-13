@@ -103,6 +103,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <?php endif; ?>
 
         <div class="nav-actions">
+        <a href="<?= e(base_url('campuses.php')) ?>" class="link nav-campuses<?= $currentPath === '/campuses.php' ? ' active' : '' ?>">Campuses</a>
         <?php if ($user): ?>
           <div class="account-menu">
             <button class="account-trigger" aria-haspopup="true">
@@ -159,6 +160,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         </div>
       <?php endif; ?>
+      <a href="<?= e(base_url('campuses.php')) ?>"><span class="mm-icon">🎓</span>Campuses</a>
       <?php if ($user): $mmPath = current_path(); ?>
         <a href="<?= e(base_url('profile.php?id=' . $user['id'])) ?>" class="<?= $mmPath === '/profile.php' ? 'active' : '' ?>"><span class="mm-icon">👤</span><?= in_array($user['role'], ['CREATOR', 'ADMIN'], true) ? 'My School' : 'My Profile' ?></a>
         <a href="<?= e(base_url('dashboard.php')) ?>" class="<?= str_starts_with($mmPath, '/dashboard') && $mmPath !== '/dashboard/settings.php' ? 'active' : '' ?>"><span class="mm-icon">📊</span>Dashboard</a>

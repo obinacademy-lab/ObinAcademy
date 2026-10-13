@@ -4098,3 +4098,8 @@ body.auth-body::before { content: ""; position: fixed; inset: -30px; background:
 .install-pop-go:active { transform: scale(.98); }
 .install-pop-later { border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 14px; padding: 13px 18px; border-radius: 999px; background: var(--surface); color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .install-pop { transition: opacity .2s ease; transform: none; } }
+
+/* Header link to the campuses (sits on the blue header) */
+.site-header .nav-actions a.nav-campuses { color: #fff; font-weight: 600; font-size: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); }
+.site-header .nav-actions a.nav-campuses:hover, .site-header .nav-actions a.nav-campuses.active { background: rgba(255,255,255,.14); color: #fff; }
+@media (max-width: 760px) { .site-header .nav-actions a.nav-campuses { display: none; } }

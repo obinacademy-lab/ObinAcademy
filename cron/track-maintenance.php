@@ -24,6 +24,7 @@ require_once __DIR__ . '/../includes/review_nudges.php';
 require_once __DIR__ . '/../includes/email.php';
 require_once __DIR__ . '/../includes/school_subscriptions.php';
 require_once __DIR__ . '/../includes/installments.php';
+require_once __DIR__ . '/../includes/campuses.php';
 
 function cron_section(string $label, callable $fn): void {
     try {
@@ -97,4 +98,9 @@ cron_section('installment_reminders', function () {
 cron_section('installment_expiry_sweep', function () {
     $swept = sweep_installment_expirations();
     echo '[' . date('Y-m-d H:i:s') . "] installment expiry sweep: to_grace={$swept['to_grace']} to_defaulted={$swept['to_defaulted']}\n";
+});
+
+cron_section('campus_renewal_reminders', function () {
+    $sent = send_due_campus_reminders();
+    echo '[' . date('Y-m-d H:i:s') . "] campus renewal reminders: sent=$sent\n";
 });

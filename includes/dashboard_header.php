@@ -11,6 +11,7 @@ $navByRole = [
     'LEARNER' => [
         'Learning' => [
             ['/dashboard/learner/index.php', 'My Learning', 'graduation-cap'],
+            ['/campuses.php', 'Campuses', 'book-open'],
             ['/dashboard/learner/following.php', 'Following', 'users'],
         ],
         'Payments' => [
@@ -50,6 +51,9 @@ $navByRole = [
             ['/dashboard/admin/leads.php', 'Leads', 'sparkle'],
             ['/dashboard/admin/logins.php', 'Login Activity', 'shield'],
             ['/dashboard/admin/shares.php', 'Course Shares', 'share'],
+        ],
+        'Campuses' => [
+            ['/dashboard/admin/campuses.php', 'Campuses', 'graduation-cap'],
         ],
         'Manage' => [
             ['/dashboard/admin/users.php', 'Users', 'users'],
