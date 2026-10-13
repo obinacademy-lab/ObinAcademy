@@ -17,7 +17,7 @@ function instructor_applications_ready(): bool {
 
 /**
  * Validates and stores an application, then tells the admins.
- * @return array{ok?: true, error?: string, field?: string}
+ * @return array{ok?: true, id?: int, error?: string, field?: string}
  */
 function submit_instructor_application(array $in, ?array $user, string $ip): array {
     $name = mb_substr(trim($in['name'] ?? ''), 0, 120);
@@ -51,7 +51,7 @@ function submit_instructor_application(array $in, ?array $user, string $ip): arr
     $recent = (int) (db_one('SELECT COUNT(*) AS n FROM instructor_applications WHERE (email = ? OR ip = ?) AND created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)', [$email, $ip])['n'] ?? 0);
     if ($recent >= 3) return ['error' => 'We already have your application. We will be in touch.'];
 
-    db_insert(
+    $appId = db_insert(
         'INSERT INTO instructor_applications (name, email, phone, campus_id, proposed_campus, headline, experience, results, links, sample_url, user_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [$name, $email, $phone, $campusId, $proposed ?: null, $headline, $experience, $results ?: null, $links ?: null, $sample ?: null, $user['id'] ?? null, mb_substr($ip, 0, 64)]
     );
@@ -71,7 +71,7 @@ function submit_instructor_application(array $in, ?array $user, string $ip): arr
         'We received your application to teach ' . e($what) . '. We read every one, and if it is a fit we will call or WhatsApp you on ' . e($phone) . ' to talk it through.',
         'See the campuses', base_url('index.php#campuses')
     ));
-    return ['ok' => true];
+    return ['ok' => true, 'id' => $appId];
 }
 
 function get_instructor_applications(string $status = ''): array {
