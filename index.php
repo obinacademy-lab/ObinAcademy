@@ -42,11 +42,12 @@ $extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,40
 require __DIR__ . '/includes/header.php';
 ?>
 <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/home-campus.css')) ?>">
+<div class="hx-yearline" aria-hidden="true"><i></i></div><div class="hx-month" aria-hidden="true">Month <b>01</b> of 12</div>
 <div class="hx">
   <section class="hx-hero">
     <div class="hx-wrap">
       <span class="hx-eyebrow">Obin Academy Campuses</span>
-      <h1>Earning is a skill.<br><em>Master it in 12 months.</em></h1>
+      <h1><span class="w" style="--w:0">Earning</span> <span class="w" style="--w:1">is</span> <span class="w" style="--w:2">a</span> <span class="w" style="--w:3">skill.</span><br><em><span class="w" style="--w:4">Master</span> <span class="w" style="--w:5">it</span> <span class="w" style="--w:6">in</span> <span class="w" style="--w:7">12</span> <span class="w" style="--w:8">months.</span></em></h1>
       <p class="lede">School taught you to look for a job. We teach you to make money with a skill. Join a campus, learn step by step from a professor who does it for a living, and build income you control.</p>
       <div class="acts">
         <a class="hx-cta" href="#campuses">Choose your campus <?= $arrow ?></a>
@@ -215,11 +216,74 @@ require __DIR__ . '/includes/header.php';
 
   <section class="hx-deep hx-final">
     <div class="hx-wrap">
-      <h2>Your year starts<br><em>the day you join.</em></h2>
+      <h2><span class="w" style="--w:0">Your</span> <span class="w" style="--w:1">year</span> <span class="w" style="--w:2">starts</span><br><em><span class="w" style="--w:3">the</span> <span class="w" style="--w:4">day</span> <span class="w" style="--w:5">you</span> <span class="w" style="--w:6">join.</span></em></h2>
       <p>Twelve months from now you will wish you had started today. Choose your campus and take the first step.</p>
       <a class="hx-cta" href="#campuses">Choose your campus <?= $arrow ?></a>
     </div>
   </section>
   <div class="hx-mbar"><a class="hx-cta" href="#campuses">Choose your campus</a></div>
 </div>
+<script>
+// "The year in motion": the year line's month counter, rolling stat counters, self-drawing icons and a
+// light cursor tilt. Scroll-linked effects live in CSS (scroll timelines); nothing here hides any content.
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var body = document.body;
+  // On this site the page scrolls inside <body>, not the window.
+  var scroller = (body.scrollHeight > body.clientHeight + 4 && /(auto|scroll)/.test(getComputedStyle(body).overflowY)) ? body : (document.scrollingElement || document.documentElement);
+  var line = document.querySelector('.hx-yearline i'), month = document.querySelector('.hx-month'), monthB = month && month.querySelector('b');
+  var cssTimeline = window.CSS && CSS.supports && CSS.supports('animation-timeline: view()');
+  var tick = function () {
+    var max = scroller.scrollHeight - scroller.clientHeight, p = max > 0 ? Math.min(1, Math.max(0, scroller.scrollTop / max)) : 0;
+    if (line && !reduce) line.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    if (month) { month.classList.toggle('on', p > .04 && p < .985); if (monthB) monthB.textContent = String(Math.min(12, 1 + Math.floor(p * 12))).padStart(2, '0'); }
+  };
+  var busy = false;
+  document.addEventListener('scroll', function () { if (!busy) { busy = true; requestAnimationFrame(function () { busy = false; tick(); }); } }, { passive: true, capture: true });
+  tick();
+  if (reduce) return;
+
+  // Odometer: each digit is a column of 0-9 that rolls to its value when the numbers come into view.
+  var odos = [];
+  document.querySelectorAll('.hx-stats b').forEach(function (b) {
+    var txt = b.textContent.trim(); if (!/^\d+$/.test(txt)) return;
+    b.setAttribute('aria-label', txt);
+    var wrap = document.createElement('span'); wrap.className = 'hx-odo'; wrap.setAttribute('aria-hidden', 'true');
+    txt.split('').forEach(function (d, i) {
+      var col = document.createElement('span'); col.style.setProperty('--d', i);
+      for (var n = 0; n <= 9; n++) { var c = document.createElement('span'); c.textContent = n; col.appendChild(c); }
+      col.dataset.v = d; wrap.appendChild(col);
+    });
+    b.textContent = ''; b.appendChild(wrap); odos.push(wrap);
+  });
+  var roll = function (wrap) { wrap.querySelectorAll(':scope > span').forEach(function (col) { col.style.transform = 'translateY(' + (-col.dataset.v) + 'em)'; }); };
+
+  // Icons draw themselves when their card arrives.
+  var cards = document.querySelectorAll('.hx-inside > div');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        io.unobserve(en.target);
+        if (en.target.classList.contains('hx-odo')) roll(en.target); else en.target.classList.add('hx-draw');
+      });
+    }, { threshold: 0.35 });
+    odos.forEach(function (o) { io.observe(o); });
+    cards.forEach(function (c) { io.observe(c); });
+  } else { odos.forEach(roll); }
+  setTimeout(function () { odos.forEach(roll); }, 4000); // never leave a number showing 0
+
+  // A light tilt toward the cursor on cards (mouse only).
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.querySelectorAll('.hx-cc, .hx-inside > div, .hx-plan').forEach(function (el) {
+      el.classList.add('hx-tilt');
+      el.addEventListener('pointermove', function (ev) {
+        var r = el.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width - .5, y = (ev.clientY - r.top) / r.height - .5;
+        el.style.rotate = (-y).toFixed(3) + ' ' + x.toFixed(3) + ' 0 ' + (Math.hypot(x, y) * 7).toFixed(2) + 'deg';
+      });
+      el.addEventListener('pointerleave', function () { el.style.rotate = ''; });
+    });
+  }
+})();
+</script>
 <?php require __DIR__ . '/includes/footer.php'; ?>
