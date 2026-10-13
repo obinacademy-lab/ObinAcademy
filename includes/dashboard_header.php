@@ -1,7 +1,7 @@
 <?php
 /**
  * Dashboard shell. Requires $user (from require_login/require_role) and
- * optionally $pageTitle before include.
+ * optionally $pageTitle, $pageCss (extra stylesheets) and $dashClass (a class on the shell) before include.
  */
 require_once __DIR__ . '/notifications.php';
 
@@ -104,13 +104,15 @@ if ($user['role'] === 'ADMIN') {
   <link rel="apple-touch-icon" href="<?= e(versioned_asset('apple-touch-icon.png')) ?>" sizes="180x180">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/dashboard.css')) ?>">
+  <?php foreach ($pageCss ?? [] as $css): ?><link rel="stylesheet" href="<?= e(versioned_asset($css)) ?>">
+  <?php endforeach; ?>
   <?php require __DIR__ . '/pwa-head.php'; ?>
 </head>
 <body>
-<div class="dash dash-premium theme-<?= e(dashboard_theme_for_user($user)) ?>">
+<div class="dash dash-premium theme-<?= e(dashboard_theme_for_user($user)) ?> <?= e($dashClass ?? '') ?>">
   <div class="dash-overlay" data-dash-overlay data-dash-close></div>
   <aside class="dash-sidebar" data-dash-sidebar>
     <div class="dash-sidebar-head">
