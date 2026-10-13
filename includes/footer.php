@@ -13,19 +13,18 @@
   ?>
   <?php
     // The same slim bar obinacademy.com uses: logo on the left, three links, copyright on the right.
-    // (Community = the WhatsApp community; Become a teacher = open a school.)
+    // (Community = the WhatsApp community.)
   ?>
   <footer class="site-footer-minimal">
     <div class="container footer-minimal-inner">
       <?php render_logo(true); ?>
       <nav class="footer-minimal-links" aria-label="Footer">
+        <a href="<?= e(base_url('campuses.php')) ?>">Campuses</a>
         <a href="<?= e(base_url('about.php')) ?>">About us</a>
         <a href="<?= e(base_url('contact.php')) ?>">Contact us</a>
         <a href="<?= e(base_url('terms.php')) ?>">Terms</a>
         <a href="<?= e(base_url('privacy.php')) ?>">Privacy</a>
         <a href="<?= e(WHATSAPP_COMMUNITY_URL) ?>" target="_blank" rel="noopener noreferrer">Community</a>
-        <a href="<?= e(base_url('become-creator.php')) ?>">Become a teacher</a>
-        <a href="<?= e(base_url('become-affiliate.php')) ?>">Become an affiliate</a>
         <a href="#" data-install-app hidden>Install the app</a>
         <?php if (!empty($user)): ?>
           <a href="<?= e(base_url('dashboard.php')) ?>">Dashboard</a>

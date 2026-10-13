@@ -27,6 +27,9 @@ if (!$course || ($course['status'] !== 'PUBLISHED' && !$canPreview)) {
 $isEnrolled = $user
     ? (bool) db_one('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [$user['id'], $course['id']])
     : (bool) guest_enrollment_for_course((int) $course['id']);
+// Obin Academy now runs as campuses. A course page stays open only to people who already own the course
+// (they keep everything they paid for), its creator and admins; everyone else is sent to the campuses.
+if (!$isEnrolled && !$canPreview) redirect('/campuses.php');
 $isInterested = $user ? is_interested_in_course((int) $user['id'], (int) $course['id']) : false;
 
 // A plain, publicly-shown view counter — not deduped per visitor, and

@@ -1,5 +1,7 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+// Obin Academy now runs as campuses: creators' schools, sales pages and open sign-ups are closed.
+redirect('/campuses.php');
 require __DIR__ . '/includes/follows.php';
 
 $creatorId = (int) query_param('id');

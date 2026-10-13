@@ -1,22 +1,17 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/data.php';
+require __DIR__ . '/includes/campuses.php';
 
 header('Content-Type: application/xml; charset=utf-8');
 
 /** @var array<int, array{loc: string, lastmod?: string, changefreq?: string, priority?: string}> */
 $urls = [];
 
-// courses/index.php, its category filters, and every published course's
-// own detail page are real, crawlable content. Only the actual lesson
-// stream (learn.php/stream.php) stays out, since that still requires
-// enrollment.
+// Obin Academy runs as campuses: the home page, each published campus and the plain information pages.
+// Creators' courses and school pages are no longer public, so they are left out.
 $staticPages = [
     ['index.php', 'daily', '1.0'],
-    ['courses/index.php', 'daily', '0.9'],
-    ['skills.php', 'weekly', '0.6'],
     ['stories.php', 'weekly', '0.5'],
-    ['become-creator.php', 'monthly', '0.6'],
     ['about.php', 'monthly', '0.4'],
     ['contact.php', 'monthly', '0.3'],
     ['privacy.php', 'yearly', '0.2'],
@@ -26,16 +21,12 @@ foreach ($staticPages as [$path, $changefreq, $priority]) {
     $urls[] = ['loc' => base_url($path), 'changefreq' => $changefreq, 'priority' => $priority];
 }
 
-foreach (get_categories() as $cat) {
-    $urls[] = ['loc' => base_url('courses/index.php?category=' . $cat['slug']), 'changefreq' => 'weekly', 'priority' => '0.6'];
-}
-
-foreach (get_course_cards() as $c) {
+foreach (get_published_campuses() as $c) {
     $urls[] = [
-        'loc' => base_url('courses/view.php?slug=' . $c['slug']),
-        'lastmod' => !empty($c['reviewed_at']) ? date('Y-m-d', strtotime($c['reviewed_at'])) : null,
+        'loc' => base_url('campus.php?slug=' . $c['slug']),
+        'lastmod' => date('Y-m-d', strtotime($c['updated_at'])),
         'changefreq' => 'weekly',
-        'priority' => '0.7',
+        'priority' => '0.9',
     ];
 }
 

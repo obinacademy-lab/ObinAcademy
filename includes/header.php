@@ -13,8 +13,8 @@ $user = current_user();
 $currentPath = current_path();
 ensure_affiliate_attribution_cookie();
 
-$seoTitle = $pageTitle ?? 'Obin Academy — Learn New Skills, Teach What You Know';
-$seoDescription = $pageDescription ?? 'Obin Academy is East Africa\'s learning marketplace — practical courses in finance, tech, business and more, taught by real creators and paid for instantly with MTN or Airtel Mobile Money.';
+$seoTitle = $pageTitle ?? 'Obin Academy Campuses — Learn a skill for one year';
+$seoDescription = $pageDescription ?? 'Obin Academy Campuses: year-long programmes in business, trading, content creation, fitness, AI and e-commerce, taught by professors we choose. Lessons, PDF guides and a weekly live class, paid monthly or yearly with MTN or Airtel Mobile Money.';
 $seoImage = isset($pageImage) ? (str_starts_with($pageImage, 'http') ? $pageImage : base_url($pageImage)) : base_url('assets/img/hero-couch-learner.jpg');
 $seoType = $pageType ?? 'website';
 $canonicalUrl = base_url(ltrim($currentPath, '/'));
@@ -103,8 +103,8 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <?php endif; ?>
 
         <div class="nav-actions">
-        <a href="<?= e(base_url('campuses.php')) ?>" class="link nav-campuses<?= $currentPath === '/campuses.php' ? ' active' : '' ?>">Campuses</a>
         <?php if ($user): ?>
+          <a href="<?= e(base_url('campuses.php')) ?>" class="link nav-campuses<?= $currentPath === '/campuses.php' ? ' active' : '' ?>">Campuses</a>
           <div class="account-menu">
             <button class="account-trigger" aria-haspopup="true">
               <span class="account-avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></span>
@@ -136,8 +136,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
           </div>
         <?php else: ?>
           <a href="<?= e(base_url('login.php')) ?>" class="btn btn-ink btn-sm shine">Log In</a>
-          <a href="<?= e(base_url('become-affiliate.php')) ?>" class="btn btn-gold btn-sm shine">Become an Affiliate</a>
-          <a href="<?= e(base_url('become-creator.php')) ?>" class="btn btn-primary btn-sm shine">Create Your School <span class="btn-arrow">→</span></a>
+          <a href="<?= e(base_url('campuses.php#campuses')) ?>" class="btn btn-gold btn-sm shine">Join a Campus <span class="btn-arrow">→</span></a>
         <?php endif; ?>
         </div>
 
@@ -169,8 +168,7 @@ $canonicalUrl = base_url(ltrim($currentPath, '/'));
         <a href="<?= e(base_url('logout.php')) ?>" class="mm-danger"><span class="mm-icon">↩</span>Sign Out</a>
       <?php else: ?>
         <a href="<?= e(base_url('login.php')) ?>" class="mm-cta mm-cta-ink">Log In</a>
-        <a href="<?= e(base_url('become-affiliate.php')) ?>" class="mm-cta mm-cta-gold">Become an Affiliate</a>
-        <a href="<?= e(base_url('become-creator.php')) ?>" class="mm-cta">Create Your School →</a>
+        <a href="<?= e(base_url('campuses.php#campuses')) ?>" class="mm-cta mm-cta-gold">Join a Campus →</a>
       <?php endif; ?>
       <a href="#" data-install-app hidden><span class="mm-icon">📲</span>Install the app</a>
     </div>

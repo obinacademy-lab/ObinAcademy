@@ -1,5 +1,7 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+// Obin Academy now runs as campuses: creators' schools, sales pages and open sign-ups are closed.
+redirect('/campuses.php');
 
 $GLOW_COLORS = ['blue', 'cyan', 'purple', 'pink', 'gold', 'emerald', 'orange', 'indigo'];
 

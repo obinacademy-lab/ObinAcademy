@@ -213,14 +213,17 @@ if ($user['role'] === 'ADMIN') {
         <button data-dash-open class="dash-hamburger" aria-label="Open menu">☰</button>
         <?php render_logo(true, 'dash-header-logo'); ?>
         <?php
-          // Admins search people, courses and payments; creators search their students; learners search courses.
-          $searchAction = $user['role'] === 'ADMIN' ? 'dashboard/admin/search.php' : ($user['role'] === 'CREATOR' ? 'dashboard/creator/students.php' : 'courses/index.php');
-          $searchHint = $user['role'] === 'ADMIN' ? 'Search people, courses, payments…' : ($user['role'] === 'CREATOR' ? 'Search your students…' : 'Search courses and creators…');
+          // Admins search people, courses and payments; creators search their students. Learners have no
+          // catalogue to search any more (the platform runs as campuses), so they get no search box.
+          $searchAction = $user['role'] === 'ADMIN' ? 'dashboard/admin/search.php' : 'dashboard/creator/students.php';
+          $searchHint = $user['role'] === 'ADMIN' ? 'Search people, courses, payments…' : 'Search your students…';
         ?>
+        <?php if ($user['role'] !== 'LEARNER'): ?>
         <form class="dash-search" method="get" action="<?= e(base_url($searchAction)) ?>" role="search">
           <?php dash_icon('search'); ?>
           <input type="search" name="q" value="" placeholder="<?= e($searchHint) ?>" aria-label="<?= e($searchHint) ?>" autocomplete="off" enterkeyhint="search">
         </form>
+        <?php endif; ?>
       </div>
       <div class="dash-header-right">
         <?php if ($user['role'] === 'ADMIN'): ?>

@@ -13,7 +13,7 @@ $minYearly = $campuses ? min(array_map(fn($c) => (float) $c['yearly_price'], $ca
 $samePrices = $campuses && count(array_unique(array_map(fn($c) => $c['monthly_price'] . '/' . $c['yearly_price'], $campuses))) === 1;
 $arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
-$pageTitle = 'Campuses — Obin Academy';
+$pageTitle = 'Obin Academy Campuses — Learn a skill for one year';
 $pageDescription = 'Year-long campuses at Obin Academy: lessons, PDF guides and a weekly live class with a professor, paid monthly or yearly with mobile money, ending with a certificate.';
 $extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400';
 require __DIR__ . '/includes/header.php';
@@ -28,7 +28,7 @@ require __DIR__ . '/includes/header.php';
         <p class="lede">Each campus is led by a professor chosen for real results. A year-long programme of video lessons, PDF guides and a live class every week, finishing with an Obin Academy certificate.</p>
         <div class="acts">
           <a class="cx-btn light" href="#campuses">View the campuses</a>
-          <a class="cx-btn ghost" href="<?= e(base_url('courses/index.php')) ?>">Browse single courses</a>
+          <?php if (!$viewer): ?><a class="cx-btn ghost" href="<?= e(base_url('login.php')) ?>">Log in</a><?php else: ?><a class="cx-btn ghost" href="<?= e(base_url('dashboard.php')) ?>">My dashboard</a><?php endif; ?>
         </div>
       </div>
       <div class="cx-terms" aria-label="Terms">
@@ -50,7 +50,7 @@ require __DIR__ . '/includes/header.php';
     <div class="cx-list">
       <?php if (!$campuses): ?>
         <div class="cx-empty">
-          Our first campuses open soon. In the meantime, browse our single courses below.
+          Our first campuses open soon. <a href="<?= e(WHATSAPP_COMMUNITY_URL) ?>" target="_blank" rel="noopener" style="color:var(--cx-brand); font-weight:600;">Join our WhatsApp community</a> to hear the moment they do.
           <?php if ($viewer && $viewer['role'] === 'ADMIN'): ?><br><a href="<?= e(base_url('dashboard/admin/campuses.php')) ?>" style="color:var(--cx-brand); font-weight:600;">Admin: set up and publish campuses</a><?php endif; ?>
         </div>
       <?php endif; ?>
@@ -64,14 +64,6 @@ require __DIR__ . '/includes/header.php';
           <span class="cx-go"><?= $arrow ?></span>
         </a>
       <?php endforeach; ?>
-      <a class="cx-row more" href="<?= e(base_url('courses/index.php')) ?>">
-        <span class="cx-gl"><?= campus_icon('book') ?></span>
-        <h3>More Courses</h3>
-        <span class="d">Single courses by Obin Academy creators, bought one at a time and yours to keep.</span>
-        <span class="pr">Per course<small>creator's price</small></span>
-        <span class="pr blank">&nbsp;</span>
-        <span class="cx-go"><?= $arrow ?></span>
-      </a>
     </div>
   </section>
 

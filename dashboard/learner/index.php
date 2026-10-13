@@ -2,6 +2,7 @@
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/data.php';
 require __DIR__ . '/../../includes/course_card.php';
+require __DIR__ . '/../../includes/campuses.php';
 $user = require_login();
 
 $enrollments = db_all('
@@ -64,6 +65,9 @@ foreach ($continuing as $en) {
 }
 $lessonsLeft = $nextUp ? max(0, (int) round((float) $nextUp['lesson_count'] * (1 - (float) $nextUp['progress'] / 100))) : 0;
 
+// Campus memberships (the platform's main offer now), newest access first.
+$myCampuses = campuses_ready() ? db_all('SELECT m.*, c.name, c.slug, c.icon FROM campus_memberships m JOIN campuses c ON c.id = m.campus_id WHERE m.user_id = ? ORDER BY m.access_until DESC', [$user['id']]) : [];
+
 $pageTitle = 'My Learning — Obin Academy';
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
@@ -76,7 +80,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?php if ($nextUp): ?>
       <a href="<?= e(base_url('learn.php?slug=' . $nextUp['slug'])) ?>" class="btn btn-gold" style="border-radius:999px;">▶ Resume Learning</a>
     <?php endif; ?>
-    <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-outline" style="border-radius:999px;">Browse Courses</a>
+    <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-outline" style="border-radius:999px;">Explore Campuses</a>
   </div>
 </div>
 
@@ -98,6 +102,24 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <div class="value" data-count-up data-count-value="<?= $certificateCount ?>" data-count-suffix="">0</div><div class="label">Certificates</div>
   </div>
 </div>
+
+<h3 class="dash-section-label" style="margin-top:36px;">My Campuses</h3>
+<?php if (!$myCampuses): ?>
+  <div class="card card-pad" style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div><strong>Join a campus</strong><p class="muted small" style="margin-top:4px;">A year-long programme with a professor: lessons, PDF guides and a live class every week, ending with a certificate.</p></div>
+    <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-primary">See the campuses</a>
+  </div>
+<?php else: ?>
+  <div class="ld-panel" style="margin-top:14px; overflow:hidden;">
+    <?php foreach ($myCampuses as $mc): $mcOpen = strtotime($mc['access_until']) > time(); ?>
+      <div class="ca-list" style="padding:0 20px;"><div>
+        <span class="ca-ico"><?= campus_icon($mc['icon']) ?></span>
+        <div style="min-width:0;"><b class="t"><?= e($mc['name']) ?> Campus</b><small><?= $mcOpen ? 'Access until ' . e(date('j M Y', strtotime($mc['access_until']))) . ' · month ' . campus_current_month($mc) . ' of 12' : 'Access ended ' . e(date('j M Y', strtotime($mc['access_until']))) ?></small></div>
+        <?php if ($mcOpen): ?><a class="btn btn-primary btn-sm" href="<?= e(base_url('campus-learn.php?campus=' . $mc['slug'])) ?>">Open campus</a><?php else: ?><a class="btn btn-outline btn-sm" href="<?= e(base_url('campus.php?slug=' . $mc['slug'] . '#join')) ?>">Renew</a><?php endif; ?>
+      </div></div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 
 <?php if ($continuing): ?>
   <h3 class="dash-section-label" style="margin-top:36px;">Continue Learning</h3>
@@ -129,8 +151,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 </div>
 <?php if (!$enrollments): ?>
   <div class="card card-pad" style="margin-top:14px; text-align:center; border-style:dashed;">
-    <p class="muted">You haven't enrolled in any courses yet.</p>
-    <a href="<?= e(base_url('courses/index.php')) ?>" class="btn btn-primary" style="margin-top:14px;">Browse Courses</a>
+    <p class="muted">Courses you bought before the campuses appear here, and stay yours to keep.</p>
   </div>
 <?php else: ?>
   <div class="my-courses-toolbar" style="margin-top:14px;" data-mycourses-toolbar>
@@ -183,18 +204,12 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <p class="muted small" style="margin-top:14px; display:none;" data-mycourses-empty>No courses match your search.</p>
 <?php endif; ?>
 
-<?php if ($recommended): ?>
-  <h3 class="dash-section-label" style="margin-top:40px;">Recommended For You</h3>
-  <div class="grid sm:grid-2 lg:grid-3" style="margin-top:14px;">
-    <?php foreach ($recommended as $c) render_course_card($c); ?>
-  </div>
-<?php endif; ?>
 
 <h3 class="dash-section-label" style="margin-top:40px;">Quick Actions</h3>
 <div class="quick-actions">
-  <a href="<?= e(base_url('courses/index.php')) ?>" class="quick-action">
+  <a href="<?= e(base_url('campuses.php')) ?>" class="quick-action">
     <span class="qa-icon" style="--tint:#0b00ff;"><?php dash_icon('book-open'); ?></span>
-    <span class="qa-text">Browse Courses</span>
+    <span class="qa-text">Explore Campuses</span>
     <?php dash_icon('arrow-right', 'qa-arrow'); ?>
   </a>
   <a href="<?= e(base_url('dashboard/settings.php')) ?>" class="quick-action">
