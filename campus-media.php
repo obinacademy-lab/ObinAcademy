@@ -6,6 +6,7 @@ require __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/campuses.php';
 
 $user = current_user();
+if (!campuses_ready()) { http_response_code(404); exit('Not found'); }
 $lesson = get_campus_lesson((int) query_param('lesson'));
 if (!$lesson) { http_response_code(404); exit('Not found'); }
 if (!campus_can_open_lesson($user, $lesson)) { http_response_code(403); exit('Forbidden'); }
