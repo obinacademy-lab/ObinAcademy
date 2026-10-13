@@ -44,8 +44,7 @@ require __DIR__ . '/includes/header.php';
 <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/home-campus.css')) ?>">
 <div class="hx">
   <section class="hx-hero">
-    <div class="hx-wrap hx-hero-grid">
-      <div class="hx-hero-copy">
+    <div class="hx-wrap">
       <span class="hx-eyebrow">Obin Academy Campuses</span>
       <h1>Earning is a skill.<br><em>Master it in 12 months.</em></h1>
       <p class="lede">School taught you to look for a job. We teach you to make money with a skill. Join a campus, learn step by step from a professor who does it for a living, and build income you control.</p>
@@ -59,11 +58,6 @@ require __DIR__ . '/includes/header.php';
         <span><?= $check ?>Stop any time</span>
         <span><?= $check ?>Certificate at the end</span>
       </div>
-      </div>
-      <figure class="hx-founder">
-        <img src="<?= e(versioned_asset('assets/img/founder.jpg')) ?>" alt="The founder of Obin Academy" fetchpriority="high">
-        <figcaption><b>Founder, Obin Academy</b></figcaption>
-      </figure>
     </div>
     <div class="hx-marquee" aria-hidden="true"><div>
       <?php for ($r = 0; $r < 2; $r++) foreach ($names as $n): ?><span><?= e($n) ?></span><b>✦</b><?php endforeach; ?>
