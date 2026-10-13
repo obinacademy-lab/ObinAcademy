@@ -1,6 +1,5 @@
-/* Teach at Obin Academy (teach.php). Built around one payment split in two: receipt hero, live
-   earnings band, the deal as a two-column ledger, a year of 52 live classes, then a three-step
-   application on paper. Everything is scoped under .tx. Dark, like the home page. */
+/* Teach at Obin Academy (teach.php). A campus list on paper in the hero, the deal as a two-column
+   ledger, a year of 52 live classes, then a three-step application on paper. Pay is never shown here. Everything is scoped under .tx. Dark, like the home page. */
 .tx {
   --tx-deep: #070b24; --tx-deep-2: #0e1540;
   --tx-on: #f4f5fb; --tx-on-2: rgba(244,245,251,.72); --tx-on-3: rgba(244,245,251,.5); --tx-line: rgba(244,245,251,.12);
@@ -37,15 +36,6 @@
 .tx-receipt::after { content: ""; position: absolute; left: 0; right: 0; bottom: -9px; height: 18px; background: radial-gradient(circle at 9px 0, transparent 8px, var(--tx-paper) 8.5px) 0 0 / 18px 18px repeat-x; transform: scaleY(-1); }
 .tx-r-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: var(--tx-mono); font-size: 11.5px; color: var(--tx-muted); letter-spacing: .04em; }
 .tx-r-ok { font-family: inherit; color: var(--tx-good); font-weight: 600; font-size: 12px; background: var(--tx-good-soft); padding: 3px 10px; border-radius: 99px; letter-spacing: 0; white-space: nowrap; }
-.tx-r-what { margin-top: 18px !important; font-size: 13.5px; color: var(--tx-ink-2); }
-.tx-r-amt { font-family: var(--tx-serif); font-size: 46px; line-height: 1; letter-spacing: -.02em; margin-top: 4px !important; }
-.tx-r-amt small { font-family: inherit; font-size: 15px; color: var(--tx-muted); letter-spacing: 0; margin-right: 6px; }
-.tx-split { display: flex; height: 54px; border-radius: 10px; overflow: hidden; margin-top: 22px; gap: 3px; }
-.tx-split div { display: flex; flex-direction: column; justify-content: center; padding: 0 14px; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; }
-.tx-split .you { background: var(--tx-lime); color: var(--tx-lime-ink); animation: txGrow 1.1s cubic-bezier(.2,.8,.2,1) .3s both; }
-.tx-split .us { background: var(--tx-ink); color: var(--tx-on); }
-.tx-split b { font-family: var(--tx-mono); font-size: 14px; font-weight: 500; }
-@keyframes txGrow { from { flex-grow: 100; } }
 .tx-r-rows { margin-top: 18px; border-top: 1px dashed #c9ccd8; }
 .tx-r-rows div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #c9ccd8; font-size: 13.5px; }
 .tx-r-rows div:last-child { border-bottom: 0; }
@@ -53,22 +43,8 @@
 .tx-r-rows b { font-family: var(--tx-mono); font-weight: 500; text-align: right; }
 .tx-r-rows .hl b { background: var(--tx-lime); padding: 0 6px; border-radius: 4px; }
 
-/* earnings band */
-.tx-band { background: var(--tx-deep-2); border-block: 1px solid var(--tx-line); padding-block: 80px; scroll-margin-top: 80px; }
-.tx-band-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; align-items: center; }
 .tx h2.tx-h2 { font-family: var(--tx-serif); font-weight: 400; font-size: clamp(32px, 4.2vw, 52px); line-height: 1.04; letter-spacing: -.025em; margin-top: 14px; color: var(--tx-on); }
 .tx .tx-sub { margin-top: 14px; color: var(--tx-on-2); max-width: 46ch; }
-.tx-calc { background: var(--tx-deep); border: 1px solid var(--tx-line); border-radius: 18px; padding: 26px; }
-.tx-slider + .tx-slider { margin-top: 22px; }
-.tx-slider label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: var(--tx-on-2); }
-.tx-slider output { font-family: var(--tx-mono); font-size: 15px; color: var(--tx-on); }
-.tx-slider input { display: block; width: 100%; margin-top: 10px; accent-color: var(--tx-lime); height: 22px; }
-.tx-result { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--tx-line); display: grid; gap: 8px; }
-.tx-result small { font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--tx-on-3); }
-.tx-result .big { font-family: var(--tx-serif); font-size: clamp(36px, 5vw, 58px); line-height: 1; letter-spacing: -.02em; color: var(--tx-lime); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.tx-result .yr { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-top: 8px; padding-top: 12px; border-top: 1px dashed var(--tx-line); font-size: 13px; color: var(--tx-on-2); }
-.tx-result .yr b { font-family: var(--tx-mono); font-weight: 500; font-size: 16px; color: var(--tx-on); }
-.tx-calc .fine { margin-top: 14px; font-size: 12.5px; color: var(--tx-on-3); }
 
 /* the deal: a two-column ledger */
 .tx-sec { padding-block: 96px; scroll-margin-top: 60px; }
@@ -148,7 +124,7 @@
 .tx-closed { padding: 40px 28px; text-align: center; color: var(--tx-ink-2); }
 
 @media (max-width: 920px) {
-  .tx-hero, .tx-band-grid, .tx-apply-grid { grid-template-columns: 1fr; gap: 44px; }
+  .tx-hero, .tx-apply-grid { grid-template-columns: 1fr; gap: 44px; }
   .tx-receipt { transform: none; max-width: 460px; }
 }
 @media (max-width: 700px) {
@@ -163,9 +139,6 @@
   .tx-steps button b { font-size: 13px; }
   .tx-sec, .tx-apply { padding-block: 72px; }
   .tx-sec.tight { padding-top: 0; }
-  .tx-band { padding-block: 56px; }
-  .tx-calc, .tx-pane { padding: 20px; }
+  .tx-pane { padding: 20px; }
   .tx-receipt { padding: 22px 20px 18px; }
-  .tx-r-amt { font-size: 40px; }
 }
-@media (prefers-reduced-motion: reduce) { .tx-split .you { animation: none; } }

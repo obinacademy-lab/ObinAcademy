@@ -1,17 +1,15 @@
 <?php
 /**
- * Teach at Obin Academy: built around the professor's share of every payment. A receipt splitting one
- * real campus payment, an earnings calculator on today's prices, the deal, a year of weekly live
- * classes, and a three-step application (stored in instructor_applications, reviewed by admins).
- * Works without JavaScript: the steps then show as one long form.
+ * Teach at Obin Academy: the role, the deal, a year of weekly live classes, and a three-step
+ * application (stored in instructor_applications, reviewed by admins). Pay is deliberately not shown
+ * publicly: it is explained to applicants on the call. Works without JavaScript: the steps then show
+ * as one long form.
  */
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/instructor_applications.php';
 
 $viewer = current_user();
 $ready = campuses_ready() && instructor_applications_ready();
-$sharePct = CAMPUS_PROFESSOR_SHARE_DEFAULT;
-$share = format_share($sharePct);
 $campuses = $ready ? get_all_campuses() : [];
 $sent = query_param('sent') === '1';
 $old = [];
@@ -36,26 +34,12 @@ $fieldStep = ['name' => 1, 'email' => 1, 'phone' => 1, 'headline' => 1, 'campus'
 $openStep = $error ? ($fieldStep[$errorField] ?? 3) : 1;
 $applicant = $sent ? ($_SESSION['teach_applicant'] ?? null) : null;
 
-// Real numbers: the receipt splits a real campus's monthly price; the calculator uses the lowest
-// prices on offer, so the example is never overstated.
-$published = array_values(array_filter($campuses, fn($c) => $c['status'] === 'PUBLISHED'));
-$exCampus = $published[0] ?? ($campuses[0] ?? null);
-$exPrice = $exCampus ? (float) $exCampus['monthly_price'] : 100000.0;
-$exYou = round($exPrice * $sharePct / 100);
-$minMonthly = $campuses ? min(array_map(fn($c) => (float) $c['monthly_price'], $campuses)) : 100000.0;
-$minYearly = $campuses ? min(array_map(fn($c) => (float) $c['yearly_price'], $campuses)) : 1000000.0;
-$num = fn(float $n) => number_format(round($n));
-$startMonthly = 50; $startYearly = 4;
-$startEarn = ($startMonthly * $minMonthly + $startYearly * $minYearly) * $sharePct / 100;
-$names = array_map(fn($c) => $c['name'], $campuses);
-$nameList = count($names) > 1 ? implode(', ', array_slice($names, 0, -1)) . ' and ' . end($names) : ($names[0] ?? '');
-
 // The year: one bar per weekly live class; the week each monthly stage opens is marked.
 $opens = [];
 for ($k = 0; $k < 12; $k++) $opens[(int) round($k * 52 / 12)] = true;
 
-$pageTitle = 'Teach at Obin Academy — Earn ' . $share . ' of every payment';
-$pageDescription = 'Lead a year-long Obin Academy campus and earn ' . $share . ' of every member payment. Weekly live classes, monthly lessons, paid to your mobile money.';
+$pageTitle = 'Teach at Obin Academy — Lead a Campus';
+$pageDescription = 'Apply to lead a year-long Obin Academy campus: monthly lessons, a weekly live class and a community of members who want to learn what you do.';
 $extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Geist+Mono:wght@400;500';
 require __DIR__ . '/includes/header.php';
 ?>
@@ -64,53 +48,19 @@ require __DIR__ . '/includes/header.php';
   <div class="tx-wrap tx-hero">
     <div>
       <p class="tx-eyebrow">Teach at Obin Academy</p>
-      <h1>Every time a member pays, <em><?= e($share) ?></em> is yours.</h1>
-      <p class="lede">Lead a year-long campus in what you already do well. You teach. We bring the members, collect the money, send the reminders and run the platform.</p>
-      <div class="acts"><a class="tx-btn lime" href="#apply">Apply to teach</a><a class="tx-btn" href="#earn">See what you could earn</a></div>
-      <?php if ($nameList): ?><p class="fine">Open for <?= e($nameList) ?>, or a campus you propose.</p><?php endif; ?>
+      <h1>Teach what you know. <em>Lead a campus.</em></h1>
+      <p class="lede">Lead a year-long campus in what you already do well. You teach. We bring the members, take care of payments and reminders, and run the platform.</p>
+      <div class="acts"><a class="tx-btn lime" href="#apply">Apply to teach</a><a class="tx-btn" href="#deal">How it works</a></div>
     </div>
 
-    <figure class="tx-receipt" aria-label="Example: how one campus payment is split">
-      <div class="tx-r-top"><span>OBIN ACADEMY · EXAMPLE PAYMENT</span><span class="tx-r-ok">Received</span></div>
-      <p class="tx-r-what"><?= e($exCampus ? $exCampus['name'] . ' Campus' : 'A campus') ?> · monthly membership</p>
-      <p class="tx-r-amt"><small>UGX</small><?= e($num($exPrice)) ?></p>
-      <div class="tx-split" role="img" aria-label="<?= e($num($exYou)) ?> to the professor, <?= e($num($exPrice - $exYou)) ?> to Obin Academy">
-        <div class="you" style="flex: <?= e((string) $sharePct) ?> 1 0;"><span>Professor</span><b><?= e($num($exYou)) ?></b></div>
-        <div class="us" style="flex: <?= e((string) (100 - $sharePct)) ?> 1 0;"><span>Obin Academy</span><b><?= e($num($exPrice - $exYou)) ?></b></div>
-      </div>
-      <div class="tx-r-rows">
-        <div class="hl"><span>Your share (<?= e($share) ?>)</span><b>UGX <?= e($num($exYou)) ?></b></div>
-        <div><span>Shows in your dashboard</span><b>Instantly</b></div>
-        <div><span>Sent to your mobile money</span><b>With the ID</b></div>
+    <figure class="tx-receipt" aria-label="Campuses open for professors">
+      <div class="tx-r-top"><span>CAMPUSES OPEN FOR PROFESSORS</span><span class="tx-r-ok">Applications open</span></div>
+      <div class="tx-r-rows tx-r-list">
+        <?php foreach ($campuses as $c): ?><div><span><?= e($c['name']) ?></span><b>12 months</b></div><?php endforeach; ?>
+        <div class="hl"><span>Something else you teach well</span><b>Propose it</b></div>
       </div>
     </figure>
   </div>
-
-  <section class="tx-band" id="earn">
-    <div class="tx-wrap tx-band-grid">
-      <div>
-        <p class="tx-eyebrow">What you could earn</p>
-        <h2 class="tx-h2">Your pay grows with every member you keep.</h2>
-        <p class="tx-sub">Move the sliders. This uses today's campus prices: <?= e(format_money($minMonthly)) ?> a month or <?= e(format_money($minYearly)) ?> a year. There is no cap.</p>
-      </div>
-      <div class="tx-calc" data-calc data-monthly="<?= e((string) $minMonthly) ?>" data-yearly="<?= e((string) $minYearly) ?>" data-share="<?= e((string) ($sharePct / 100)) ?>">
-        <div class="tx-slider">
-          <label for="tx-m">Members paying monthly <output id="tx-mo" for="tx-m"><?= $startMonthly ?></output></label>
-          <input id="tx-m" type="range" min="0" max="300" step="5" value="<?= $startMonthly ?>">
-        </div>
-        <div class="tx-slider">
-          <label for="tx-y">New yearly members that month <output id="tx-yo" for="tx-y"><?= $startYearly ?></output></label>
-          <input id="tx-y" type="range" min="0" max="40" step="1" value="<?= $startYearly ?>">
-        </div>
-        <div class="tx-result">
-          <small>You earn that month</small>
-          <span class="big" id="tx-out"><?= e(format_money($startEarn)) ?></span>
-          <span class="yr">Over a year at this pace<b id="tx-yr"><?= e(format_money($startEarn * 12)) ?></b></span>
-        </div>
-        <p class="fine">An example, not a promise. What you earn depends on how many members join and stay.</p>
-      </div>
-    </div>
-  </section>
 
   <div class="tx-wrap">
     <section class="tx-sec" id="deal">
@@ -118,7 +68,7 @@ require __DIR__ . '/includes/header.php';
       <h2 class="tx-h2">You bring the knowledge. We carry everything else.</h2>
       <div class="tx-deal">
         <div>
-          <h3>You bring <b><?= e($share) ?></b></h3>
+          <h3>You bring</h3>
           <ul>
             <li><div><b>A twelve-month path</b><span>One stage a month, from first steps to mastery</span></div><i>Once</i></li>
             <li><div><b>Lessons for each stage</b><span>Short videos and PDF guides, recorded with our help</span></div><i>Monthly</i></li>
@@ -127,12 +77,12 @@ require __DIR__ . '/includes/header.php';
           </ul>
         </div>
         <div>
-          <h3>We bring <b><?= e(format_share(100 - $sharePct)) ?></b></h3>
+          <h3>We bring</h3>
           <ul>
             <li><div><b>Members</b><span>Marketing, the website and your campus page</span></div><i>Always</i></li>
             <li><div><b>Payments</b><span>Mobile money collection, renewals and reminders</span></div><i>Always</i></li>
             <li><div><b>The platform</b><span>Lesson hosting, community, certificates and support</span></div><i>Always</i></li>
-            <li><div><b>Your pay</b><span>Tracked per payment and sent to your mobile money</span></div><i>Regularly</i></li>
+            <li><div><b>Help getting started</b><span>Planning your year and recording your first lessons together</span></div><i>Month one</i></li>
           </ul>
         </div>
       </div>
@@ -167,9 +117,9 @@ require __DIR__ . '/includes/header.php';
         <p class="lead">Three short steps, about five minutes. We read every application.</p>
         <div class="tx-after">
           <div><span>Within a week</span><b>We reply, by WhatsApp or email</b></div>
-          <div><span>Next</span><b>A short call about you and the campus</b></div>
+          <div><span>Next</span><b>A call where we explain everything: the role, the schedule and how professors are paid</b></div>
           <div><span>Then</span><b>We plan your twelve stages and record month one together</b></div>
-          <div><span>Opening day</span><b>Members join, and you start earning</b></div>
+          <div><span>Opening day</span><b>Members join your campus</b></div>
         </div>
       </div>
 
@@ -237,21 +187,6 @@ require __DIR__ . '/includes/header.php';
 </main>
 <script>
 (function () {
-  var calc = document.querySelector('[data-calc]');
-  if (calc) {
-    var P = +calc.dataset.monthly, Y = +calc.dataset.yearly, S = +calc.dataset.share;
-    var m = document.getElementById('tx-m'), y = document.getElementById('tx-y');
-    var fmt = function (n) { return 'UGX ' + Math.round(n).toLocaleString('en-US'); };
-    var run = function () {
-      document.getElementById('tx-mo').textContent = m.value;
-      document.getElementById('tx-yo').textContent = y.value;
-      var month = (m.value * P + y.value * Y) * S;
-      document.getElementById('tx-out').textContent = fmt(month);
-      document.getElementById('tx-yr').textContent = fmt(month * 12);
-    };
-    m.addEventListener('input', run); y.addEventListener('input', run);
-  }
-
   var form = document.getElementById('tx-form');
   if (!form) return;
   form.classList.add('js');
