@@ -1,0 +1,88 @@
+<?php
+/**
+ * A campus professor's pay: every payment in their campus, their share of it, what Obin Academy owes
+ * them now and what has been sent. Shown to any account linked as a campus professor (Admin, Campus,
+ * Professor tab), whatever its role.
+ */
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/campuses.php';
+$user = require_login();
+
+$mine = professor_pay_summary((int) $user['id']);
+if (!$mine) {
+    flash_set('error', 'You are not teaching a campus yet.');
+    redirect('/teach.php');
+}
+$sel = $mine[(int) query_param('campus')] ?? reset($mine);
+$campusId = (int) $sel['id'];
+$ledger = get_campus_professor_earnings($campusId, 200);
+$payouts = get_campus_professor_payouts($campusId);
+$share = campus_professor_share($sel);
+
+$pageTitle = 'My Campus Pay — Obin Academy';
+require __DIR__ . '/../includes/dashboard_header.php';
+?>
+<div class="dash-page-head">
+  <div>
+    <h1 class="h2">My Campus Pay</h1>
+    <p class="muted" style="margin-top:6px;">You earn <?= e(format_share($share)) ?> of every payment in the <?= e($sel['name']) ?> Campus, the moment it lands.</p>
+  </div>
+  <div class="row gap-2 wrap">
+    <?php if (count($mine) > 1): ?>
+      <form method="get"><select name="campus" class="sort-select" onchange="this.form.submit()" aria-label="Campus"><?php foreach ($mine as $c): ?><option value="<?= (int) $c['id'] ?>"<?= (int) $c['id'] === $campusId ? ' selected' : '' ?>><?= e($c['name']) ?></option><?php endforeach; ?></select></form>
+    <?php endif; ?>
+    <a class="ld-btn" href="<?= e(base_url('campus-learn.php?campus=' . $sel['slug'])) ?>">Open your campus</a>
+  </div>
+</div>
+
+<div class="ld-panel ld-strip" style="margin-top:20px;">
+  <div class="<?= $sel['owed'] > 0 ? 'warn' : '' ?>"><b><?= e(format_money($sel['owed'])) ?></b><span>Owed to you now</span><small><?= $sel['owed_count'] ? $sel['owed_count'] . ' payment' . ($sel['owed_count'] === 1 ? '' : 's') . ' not yet sent' : 'You are paid up' ?></small></div>
+  <div><b><?= e(format_money($sel['paid'])) ?></b><span>Paid to you</span><small><?= $sel['last_paid_at'] ? 'Last on ' . e(date('j M Y', strtotime($sel['last_paid_at']))) : 'Nothing sent yet' ?></small></div>
+  <div><b><?= e(format_money($sel['earned30'])) ?></b><span>Earned, last 30 days</span><small><?= e(format_money($sel['earned'])) ?> since you started</small></div>
+  <div><b><?= number_format($sel['members']) ?></b><span>Active members</span><small>In your campus right now</small></div>
+</div>
+
+<div class="pp-grid" style="margin-top:20px;">
+  <div class="ld-panel" style="overflow:hidden;">
+    <div class="ld-card" style="padding-bottom:12px;"><div class="ld-chead"><div><h2>Every payment</h2><p class="sub">What each member paid and your <?= e(format_share($share)) ?></p></div></div></div>
+    <div class="ca-tbl"><table class="ca-table">
+      <thead><tr><th>Date</th><th>Member</th><th class="num">Paid</th><th class="num">Yours</th><th>Status</th></tr></thead>
+      <tbody>
+        <?php if (!$ledger): ?><tr><td colspan="5" class="muted">No payments yet. Each one appears here the moment a member pays.</td></tr><?php endif; ?>
+        <?php foreach ($ledger as $l): ?>
+          <tr>
+            <td style="white-space:nowrap;"><?= e(date('j M Y', strtotime($l['created_at']))) ?></td>
+            <td><?= e($l['learner_name'] ?: 'A member') ?><small><?= $l['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></small></td>
+            <td class="num"><?= e(format_money((float) $l['gross'])) ?></td>
+            <td class="num"><b><?= e(format_money((float) $l['amount'])) ?></b></td>
+            <td><?= $l['payout_id'] ? '<span class="ca-pill good">Paid ' . e(date('j M', strtotime($l['payout_paid_at']))) . '</span>' : '<span class="ca-pill warn">Owed</span>' ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="pp-side">
+    <div class="ld-panel ld-card">
+      <div class="ld-chead"><div><h2>How you are paid</h2></div></div>
+      <ul class="pp-how">
+        <li>Every monthly or yearly payment in your campus earns you <b><?= e(format_share($share)) ?></b> of it.</li>
+        <li>Obin Academy sends what you are owed to <b><?= e($sel['professor_payout_phone'] ?: 'your mobile money') ?></b>, and you get an email with the transaction ID.</li>
+        <li>Questions about a payment? <a href="<?= e(base_url('contact.php')) ?>">Contact us</a>.</li>
+      </ul>
+    </div>
+    <div class="ld-panel" style="overflow:hidden; margin-top:16px;">
+      <div class="ld-card" style="padding-bottom:12px;"><div class="ld-chead"><div><h2>Sent to you</h2><p class="sub"><?= e(format_money($sel['paid'])) ?> to date</p></div></div></div>
+      <div class="ca-list" style="padding:0 22px 10px;">
+        <?php if (!$payouts): ?><p class="muted small" style="padding-bottom:12px;">Nothing sent yet.</p><?php endif; ?>
+        <?php foreach ($payouts as $p): ?>
+          <div style="grid-template-columns:minmax(0,1fr) auto;">
+            <div style="min-width:0;"><b class="t"><?= e(format_money((float) $p['amount'])) ?></b><small><?= e(PROFESSOR_PAYOUT_METHODS[$p['method']] ?? $p['method']) ?><?= $p['reference'] ? ' · ID ' . e($p['reference']) : '' ?> · <?= (int) $p['payments'] ?> payment<?= (int) $p['payments'] === 1 ? '' : 's' ?></small></div>
+            <small style="white-space:nowrap;"><?= e(date('j M Y', strtotime($p['paid_at']))) ?></small>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </div>
+</div>
+<?php require __DIR__ . '/../includes/dashboard_footer.php'; ?>

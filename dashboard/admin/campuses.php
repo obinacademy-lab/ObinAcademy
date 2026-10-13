@@ -36,21 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_admin_action((int) $user['id'], $user['name'], 'campus.reminded', 'Campus member', $m['user_name'], $m['campus_name']);
             flash_set($okSend ? 'success' : 'error', $okSend ? 'Reminder sent to ' . $m['user_email'] . '. A copy is in your inbox.' : 'The email service refused the reminder. The in-app notice was still sent.');
         }
-    } elseif ($action === 'payout') {
-        $campus = get_campus((int) post('campus'));
-        $amount = (float) str_replace([',', ' '], '', post('amount'));
-        if ($campus && $amount > 0) {
-            db_run(
-                'INSERT INTO campus_payouts (campus_id, period, amount, paid_at, note) VALUES (?, ?, ?, NOW(), ?)
-                 ON DUPLICATE KEY UPDATE amount = VALUES(amount), paid_at = NOW(), note = VALUES(note)',
-                [$campus['id'], $period, $amount, mb_substr(post('note'), 0, 255) ?: null]
-            );
-            log_admin_action((int) $user['id'], $user['name'], 'campus.professor_paid', 'Campus', $campus['name'], format_money($amount) . ' for ' . $period);
-            flash_set('success', 'Recorded ' . format_money($amount) . ' paid to the ' . $campus['name'] . ' professor for ' . date('F', strtotime($period . '-01')) . '.');
-        }
-    } elseif ($action === 'payout_undo') {
-        db_run('DELETE FROM campus_payouts WHERE campus_id = ? AND period = ?', [(int) post('campus'), $period]);
-        flash_set('success', 'Payment record removed.');
     }
     redirect('/dashboard/admin/campuses.php');
 }
@@ -58,8 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $o = campus_admin_overview();
 $renewals = campus_renewals_due(7, 30);
 $live = upcoming_campus_live_classes(7);
-$payouts = [];
-foreach (db_all('SELECT * FROM campus_payouts WHERE period = ?', [$period]) as $p) $payouts[(int) $p['campus_id']] = $p;
+$pay = professor_pay_summary();
 $delta = $o['collected_prev'] > 0 ? round(($o['collected'] - $o['collected_prev']) / $o['collected_prev'] * 100, 1) : null;
 $fmtM = fn(float $v) => $v >= 1000000 ? 'UGX ' . rtrim(rtrim(number_format($v / 1000000, 1), '0'), '.') . 'M' : format_money($v);
 
@@ -131,7 +115,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <?php foreach ($o['campuses'] as $c): $mo = $c['active'] ? round($c['monthly'] / $c['active'] * 100) : 0; ?>
         <tr>
           <td><a class="ca-name" href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . $c['id'])) ?>"><i><?= campus_icon($c['icon']) ?></i><?= e($c['name']) ?></a></td>
-          <td><?= $c['professor_name'] ? e($c['professor_name']) : '<span class="muted">Not set</span>' ?><small><?= $c['professor_fee_monthly'] ? e(format_money((float) $c['professor_fee_monthly'])) . ' a month' : 'Fee not set' ?></small></td>
+          <td><?= $c['professor_name'] ? e($c['professor_name']) : '<span class="muted">Not set</span>' ?><small><?= e(format_share(campus_professor_share($c))) ?> of each payment</small></td>
           <td class="num"><?= number_format($c['active']) ?></td>
           <td><div class="ca-split"><span class="bar"><?php if ($c['active']): ?><i class="m" style="width:<?= $mo ?>%"></i><i class="y" style="width:<?= 100 - $mo ?>%"></i><?php endif; ?></span><small><?= (int) $c['monthly'] ?> / <?= (int) $c['yearly'] ?></small></div></td>
           <td class="num"><?= e(format_money($c['collected'])) ?></td>
@@ -167,17 +151,15 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     </table></div>
   </div>
   <div class="ld-panel" style="overflow:hidden;">
-    <div class="ld-card" style="padding-bottom:14px;"><div class="ld-chead"><div><h2>Professor payments</h2><p class="sub"><?= e(date('F Y')) ?> · your own record of what you paid</p></div></div></div>
+    <div class="ld-card" style="padding-bottom:14px;"><div class="ld-chead"><div><h2>Professor pay</h2><p class="sub">Their share of every payment, owed until you send it</p></div><a class="ld-view" href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>">Open</a></div></div>
     <div class="ca-list" style="padding:0 22px 12px;">
-      <?php foreach ($o['campuses'] as $c): $p = $payouts[(int) $c['id']] ?? null; ?>
+      <?php foreach ($pay as $c): ?>
         <div>
           <span class="ca-ico"><?= campus_icon($c['icon']) ?></span>
-          <div style="min-width:0;"><b class="t"><?= e($c['name']) ?></b><small><?= $p ? 'Paid ' . e(format_money((float) $p['amount'])) . ' · ' . e(date('j M', strtotime($p['paid_at']))) : ($c['professor_fee_monthly'] ? e(format_money((float) $c['professor_fee_monthly'])) . ' due' : 'No fee set') ?></small></div>
-          <?php if ($p): ?>
-            <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="payout_undo"><input type="hidden" name="campus" value="<?= (int) $c['id'] ?>"><button class="ca-pill good" type="submit" title="Remove this record" style="border:0; cursor:pointer;">Paid</button></form>
-          <?php elseif ($c['professor_fee_monthly']): ?>
-            <form method="post" data-confirm="Record <?= e(format_money((float) $c['professor_fee_monthly'])) ?> as paid to the <?= e($c['name']) ?> professor for <?= e(date('F')) ?>?"><?= csrf_field() ?><input type="hidden" name="_action" value="payout"><input type="hidden" name="campus" value="<?= (int) $c['id'] ?>"><input type="hidden" name="amount" value="<?= e((string) $c['professor_fee_monthly']) ?>"><button class="ot-btn" type="submit">Mark paid</button></form>
-          <?php else: ?><span class="ca-pill mute">Set fee</span><?php endif; ?>
+          <div style="min-width:0;"><b class="t"><?= e($c['name']) ?></b><small><?= $c['professor_name'] ? e($c['professor_name']) . ' · ' : '' ?><?= e(format_share(campus_professor_share($c))) ?> · <?= e(format_money($c['paid'])) ?> paid to date</small></div>
+          <?php if ($c['owed'] > 0): ?>
+            <a class="ot-btn" href="<?= e(base_url('dashboard/admin/professor-pay.php?campus=' . $c['id'] . '#pay')) ?>">Pay <?= e(format_money($c['owed'])) ?></a>
+          <?php else: ?><span class="ca-pill <?= $c['earned'] > 0 ? 'good' : 'mute' ?>"><?= $c['earned'] > 0 ? 'Paid up' : 'Nothing yet' ?></span><?php endif; ?>
         </div>
       <?php endforeach; ?>
     </div>

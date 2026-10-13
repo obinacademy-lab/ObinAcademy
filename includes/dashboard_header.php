@@ -54,6 +54,8 @@ $navByRole = [
         ],
         'Campuses' => [
             ['/dashboard/admin/campuses.php', 'Campuses', 'graduation-cap'],
+            ['/dashboard/admin/professor-pay.php', 'Professor Pay', 'banknote'],
+            ['/dashboard/admin/instructor-applications.php', 'Teach Applications', 'user-plus'],
         ],
         'Manage' => [
             ['/dashboard/admin/users.php', 'Users', 'users'],
@@ -90,6 +92,15 @@ if ($isActiveAffiliate) {
     ];
 }
 
+// Campus professors (linked by account on the campus) get their pay page, whatever their role.
+try {
+    if ($user['role'] !== 'ADMIN' && db_one('SELECT 1 FROM campuses WHERE professor_user_id = ? LIMIT 1', [(int) $user['id']])) {
+        $navGroups = ['Teaching' => [['/dashboard/professor.php', 'My Campus Pay', 'banknote']]] + $navGroups;
+    }
+} catch (Throwable $e) {
+    // Professor pay migration not applied yet.
+}
+
 // Live counts shown as badges on the relevant nav item, and a small
 // role-specific snapshot widget — so the sidebar carries real information
 // instead of sitting mostly empty below a short link list.
@@ -114,6 +125,11 @@ if ($user['role'] === 'ADMIN') {
         $navBadges['/dashboard/admin/comments.php'] = (int) db_one("SELECT COUNT(*) AS n FROM comments WHERE status='HIDDEN'")['n'];
     } catch (Throwable $e) {
         $navBadges['/dashboard/admin/comments.php'] = 0;
+    }
+    try {
+        $navBadges['/dashboard/admin/instructor-applications.php'] = (int) db_one("SELECT COUNT(*) AS n FROM instructor_applications WHERE status='NEW'")['n'];
+    } catch (Throwable $e) {
+        $navBadges['/dashboard/admin/instructor-applications.php'] = 0;
     }
     $sidebarWidget = [
         'title' => 'This Month',

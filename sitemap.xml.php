@@ -13,6 +13,7 @@ $staticPages = [
     ['index.php', 'daily', '1.0'],
     ['stories.php', 'weekly', '0.5'],
     ['about.php', 'monthly', '0.4'],
+    ['teach.php', 'monthly', '0.5'],
     ['contact.php', 'monthly', '0.3'],
     ['privacy.php', 'yearly', '0.2'],
     ['terms.php', 'yearly', '0.2'],

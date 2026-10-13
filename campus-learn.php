@@ -11,7 +11,10 @@ $user = current_user();
 $slug = query_param('campus');
 if (!$user) redirect('/login.php?redirect=' . urlencode('/campus-learn.php?campus=' . $slug));
 $campus = get_campus_by_slug($slug);
-$isAdmin = $user['role'] === 'ADMIN';
+// Admins and the campus's own professor see the whole campus, published or not, without paying.
+$isProf = $campus && campus_is_professor($user, $campus);
+$isAdmin = $user['role'] === 'ADMIN' || $isProf;
+$staffLabel = $isProf ? 'Professor' : 'Admin preview';
 if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) redirect('/index.php#campuses');
 
 $campusId = (int) $campus['id'];
@@ -67,6 +70,13 @@ $daysLeft = $membership ? campus_days_left($membership) : null;
 $stageTitle = fn(int $m) => $stages[$m]['title'] !== '' ? $stages[$m]['title'] : 'Month ' . $m;
 $kindLabel = fn(array $l) => ($l['kind'] === 'PDF' ? 'PDF' : 'Video') . ($l['duration_label'] ? ' · ' . $l['duration_label'] : '');
 $profLabel = $campus['professor_name'] ?: 'Obin Academy';
+// Who a community post is from: the linked professor posts as themselves; admin posts show as the
+// professor until one is linked, then as the Obin Academy team.
+$poster = function (array $p) use ($campus, $profLabel): array {
+    if (!empty($campus['professor_user_id']) && (int) $p['user_id'] === (int) $campus['professor_user_id']) return [$profLabel, 'Professor', true];
+    if ($p['role'] === 'ADMIN') return empty($campus['professor_user_id']) ? [$profLabel, 'Team', true] : ['Obin Academy', 'Team', true];
+    return [$p['name'], '', false];
+};
 
 $ic = [
     'home' => '<path d="M3 10.5 12 3l9 7.5V21H3z"/>',
@@ -134,7 +144,7 @@ $flash = function_exists('flash_get') ? (flash_get('success') ?: null) : null;
         <a href="<?= e(base_url('dashboard.php')) ?>"><?= $svg('home') ?>Dashboard</a>
       </nav>
     </div>
-    <div class="who"><i><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></i><div><b><?= e($user['name']) ?></b><small><?= $isAdmin ? 'Admin preview' : ($membership['plan'] === 'YEARLY' ? 'Yearly member' : 'Monthly member') ?></small></div></div>
+    <div class="who"><i><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></i><div><b><?= e($user['name']) ?></b><small><?= $isAdmin ? e($staffLabel) : ($membership['plan'] === 'YEARLY' ? 'Yearly member' : 'Monthly member') ?></small></div></div>
   </aside>
 
   <main class="cx-main">
@@ -150,7 +160,7 @@ $flash = function_exists('flash_get') ? (flash_get('success') ?: null) : null;
 
     <?php if ($view === 'home'): ?>
       <div class="cx-top"><div><span class="cx-label"><?= e($campus['name']) ?> Campus</span><h1>Welcome, <?= e(campus_first_name($user['name'])) ?></h1></div>
-        <?php if (!$isAdmin): ?><span class="cx-pill <?= $daysLeft !== null && $daysLeft <= 7 ? 'warn' : 'good' ?>"><span class="dot"></span>Access until <?= e(date('j M', strtotime($membership['access_until']))) ?></span><?php else: ?><span class="cx-pill mute">Admin preview</span><?php endif; ?>
+        <?php if (!$isAdmin): ?><span class="cx-pill <?= $daysLeft !== null && $daysLeft <= 7 ? 'warn' : 'good' ?>"><span class="dot"></span>Access until <?= e(date('j M', strtotime($membership['access_until']))) ?></span><?php else: ?><span class="cx-pill mute"><?= e($staffLabel) ?></span><?php endif; ?>
       </div>
       <div class="cx-mhero">
         <div class="cx-cont">
@@ -196,8 +206,8 @@ $flash = function_exists('flash_get') ? (flash_get('success') ?: null) : null;
           <header style="border-top:1px solid var(--cx-line);"><h2>Community</h2><a href="<?= e($self(['view' => 'community'])) ?>">Open</a></header>
           <div>
             <?php $posts = get_campus_posts($campusId, 3); if (!$posts): ?><div class="cx-none">No messages yet. Say hello to your classmates.</div><?php endif; ?>
-            <?php foreach ($posts as $p): $staff = $p['role'] === 'ADMIN'; ?>
-              <div class="cx-msg"><span class="a<?= $staff ? ' prof' : '' ?>"><?= e(mb_strtoupper(mb_substr($staff ? $profLabel : $p['name'], 0, 1))) ?></span><div><b><?= e($staff ? $profLabel : $p['name']) ?><?= $staff ? '<em>Team</em>' : '' ?></b><p><?= e(mb_strimwidth($p['body'], 0, 140, '…')) ?></p></div></div>
+            <?php foreach ($posts as $p): [$who, $tag, $staff] = $poster($p); ?>
+              <div class="cx-msg"><span class="a<?= $staff ? ' prof' : '' ?>"><?= e(mb_strtoupper(mb_substr($who, 0, 1))) ?></span><div><b><?= e($who) ?><?= $tag ? '<em>' . e($tag) . '</em>' : '' ?></b><p><?= e(mb_strimwidth($p['body'], 0, 140, '…')) ?></p></div></div>
             <?php endforeach; ?>
           </div>
         </section>
@@ -278,9 +288,9 @@ $flash = function_exists('flash_get') ? (flash_get('success') ?: null) : null;
           <button class="cx-btn solid" type="submit">Post</button>
         </form>
         <?php if (!$posts): ?><div class="cx-none">No messages yet. Be the first to say hello.</div><?php endif; ?>
-        <?php foreach ($posts as $p): $staff = $p['role'] === 'ADMIN'; ?>
-          <div class="cx-msg"><span class="a<?= $staff ? ' prof' : '' ?>"><?= e(mb_strtoupper(mb_substr($staff ? $profLabel : $p['name'], 0, 1))) ?></span>
-            <div><b><?= e($staff ? $profLabel : $p['name']) ?><?= $staff ? '<em>Team</em>' : '' ?></b><time datetime="<?= e($p['created_at']) ?>"><?= e(time_ago($p['created_at'])) ?></time>
+        <?php foreach ($posts as $p): [$who, $tag, $staff] = $poster($p); ?>
+          <div class="cx-msg"><span class="a<?= $staff ? ' prof' : '' ?>"><?= e(mb_strtoupper(mb_substr($who, 0, 1))) ?></span>
+            <div><b><?= e($who) ?><?= $tag ? '<em>' . e($tag) . '</em>' : '' ?></b><time datetime="<?= e($p['created_at']) ?>"><?= e(time_ago($p['created_at'])) ?></time>
               <p><?= e($p['body']) ?></p>
               <?php if ($isAdmin): ?><form method="post" style="margin-top:6px;"><?= csrf_field() ?><input type="hidden" name="_action" value="delete_post"><input type="hidden" name="post" value="<?= (int) $p['id'] ?>"><button type="submit" style="border:0; background:none; padding:0; font-size:12px; color:var(--cx-bad); cursor:pointer;">Remove</button></form><?php endif; ?>
             </div></div>
@@ -300,7 +310,7 @@ $flash = function_exists('flash_get') ? (flash_get('success') ?: null) : null;
 
     <?php elseif ($view === 'membership'): ?>
       <div class="cx-top"><div><span class="cx-label">Membership</span><h1><?= e($campus['name']) ?> Campus</h1></div><a class="cx-btn solid sm" href="<?= e(base_url('campus.php?slug=' . $campus['slug'] . '#join')) ?>">Add more time</a></div>
-      <?php if ($isAdmin && !$membership): ?><p class="cx-fine">You are viewing as an admin, without a membership.</p><?php else: ?>
+      <?php if ($isAdmin && !$membership): ?><p class="cx-fine">You are viewing as <?= $isProf ? 'the professor' : 'an admin' ?>, without a membership.</p><?php else: ?>
       <section class="cx-box" style="margin-top:20px;">
         <div class="cx-kv">
           <div><span>Plan</span><b><?= $membership['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></b></div>

@@ -11,8 +11,10 @@
  * stage N is available from the start of month N; the certificate is issued once every lesson of
  * a fully built twelve-month path is complete.
  *
- * Campus money goes to the platform (no creator earnings rows). What the platform owes each
- * professor is tracked in campus_payouts, for the admin's own records.
+ * Campus money goes to the platform (no creator earnings rows). Each campus professor earns a share
+ * of every payment (campuses.professor_share_percent, 40% by default), recorded per payment in
+ * campus_professor_earnings the moment it succeeds. The admin sends the money by mobile money or bank
+ * and records it in campus_professor_payouts, which marks those earnings paid.
  */
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/email.php';
@@ -133,6 +135,8 @@ function campus_completed_lesson_ids(int $userId, int $campusId): array {
 function campus_can_open_lesson(?array $user, array $lesson): bool {
     if (!$user) return false;
     if ($user['role'] === 'ADMIN') return true;
+    $campus = get_campus((int) $lesson['campus_id']);
+    if ($campus && campus_is_professor($user, $campus)) return true;
     $m = get_campus_membership((int) $lesson['campus_id'], (int) $user['id']);
     return campus_membership_open($m) && (int) $lesson['month_no'] <= campus_current_month($m);
 }
@@ -274,6 +278,11 @@ function apply_campus_payment_success(array $payment): void {
     }
     create_user_notification($userId, null, 'campus_joined', 'Your ' . $payment['campus_name'] . ' Campus access is open until ' . date('j M Y', strtotime($until)) . '.', $learnUrl);
     try {
+        record_campus_professor_earning($payment);
+    } catch (Throwable $e) {
+        error_log('[campus] professor earning not recorded for payment ' . $payment['id'] . ': ' . $e->getMessage());
+    }
+    try {
         send_admin_sale_notification_email($payment['campus_name'] . ' Campus', $plan === 'YEARLY' ? 'Campus, yearly' : 'Campus, monthly', (string) ($payment['learner_name'] ?: 'A member'), (float) $payment['amount'], 'Obin Academy');
     } catch (Throwable $e) {}
 }
@@ -414,6 +423,162 @@ function campus_renewals_due(int $days = 7, int $limit = 50): array {
          ORDER BY m.access_until ASC LIMIT ' . (int) $limit,
         [$days]
     );
+}
+
+// ---------------------------------------------------------------- professor pay
+
+const CAMPUS_PROFESSOR_SHARE_DEFAULT = 40.0;
+const PROFESSOR_PAYOUT_METHODS = ['MOBILE_MONEY' => 'Mobile money', 'BANK' => 'Bank transfer', 'CASH' => 'Cash'];
+
+/** True once migration/add-professor-pay.sql has been applied. */
+function professor_pay_ready(): bool {
+    static $ready = null;
+    if ($ready !== null) return $ready;
+    try { db_one('SELECT 1 FROM campus_professor_earnings LIMIT 1'); return $ready = true; } catch (Throwable $e) { return $ready = false; }
+}
+
+/** Is this user the professor of this campus (linked by account)? */
+function campus_is_professor(?array $user, array $campus): bool {
+    return $user !== null && !empty($campus['professor_user_id']) && (int) $campus['professor_user_id'] === (int) $user['id'];
+}
+
+function campus_professor_share(array $campus): float {
+    $p = isset($campus['professor_share_percent']) ? (float) $campus['professor_share_percent'] : CAMPUS_PROFESSOR_SHARE_DEFAULT;
+    return max(0.0, min(100.0, $p));
+}
+
+/** "40%" or "37.5%". */
+function format_share(float $pct): string {
+    return rtrim(rtrim(number_format($pct, 2, '.', ''), '0'), '.') . '%';
+}
+
+/** Campuses this user teaches. */
+function get_professor_campuses(int $userId): array {
+    if (!campuses_ready() || !professor_pay_ready()) return [];
+    return db_all('SELECT * FROM campuses WHERE professor_user_id = ? ORDER BY sort_order, name', [$userId]);
+}
+
+/**
+ * Records the professor's share of one successful campus payment, once (payment_id is unique), and
+ * tells the professor when they have an account linked. Called from apply_campus_payment_success().
+ */
+function record_campus_professor_earning(array $payment): void {
+    if (!professor_pay_ready()) return;
+    $campus = get_campus((int) $payment['campus_id']);
+    if (!$campus) return;
+    $pct = campus_professor_share($campus);
+    $gross = (float) $payment['amount'];
+    $amount = round($gross * $pct / 100, 2);
+    $plan = $payment['campus_plan'] === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
+    $added = db_run(
+        'INSERT IGNORE INTO campus_professor_earnings (campus_id, payment_id, learner_id, professor_name, professor_user_id, plan, gross, share_percent, amount)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [$campus['id'], $payment['id'], $payment['user_id'] ?: null, $campus['professor_name'], $campus['professor_user_id'] ?: null, $plan, $gross, $pct, $amount]
+    );
+    if (!$added || empty($campus['professor_user_id']) || $amount <= 0) return;
+
+    $prof = db_one('SELECT id, name, email FROM users WHERE id = ?', [$campus['professor_user_id']]);
+    if (!$prof) return;
+    $url = base_url('dashboard/professor.php?campus=' . $campus['id']);
+    $line = 'A ' . ($plan === 'YEARLY' ? 'yearly' : 'monthly') . ' payment of ' . format_money($gross) . ' came in for the ' . $campus['name'] . ' Campus. Your '
+        . format_share($pct) . ' share is ' . format_money($amount) . '.';
+    create_user_notification((int) $prof['id'], null, 'professor_earning', 'You earned ' . format_money($amount) . ' from a ' . $campus['name'] . ' Campus payment.', $url);
+    if ($prof['email']) {
+        resend_send($prof['email'], 'You earned ' . format_money($amount) . ' · ' . $campus['name'] . ' Campus', campus_email_html(
+            'You earned ' . format_money($amount), e($line) . ' It is added to what Obin Academy owes you and is paid out to your mobile money.', 'See your earnings', $url
+        ));
+    }
+}
+
+/** Per campus: earned (all time and last 30 days), paid, owed now and the last payout. */
+function professor_pay_summary(?int $professorUserId = null): array {
+    $campuses = $professorUserId !== null ? get_professor_campuses($professorUserId) : get_all_campuses();
+    $out = [];
+    foreach ($campuses as $c) {
+        $out[(int) $c['id']] = $c + ['earned' => 0.0, 'earned30' => 0.0, 'gross30' => 0.0, 'owed' => 0.0, 'owed_count' => 0, 'payments' => 0, 'paid' => 0.0, 'last_paid_at' => null, 'members' => 0];
+    }
+    if (!$out || !professor_pay_ready()) return $out;
+    $ids = implode(',', array_map('intval', array_keys($out)));
+    foreach (db_all(
+        "SELECT campus_id, SUM(amount) AS earned, SUM(IF(created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY), amount, 0)) AS earned30,
+                SUM(IF(created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY), gross, 0)) AS gross30,
+                SUM(IF(payout_id IS NULL, amount, 0)) AS owed, SUM(payout_id IS NULL) AS owed_count, COUNT(*) AS payments
+         FROM campus_professor_earnings WHERE campus_id IN ($ids) GROUP BY campus_id"
+    ) as $r) {
+        $k = (int) $r['campus_id'];
+        $out[$k]['earned'] = (float) $r['earned']; $out[$k]['earned30'] = (float) $r['earned30']; $out[$k]['gross30'] = (float) $r['gross30'];
+        $out[$k]['owed'] = (float) $r['owed']; $out[$k]['owed_count'] = (int) $r['owed_count']; $out[$k]['payments'] = (int) $r['payments'];
+    }
+    foreach (db_all("SELECT campus_id, SUM(amount) AS paid, MAX(paid_at) AS last_paid_at FROM campus_professor_payouts WHERE campus_id IN ($ids) GROUP BY campus_id") as $r) {
+        $out[(int) $r['campus_id']]['paid'] = (float) $r['paid'];
+        $out[(int) $r['campus_id']]['last_paid_at'] = $r['last_paid_at'];
+    }
+    foreach (db_all("SELECT campus_id, COUNT(*) AS n FROM campus_memberships WHERE campus_id IN ($ids) AND access_until > NOW() GROUP BY campus_id") as $r) {
+        $out[(int) $r['campus_id']]['members'] = (int) $r['n'];
+    }
+    return $out;
+}
+
+/** One campus's earnings, newest first, with the learner's name and when each was paid out. */
+function get_campus_professor_earnings(int $campusId, int $limit = 100): array {
+    if (!professor_pay_ready()) return [];
+    return db_all(
+        'SELECT e.*, u.name AS learner_name, po.paid_at AS payout_paid_at, po.reference AS payout_reference
+         FROM campus_professor_earnings e LEFT JOIN users u ON u.id = e.learner_id LEFT JOIN campus_professor_payouts po ON po.id = e.payout_id
+         WHERE e.campus_id = ? ORDER BY e.created_at DESC, e.id DESC LIMIT ' . (int) $limit,
+        [$campusId]
+    );
+}
+
+function get_campus_professor_payouts(int $campusId, int $limit = 50): array {
+    if (!professor_pay_ready()) return [];
+    return db_all(
+        'SELECT po.*, (SELECT COUNT(*) FROM campus_professor_earnings e WHERE e.payout_id = po.id) AS payments
+         FROM campus_professor_payouts po WHERE po.campus_id = ? ORDER BY po.paid_at DESC, po.id DESC LIMIT ' . (int) $limit,
+        [$campusId]
+    );
+}
+
+/**
+ * Records money sent to a campus professor: settles every unpaid earning for that campus in one
+ * payout, inside a transaction so a payment landing at the same moment is never half-counted.
+ * Emails the professor a statement when an account is linked. Returns the payout row, or null when
+ * nothing was owed.
+ */
+function record_campus_professor_payout(int $campusId, string $method, string $sentTo, string $reference, string $note, int $adminId): ?array {
+    $campus = get_campus($campusId);
+    if (!$campus || !professor_pay_ready()) return null;
+    if (!isset(PROFESSOR_PAYOUT_METHODS[$method])) $method = 'MOBILE_MONEY';
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $rows = db_all('SELECT id, amount FROM campus_professor_earnings WHERE campus_id = ? AND payout_id IS NULL FOR UPDATE', [$campusId]);
+        $total = round(array_sum(array_map(fn($r) => (float) $r['amount'], $rows)), 2);
+        if (!$rows || $total <= 0) { $pdo->rollBack(); return null; }
+        $payoutId = db_insert(
+            'INSERT INTO campus_professor_payouts (campus_id, professor_name, professor_user_id, amount, method, sent_to, reference, note, paid_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$campusId, $campus['professor_name'], $campus['professor_user_id'] ?: null, $total, $method, mb_substr($sentTo, 0, 120) ?: null, mb_substr($reference, 0, 120) ?: null, mb_substr($note, 0, 255) ?: null, $adminId]
+        );
+        $ids = implode(',', array_map(fn($r) => (int) $r['id'], $rows));
+        db_run("UPDATE campus_professor_earnings SET payout_id = ? WHERE id IN ($ids)", [$payoutId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+
+    $payout = db_one('SELECT * FROM campus_professor_payouts WHERE id = ?', [$payoutId]);
+    if (!empty($campus['professor_user_id'])) {
+        $prof = db_one('SELECT id, name, email FROM users WHERE id = ?', [$campus['professor_user_id']]);
+        if ($prof) {
+            $url = base_url('dashboard/professor.php?campus=' . $campusId);
+            $line = format_money($total) . ' for ' . count($rows) . ' payment' . (count($rows) === 1 ? '' : 's') . ' in the ' . $campus['name'] . ' Campus was sent by '
+                . strtolower(PROFESSOR_PAYOUT_METHODS[$method]) . ($sentTo !== '' ? ' to ' . $sentTo : '') . ($reference !== '' ? ' (reference ' . $reference . ')' : '') . '.';
+            create_user_notification((int) $prof['id'], null, 'professor_paid', 'Obin Academy paid you ' . format_money($total) . ' for the ' . $campus['name'] . ' Campus.', $url);
+            if ($prof['email']) resend_send($prof['email'], 'Obin Academy paid you ' . format_money($total), campus_email_html('Payment sent, ' . campus_first_name($prof['name']), e($line), 'See your statement', $url));
+        }
+    }
+    return $payout;
 }
 
 function upcoming_campus_live_classes(int $days = 7, ?int $campusId = null): array {

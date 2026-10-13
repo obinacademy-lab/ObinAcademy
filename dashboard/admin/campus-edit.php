@@ -51,13 +51,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($a === 'professor') {
             $photo = $campus['professor_photo_url'];
             if (!empty($_FILES['photo']['name'])) $photo = save_upload($_FILES['photo'], 'thumbnails');
-            $fee = trim(post('fee')) === '' ? null : $money(post('fee'));
             db_run(
-                'UPDATE campuses SET professor_name = ?, professor_title = ?, professor_bio = ?, professor_photo_url = ?, professor_fee_monthly = ? WHERE id = ?',
-                [mb_substr(trim(post('pname')), 0, 120) ?: null, mb_substr(trim(post('ptitle')), 0, 160) ?: null, trim(post('pbio')) ?: null, $photo, $fee, $id]
+                'UPDATE campuses SET professor_name = ?, professor_title = ?, professor_bio = ?, professor_photo_url = ? WHERE id = ?',
+                [mb_substr(trim(post('pname')), 0, 120) ?: null, mb_substr(trim(post('ptitle')), 0, 160) ?: null, trim(post('pbio')) ?: null, $photo, $id]
             );
-            $log('professor_updated', trim(post('pname')));
-            flash_set('success', 'Professor saved.');
+            $note = '';
+            if (professor_pay_ready()) {
+                $share = (float) str_replace('%', '', post('share'));
+                if ($share < 0 || $share > 100) throw new RuntimeException('The professor\'s share must be between 0 and 100%.');
+                $linkId = null;
+                $email = strtolower(trim(post('account_email')));
+                if ($email !== '') {
+                    $acct = db_one('SELECT id FROM users WHERE email = ?', [$email]);
+                    if (!$acct) $note = ' No account uses ' . $email . ' yet, so their account is not linked. Ask them to sign up with that email, then save again.';
+                    else $linkId = (int) $acct['id'];
+                }
+                db_run(
+                    'UPDATE campuses SET professor_share_percent = ?, professor_user_id = ?, professor_payout_phone = ?, professor_payout_name = ? WHERE id = ?',
+                    [$share, $linkId, mb_substr(trim(post('payout_phone')), 0, 32) ?: null, mb_substr(trim(post('payout_name')), 0, 120) ?: null, $id]
+                );
+            }
+            $log('professor_updated', trim(post('pname')) . (professor_pay_ready() ? ', share ' . format_share((float) post('share')) : ''));
+            flash_set($note ? 'error' : 'success', 'Professor saved.' . $note);
             redirect($here('professor'));
         }
         if ($a === 'curriculum') {
@@ -228,7 +243,18 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <label>Title <small>For example: Lead professor, 8 years trading</small><input name="ptitle" value="<?= e($campus['professor_title'] ?? '') ?>" maxlength="160"></label>
     </div>
     <label>About the professor <small>Their background and real results</small><textarea name="pbio" rows="5"><?= e($campus['professor_bio'] ?? '') ?></textarea></label>
-    <label style="max-width:320px;">Monthly fee you pay them (UGX) <small>Private. Only used for your payment records.</small><input name="fee" inputmode="numeric" value="<?= $campus['professor_fee_monthly'] !== null ? e(number_format((float) $campus['professor_fee_monthly'], 0, '.', '')) : '' ?>"></label>
+    <?php if (professor_pay_ready()): $acct = $campus['professor_user_id'] ? db_one('SELECT name, email FROM users WHERE id = ?', [$campus['professor_user_id']]) : null; $owedNow = professor_pay_summary()[$id]['owed'] ?? 0; ?>
+      <div class="ca-paybox">
+        <div class="ca-paybox-h"><b>Pay</b><span>Private. Learners never see this.</span></div>
+        <div class="ca-f3">
+          <label>Share of each payment (%) <small>Paid on every monthly or yearly payment</small><input name="share" inputmode="decimal" value="<?= e(format_share(campus_professor_share($campus))) ?>" required></label>
+          <label>Mobile money number <small>Where you send their pay</small><input name="payout_phone" type="tel" value="<?= e($campus['professor_payout_phone'] ?? '') ?>" placeholder="07XX XXX XXX" maxlength="32"></label>
+          <label>Name on that number <small>To check before you send</small><input name="payout_name" value="<?= e($campus['professor_payout_name'] ?? '') ?>" maxlength="120"></label>
+        </div>
+        <label style="max-width:420px;">Their Obin Academy account email <small><?= $acct ? 'Linked to ' . e($acct['name']) . '. They see their earnings and can teach in the campus.' : 'Optional. Once linked, they see every payment and their share in their dashboard, and post in the community as the professor.' ?></small><input name="account_email" type="email" value="<?= e($acct['email'] ?? '') ?>" placeholder="name@example.com"></label>
+        <?php if ($owedNow > 0): ?><p class="ca-paynote">You owe this campus's professor <b><?= e(format_money($owedNow)) ?></b>. Pay it on <a href="<?= e(base_url('dashboard/admin/professor-pay.php?campus=' . $id)) ?>">Professor Pay</a> before you change the professor.</p><?php endif; ?>
+      </div>
+    <?php endif; ?>
     <div><button class="btn btn-primary" type="submit">Save professor</button></div>
   </form>
 

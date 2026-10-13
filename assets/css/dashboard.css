@@ -1574,6 +1574,52 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
 .ca-lessons small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
 .ca-lessons .acts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .ca-lessons .acts form { margin: 0; }
+/* Professor pay (admin professor-pay.php, professor's dashboard/professor.php) */
+.ca-paybox { display: grid; gap: 14px; padding: 18px; border-radius: 12px; border: 1px dashed var(--dash-border); background: var(--dash-bg); }
+.ca-paybox-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ca-paybox-h b { font-size: 14px; }
+.ca-paybox-h span { font-size: 12px; color: var(--muted); }
+.ca-paynote { margin: 0; font-size: 13px; color: var(--dash-warn, #b45309); }
+.pp-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+.pp-side { min-width: 0; }
+.pp-owed { margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--dash-bg); border: 1px solid var(--dash-border-soft, var(--dash-border)); }
+.pp-owed small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.pp-owed b { font-size: 26px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.pp-steps, .pp-how { margin: 14px 0 0; padding-left: 18px; display: grid; gap: 8px; font-size: 13px; color: var(--ink); line-height: 1.5; }
+.pp-how { list-style: disc; }
+.ca-table tr.pp-sel td { background: var(--dash-tint); }
+
+/* Teach applications (admin instructor-applications.php) */
+.ia-list { display: grid; gap: 16px; margin-top: 16px; }
+.ia-card { padding: 0; overflow: hidden; scroll-margin-top: 90px; }
+.ia-head { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--dash-border-soft, var(--dash-border)); }
+.ia-av { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--dash-tint); color: var(--accent); font-weight: 800; font-size: 17px; }
+.ia-head b { display: block; font-size: 15px; }
+.ia-head small { display: block; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ia-meta { display: grid; justify-items: end; gap: 4px; }
+.ia-meta small { font-size: 12px; color: var(--muted); }
+.ia-body { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 24px; padding: 18px 22px; }
+.ia-facts { margin: 0; display: grid; gap: 10px; align-content: start; }
+.ia-facts dt { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ia-facts dd { margin: 2px 0 0; font-size: 13.5px; overflow-wrap: anywhere; }
+.ia-text h3 { margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ia-text p { margin: 0 0 14px; font-size: 14px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+.ia-text p:last-child { margin-bottom: 0; }
+.ia-note { padding: 0 22px 16px; display: grid; gap: 6px; }
+.ia-note input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--dash-border); background: var(--dash-panel); color: var(--ink); font: inherit; font-size: 13.5px; }
+.ia-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 14px 22px; border-top: 1px solid var(--dash-border-soft, var(--dash-border)); background: var(--dash-bg); }
+.ia-acts form { margin: 0; }
+.ia-accept { display: flex; gap: 8px; align-items: center; margin-left: auto !important; flex-wrap: wrap; }
+.ia-accept select { padding: 7px 10px; border-radius: 9px; border: 1px solid var(--dash-border); background: var(--dash-panel); color: var(--ink); font: inherit; font-size: 13px; max-width: 280px; }
+@media (max-width: 1000px) { .pp-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+  .ia-head { grid-template-columns: 40px minmax(0, 1fr); }
+  .ia-meta { grid-column: 1 / -1; grid-auto-flow: column; justify-content: start; align-items: center; gap: 10px; }
+  .ia-body { grid-template-columns: 1fr; }
+  .ia-accept { margin-left: 0 !important; width: 100%; }
+  .ia-accept select { flex: 1; max-width: none; }
+}
+
 @media (max-width: 760px) {
   .ca-f2, .ca-f3 { grid-template-columns: 1fr; }
   .ca-stage { grid-template-columns: 1fr; gap: 6px; }
