@@ -45,7 +45,8 @@
     // this page. courses/view.php sets $suppressGlobalActivityToast so its
     // own specialized (click-to-scroll) version isn't doubled up with this
     // one on that one page.
-    $recentPlatformActivity = empty($suppressGlobalActivityToast) ? get_recent_activity_feed(null, 8) : [];
+    // Switched off since the platform became campus-only: it announced creators' courses, which are no longer sold.
+    $recentPlatformActivity = [];
   ?>
   <?php if ($recentPlatformActivity): ?>
     <button type="button" class="activity-toast" id="globalActivityToast" aria-live="polite">
