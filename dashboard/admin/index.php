@@ -54,25 +54,12 @@ if (campuses_ready()) {
 
 // Launch steps for each campus card: what is done, and where to go for the next one.
 $campusCards = [];
-if ($overview['campuses']) {
-    $written = array_column(db_all("SELECT campus_id, COUNT(*) AS n FROM campus_stages WHERE TRIM(title) <> '' GROUP BY campus_id"), 'n', 'campus_id');
-    $monthOne = array_column(db_all('SELECT campus_id, COUNT(*) AS n FROM campus_lessons WHERE month_no = 1 GROUP BY campus_id'), 'n', 'campus_id');
-    foreach ($overview['campuses'] as $c) {
-        $cid = (int) $c['id'];
-        $w = (int) ($written[$cid] ?? 0);
-        $l = (int) ($monthOne[$cid] ?? 0);
-        $live = $nextLive[$cid] ?? null;
-        $steps = [
-            ['Professor', (bool) $c['professor_name'], $c['professor_name'] ?: 'Not assigned', 'Assign a professor', 'professor'],
-            ['Curriculum', $w >= CAMPUS_YEAR_MONTHS, $w . ' of ' . CAMPUS_YEAR_MONTHS . ' months', 'Write the curriculum', 'curriculum'],
-            ['Month 1 lessons', $l > 0, $l ? $l . ' lesson' . ($l === 1 ? '' : 's') : 'None yet', 'Upload month 1 lessons', 'lessons'],
-            ['Live class', $live !== null, $live ? date('D j M', strtotime($live)) : 'None booked', 'Book a live class', 'live'],
-            ['Publish', $c['status'] === 'PUBLISHED', $c['status'] === 'PUBLISHED' ? 'Open' : 'Draft', 'Publish the campus', 'details'],
-        ];
-        $trend = array_replace(array_fill(0, 30, 0.0), $campusDaily[$cid] ?? []);
-        ksort($trend);
-        $campusCards[] = $c + ['steps' => $steps, 'done' => count(array_filter(array_column($steps, 1))), 'live' => $live, 'trend' => array_values($trend)];
-    }
+$launch = campus_launch_steps($overview['campuses']);
+foreach ($overview['campuses'] as $c) {
+    $cid = (int) $c['id'];
+    $trend = array_replace(array_fill(0, 30, 0.0), $campusDaily[$cid] ?? []);
+    ksort($trend);
+    $campusCards[] = $c + $launch[$cid] + ['trend' => array_values($trend)];
 }
 $openCampuses = count(array_filter($campusCards, fn($c) => $c['status'] === 'PUBLISHED'));
 

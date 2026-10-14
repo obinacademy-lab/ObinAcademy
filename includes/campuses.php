@@ -414,6 +414,53 @@ function campus_admin_overview(): array {
     ];
 }
 
+/** Labels for campus_launch_stage(), in order. */
+const CAMPUS_LAUNCH_STAGES = ['Needs a professor', 'Building', 'Ready to open', 'Open'];
+
+/**
+ * The five launch steps of each campus, keyed by campus id: professor, curriculum (all twelve months
+ * titled), month 1 lessons, an upcoming live class, published. Each step is
+ * [label, done, status text, next-step label, campus-edit tab]. Also returns the next live class.
+ */
+function campus_launch_steps(array $campuses): array {
+    if (!$campuses) return [];
+    $written = array_column(db_all("SELECT campus_id, COUNT(*) AS n FROM campus_stages WHERE TRIM(title) <> '' GROUP BY campus_id"), 'n', 'campus_id');
+    $monthOne = array_column(db_all('SELECT campus_id, COUNT(*) AS n FROM campus_lessons WHERE month_no = 1 GROUP BY campus_id'), 'n', 'campus_id');
+    $nextLive = array_column(db_all('SELECT campus_id, MIN(starts_at) AS s FROM campus_live_classes WHERE starts_at >= NOW() GROUP BY campus_id'), 's', 'campus_id');
+    $out = [];
+    foreach ($campuses as $c) {
+        $cid = (int) $c['id'];
+        $w = (int) ($written[$cid] ?? 0);
+        $l = (int) ($monthOne[$cid] ?? 0);
+        $live = $nextLive[$cid] ?? null;
+        $open = $c['status'] === 'PUBLISHED';
+        $out[$cid] = [
+            'steps' => [
+                ['Professor', (bool) $c['professor_name'], $c['professor_name'] ?: 'Not assigned', 'Assign a professor', 'professor'],
+                ['Curriculum', $w >= CAMPUS_YEAR_MONTHS, $w ? $w . ' of ' . CAMPUS_YEAR_MONTHS . ' months' : 'Not written', 'Write the curriculum', 'curriculum'],
+                ['Month 1 lessons', $l > 0, $l ? $l . ' lesson' . ($l === 1 ? '' : 's') : 'None yet', 'Upload month 1 lessons', 'lessons'],
+                ['Live class', $live !== null, $live ? date('D j M', strtotime($live)) : 'None booked', 'Book a live class', 'live'],
+                ['Publish', $open, $open ? 'Open' : 'Draft', 'Publish the campus', 'details'],
+            ],
+            'live' => $live,
+            'month_one' => $l,
+            'written' => $w,
+        ];
+        $out[$cid]['done'] = count(array_filter(array_column($out[$cid]['steps'], 1)));
+    }
+    return $out;
+}
+
+/**
+ * Where a campus is on the way to opening, as an index into CAMPUS_LAUNCH_STAGES. A campus can be
+ * published once it has a professor and a month 1 lesson (see campus-edit.php), so that is "ready".
+ */
+function campus_launch_stage(array $campus, array $launch): int {
+    if ($campus['status'] === 'PUBLISHED') return 3;
+    if (!$campus['professor_name']) return 0;
+    return $launch['month_one'] > 0 ? 2 : 1;
+}
+
 /** Members whose access ends within $days (or ended in the last 3 days), soonest first. */
 function campus_renewals_due(int $days = 7, int $limit = 50): array {
     return db_all(
