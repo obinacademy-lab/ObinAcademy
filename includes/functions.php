@@ -301,7 +301,9 @@ function csrf_field(): string {
 
 function csrf_verify(): void {
     $token = $_POST['csrf_token'] ?? '';
-    if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+    // A session with no token yet never matches, even an empty submitted one.
+    $expected = (string) ($_SESSION['csrf_token'] ?? '');
+    if ($expected === '' || !hash_equals($expected, (string) $token)) {
         http_response_code(403);
         die('Invalid or expired form submission. Please go back and try again.');
     }
@@ -332,7 +334,8 @@ function json_response(array $data, int $status = 200): never {
 
 /** CSRF check for JSON API endpoints (token passed in the JSON body). */
 function api_csrf_verify(array $body): void {
-    if (!hash_equals($_SESSION['csrf_token'] ?? '', $body['csrf_token'] ?? '')) {
+    $expected = (string) ($_SESSION['csrf_token'] ?? '');
+    if ($expected === '' || !hash_equals($expected, (string) ($body['csrf_token'] ?? ''))) {
         json_response(['error' => 'Invalid or expired session. Please refresh the page and try again.'], 403);
     }
 }
