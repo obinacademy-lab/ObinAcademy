@@ -10,6 +10,7 @@ require __DIR__ . '/../../includes/audit.php';
 require __DIR__ . '/../../includes/storage.php';
 require __DIR__ . '/../../includes/campuses.php';
 require __DIR__ . '/../../includes/campus_content.php';
+require __DIR__ . '/../../includes/campus_pages.php';
 $user = require_role(['ADMIN']);
 
 if (!campuses_ready()) redirect('/dashboard/admin/campuses.php');
@@ -58,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'UPDATE campuses SET professor_name = ?, professor_title = ?, professor_bio = ?, professor_photo_url = ? WHERE id = ?',
                 [mb_substr(trim(post('pname')), 0, 120) ?: null, mb_substr(trim(post('ptitle')), 0, 160) ?: null, trim(post('pbio')) ?: null, $photo, $id]
             );
+            if (campus_links_ready()) campus_save_professor_links($id); // quote and social links on the public campus page
             $note = '';
             if (professor_pay_ready()) {
                 $share = (float) str_replace('%', '', post('share'));
@@ -183,6 +185,20 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <label>Title <small>For example: Lead professor, 8 years trading</small><input name="ptitle" value="<?= e($campus['professor_title'] ?? '') ?>" maxlength="160"></label>
     </div>
     <label>About the professor <small>Their background and real results</small><textarea name="pbio" rows="5"><?= e($campus['professor_bio'] ?? '') ?></textarea></label>
+    <?php if (campus_links_ready()): ?>
+      <label>A short quote from the professor <small>Shown large on the campus page, e.g. what they promise to teach</small><input name="quote" maxlength="300" value="<?= e($campus['professor_quote'] ?? '') ?>" placeholder="I teach the exact workflows I use with paying clients."></label>
+      <div class="ca-links">
+        <div class="ca-links-h"><b>Social media</b><span>Shown as icons on the campus page. Paste a full link or the @username; only filled ones show.</span></div>
+        <div class="ca-f3">
+          <?php foreach (CAMPUS_PROFESSOR_SOCIALS as $key => [$label]): ?>
+            <label><?= e($label) ?><input name="<?= $key ?>" value="<?= e($campus['professor_' . $key] ?? '') ?>" placeholder="<?= $key === 'whatsapp' ? '0772 123 456' : ($key === 'linkedin' ? 'https://linkedin.com/in/…' : '@username') ?>" maxlength="<?= $key === 'whatsapp' ? 32 : 255 ?>"></label>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <style>.ca-links { display: grid; gap: 10px; padding: 16px; border-radius: 12px; border: 1px dashed var(--border-strong, #d0d0e8); } .ca-links-h b { display: block; font-size: 14px; } .ca-links-h span { font-size: 12.5px; color: var(--muted); }</style>
+    <?php else: ?>
+      <p class="muted small" style="margin:0;">To add the professor's quote and social media links, run migration/add-professor-links.sql in phpMyAdmin first.</p>
+    <?php endif; ?>
     <?php if (professor_pay_ready()): $acct = $campus['professor_user_id'] ? db_one('SELECT name, email FROM users WHERE id = ?', [$campus['professor_user_id']]) : null; $owedNow = professor_pay_summary()[$id]['owed'] ?? 0; ?>
       <div class="ca-paybox">
         <div class="ca-paybox-h"><b>Pay</b><span>Private. Learners never see this.</span></div>

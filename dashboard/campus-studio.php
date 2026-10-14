@@ -15,6 +15,7 @@ require __DIR__ . '/../includes/audit.php';
 require __DIR__ . '/../includes/storage.php';
 require __DIR__ . '/../includes/campuses.php';
 require __DIR__ . '/../includes/campus_content.php';
+require __DIR__ . '/../includes/campus_pages.php';
 $user = require_login();
 
 // Only the campuses this account is the linked professor of. Anything else is refused.
@@ -26,7 +27,7 @@ if (!$teaching) {
 }
 $campus = $teaching[(int) ($_SERVER['REQUEST_METHOD'] === 'POST' ? post('campus') : query_param('campus'))] ?? reset($teaching);
 $id = (int) $campus['id'];
-$tab = in_array(query_param('tab'), ['curriculum', 'lessons', 'live'], true) ? query_param('tab') : 'lessons';
+$tab = in_array(query_param('tab'), ['curriculum', 'lessons', 'live', 'profile'], true) ? query_param('tab') : 'lessons';
 $here = fn(string $t, array $q = []) => '/dashboard/campus-studio.php?' . http_build_query(['campus' => $id, 'tab' => $t] + $q);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -37,6 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     csrf_verify();
     $a = post('_action');
+    // The professor's own quote and social links on the public campus page (never prices or pay).
+    if ($a === 'prof_links' && isset($teaching[(int) post('campus')])) {
+        try {
+            campus_save_professor_links($id);
+            log_admin_action((int) $user['id'], $user['name'], 'campus.professor_links_updated', 'Campus', $campus['name']);
+            flash_set('success', 'Saved. Your quote and links now show on the campus page.');
+        } catch (RuntimeException $e) {
+            flash_set('error', $e->getMessage());
+        }
+        redirect($here('profile'));
+    }
     if (!in_array($a, CAMPUS_CONTENT_ACTIONS, true) || !isset($teaching[(int) post('campus')])) {
         flash_set('error', 'You can only change the lessons, stages and live classes of your own campus.');
         redirect($here($tab));
@@ -154,7 +166,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
 
   <section class="acx-sec acx-slam" style="--i:2" id="studio">
     <nav class="cs-tabs" aria-label="Studio sections">
-      <?php foreach (['lessons' => ['Lessons', $lessonTotal], 'curriculum' => ['Twelve stages', $written . '/12'], 'live' => ['Live classes', count($upcoming)]] as $k => [$label, $n]): ?>
+      <?php foreach (['lessons' => ['Lessons', $lessonTotal], 'curriculum' => ['Twelve stages', $written . '/12'], 'live' => ['Live classes', count($upcoming)], 'profile' => ['Your profile', count(campus_professor_links($campus)) . ' links']] as $k => [$label, $n]): ?>
         <a href="<?= e(base_url(ltrim($here($k, $k === 'lessons' ? ['month' => $month] : []), '/'))) ?>#studio"<?= $tab === $k ? ' aria-current="page"' : '' ?>><?= e($label) ?><em><?= e((string) $n) ?></em></a>
       <?php endforeach; ?>
     </nav>
@@ -246,6 +258,34 @@ require __DIR__ . '/../includes/dashboard_header.php';
         <?php if (!empty($stages[$m]['thumbnail_url'])): ?><form method="post" id="thr-<?= $m ?>" hidden data-confirm="Remove the picture for month <?= $m ?>?"><?= $hidden('stage_thumb_remove', 'curriculum') ?><input type="hidden" name="month" value="<?= $m ?>"></form><?php endif; ?>
       <?php endfor; endif; ?>
 
+    <?php elseif ($tab === 'profile'): ?>
+      <div class="cs-two">
+        <div>
+          <div class="cs-h"><div><h2>How students see you</h2><p>Your name, photo, title and bio are set by Obin Academy. Your quote and social links are yours to keep up to date.</p></div></div>
+          <div class="cs-preview">
+            <span class="cs-pv-ph"<?= $campus['professor_photo_url'] ? ' style="background-image:url(\'' . e(asset_src($campus['professor_photo_url'])) . '\')"' : '' ?>><?= $campus['professor_photo_url'] ? '' : e(mb_strtoupper(mb_substr((string) $campus['professor_name'], 0, 1))) ?></span>
+            <div><b><?= e($campus['professor_name'] ?: $user['name']) ?></b><small><?= e($campus['professor_title'] ?: 'Lead professor, ' . $campus['name'] . ' Campus') ?></small>
+              <?php $pl = campus_professor_links($campus); if ($pl): ?><span class="cs-pv-links"><?php foreach ($pl as [$label, $url, $path]): ?><a href="<?= e($url) ?>" target="_blank" rel="noopener" title="<?= e($label) ?>"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="<?= $path ?>"/></svg></a><?php endforeach; ?></span><?php else: ?><em>No links yet</em><?php endif; ?>
+            </div>
+          </div>
+          <?php if (!empty($campus['professor_quote'])): ?><p class="cs-pv-quote">“<?= e($campus['professor_quote']) ?>”</p><?php endif; ?>
+          <p class="cs-hint" style="padding:0 22px 22px;"><a href="<?= e(base_url('campus.php?slug=' . $campus['slug'])) ?>#join" target="_blank" rel="noopener" style="color:var(--ov-brand)">Open the campus page →</a> To change your name, photo or bio, message Obin Academy.</p>
+        </div>
+        <?php if (campus_links_ready()): ?>
+          <form method="post" class="cs-form cs-upload">
+            <?= $hidden('prof_links', 'profile') ?>
+            <h3>Your quote and links</h3>
+            <label><span>Your quote <small>one or two sentences, shown large on the campus page</small></span><input name="quote" maxlength="300" value="<?= e($campus['professor_quote'] ?? '') ?>" placeholder="I teach the exact methods I use every day."></label>
+            <?php foreach (CAMPUS_PROFESSOR_SOCIALS as $key => [$label]): ?>
+              <label><?= e($label) ?><input name="<?= $key ?>" value="<?= e($campus['professor_' . $key] ?? '') ?>" placeholder="<?= $key === 'whatsapp' ? '0772 123 456' : ($key === 'linkedin' ? 'https://linkedin.com/in/…' : '@username or full link') ?>" maxlength="<?= $key === 'whatsapp' ? 32 : 255 ?>"></label>
+            <?php endforeach; ?>
+            <button class="cs-btn lime" type="submit">Save my profile <span>→</span></button>
+            <p class="cs-hint">Only the links you fill in show, as icons under your photo. Leave a box empty to hide that one.</p>
+          </form>
+        <?php else: ?>
+          <div class="cs-form cs-upload"><div class="cs-setup"><b>Profile links are being switched on</b><span>Obin Academy is finishing a quick update. Once it is done, you can add your quote and social media links here.</span></div></div>
+        <?php endif; ?>
+      </div>
     <?php else: ?>
       <div class="cs-two">
         <div>
