@@ -1,15 +1,25 @@
 <?php
+/**
+ * Admin: revenue, as a revenue desk. A dark console with the last 30 days (collected, kept, the
+ * professors' share, professor pay sent and owed) and a daily chart of collected and kept; below, a
+ * day lookup with that day's totals and every campus payment made on it.
+ *
+ * Styles: assets/css/admin-campuses.css (console) + assets/css/admin-revenue.css. Chart and figures:
+ * assets/js/admin-revenue.js.
+ */
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/data.php';
+require __DIR__ . '/../../includes/campuses.php';
 $user = require_role(['ADMIN']);
 
 $today = date('Y-m-d');
 $selectedDate = query_param('date') ?: $today;
-if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate) || $selectedDate > $today) {
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate) || $selectedDate > $today || !strtotime($selectedDate)) {
     $selectedDate = $today;
 }
-
 $daySummary = get_day_collection_summary($selectedDate);
+$prevDay = date('Y-m-d', strtotime($selectedDate . ' -1 day'));
+$nextDay = date('Y-m-d', strtotime($selectedDate . ' +1 day'));
 
 // Professor pay: what has been sent (campus_professor_payouts) and what is still owed (unpaid earnings).
 try {
@@ -19,157 +29,95 @@ try {
     $totalPaidProfessors = 0.0; $owedProfessors = 0.0;
 }
 
-// ---------------------------------------------------------------------
-// Daily collections chart — blue-branded, plots each day's actual amount
-// collected (not a cumulative run) so every point on the curve answers
-// "how much came in on this date" directly.
-// ---------------------------------------------------------------------
-$collectionsSeries = get_daily_collections_series(30);
-$dailyCollected = array_column($collectionsSeries, 'collected');
-$monthTotal = array_sum($dailyCollected);
+// The last 30 days, per day: collected, the professors' share, and what Obin Academy kept.
+$series = get_daily_collections_series(30);
+$share = campus_professor_share_by_day($series[0]['date']);
+$days = array_map(fn($r) => ['d' => $r['date'], 'c' => (float) $r['collected'], 'p' => (float) ($share[$r['date']] ?? 0)], $series);
+$collected30 = array_sum(array_column($days, 'c'));
+$share30 = array_sum(array_column($days, 'p'));
+$kept30 = max(0.0, $collected30 - $share30);
+$dailyCollected = array_column($days, 'c');
 $bestDay = $dailyCollected ? max($dailyCollected) : 0.0;
-$dailyAvg = $collectionsSeries ? $monthTotal / count($collectionsSeries) : 0.0;
-
 $last7 = array_sum(array_slice($dailyCollected, -7));
 $prev7 = array_sum(array_slice($dailyCollected, -14, 7));
-$trendPct = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : null;
+$trendPct = $prev7 > 0 ? (int) round(($last7 - $prev7) / $prev7 * 100) : null;
 
-$chartW = 700; $chartH = 220; $padTop = 16; $padBottom = 4;
-$n = count($collectionsSeries);
-$yMax = ($bestDay ?: 1) * 1.15; // headroom so the peak doesn't touch the ceiling
-$xStep = $n > 1 ? $chartW / ($n - 1) : 0;
-$points = [];
-foreach ($collectionsSeries as $i => $row) {
-    $x = $i * $xStep;
-    $y = $padTop + ($chartH - $padTop - $padBottom) * (1 - $row['collected'] / $yMax);
-    $points[] = [$x, $y];
-}
-$linePath = smooth_svg_path($points);
-// Same curve, closed down to the baseline — the gradient-filled area under the line.
-$areaPath = $points ? $linePath . sprintf(' L%.2f,%d L0,%d Z', end($points)[0], $chartH, $chartH) : '';
-$labelIdxs = $n > 1 ? [0, (int) round(($n - 1) * 0.2), (int) round(($n - 1) * 0.4), (int) round(($n - 1) * 0.6), (int) round(($n - 1) * 0.8), $n - 1] : [0];
+// Campus photos for the day's payments, matched by campus name.
+$look = [];
+$colors = ['#2b22ff', '#0f766e', '#b45309', '#be185d', '#6d28d9', '#15803d', '#475569', '#0369a1'];
+foreach (get_all_campuses() as $k => $c) $look[$c['name']] = ['photo' => campus_photo($c), 'color' => $colors[$k % count($colors)], 'icon' => $c['icon'] ?: 'book'];
+$dayUrl = fn(string $d) => base_url('dashboard/admin/revenue.php' . ($d === $today ? '' : '?date=' . $d)) . '#day';
+$dayLabel = $selectedDate === $today ? 'Today' : ($selectedDate === date('Y-m-d', strtotime('-1 day')) ? 'Yesterday' : date('l', strtotime($selectedDate)));
 
 $pageTitle = 'Revenue — Admin — Obin Academy';
+$dashClass = 'dash-ov';
+$pageCss = ['assets/css/admin-overview.css', 'assets/css/admin-campuses.css', 'assets/css/admin-revenue.css'];
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<h1 class="h2">Revenue</h1>
-<p class="muted" style="margin-top:6px;">Look up what the campuses collected on a specific day, and track the daily trend.</p>
+<div class="ov acx rv" data-rv>
+  <div class="acx-head acx-slam" style="--i:0">
+    <div><h1>Revenue</h1><p>What the campuses collected, what professors earned from it, and what Obin Academy kept.</p></div>
+    <div class="acx-acts"><a class="acx-btn dark" href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Professor pay</a></div>
+  </div>
 
-<h3 class="dash-section-label" style="margin-top:24px;">Professor Pay</h3>
-<div class="grid md:grid-2" style="margin-top:14px;">
-  <div class="stat-card payout-stat-card" data-hoverable="true" style="--hover-color:#10b981;">
-    <div class="icon"><?php dash_icon('banknote'); ?></div>
-    <div class="value"><?= e(format_money($totalPaidProfessors)) ?></div>
-    <div class="label">Paid to professors</div>
-    <div class="sub">all time, recorded on Professor Pay</div>
-  </div>
-  <div class="stat-card payout-stat-card" data-hoverable="true" style="--hover-color:#f5b301;">
-    <div class="icon"><?php dash_icon('clock'); ?></div>
-    <div class="value"><?= e(format_money($owedProfessors)) ?></div>
-    <div class="label">Owed to professors now</div>
-    <div class="sub"><a href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>">Open Professor Pay</a></div>
-  </div>
-</div>
-
-<div class="card card-pad" style="margin-top:24px;">
-  <form method="get" class="day-lookup-form">
-    <div class="field">
-      <label for="revenue-date">Date</label>
-      <input id="revenue-date" type="date" name="date" value="<?= e($selectedDate) ?>" max="<?= e($today) ?>">
-    </div>
-    <button type="submit" class="btn btn-primary">View Day</button>
-    <?php if ($selectedDate !== $today): ?>
-      <a href="<?= e(base_url('dashboard/admin/revenue.php')) ?>" class="btn btn-outline">Jump to Today</a>
-    <?php endif; ?>
-  </form>
-</div>
-
-<h3 class="dash-section-label" style="margin-top:28px;"><?= e(format_date($selectedDate . ' 00:00:00')) ?></h3>
-<div class="grid md:grid-3" style="margin-top:14px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#0b00ff;">
-    <div class="icon">💵</div>
-    <div class="value"><?= e(format_money($daySummary['collected'])) ?></div><div class="label">Total Collected</div>
-  </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#f5b301;">
-    <div class="icon">🏦</div>
-    <div class="value"><?= e(format_money($daySummary['professors'])) ?></div><div class="label">Professors' share</div>
-  </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#10b981;">
-    <div class="icon">🧾</div>
-    <div class="value"><?= e(format_money($daySummary['kept'])) ?></div><div class="label">Kept by Obin Academy (<?= (int) $daySummary['count'] ?> payment<?= $daySummary['count'] === 1 ? '' : 's' ?>)</div>
-  </div>
-</div>
-
-<?php if ($daySummary['payments']): ?>
-  <div class="activity-feed" style="margin-top:20px;">
-    <?php foreach ($daySummary['payments'] as $s): ?>
-      <div class="list-row">
-        <div class="list-row-main">
-          <span class="activity-dot tone-success" style="flex-shrink:0;"><?php dash_icon('banknote'); ?></span>
-          <div style="min-width:0;">
-            <div style="font-weight:700;"><?= e(($s['campus_name'] ?: 'A campus') . ' Campus') ?></div>
-            <div class="small muted" style="margin-top:2px;"><?= e($s['learner_name'] ?: 'A member') ?> &middot; <?= $s['campus_plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?> &middot; <?= e(date('g:i A', strtotime($s['created_at']))) ?></div>
-          </div>
-        </div>
-        <div class="list-row-meta">
-          <div style="text-align:right;">
-            <div style="font-weight:700;"><?= e(format_money((float) $s['amount'])) ?></div>
-          </div>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-<?php else: ?>
-  <div class="card" style="padding:36px; text-align:center; border-style:dashed; color:var(--muted); margin-top:20px;">No campus payments on this date.</div>
-<?php endif; ?>
-
-<h3 class="dash-section-label" style="margin-top:36px;">Daily Trend</h3>
-<div class="chart-card" style="margin-top:14px;">
-  <div class="chart-card-head">
+  <section class="lc-console rv-console acx-slam" style="--i:1">
+    <span class="lc-glow" aria-hidden="true"></span>
     <div>
-      <h2 class="h3">Campus Collections</h2>
-      <p class="muted small" style="margin-top:4px;">Money collected from campus payments, before professors' share &middot; last 30 days</p>
-    </div>
-    <?php if ($trendPct !== null): ?>
-      <div class="chart-trend <?= $trendPct >= 0 ? 'up' : 'down' ?>">
-        <?php dash_icon('trending-up'); ?><?= $trendPct >= 0 ? '+' : '' ?><?= $trendPct ?>% vs last week
+      <span class="lc-eyebrow"><i></i>Last 30 days</span>
+      <div class="rv-big"><small>UGX</small><b data-scramble="<?= (int) round($collected30) ?>"><?= e(number_format($collected30)) ?></b></div>
+      <p class="lc-copy">Collected from campus payments<?php if ($trendPct !== null): ?> · <span class="rv-trend <?= $trendPct >= 0 ? 'up' : 'down' ?>"><?= $trendPct >= 0 ? '▲' : '▼' ?> <?= abs($trendPct) ?>% on the week before</span><?php endif; ?></p>
+      <div class="lc-stats">
+        <div><span>Kept by Obin Academy</span><b class="lime"><small>UGX</small><span data-scramble="<?= (int) round($kept30) ?>"><?= e(number_format($kept30)) ?></span></b></div>
+        <div><span>Professors' share</span><b><small>UGX</small><span data-scramble="<?= (int) round($share30) ?>"><?= e(number_format($share30)) ?></span></b></div>
+        <div><span>Paid to professors · all time</span><b><small>UGX</small><span data-scramble="<?= (int) round($totalPaidProfessors) ?>"><?= e(number_format($totalPaidProfessors)) ?></span></b></div>
+        <div><span>Owed to professors now</span><b class="<?= $owedProfessors > 0 ? 'red' : '' ?>"><small>UGX</small><span data-scramble="<?= (int) round($owedProfessors) ?>"><?= e(number_format($owedProfessors)) ?></span></b></div>
       </div>
-    <?php endif; ?>
-  </div>
-
-  <div class="chart-stats-row">
-    <div><span class="value"><?= e(format_money($monthTotal)) ?></span><span class="label">Total (30d)</span></div>
-    <div><span class="value"><?= e(format_money($dailyAvg)) ?></span><span class="label">Daily Average</span></div>
-    <div><span class="value"><?= e(format_money($bestDay)) ?></span><span class="label">Best Day</span></div>
-  </div>
-
-  <div class="chart-wrap">
-    <svg viewBox="0 0 <?= $chartW ?> <?= $chartH ?>" preserveAspectRatio="none" class="revenue-chart">
-      <defs>
-        <linearGradient id="dashAreaFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.22"/>
-          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <?php for ($g = 1; $g <= 3; $g++): $gy = $padTop + ($chartH - $padTop - $padBottom) * ($g / 4); ?>
-        <line x1="0" y1="<?= round($gy, 1) ?>" x2="<?= $chartW ?>" y2="<?= round($gy, 1) ?>" class="chart-gridline"></line>
-      <?php endfor; ?>
-      <path d="<?= e($areaPath) ?>" class="chart-area-blue"></path>
-      <path d="<?= e($linePath) ?>" class="chart-line chart-line-blue"></path>
-      <?php foreach ($points as $i => [$px, $py]): ?>
-        <circle cx="<?= round($px, 1) ?>" cy="<?= round($py, 1) ?>" class="chart-point" tabindex="0"
-          data-chart-label="<?= e(format_date($collectionsSeries[$i]['date'] . ' 00:00:00')) ?>"
-          data-chart-value="<?= e(format_money($collectionsSeries[$i]['collected'])) ?>"></circle>
-      <?php endforeach; ?>
-      <?php if ($points): [$lx, $ly] = end($points); ?>
-        <circle cx="<?= round($lx, 1) ?>" cy="<?= round($ly, 1) ?>" r="5" class="chart-end-dot chart-end-dot-blue" style="pointer-events:none;"></circle>
-      <?php endif; ?>
-    </svg>
-    <div class="chart-x-labels">
-      <?php foreach ($labelIdxs as $idx): ?>
-        <span><?= e(date('M j', strtotime($collectionsSeries[$idx]['date']))) ?></span>
-      <?php endforeach; ?>
     </div>
-  </div>
+    <div class="rv-chart-wrap">
+      <div class="lc-rx-h"><b>Every day, last 30 days</b><span class="rv-legend"><i class="c"></i>Collected <i class="k"></i>Kept</span></div>
+      <div class="rv-chart" data-chart role="img" aria-label="Money collected and kept each day for the last 30 days"></div>
+      <div class="rv-mini">
+        <div><span>Best day</span><b>UGX <?= e(number_format($bestDay)) ?></b></div>
+        <div><span>Daily average</span><b>UGX <?= e(number_format($collected30 / 30)) ?></b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="acx-sec acx-slam" style="--i:2" id="day">
+    <div class="rv-day-h">
+      <div><h2><?= e($dayLabel) ?><span><?= e(date('j F Y', strtotime($selectedDate))) ?></span></h2><p>Every campus payment that landed on this day</p></div>
+      <form method="get" class="rv-pick" action="<?= e(base_url('dashboard/admin/revenue.php')) ?>#day">
+        <a class="rv-step" href="<?= e($dayUrl($prevDay)) ?>" aria-label="Previous day" title="Previous day">‹</a>
+        <label class="rv-date"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><input type="date" name="date" value="<?= e($selectedDate) ?>" max="<?= e($today) ?>" aria-label="Date" onchange="this.form.submit()"></label>
+        <?php if ($nextDay <= $today): ?><a class="rv-step" href="<?= e($dayUrl($nextDay)) ?>" aria-label="Next day" title="Next day">›</a><?php else: ?><span class="rv-step off" aria-hidden="true">›</span><?php endif; ?>
+        <?php if ($selectedDate !== $today): ?><a class="rv-today" href="<?= e($dayUrl($today)) ?>">Today</a><?php endif; ?>
+      </form>
+    </div>
+    <div class="rv-totals">
+      <div><span>Collected</span><b><small>UGX</small><?= e(number_format($daySummary['collected'])) ?></b></div>
+      <div><span>Professors' share</span><b><small>UGX</small><?= e(number_format($daySummary['professors'])) ?></b></div>
+      <div><span>Kept by Obin Academy</span><b class="kept"><small>UGX</small><?= e(number_format($daySummary['kept'])) ?></b></div>
+      <div><span>Payments</span><b><?= (int) $daySummary['count'] ?></b></div>
+    </div>
+    <?php if ($daySummary['payments']): ?>
+      <div class="rv-grid rv-th"><span>Time</span><span>Campus</span><span>Member</span><span>Plan</span><span class="r">Amount</span></div>
+      <?php foreach ($daySummary['payments'] as $j => $p): $l = $look[$p['campus_name']] ?? null; ?>
+        <div class="rv-grid lc-row acx-whip" style="--j:<?= min($j, 14) ?>">
+          <span class="rv-time"><?= e(date('g:i a', strtotime($p['created_at']))) ?></span>
+          <span class="rv-camp">
+            <?php if ($l && $l['photo']): ?><i style="background-image:url('<?= e($l['photo']) ?>')"></i><?php elseif ($l): ?><i class="badge" style="background:<?= e($l['color']) ?>"><?= campus_icon($l['icon'], 1.8) ?></i><?php else: ?><i class="badge" style="background:#475569"></i><?php endif; ?>
+            <b><?= e($p['campus_name'] ?: 'A campus') ?></b>
+          </span>
+          <span class="rv-member"><?= e($p['learner_name'] ?: 'A member') ?></span>
+          <span><span class="rv-plan <?= $p['campus_plan'] === 'YEARLY' ? 'y' : '' ?>"><?= $p['campus_plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></span></span>
+          <span class="rv-amt r"><small>UGX</small><?= e(number_format((float) $p['amount'])) ?></span>
+        </div>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <p class="rv-none">No campus payments on <?= e(date('j F Y', strtotime($selectedDate))) ?>.</p>
+    <?php endif; ?>
+  </section>
 </div>
+<script type="application/json" id="rv-data"><?= json_encode(['days' => $days], JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+<script src="<?= e(versioned_asset('assets/js/admin-revenue.js')) ?>" defer></script>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
