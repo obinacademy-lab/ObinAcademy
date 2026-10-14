@@ -127,13 +127,36 @@ function get_leads(array $filters = [], int $page = 1, int $perPage = 25): array
 
     $perPage = max(1, min(100, $perPage));
     $offset = max(0, ($page - 1) * $perPage);
+    $order = ($filters['sort'] ?? '') === 'hot'
+        ? LEAD_HEAT_SQL . ' DESC, last_visit_at DESC'
+        : 'created_at DESC';
     $rows = db_all(
         "SELECT l.*, " . LEAD_LOCATION_SUBQUERY . "
-         FROM leads l $whereSql ORDER BY created_at DESC LIMIT $perPage OFFSET $offset",
+         FROM leads l $whereSql ORDER BY $order LIMIT $perPage OFFSET $offset",
         $params
     );
 
     return ['rows' => $rows, 'total' => $total];
+}
+
+/**
+ * How warm a lead is, 0 to 5: up to 3 points for visiting recently (today or yesterday, within 3 days,
+ * within a week) and up to 2 for coming back (2+ visits, 4+ visits). lead_heat() is the same rule in PHP.
+ */
+const LEAD_HEAT_SQL = "((CASE WHEN DATEDIFF(NOW(), last_visit_at) <= 1 THEN 3 WHEN DATEDIFF(NOW(), last_visit_at) <= 3 THEN 2 WHEN DATEDIFF(NOW(), last_visit_at) <= 7 THEN 1 ELSE 0 END)
+    + (CASE WHEN visit_count >= 4 THEN 2 WHEN visit_count >= 2 THEN 1 ELSE 0 END))";
+
+/** @return array{score:int, level:string} level is hot (4-5), warm (2-3) or cold (0-1). */
+function lead_heat(array $lead): array {
+    $days = (int) floor((strtotime(date('Y-m-d')) - strtotime(date('Y-m-d', strtotime($lead['last_visit_at'])))) / 86400);
+    $visits = (int) $lead['visit_count'];
+    $score = ($days <= 1 ? 3 : ($days <= 3 ? 2 : ($days <= 7 ? 1 : 0))) + ($visits >= 4 ? 2 : ($visits >= 2 ? 1 : 0));
+    return ['score' => $score, 'level' => $score >= 4 ? 'hot' : ($score >= 2 ? 'warm' : 'cold')];
+}
+
+/** The warmest lead nobody has contacted yet, or null when there is none. */
+function get_hottest_new_lead(): ?array {
+    return db_one("SELECT * FROM leads WHERE status = 'NEW' ORDER BY " . LEAD_HEAT_SQL . " DESC, last_visit_at DESC LIMIT 1") ?: null;
 }
 
 /** Most recent known country/city for the lead's visitor, if any session ever resolved one. */
