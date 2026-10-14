@@ -9,13 +9,13 @@ $campuses = get_published_campuses() ?: get_all_campuses();
 $howItWorks = [
     ['Choose your campus', 'Pick the one skill you want to master this year: business, trading, content, fitness, AI or e-commerce.'],
     ['Join monthly or yearly', 'Pay with MTN or Airtel Mobile Money. Your year starts the day you join, and nothing renews by itself.'],
-    ['Learn every month, live every week', 'A new stage of video lessons and PDF guides opens each month, and your professor teaches live every week.'],
+    ['Learn every month, live every week', 'A new stage of video lessons and PDF guides opens as your class moves through the year, and your professor teaches live every week.'],
     ['Earn your certificate', 'Finish all twelve stages and you are awarded your campus certificate.'],
 ];
 
 $commitments = [
     ['🎓', '#0b00ff', 'Professors who have done the work', 'Every campus is led by someone with real results in that skill, chosen by us.'],
-    ['🗓️', '#f5b301', 'A clear path for the year', 'Twelve stages, one a month, so you always know what comes next.'],
+    ['🗓️', '#f5b301', 'A clear path for the year', 'Twelve stages laid out from day one, opened by your professor as the class is ready, so you always know what comes next.'],
     ['📡', '#10b981', 'Live, every week', 'A live class each week, with time for your questions.'],
     ['🤝', '#8b5cf6', 'A community that keeps you going', 'Learn alongside people working on the same skill as you.'],
     ['📱', '#f97316', 'Built for your phone', 'Lessons, live classes and payments all work from a phone.'],

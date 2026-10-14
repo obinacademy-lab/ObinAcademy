@@ -1,10 +1,10 @@
 <?php
 /**
  * Admin: storage. A dark console with how much space uploads take, a disk map split into what is in use
- * (lesson videos and PDFs, story videos, professor and profile photos) and what nothing uses any more;
+ * (lesson videos and PDFs, story videos, month pictures, professor and profile photos) and what nothing uses any more;
  * below, the kept files by kind, and the unused ones (biggest first) with one button that deletes them
  * all. Unused files are mostly left behind by the old per-course platform. A file is kept if any campus
- * lesson, professor photo, profile photo or video story still points at it; the list is worked out again
+ * lesson, month picture, professor photo, profile photo or video story still points at it; the list is worked out again
  * at the moment of deleting, so a file uploaded in the meantime is never removed. Every clean-up is
  * written to the audit log.
  *
@@ -30,6 +30,11 @@ function storage_files_in_use(): array {
         foreach (db_all("SELECT video_url AS u FROM video_stories WHERE video_url LIKE '/uploads/%'") as $r) $public[] = [$r['u'], 'story'];
     } catch (Throwable $e) {
         // Video stories not set up yet.
+    }
+    try {
+        foreach (db_all("SELECT thumbnail_url AS u FROM campus_stages WHERE thumbnail_url LIKE '/uploads/%'") as $r) $public[] = [$r['u'], 'stage'];
+    } catch (Throwable $e) {
+        // Month pictures not set up yet.
     }
     foreach ($public as [$u, $kind]) $add(public_uploads_root() . '/' . substr($u, strlen('/uploads/')), $kind);
     return $used;
@@ -80,6 +85,7 @@ $keptKinds = [
     'video' => ['Lesson videos', 'Campus lessons members watch', 'play'],
     'pdf' => ['Lesson PDFs', 'Guides attached to campus lessons', 'file-text'],
     'story' => ['Story videos', 'Student video stories', 'quote'],
+    'stage' => ['Month pictures', 'One for each of the twelve stages', 'calendar'],
     'professor' => ['Professor photos', 'Shown on campus pages', 'graduation-cap'],
     'avatar' => ['Profile photos', 'Members\' own pictures', 'users'],
 ];

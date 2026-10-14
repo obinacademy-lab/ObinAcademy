@@ -1,8 +1,9 @@
 <?php
 /**
  * Campus Studio: where a campus's professor builds the teaching for their own campus only. They write
- * the twelve monthly stages, upload, rename, reorder, move and remove lessons, and schedule live
- * classes. Prices, campus details, publishing, members and pay are not here: Obin Academy sets those
+ * the twelve monthly stages and give each a picture, upload, rename, reorder, move and remove lessons,
+ * schedule live classes, and mark the month the class is on complete, which opens the next month for
+ * every student (the whole campus moves together). Prices, campus details, publishing, members and pay are not here: Obin Academy sets those
  * (dashboard/admin/campus-edit.php), and sees and can change everything a professor does. Every change
  * is written to the audit log under the professor's name.
  *
@@ -63,6 +64,12 @@ foreach (range(1, 12) as $m) if (empty($byMonth[$m])) { $firstEmpty = $m; break;
 $month = max(1, min(12, (int) query_param('month', (string) $firstEmpty)));
 $open = $campus['status'] === 'PUBLISHED';
 $photo = campus_photo($campus);
+// Where the class is: students can open every month up to $classMonth; the professor completes it to open the next.
+$paced = campus_progress_ready();
+$done = campus_months_completed($campus);
+$classMonth = campus_open_month($campus);
+$yearDone = $done >= 12;
+$stageState = fn(int $m) => $m <= $done ? 'done' : ($m === $classMonth && !$yearDone ? 'now' : 'later');
 
 // The biggest file this server accepts: the smallest of our cap and PHP's upload and post limits.
 $iniBytes = function (string $v): int {
@@ -104,14 +111,32 @@ require __DIR__ . '/../includes/dashboard_header.php';
         <div><span>Lessons</span><b data-scramble="<?= $lessonTotal ?>"><?= $lessonTotal ?></b></div>
         <div><span>Active students</span><b data-scramble="<?= $members ?>"><?= $members ?></b></div>
       </div>
-      <p class="cs-note">Prices, opening the campus and memberships are handled by Obin Academy.</p>
+      <?php if ($paced): ?>
+        <div class="cs-class <?= $yearDone ? 'finished' : '' ?>">
+          <div class="cs-class-now">
+            <span><?= $yearDone ? 'The year is complete' : 'The class is on' ?></span>
+            <b><?= $yearDone ? 'All 12 months' : 'Month ' . $classMonth ?></b>
+            <small><?= $yearDone ? 'Students who finish every lesson get their certificate.' : (trim((string) $stages[$classMonth]['title']) !== '' ? e($stages[$classMonth]['title']) : 'No title yet') . ' · ' . count($byMonth[$classMonth] ?? []) . ' lesson' . (count($byMonth[$classMonth] ?? []) === 1 ? '' : 's') ?></small>
+          </div>
+          <?php if (!$yearDone): $nextN = count($byMonth[$classMonth + 1] ?? []); ?>
+            <form method="post" class="cs-complete" data-confirm="<?= e($classMonth < 12 ? 'Mark month ' . $classMonth . ' complete? Month ' . ($classMonth + 1) . ' opens right away for ' . ($members === 1 ? 'your 1 active student' : ($members ? 'all ' . $members . ' active students' : 'every student')) . ($nextN ? '' : ', but it has no lessons yet') . '. They get a notification.' : 'Mark month 12 complete? This finishes the year for the class.') ?>">
+              <?= $hidden('month_complete', $tab) ?><input type="hidden" name="month" value="<?= $classMonth ?>">
+              <button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Mark month <?= $classMonth ?> complete</button>
+            </form>
+          <?php endif; ?>
+          <?php if ($done > 0): ?>
+            <form method="post" class="cs-undo" data-confirm="Undo completing month <?= $done ?>? <?= $done < 12 ? 'Month ' . ($done + 1) . ' closes again for students until you complete month ' . $done . '.' : '' ?>"><?= $hidden('month_undo', $tab) ?><button type="submit">Undo month <?= $done ?></button></form>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
+      <p class="cs-note"><?= $paced ? 'Students see every month up to the one the class is on. ' : '' ?>Prices, opening the campus and memberships are handled by Obin Academy.</p>
     </div>
     <div>
-      <div class="lc-rx-h"><b>Your year</b><span>tap a month to fill it</span></div>
+      <div class="lc-rx-h"><b>Your year</b><span><?= $paced ? $done . ' of 12 months complete' : 'tap a month to fill it' ?></span></div>
       <div class="cs-year">
-        <?php for ($m = 1; $m <= 12; $m++): $n = count($byMonth[$m] ?? []); $t = trim((string) $stages[$m]['title']); ?>
-          <a href="<?= e(base_url(ltrim($here('lessons', ['month' => $m]), '/'))) ?>#studio" class="<?= $n ? 'has' : '' ?> <?= $t === '' ? 'untitled' : '' ?> <?= $tab === 'lessons' && $m === $month ? 'on' : '' ?>" style="--m:<?= $m ?>">
-            <span class="cs-mn">M<?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?></span>
+        <?php for ($m = 1; $m <= 12; $m++): $n = count($byMonth[$m] ?? []); $t = trim((string) $stages[$m]['title']); $st = $paced ? $stageState($m) : ''; $th = $stages[$m]['thumbnail_url'] ?? null; ?>
+          <a href="<?= e(base_url(ltrim($here('lessons', ['month' => $m]), '/'))) ?>#studio" class="<?= $n ? 'has' : '' ?> <?= $t === '' ? 'untitled' : '' ?> <?= $tab === 'lessons' && $m === $month ? 'on' : '' ?> st-<?= $st ?> <?= $th ? 'pic' : '' ?>" style="--m:<?= $m ?>;<?= $th ? ' --pic:url(\'' . e(asset_src($th)) . '\')' : '' ?>">
+            <span class="cs-mn">M<?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?><?php if ($st === 'done'): ?><i class="cs-tick" title="Complete">✓</i><?php elseif ($st === 'now'): ?><i class="cs-here">Class is here</i><?php endif; ?></span>
             <b><?= $t !== '' ? e($t) : 'No title yet' ?></b>
             <small><?= $n ?> lesson<?= $n === 1 ? '' : 's' ?></small>
           </a>
@@ -188,19 +213,37 @@ require __DIR__ . '/../includes/dashboard_header.php';
       </div>
 
     <?php elseif ($tab === 'curriculum'): ?>
-      <form method="post" class="cs-form cs-stages">
+      <form method="post" class="cs-form cs-stages" id="stages-form">
         <?= $hidden('curriculum', 'curriculum') ?>
-        <p class="cs-lead">One stage per month. Month 1 opens the day a student joins, month 2 a month later, and so on. Give each a clear title and a line on what it covers.</p>
-        <?php for ($m = 1; $m <= 12; $m++): $n = count($byMonth[$m] ?? []); ?>
-          <div class="cs-stage acx-whip <?= trim((string) $stages[$m]['title']) !== '' ? 'done' : '' ?>" style="--j:<?= $m - 1 ?>">
+        <p class="cs-lead"><?= $paced ? 'Build the whole year here. Students start on month 1 and see every month\'s picture and title, so they know what is coming. Each month opens for the class when you mark the month before it complete.' : 'One stage per month. Give each a clear title and a line on what it covers.' ?></p>
+        <?php for ($m = 1; $m <= 12; $m++): $n = count($byMonth[$m] ?? []); $th = $stages[$m]['thumbnail_url'] ?? null; $st = $paced ? $stageState($m) : ''; ?>
+          <div class="cs-stage acx-whip <?= trim((string) $stages[$m]['title']) !== '' ? 'done' : '' ?> <?= $paced ? 'paced' : '' ?>" style="--j:<?= $m - 1 ?>">
             <span class="cs-sn"><small>Month</small><?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?></span>
+            <?php if ($paced): ?>
+              <div class="cs-thumb <?= $th ? 'has' : '' ?>">
+                <label title="<?= $th ? 'Change the picture for month ' . $m : 'Add a picture for month ' . $m ?>" style="<?= $th ? 'background-image:url(\'' . e(asset_src($th)) . '\')' : '' ?>">
+                  <input type="file" name="thumb" accept="image/png,image/jpeg,image/webp" form="th-<?= $m ?>" data-thumb aria-label="Picture for month <?= $m ?>">
+                  <span><?= $th ? 'Change' : '+ Picture' ?></span>
+                </label>
+                <?php if ($th): ?><button type="submit" form="thr-<?= $m ?>" class="cs-thumb-x" aria-label="Remove the picture for month <?= $m ?>">×</button><?php endif; ?>
+              </div>
+            <?php endif; ?>
             <input name="title[<?= $m ?>]" value="<?= e($stages[$m]['title']) ?>" placeholder="Stage title" maxlength="160" aria-label="Month <?= $m ?> title">
             <input name="summary[<?= $m ?>]" value="<?= e($stages[$m]['summary']) ?>" placeholder="What it covers (optional)" maxlength="255" aria-label="Month <?= $m ?> summary">
-            <a class="cs-count" href="<?= e(base_url(ltrim($here('lessons', ['month' => $m]), '/'))) ?>#studio" title="Lessons in month <?= $m ?>"><?= $n ?> lesson<?= $n === 1 ? '' : 's' ?></a>
+            <div class="cs-side">
+              <?php if ($st === 'done'): ?><span class="cs-st done" title="<?= !empty($stages[$m]['completed_at']) ? 'Completed ' . e(date('j M Y', strtotime($stages[$m]['completed_at']))) : '' ?>">Complete</span>
+              <?php elseif ($st === 'now'): ?><span class="cs-st now">Class is here</span>
+              <?php elseif ($st === 'later'): ?><span class="cs-st later">Opens later</span><?php endif; ?>
+              <a class="cs-count" href="<?= e(base_url(ltrim($here('lessons', ['month' => $m]), '/'))) ?>#studio" title="Lessons in month <?= $m ?>"><?= $n ?> lesson<?= $n === 1 ? '' : 's' ?></a>
+            </div>
           </div>
         <?php endfor; ?>
-        <div><button class="cs-btn lime" type="submit">Save the twelve stages <span>→</span></button></div>
+        <div><button class="cs-btn lime" type="submit">Save titles and summaries <span>→</span></button></div>
       </form>
+      <?php if ($paced): for ($m = 1; $m <= 12; $m++): ?>
+        <form method="post" enctype="multipart/form-data" id="th-<?= $m ?>" hidden><?= $hidden('stage_thumb', 'curriculum') ?><input type="hidden" name="month" value="<?= $m ?>"></form>
+        <?php if (!empty($stages[$m]['thumbnail_url'])): ?><form method="post" id="thr-<?= $m ?>" hidden data-confirm="Remove the picture for month <?= $m ?>?"><?= $hidden('stage_thumb_remove', 'curriculum') ?><input type="hidden" name="month" value="<?= $m ?>"></form><?php endif; ?>
+      <?php endfor; endif; ?>
 
     <?php else: ?>
       <div class="cs-two">
@@ -236,6 +279,20 @@ require __DIR__ . '/../includes/dashboard_header.php';
 </div>
 <script src="<?= e(versioned_asset('assets/js/admin-pay.js')) ?>" defer></script>
 <script>
+// Month pictures upload as soon as one is chosen (each has its own small form, so they don't need the Save button).
+(function () {
+  var stages = document.getElementById('stages-form'), dirty = false;
+  if (stages) stages.addEventListener('input', function () { dirty = true; });
+  document.querySelectorAll('[data-thumb]').forEach(function (input) {
+    input.addEventListener('change', function () {
+      if (!input.files.length) return;
+      if (dirty && !confirm('You have changed titles you have not saved. Upload the picture anyway? Those changes will be lost.')) { input.value = ''; return; }
+      input.closest('label').classList.add('busy');
+      input.closest('label').querySelector('span').textContent = 'Uploading…';
+      input.form.submit();
+    });
+  });
+})();
 document.querySelectorAll('form[data-upload]').forEach(function (f) {
   var input = f.querySelector('[data-file]'), name = f.querySelector('[data-file-name]');
   if (input && name) input.addEventListener('change', function () { var x = input.files[0]; name.textContent = x ? x.name + ' · ' + (x.size / 1048576).toFixed(1) + 'MB' : 'Choose the file'; f.querySelector('.cs-file').classList.toggle('has', !!x); });

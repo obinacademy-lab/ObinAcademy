@@ -198,17 +198,62 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <div><button class="btn btn-primary" type="submit">Save professor</button></div>
   </form>
 
-<?php elseif ($tab === 'curriculum'): ?>
-  <form method="post" class="ld-panel ca-form">
+<?php elseif ($tab === 'curriculum'): $paced = campus_progress_ready(); $done = campus_months_completed($campus); $classMonth = campus_open_month($campus); ?>
+  <?php if ($paced): ?>
+    <div class="ld-panel ca-class">
+      <div><small>The class is on</small><b><?= $done >= 12 ? 'All 12 months complete' : 'Month ' . $classMonth . (trim((string) $stages[$classMonth]['title']) !== '' ? ' · ' . e($stages[$classMonth]['title']) : '') ?></b><span>Students see every month up to this one. The professor<?= $campus['professor_name'] ? ' (' . e($campus['professor_name']) . ')' : '' ?> marks it complete in Campus Studio to open the next month for everyone; you can do it here too.</span></div>
+      <?php if ($done < 12): ?>
+        <form method="post" data-confirm="Mark month <?= $classMonth ?> complete? <?= $classMonth < 12 ? 'Month ' . ($classMonth + 1) . ' opens right away for every active student.' : 'This finishes the year.' ?>"><?= csrf_field() ?><input type="hidden" name="_action" value="month_complete"><input type="hidden" name="month" value="<?= $classMonth ?>"><button class="btn btn-primary" type="submit">Mark month <?= $classMonth ?> complete</button></form>
+      <?php endif; ?>
+      <?php if ($done > 0): ?>
+        <form method="post" data-confirm="Undo completing month <?= $done ?>?"><?= csrf_field() ?><input type="hidden" name="_action" value="month_undo"><button class="ot-btn" type="submit">Undo month <?= $done ?></button></form>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
+  <form method="post" class="ld-panel ca-form" id="ca-stages" style="<?= $paced ? 'margin-top:16px;' : '' ?>">
     <?= csrf_field() ?><input type="hidden" name="_action" value="curriculum">
-    <p class="muted small" style="margin:0;">One stage per month. Month 1 opens the day a learner joins, month 2 a month later, and so on.</p>
-    <?php for ($m = 1; $m <= 12; $m++): ?>
-      <div class="ca-stage"><span class="n">Month <?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?></span>
+    <p class="muted small" style="margin:0;"><?= $paced ? 'One stage per month, each with an optional picture students see in their year. A month opens for the whole class when the month before it is marked complete.' : 'One stage per month.' ?></p>
+    <?php for ($m = 1; $m <= 12; $m++): $th = $stages[$m]['thumbnail_url'] ?? null; ?>
+      <div class="ca-stage<?= $paced ? ' paced' : '' ?>"><span class="n">Month <?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?><?= $paced && $m <= $done ? ' <em class="ca-done">✓</em>' : '' ?></span>
+        <?php if ($paced): ?><label class="ca-thumb" title="<?= $th ? 'Change' : 'Add' ?> the picture for month <?= $m ?>" style="<?= $th ? 'background-image:url(\'' . e(asset_src($th)) . '\')' : '' ?>"><input type="file" name="thumb" accept="image/png,image/jpeg,image/webp" form="ca-th-<?= $m ?>" data-thumb aria-label="Picture for month <?= $m ?>"><span><?= $th ? 'Change' : '+ Picture' ?></span></label><?php endif; ?>
         <input name="title[<?= $m ?>]" value="<?= e($stages[$m]['title']) ?>" placeholder="Stage title" maxlength="160" aria-label="Month <?= $m ?> title">
-        <input name="summary[<?= $m ?>]" value="<?= e($stages[$m]['summary']) ?>" placeholder="What it covers (optional)" maxlength="255" aria-label="Month <?= $m ?> summary"></div>
+        <input name="summary[<?= $m ?>]" value="<?= e($stages[$m]['summary']) ?>" placeholder="What it covers (optional)" maxlength="255" aria-label="Month <?= $m ?> summary">
+        <?php if ($paced && $th): ?><button class="ot-btn" type="submit" form="ca-thr-<?= $m ?>" aria-label="Remove the picture for month <?= $m ?>">Remove picture</button><?php endif; ?></div>
     <?php endfor; ?>
     <div><button class="btn btn-primary" type="submit">Save curriculum</button></div>
   </form>
+  <?php if ($paced): for ($m = 1; $m <= 12; $m++): ?>
+    <form method="post" enctype="multipart/form-data" id="ca-th-<?= $m ?>" hidden><?= csrf_field() ?><input type="hidden" name="_action" value="stage_thumb"><input type="hidden" name="month" value="<?= $m ?>"></form>
+    <?php if (!empty($stages[$m]['thumbnail_url'])): ?><form method="post" id="ca-thr-<?= $m ?>" hidden data-confirm="Remove the picture for month <?= $m ?>?"><?= csrf_field() ?><input type="hidden" name="_action" value="stage_thumb_remove"><input type="hidden" name="month" value="<?= $m ?>"></form><?php endif; ?>
+  <?php endfor; endif; ?>
+  <style>
+    .ca-class { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px 20px; }
+    .ca-class > div { flex: 1 1 320px; display: grid; gap: 3px; }
+    .ca-class small { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .ca-class b { font-size: 17px; }
+    .ca-class span { font-size: 12.5px; color: var(--muted); }
+    .ca-class form { margin: 0; }
+    .ca-stage.paced { grid-template-columns: 90px 84px minmax(0, 1fr) minmax(0, 1.3fr) 124px; align-items: center; }
+    .ca-done { font-style: normal; color: #067647; font-weight: 800; }
+    .ca-thumb { position: relative; width: 84px; height: 54px; border-radius: 8px; border: 1.5px dashed var(--border-strong, #d0d0e8); background: var(--surface, #f5f5f7) center / cover; display: grid; place-items: center; cursor: pointer; overflow: hidden; }
+    .ca-thumb input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .ca-thumb span { font-size: 11px; font-weight: 600; color: var(--accent, #2b22ff); }
+    .ca-thumb[style*="background-image"] { border-style: solid; border-color: transparent; }
+    .ca-thumb[style*="background-image"] span { color: #fff; background: rgba(10, 15, 44, .6); padding: 1px 6px; border-radius: 5px; opacity: 0; }
+    .ca-thumb:hover span { opacity: 1; }
+    @media (max-width: 760px) { .ca-stage.paced { grid-template-columns: 1fr 84px; } .ca-stage.paced > input { grid-column: 1 / -1; } }
+  </style>
+  <script>
+    (function () {
+      var f = document.getElementById('ca-stages'), dirty = false;
+      if (f) f.addEventListener('input', function () { dirty = true; });
+      document.querySelectorAll('[data-thumb]').forEach(function (i) { i.addEventListener('change', function () {
+        if (!i.files.length) return;
+        if (dirty && !confirm('You have unsaved curriculum changes. Upload the picture anyway? Those changes will be lost.')) { i.value = ''; return; }
+        i.nextElementSibling.textContent = 'Uploading…'; i.form.submit();
+      }); });
+    })();
+  </script>
 
 <?php elseif ($tab === 'lessons'): $month = max(1, min(12, (int) query_param('month', '1'))); $ls = $byMonth[$month] ?? []; ?>
   <nav class="ca-months" aria-label="Months">

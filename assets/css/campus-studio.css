@@ -161,3 +161,61 @@
   .cs-acts { grid-column: 2; }
   .cs-live { grid-template-columns: 52px minmax(0, 1fr) auto; }
 }
+
+/* where the class is: the month it is on, complete and undo */
+.cs-class { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: center; margin-top: 16px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(135deg, rgba(205, 251, 94, .14), rgba(205, 251, 94, .03)); border: 1px solid rgba(205, 251, 94, .35); }
+.cs-class-now span { display: block; font: 500 10.5px var(--ov-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--lc-lime); }
+.cs-class-now b { display: block; margin-top: 3px; font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: #fff; }
+.cs-class-now small { display: block; margin-top: 2px; font-size: 12.5px; color: #a9acd0; }
+.cs-complete { margin: 0; }
+.cs-complete button { width: 100%; justify-content: center; }
+.cs-complete button { height: 44px; padding: 0 16px; border: 0; border-radius: 11px; background: var(--lc-lime); color: var(--lc-void); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; box-shadow: 0 0 0 4px rgba(205, 251, 94, .16), 0 12px 26px -12px rgba(205, 251, 94, .8); transition: transform .3s var(--lc-spring), box-shadow .3s ease; }
+.cs-complete button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.cs-complete button:hover { transform: translateY(-2px); box-shadow: 0 0 0 6px rgba(205, 251, 94, .22), 0 16px 30px -12px rgba(205, 251, 94, .9); }
+.cs-complete button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.cs-undo { grid-column: 1 / -1; margin: 0; }
+.cs-undo button { border: 0; background: none; padding: 0; font: inherit; font-size: 12px; color: #8b8fc0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.cs-undo button:hover { color: #fff; }
+.cs-class.finished { background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .12); }
+
+/* year tiles: complete, where the class is, later; a picture when the month has one */
+.cs-year a.pic { background: linear-gradient(180deg, rgba(7, 8, 31, .35), rgba(7, 8, 31, .92)), var(--pic) center / cover; }
+.cs-year a.st-done .cs-mn, .cs-year a.st-now .cs-mn { color: var(--lc-lime); }
+.cs-mn { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.cs-tick { width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; background: var(--lc-lime); color: var(--lc-void); font-size: 10px; font-style: normal; font-weight: 800; }
+.cs-here { font: 600 9px var(--ov-sans, inherit); font-style: normal; letter-spacing: .02em; padding: 2px 6px; border-radius: 20px; background: var(--lc-lime); color: var(--lc-void); white-space: nowrap; }
+.cs-year a.st-now { border-color: var(--lc-lime); box-shadow: 0 0 0 1px var(--lc-lime); }
+.cs-year a.st-later { opacity: .72; }
+.cs-year a.st-later:hover { opacity: 1; }
+
+/* stages tab: picture, status */
+.cs-stage.paced { grid-template-columns: 64px 92px minmax(0, 1fr) minmax(0, 1.2fr) 120px; }
+.cs-thumb { position: relative; }
+.cs-thumb label { position: relative; display: grid; place-items: end start; width: 92px; height: 60px; border-radius: 10px; overflow: hidden; border: 1.5px dashed #c9cbe0; background: var(--ov-panel-2) center / cover; cursor: pointer; transition: border-color .3s ease, transform .3s var(--lc-spring); }
+.cs-thumb label:hover { border-color: var(--ov-brand); transform: translateY(-2px); }
+.cs-thumb label:focus-within { border-color: var(--ov-brand); box-shadow: 0 0 0 4px var(--ov-brand-tint); }
+.cs-thumb.has label { border-style: solid; border-color: transparent; box-shadow: 0 8px 18px -12px rgba(12, 14, 36, .7); }
+.cs-thumb input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cs-thumb span { position: relative; width: 100%; padding: 4px 7px; font-size: 11px; font-weight: 600; color: var(--ov-brand); text-align: center; align-self: center; }
+.cs-thumb.has span { align-self: end; text-align: left; padding: 14px 7px 4px; color: #fff; background: linear-gradient(transparent, rgba(7, 8, 31, .8)); opacity: 0; transition: opacity .25s ease; }
+.cs-thumb.has label:hover span, .cs-thumb label.busy span { opacity: 1; }
+.cs-thumb label.busy { opacity: .7; pointer-events: none; }
+.cs-thumb-x { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ov-panel); background: var(--ov-ink); color: #fff; font-size: 13px; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0; }
+.cs-thumb-x:hover { background: #e5302a; }
+.cs-side { display: grid; justify-items: end; gap: 5px; }
+.cs-st { height: 22px; padding: 0 9px; border-radius: 20px; display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.cs-st.done { background: var(--lc-void); color: var(--lc-lime); }
+.cs-st.now { background: var(--lc-lime); color: var(--lc-void); }
+.cs-st.later { background: var(--ov-panel-2); color: var(--ov-ink-3); border: 1px solid var(--ov-line-soft); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .cs-year a.st-now { animation: cs-tile .7s cubic-bezier(.2, 1.2, .35, 1) backwards, cs-here 2.4s ease-in-out 1.2s infinite; animation-delay: calc(.35s + var(--m, 1) * 45ms), 1.2s; }
+  @keyframes cs-here { 50% { box-shadow: 0 0 0 1px var(--lc-lime), 0 0 22px -2px rgba(205, 251, 94, .65); } }
+}
+@media (max-width: 760px) {
+  .cs-class { grid-template-columns: 1fr; }
+  .cs-complete button { width: 100%; justify-content: center; }
+  .cs-stage.paced { grid-template-columns: 52px 92px minmax(0, 1fr); }
+  .cs-stage.paced > input { grid-column: 2 / -1; }
+  .cs-stage.paced .cs-side { grid-column: 3; grid-row: 1; justify-items: start; }
+}

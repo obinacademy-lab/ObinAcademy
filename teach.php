@@ -97,7 +97,7 @@ require __DIR__ . '/includes/header.php';
         <div class="mask"><h2>You bring the knowledge. <em>We carry everything else.</em></h2><p class="sub">One professor leads each campus for the whole year. Here is what that means week to week.</p></div>
       </div>
       <div class="tx-ledger">
-        <div class="rv"><span class="tx-label">Once</span><h3>Plan the year</h3><p>Twelve stages, one a month, from first steps to mastery. We plan it with you.</p></div>
+        <div class="rv"><span class="tx-label">Once</span><h3>Plan the year</h3><p>Twelve stages, from first steps to mastery, each with its own picture. You build them in your Campus Studio and open the next one when your class is ready.</p></div>
         <div class="rv"><span class="tx-label">Each month</span><h3>Record the lessons</h3><p>Short videos and a PDF guide for that month's stage.</p></div>
         <div class="rv"><span class="tx-label">Each week</span><h3>Teach live</h3><p>One live class on Zoom or Google Meet, with time for questions.</p></div>
         <div class="rv"><span class="tx-label">Every day</span><h3>Lead the community</h3><p>Answer, encourage and review your members' work.</p></div>

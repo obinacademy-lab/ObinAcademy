@@ -1,6 +1,7 @@
 <?php
 /**
- * A campus's teaching content (the twelve monthly stages, lessons and live classes), changed from two
+ * A campus's teaching content (the twelve monthly stages with their pictures, lessons, live classes, and
+ * marking a month complete so the next one opens for the whole class), changed from two
  * places with exactly the same rules: the admin's campus page (dashboard/admin/campus-edit.php) and the
  * professor's Campus Studio (dashboard/campus-studio.php). Prices, campus details, publishing, pay and
  * members are not here: only Obin Academy changes those, on the admin page.
@@ -8,7 +9,7 @@
  * Needs includes/storage.php, includes/campuses.php and includes/audit.php.
  */
 
-const CAMPUS_CONTENT_ACTIONS = ['curriculum', 'lesson_add', 'lesson_delete', 'lesson_move', 'lesson_rename', 'live_add', 'live_delete'];
+const CAMPUS_CONTENT_ACTIONS = ['curriculum', 'stage_thumb', 'stage_thumb_remove', 'month_complete', 'month_undo', 'lesson_add', 'lesson_delete', 'lesson_move', 'lesson_rename', 'live_add', 'live_delete'];
 
 /**
  * Runs one content action from the posted form for $campus. Returns where to go next as
@@ -18,6 +19,7 @@ const CAMPUS_CONTENT_ACTIONS = ['curriculum', 'lesson_add', 'lesson_delete', 'le
 function campus_content_handle(string $a, array $campus, array $user): array {
     $id = (int) $campus['id'];
     $log = fn(string $what, string $detail = '') => log_admin_action((int) $user['id'], $user['name'], 'campus.' . $what, 'Campus', $campus['name'], $detail);
+    $backTab = in_array(post('back_tab'), ['curriculum', 'lessons', 'live'], true) ? post('back_tab') : 'curriculum';
     $lesson = fn() => db_one('SELECT * FROM campus_lessons WHERE id = ? AND campus_id = ?', [(int) post('lesson'), $id]);
 
     if ($a === 'curriculum') {
@@ -30,6 +32,64 @@ function campus_content_handle(string $a, array $campus, array $user): array {
         $log('curriculum_updated');
         flash_set('success', 'Curriculum saved.');
         return ['tab' => 'curriculum', 'month' => null];
+    }
+    if ($a === 'stage_thumb' || $a === 'stage_thumb_remove') {
+        if (!campus_progress_ready()) throw new RuntimeException('Month pictures are being set up. Try again shortly.');
+        $month = max(1, min(CAMPUS_YEAR_MONTHS, (int) post('month')));
+        $old = db_one('SELECT thumbnail_url FROM campus_stages WHERE campus_id = ? AND month_no = ?', [$id, $month])['thumbnail_url'] ?? null;
+        $url = null;
+        if ($a === 'stage_thumb') {
+            if (empty($_FILES['thumb']['name'])) throw new RuntimeException('Choose a picture for month ' . $month . '.');
+            $url = save_upload($_FILES['thumb'], 'thumbnails');
+        }
+        db_run('INSERT INTO campus_stages (campus_id, month_no, title, summary, thumbnail_url) VALUES (?, ?, \'\', \'\', ?) ON DUPLICATE KEY UPDATE thumbnail_url = VALUES(thumbnail_url)', [$id, $month, $url]);
+        // The replaced picture is no longer used anywhere: remove the file.
+        if ($old && $old !== $url && str_starts_with($old, '/uploads/thumbnails/')) {
+            $path = public_uploads_root() . '/' . substr($old, strlen('/uploads/'));
+            if (is_file($path)) @unlink($path);
+        }
+        $log($a === 'stage_thumb' ? 'month_picture_set' : 'month_picture_removed', 'month ' . $month);
+        flash_set('success', $a === 'stage_thumb' ? 'Picture saved for month ' . $month . '.' : 'Picture removed from month ' . $month . '.');
+        return ['tab' => 'curriculum', 'month' => null];
+    }
+    if ($a === 'month_complete') {
+        if (!campus_progress_ready()) throw new RuntimeException('Completing months is being set up. Try again shortly.');
+        $fresh = get_campus($id);
+        $done = campus_months_completed($fresh);
+        $month = (int) post('month');
+        // Only the month the class is on can be completed: a double click or an old page never skips one.
+        if ($done >= CAMPUS_YEAR_MONTHS) throw new RuntimeException('All twelve months are already complete.');
+        if ($month !== $done + 1) throw new RuntimeException('The class is on month ' . ($done + 1) . ', so that is the month to complete next.');
+        db_run('UPDATE campuses SET months_completed = ? WHERE id = ? AND months_completed = ?', [$month, $id, $done]);
+        db_run('INSERT INTO campus_stages (campus_id, month_no, title, summary, completed_at) VALUES (?, ?, \'\', \'\', NOW()) ON DUPLICATE KEY UPDATE completed_at = NOW()', [$id, $month]);
+        $stages = get_campus_stages($id);
+        $next = $month + 1;
+        $students = array_map('intval', array_column(db_all('SELECT user_id FROM campus_memberships WHERE campus_id = ? AND access_until > NOW()', [$id]), 'user_id'));
+        if ($next <= CAMPUS_YEAR_MONTHS) {
+            $title = trim((string) $stages[$next]['title']);
+            foreach ($students as $sid) {
+                create_user_notification($sid, (int) $user['id'], 'campus_month_open', 'Month ' . $next . ($title !== '' ? ': ' . $title : '') . ' is now open in the ' . $campus['name'] . ' Campus.', base_url('campus-learn.php?campus=' . $campus['slug'] . '&view=lessons&month=' . $next));
+            }
+            $log('month_completed', 'month ' . $month . ' complete, month ' . $next . ' opened for ' . count($students) . ' student' . (count($students) === 1 ? '' : 's'));
+            flash_set('success', 'Month ' . $month . ' is complete. Month ' . $next . ' is now open for ' . (count($students) === 1 ? 'your 1 student' : (count($students) ? 'all ' . count($students) . ' students' : 'every student who joins')) . '.');
+        } else {
+            foreach ($students as $sid) {
+                create_user_notification($sid, (int) $user['id'], 'campus_year_done', 'Your professor has completed the final month of the ' . $campus['name'] . ' Campus. Finish your lessons to earn your certificate.', base_url('campus-learn.php?campus=' . $campus['slug']));
+            }
+            $log('month_completed', 'month 12 complete, the year is finished');
+            flash_set('success', 'Month 12 is complete. The whole year is finished. Students who finish every lesson get their certificate.');
+        }
+        return ['tab' => $backTab, 'month' => null];
+    }
+    if ($a === 'month_undo') {
+        if (!campus_progress_ready()) throw new RuntimeException('Completing months is being set up. Try again shortly.');
+        $done = campus_months_completed(get_campus($id));
+        if ($done < 1) throw new RuntimeException('No month has been completed yet.');
+        db_run('UPDATE campuses SET months_completed = ? WHERE id = ? AND months_completed = ?', [$done - 1, $id, $done]);
+        db_run('UPDATE campus_stages SET completed_at = NULL WHERE campus_id = ? AND month_no = ?', [$id, $done]);
+        $log('month_reopened', 'month ' . $done . ' marked not complete' . ($done < CAMPUS_YEAR_MONTHS ? ', month ' . ($done + 1) . ' closed again' : ''));
+        flash_set('success', 'Month ' . $done . ' is open again' . ($done < CAMPUS_YEAR_MONTHS ? ' and month ' . ($done + 1) . ' is closed until you complete it' : '') . '.');
+        return ['tab' => $backTab, 'month' => null];
     }
     if ($a === 'lesson_add') {
         $month = max(1, min(CAMPUS_YEAR_MONTHS, (int) post('month')));

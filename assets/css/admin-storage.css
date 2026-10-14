@@ -1,7 +1,7 @@
 /* Admin Storage (dashboard/admin/storage-cleanup.php), the storage console. Builds on the console styles
    in admin-campuses.css; this file adds the disk map, the kept kinds and the unused-files clean-up. */
 
-.st { --k-video: var(--lc-lime); --k-pdf: #7c74ff; --k-story: #2dd4bf; --k-professor: #fbbf24; --k-avatar: #f472b6; --k-unused: #ff4d4d; }
+.st { --k-video: var(--lc-lime); --k-pdf: #7c74ff; --k-story: #2dd4bf; --k-stage: #38bdf8; --k-professor: #fbbf24; --k-avatar: #f472b6; --k-unused: #ff4d4d; }
 .st .lc-eyebrow.warn { color: #ff8a8a; }
 .st .lc-eyebrow.warn i { background: #ff4d4d; box-shadow: 0 0 0 4px rgba(255, 77, 77, .2); }
 .st .lc-stats b.lime { color: var(--lc-lime); text-shadow: 0 0 16px rgba(205, 251, 94, .4); }
@@ -15,6 +15,7 @@
 .k-video { background: var(--k-video); }
 .k-pdf { background: var(--k-pdf); }
 .k-story { background: var(--k-story); }
+.k-stage { background: var(--k-stage); }
 .k-professor { background: var(--k-professor); }
 .k-avatar { background: var(--k-avatar); }
 .st-map i.k-unused { background: repeating-linear-gradient(135deg, var(--k-unused) 0 7px, #b3262a 7px 14px); box-shadow: 0 0 22px rgba(255, 77, 77, .45); }

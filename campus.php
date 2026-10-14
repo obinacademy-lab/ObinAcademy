@@ -21,6 +21,7 @@ if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) {
 
 $stages = get_campus_stages((int) $campus['id']);
 $curriculumReady = campus_curriculum_written($stages);
+$anyPic = (bool) array_filter(array_column($stages, 'thumbnail_url')); // line every month up when some have a picture
 $membership = $viewer ? get_campus_membership((int) $campus['id'], (int) $viewer['id']) : null;
 $open = campus_membership_open($membership);
 $isTrading = (bool) preg_match('/crypto|forex|trading/i', $campus['slug'] . ' ' . $campus['name']);
@@ -75,7 +76,7 @@ require __DIR__ . '/includes/header.php';
 
       <section class="cx-sec">
         <h2>The year, quarter by quarter</h2>
-        <p>One stage opens each month from the day you join. The final month closes the path, and completing it earns your certificate.</p>
+        <p>Twelve stages, taught as a class. You start on the stage your class is on, with every earlier stage open to catch up, and your professor opens the next one when the class completes it. Completing the final stage earns your certificate.</p>
         <?php if ($curriculumReady): ?>
           <div class="cx-quarters">
             <?php for ($q = 0; $q < 4; $q++): ?>
@@ -83,7 +84,7 @@ require __DIR__ . '/includes/header.php';
                 <div class="qh"><small>Quarter <?= $q + 1 ?></small><b><?= e($quarterNames[$q]) ?></b></div>
                 <ul>
                   <?php for ($m = $q * 3 + 1; $m <= $q * 3 + 3; $m++): ?>
-                    <li><span class="cx-mono">Month <?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?></span><span><b><?= e($stages[$m]['title']) ?></b><?php if ($stages[$m]['summary'] !== ''): ?> · <span><?= e($stages[$m]['summary']) ?></span><?php endif; ?></span></li>
+                    <li<?= $anyPic ? ' class="pic"' : '' ?>><?php if (!empty($stages[$m]['thumbnail_url'])): ?><img class="cx-qpic" src="<?= e(asset_src($stages[$m]['thumbnail_url'])) ?>" alt="" loading="lazy"><?php elseif ($anyPic): ?><span class="cx-qpic empty" aria-hidden="true"></span><?php endif; ?><span class="cx-mono">Month <?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?></span><span><b><?= e($stages[$m]['title']) ?></b><?php if ($stages[$m]['summary'] !== ''): ?> · <span><?= e($stages[$m]['summary']) ?></span><?php endif; ?></span></li>
                   <?php endfor; ?>
                 </ul>
               </div>

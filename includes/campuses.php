@@ -7,9 +7,10 @@
  * renews by itself: access is simply open while campus_memberships.access_until is in the future,
  * and reminders (email and an in-app notice, from 7 days before) ask the learner to pay again.
  *
- * The year starts the day a learner first joins (started_at). One stage opens per month, so
- * stage N is available from the start of month N; the certificate is issued once every lesson of
- * a fully built twelve-month path is complete.
+ * The whole campus moves through the twelve stages together, at the professor's pace: students can
+ * open every stage up to the one the class is on (campus_open_month), and the professor marks that
+ * stage complete to open the next for everyone (campus_content.php). The certificate is issued once
+ * every lesson of a fully built twelve-month path is complete.
  *
  * Campus money goes to the platform (no creator earnings rows). Each campus professor earns a share
  * of every payment (campuses.professor_share_percent, 40% by default), recorded per payment in
@@ -81,8 +82,8 @@ function get_campus_by_slug(string $slug): ?array {
 function get_campus_stages(int $campusId): array {
     $rows = db_all('SELECT * FROM campus_stages WHERE campus_id = ? ORDER BY month_no', [$campusId]);
     $out = [];
-    for ($m = 1; $m <= CAMPUS_YEAR_MONTHS; $m++) $out[$m] = ['month_no' => $m, 'title' => '', 'summary' => ''];
-    foreach ($rows as $r) $out[(int) $r['month_no']] = $r;
+    for ($m = 1; $m <= CAMPUS_YEAR_MONTHS; $m++) $out[$m] = ['month_no' => $m, 'title' => '', 'summary' => '', 'thumbnail_url' => null, 'completed_at' => null];
+    foreach ($rows as $r) $out[(int) $r['month_no']] = $r + ['thumbnail_url' => null, 'completed_at' => null];
     return $out;
 }
 
@@ -114,11 +115,32 @@ function campus_membership_open(?array $m): bool {
     return $m !== null && strtotime($m['access_until']) > time();
 }
 
-/** Month of the learner's year they are in now, 1 to 12. */
+/** True once migration/add-month-completion.sql has been applied (professor-paced months, month pictures). */
+function campus_progress_ready(): bool {
+    static $ready = null;
+    if ($ready !== null) return $ready;
+    try { db_one('SELECT months_completed FROM campuses LIMIT 1'); db_one('SELECT thumbnail_url, completed_at FROM campus_stages LIMIT 1'); return $ready = true; } catch (Throwable $e) { return $ready = false; }
+}
+
+/**
+ * The month a campus's class is on, 1 to 12. The whole campus moves together: the professor marks a
+ * month complete and the next one opens for every student (campus_content.php, 'month_complete').
+ * Students can open every month up to this one, so someone who joins late can catch up.
+ */
+function campus_open_month(array $campus): int {
+    return max(1, min(CAMPUS_YEAR_MONTHS, (int) ($campus['months_completed'] ?? 0) + 1));
+}
+
+/** Months the professor has completed, 0 to 12 (12 = the whole year is done). */
+function campus_months_completed(array $campus): int {
+    return max(0, min(CAMPUS_YEAR_MONTHS, (int) ($campus['months_completed'] ?? 0)));
+}
+
+/** The month a member can reach now: the month their campus's class is on. Takes a membership (or any row with campus_id) or a campus row. */
 function campus_current_month(array $m): int {
-    $start = new DateTimeImmutable($m['started_at']);
-    $diff = $start->diff(new DateTimeImmutable('now'));
-    return max(1, min(CAMPUS_YEAR_MONTHS, $diff->y * 12 + $diff->m + 1));
+    if (array_key_exists('months_completed', $m)) return campus_open_month($m);
+    $campus = get_campus((int) ($m['campus_id'] ?? 0));
+    return $campus ? campus_open_month($campus) : 1;
 }
 
 function campus_days_left(array $m): int {

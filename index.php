@@ -97,7 +97,7 @@ require __DIR__ . '/includes/header.php';
           <li><?= $cross ?><span>Notes to memorise, then hope for a job</span></li>
         </ul></div>
         <div class="new"><h3>An Obin <em>campus</em></h3><ul>
-          <li><?= $check ?><span>Twelve months, one practical stage a month</span></li>
+          <li><?= $check ?><span>Twelve practical stages, taught as a class</span></li>
           <li><?= $check ?><span>From <?= e(format_money($monthly)) ?> a month, paid on your phone</span></li>
           <li><?= $check ?><span>Taught by a professor who earns from the skill</span></li>
           <li><?= $check ?><span>You practise every week and use the skill as you learn</span></li>
@@ -138,7 +138,7 @@ require __DIR__ . '/includes/header.php';
     <div class="hx-wrap">
       <div class="hx-head"><span class="hx-eyebrow dark">What you get</span><h2>Everything inside <em>one campus.</em></h2><p>One membership opens all of it for your campus, on your phone or computer.</p></div>
       <div class="hx-inside">
-        <div><?= campus_icon('content', 1.8) ?><h3>Step-by-step video lessons</h3><p>A new stage every month, in the right order. You always know what to do next.</p></div>
+        <div><?= campus_icon('content', 1.8) ?><h3>Step-by-step video lessons</h3><p>A new stage each time your class is ready, in the right order. You always know what to do next.</p></div>
         <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg><h3>A live class every week</h3><p>Learn live with your professor and ask your questions. Missed it? The recording waits for you.</p></div>
         <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg><h3>A professor who does it</h3><p>Every professor is chosen by Obin Academy for real results in the skill they teach.</p></div>
         <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><h3>A private community</h3><p>Share your wins, ask for help and stay accountable with people on the same path.</p></div>
