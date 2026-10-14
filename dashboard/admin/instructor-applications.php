@@ -1,7 +1,11 @@
 <?php
 /**
- * Admin: applications to teach a campus (from teach.php). Shortlist, decline, or accept, which makes
- * the applicant the professor of an existing campus or of a new draft campus from their proposal.
+ * Admin: applications to teach a campus (from teach.php), as a "faculty intake" desk. A dark console
+ * shows the applications waiting and every campus's professor seat (filled, or open with how many
+ * applicants want it). Below, each application can be noted, shortlisted, declined, or accepted, which
+ * makes the applicant the professor of an existing campus or of a new draft campus from their proposal.
+ *
+ * Styles: assets/css/admin-campuses.css (console) + assets/css/admin-apps.css. Motion: assets/js/admin-pay.js.
  */
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/audit.php';
@@ -62,81 +66,129 @@ $apps = get_instructor_applications($filter);
 $counts = ['' => 0] + array_fill_keys(array_keys(INSTRUCTOR_APP_STATUSES), 0);
 foreach (db_all('SELECT status, COUNT(*) AS n FROM instructor_applications GROUP BY status') as $r) { $counts[$r['status']] = (int) $r['n']; $counts[''] += (int) $r['n']; }
 $campuses = get_all_campuses();
-$pills = ['NEW' => 'warn', 'SHORTLISTED' => 'good', 'ACCEPTED' => 'good', 'DECLINED' => 'mute'];
+
+// Applicants still in play (new or shortlisted) per campus, and for brand-new campus proposals.
+$waitingFor = array_map('intval', array_column(db_all("SELECT campus_id, COUNT(*) AS n FROM instructor_applications WHERE status IN ('NEW', 'SHORTLISTED') AND campus_id IS NOT NULL GROUP BY campus_id"), 'n', 'campus_id'));
+$proposals = (int) (db_one("SELECT COUNT(*) AS n FROM instructor_applications WHERE status IN ('NEW', 'SHORTLISTED') AND campus_id IS NULL")['n'] ?? 0);
+$seatsFilled = count(array_filter($campuses, fn($c) => (bool) $c['professor_name']));
+
+$colors = ['#2b22ff', '#0f766e', '#b45309', '#be185d', '#6d28d9', '#15803d', '#475569', '#0369a1'];
+$look = [];
+foreach ($campuses as $k => $c) $look[(int) $c['id']] = ['photo' => campus_photo($c), 'color' => $colors[$k % count($colors)], 'icon' => $c['icon'] ?: 'book'];
+$thumb = function (?int $campusId, string $class) use ($look): string {
+    $l = $campusId !== null ? ($look[$campusId] ?? null) : null;
+    if (!$l) return '<span class="' . $class . ' badge new" aria-hidden="true">+</span>';
+    return $l['photo']
+        ? '<span class="' . $class . '" style="background-image:url(\'' . e($l['photo']) . '\')"></span>'
+        : '<span class="' . $class . ' badge" style="background:' . e($l['color']) . '">' . campus_icon($l['icon'], 1.8) . '</span>';
+};
+$initials = fn(string $name) => mb_strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(preg_split('/\s+/', trim($name)) ?: [''], 0, 2))));
+$appsUrl = fn(string $status = '') => base_url('dashboard/admin/instructor-applications.php' . ($status ? '?status=' . $status : ''));
 
 $pageTitle = 'Teach Applications — Admin — Obin Academy';
+$dashClass = 'dash-ov';
+$pageCss = ['assets/css/admin-overview.css', 'assets/css/admin-campuses.css', 'assets/css/admin-apps.css'];
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="dash-page-head">
-  <div>
-    <h1 class="h2">Teach Applications</h1>
-    <p class="muted" style="margin-top:6px;">People who want to lead a campus. Accepting one makes them its professor, on <?= e(format_share(CAMPUS_PROFESSOR_SHARE_DEFAULT)) ?> of every payment.</p>
+<div class="ov acx ia" data-pp>
+  <div class="acx-head acx-slam" style="--i:0">
+    <div><h1>Teach applications</h1><p>People who want to lead a campus. Accepting one makes them its professor, on <?= e(format_share(CAMPUS_PROFESSOR_SHARE_DEFAULT)) ?> of every payment.</p></div>
+    <div class="acx-acts"><a class="acx-btn" href="<?= e(base_url('teach.php')) ?>" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>View the Teach page</a></div>
   </div>
-  <div class="row gap-2 wrap"><a class="ld-btn" href="<?= e(base_url('teach.php')) ?>" target="_blank" rel="noopener">View the Teach page</a></div>
-</div>
 
-<nav class="ca-tabs" aria-label="Filter applications">
-  <?php foreach (['' => 'All'] + INSTRUCTOR_APP_STATUSES as $k => $label): ?>
-    <a href="<?= e(base_url('dashboard/admin/instructor-applications.php' . ($k ? '?status=' . $k : ''))) ?>"<?= $filter === $k ? ' aria-current="page"' : '' ?>><?= e($label) ?> <span class="muted">(<?= (int) $counts[$k] ?>)</span></a>
-  <?php endforeach; ?>
-</nav>
+  <section class="lc-console acx-slam" style="--i:1">
+    <span class="lc-glow" aria-hidden="true"></span>
+    <div>
+      <span class="lc-eyebrow <?= $counts['NEW'] ? '' : 'calm' ?>"><i></i><?= $counts['NEW'] ? 'Waiting for you' : 'All read' ?></span>
+      <div class="lc-big"><b><span data-scramble="<?= $counts['NEW'] ?>"><?= $counts['NEW'] ?></span></b><span>new application<?= $counts['NEW'] === 1 ? '' : 's' ?><br>to read</span></div>
+      <p class="lc-copy"><?= $counts['NEW'] ? 'Read each one, call the strongest, then make them professor of a campus.' : 'New applications from the Teach page appear here straight away.' ?></p>
+      <div class="lc-stats">
+        <div><span>All applications</span><b data-scramble="<?= $counts[''] ?>"><?= $counts[''] ?></b></div>
+        <div><span>Shortlisted</span><b data-scramble="<?= $counts['SHORTLISTED'] ?>"><?= $counts['SHORTLISTED'] ?></b></div>
+        <div><span>Made professor</span><b class="lime" data-scramble="<?= $counts['ACCEPTED'] ?>"><?= $counts['ACCEPTED'] ?></b></div>
+        <div><span>Declined</span><b data-scramble="<?= $counts['DECLINED'] ?>"><?= $counts['DECLINED'] ?></b></div>
+      </div>
+    </div>
+    <div class="lc-rx">
+      <div class="lc-rx-h"><b>Faculty seats</b><span><?= $seatsFilled ?> of <?= count($campuses) ?> filled</span></div>
+      <?php foreach ($campuses as $li => $c): $cid = (int) $c['id']; $n = $waitingFor[$cid] ?? 0; $filled = (bool) $c['professor_name']; ?>
+        <a class="ia-seat <?= $filled ? 'filled' : 'open' ?>" href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . $cid . '&tab=professor')) ?>" style="--l:<?= $li ?>">
+          <span class="nm"><?= $thumb($cid, 'pp-dot') ?><?= e($c['name']) ?></span>
+          <span class="who"><?= $filled ? '<i></i>' . e($c['professor_name']) : '<i></i>Seat open' ?></span>
+          <span class="n <?= $n ? 'on' : '' ?>"><?= $n ? $n . ' applicant' . ($n === 1 ? '' : 's') : '—' ?></span>
+        </a>
+      <?php endforeach; ?>
+      <div class="ia-seat proposal">
+        <span class="nm"><?= $thumb(null, 'pp-dot') ?>New campus proposals</span>
+        <span class="who"><i></i>Ideas for campuses we don't have yet</span>
+        <span class="n <?= $proposals ? 'on' : '' ?>"><?= $proposals ? $proposals . ' waiting' : '—' ?></span>
+      </div>
+    </div>
+  </section>
 
-<?php if (!$apps): ?>
-  <div class="ld-panel" style="margin-top:16px; padding:40px 22px; text-align:center;"><p class="muted">No applications here yet. Share <a href="<?= e(base_url('teach.php')) ?>"><?= e(base_url('teach.php')) ?></a> with people you would like to teach.</p></div>
-<?php endif; ?>
+  <div class="ia-bar acx-slam" style="--i:2">
+    <h2>Applications</h2>
+    <nav class="lc-chips ia-chips" aria-label="Filter applications">
+      <?php foreach (['' => 'All'] + INSTRUCTOR_APP_STATUSES as $k => $label): ?>
+        <a href="<?= e($appsUrl($k)) ?>" class="<?= $filter === $k ? 'on' : '' ?>" <?= $filter === $k ? 'aria-current="page"' : '' ?>><?= e($label) ?> <em><?= (int) $counts[$k] ?></em></a>
+      <?php endforeach; ?>
+    </nav>
+  </div>
 
-<div class="ia-list">
-  <?php foreach ($apps as $a): $wa = whatsapp_number($a['phone']); $target = $a['campus_name'] ? $a['campus_name'] . ' Campus' : 'New: ' . $a['proposed_campus']; ?>
-    <article class="ld-panel ia-card" id="app-<?= (int) $a['id'] ?>">
+  <?php if (!$apps): ?>
+    <section class="acx-sec acx-slam ia-empty" style="--i:3"><p>No applications here yet. Share <a href="<?= e(base_url('teach.php')) ?>"><?= e(base_url('teach.php')) ?></a> with people you would like to teach.</p></section>
+  <?php endif; ?>
+
+  <?php foreach ($apps as $j => $a): $wa = whatsapp_number($a['phone']); $target = $a['campus_name'] ? $a['campus_name'] . ' Campus' : 'New campus: ' . $a['proposed_campus']; $open = $a['status'] !== 'ACCEPTED' && $a['status'] !== 'DECLINED'; ?>
+    <article class="acx-sec ia-card acx-whip st-<?= strtolower($a['status']) ?>" id="app-<?= (int) $a['id'] ?>" style="--j:<?= min($j, 10) ?>;--i:3">
       <header class="ia-head">
-        <span class="ia-av"><?= e(mb_strtoupper(mb_substr($a['name'], 0, 1))) ?></span>
-        <div style="min-width:0;">
-          <b><?= e($a['name']) ?></b>
-          <small><?= e($a['headline']) ?></small>
-        </div>
+        <span class="ia-av"><?= e($initials($a['name'])) ?></span>
+        <div class="ia-id"><b><?= e($a['name']) ?></b><small><?= e($a['headline']) ?></small></div>
         <div class="ia-meta">
-          <span class="ca-pill <?= $pills[$a['status']] ?>"><span class="dot"></span><?= e(INSTRUCTOR_APP_STATUSES[$a['status']]) ?></span>
+          <span class="ia-st <?= strtolower($a['status']) ?>"><?= e(INSTRUCTOR_APP_STATUSES[$a['status']]) ?></span>
           <small><?= e(time_ago($a['created_at'])) ?></small>
         </div>
       </header>
       <div class="ia-body">
-        <dl class="ia-facts">
-          <div><dt>Wants to teach</dt><dd><?= e($target) ?></dd></div>
-          <div><dt>Email</dt><dd><a href="mailto:<?= e($a['email']) ?>"><?= e($a['email']) ?></a></dd></div>
-          <div><dt>Phone</dt><dd><?= e($a['phone']) ?></dd></div>
-          <?php if ($a['links']): ?><div><dt>Work</dt><dd><?= e($a['links']) ?></dd></div><?php endif; ?>
-          <?php if ($a['sample_url']): ?><div><dt>Teaching sample</dt><dd><a href="<?= e($a['sample_url']) ?>" target="_blank" rel="noopener nofollow">Watch</a></dd></div><?php endif; ?>
-        </dl>
+        <div class="ia-facts">
+          <div class="ia-target"><?= $thumb($a['campus_id'] ? (int) $a['campus_id'] : null, 'ph') ?><span><small>Wants to teach</small><b><?= e($target) ?></b></span></div>
+          <dl>
+            <div><dt>Email</dt><dd><a href="mailto:<?= e($a['email']) ?>"><?= e($a['email']) ?></a></dd></div>
+            <div><dt>Phone</dt><dd><?= e($a['phone']) ?></dd></div>
+            <?php if ($a['links']): ?><div><dt>Work</dt><dd><?= e($a['links']) ?></dd></div><?php endif; ?>
+            <?php if ($a['sample_url']): ?><div><dt>Teaching sample</dt><dd><a href="<?= e($a['sample_url']) ?>" target="_blank" rel="noopener nofollow">Watch</a></dd></div><?php endif; ?>
+          </dl>
+        </div>
         <div class="ia-text">
           <h3>Experience</h3><p><?= e($a['experience']) ?></p>
           <?php if ($a['results']): ?><h3>Results</h3><p><?= e($a['results']) ?></p><?php endif; ?>
         </div>
       </div>
       <form method="post" class="ia-note"><?= csrf_field() ?><input type="hidden" name="_action" value="note"><input type="hidden" name="app" value="<?= (int) $a['id'] ?>">
-        <label for="note-<?= (int) $a['id'] ?>" class="muted small">Your notes (private)</label>
-        <div class="row gap-2"><input id="note-<?= (int) $a['id'] ?>" name="note" value="<?= e($a['admin_note'] ?? '') ?>" placeholder="e.g. Called on Tuesday, strong results, wants Thursdays"><button class="ot-btn" type="submit">Save</button></div>
+        <label for="note-<?= (int) $a['id'] ?>">Your notes (private)</label>
+        <div><input id="note-<?= (int) $a['id'] ?>" name="note" value="<?= e($a['admin_note'] ?? '') ?>" placeholder="e.g. Called on Tuesday, strong results, wants Thursdays"><button type="submit">Save</button></div>
       </form>
       <footer class="ia-acts">
-        <?php if ($wa): ?><a class="ot-btn wa" target="_blank" rel="noopener" href="https://wa.me/<?= e($wa) ?>?text=<?= e(rawurlencode('Hi ' . campus_first_name($a['name']) . ', this is Obin Academy. Thank you for applying to teach the ' . ($a['campus_name'] ?: $a['proposed_campus']) . ' campus. When is a good time for a short call?')) ?>">WhatsApp</a><?php endif; ?>
+        <?php if ($wa): ?><a class="ia-btn wa" target="_blank" rel="noopener" href="https://wa.me/<?= e($wa) ?>?text=<?= e(rawurlencode('Hi ' . campus_first_name($a['name']) . ', this is Obin Academy. Thank you for applying to teach the ' . ($a['campus_name'] ?: $a['proposed_campus']) . ' campus. When is a good time for a short call?')) ?>">WhatsApp</a><?php endif; ?>
         <?php if ($a['status'] === 'NEW'): ?>
-          <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="shortlist"><input type="hidden" name="app" value="<?= (int) $a['id'] ?>"><button class="ot-btn" type="submit">Shortlist</button></form>
+          <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="shortlist"><input type="hidden" name="app" value="<?= (int) $a['id'] ?>"><button class="ia-btn" type="submit">Shortlist</button></form>
         <?php endif; ?>
-        <?php if ($a['status'] !== 'ACCEPTED' && $a['status'] !== 'DECLINED'): ?>
-          <form method="post" data-confirm="Decline <?= e($a['name']) ?> and tell them by email?"><?= csrf_field() ?><input type="hidden" name="_action" value="decline"><input type="hidden" name="app" value="<?= (int) $a['id'] ?>"><input type="hidden" name="tell" value="1"><button class="ot-btn" type="submit">Decline</button></form>
+        <?php if ($open): ?>
+          <form method="post" data-confirm="Decline <?= e($a['name']) ?> and tell them by email?"><?= csrf_field() ?><input type="hidden" name="_action" value="decline"><input type="hidden" name="app" value="<?= (int) $a['id'] ?>"><input type="hidden" name="tell" value="1"><button class="ia-btn ghost" type="submit">Decline</button></form>
           <form method="post" class="ia-accept" data-confirm="Make <?= e($a['name']) ?> the professor of the chosen campus? They are emailed straight away.">
             <?= csrf_field() ?><input type="hidden" name="_action" value="accept"><input type="hidden" name="app" value="<?= (int) $a['id'] ?>">
             <select id="camp-<?= (int) $a['id'] ?>" name="campus" aria-label="Campus they will teach">
               <?php if ($a['proposed_campus']): ?><option value="new">New campus: <?= e($a['proposed_campus']) ?></option><?php endif; ?>
               <?php foreach ($campuses as $c): ?><option value="<?= (int) $c['id'] ?>"<?= (int) $a['campus_id'] === (int) $c['id'] ? ' selected' : '' ?>><?= e($c['name']) ?><?= $c['professor_name'] ? ' (now: ' . e($c['professor_name']) . ')' : '' ?></option><?php endforeach; ?>
             </select>
-            <button class="btn btn-primary btn-sm" type="submit">Make professor</button>
+            <button class="ia-make" type="submit">Make professor <span>→</span></button>
           </form>
         <?php elseif ($a['status'] === 'ACCEPTED' && $a['campus_id']): ?>
-          <a class="ld-view" href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . $a['campus_id'] . '&tab=professor')) ?>">Open their campus</a>
+          <a class="ia-btn" href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . $a['campus_id'] . '&tab=professor')) ?>">Open their campus →</a>
         <?php endif; ?>
       </footer>
     </article>
   <?php endforeach; ?>
 </div>
-<script>document.querySelectorAll('form[data-confirm]').forEach(function (f) { f.addEventListener('submit', function (e) { if (!confirm(f.dataset.confirm)) e.preventDefault(); }); });</script>
+<script src="<?= e(versioned_asset('assets/js/admin-pay.js')) ?>" defer></script>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
