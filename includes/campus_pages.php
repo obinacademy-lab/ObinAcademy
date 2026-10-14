@@ -334,3 +334,20 @@ function campus_page_icon(string $name): string {
     ][$name] ?? '<circle cx="12" cy="12" r="9"/>';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $p . '</svg>';
 }
+
+/**
+ * The short opening for the campus page: three headline lines (the last in italic lime) and one
+ * sentence. Kept deliberately short so the page stays clean and the join card stays the focus.
+ */
+function campus_page_intro(array $campus): array {
+    $intros = [
+        'ai-technology' => [['The AI skills', 'businesses', 'pay for.'], 'Twelve months with a professor who teaches you live every week, from your first prompt to your first client.'],
+        'business-finance' => [['Run a business', 'that makes', 'real profit.'], 'Twelve months with a professor who teaches you live every week to price right, track every shilling and grow.'],
+        'crypto-trading' => [['Understand crypto', 'before you', 'risk a shilling.'], 'Twelve months with a professor who teaches you live every week to read the market, manage risk and trade with a plan.'],
+        'forex-trading' => [['Learn forex', 'the disciplined', 'way.'], 'Twelve months with a professor who teaches you live every week to read charts, control risk and test a strategy.'],
+        'content-creation' => [['Grow an audience', 'that pays', 'you back.'], 'Twelve months with a professor who teaches you live every week to make content people watch, and earn from it.'],
+        'fitness-nutrition' => [['Get fit with', 'food you', 'already eat.'], 'Twelve months with a professor who teaches you live every week to train, eat and recover well, the Ugandan way.'],
+        'e-commerce' => [['Build an online', 'store that', 'delivers.'], 'Twelve months with a professor who teaches you live every week to find products, get orders and deliver across Uganda.'],
+    ];
+    return $intros[$campus['slug']] ?? [[$campus['name'], 'taught by someone', 'who does it.'], $campus['tagline'] ?: 'Twelve months with a professor who teaches you live every week.'];
+}
