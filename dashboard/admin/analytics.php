@@ -1,247 +1,203 @@
 <?php
+/**
+ * Admin: visitors. Traffic (unique visitors and visits per day, with the key averages), where visitors
+ * come from, what they use, where visits start and end, the most-viewed campuses, and towns and cities.
+ *
+ * Styles: assets/css/admin-visitors.css (scoped under .vx). Chart, ring and motion: assets/js/admin-visitors.js.
+ */
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/data.php';
+require __DIR__ . '/../../includes/campuses.php';
 $user = require_role(['ADMIN']);
 
-$allowedRanges = [7 => 'Last 7 Days', 30 => 'Last 30 Days', 90 => 'Last 90 Days'];
+$allowedRanges = [7 => '7D', 30 => '30D', 90 => '90D'];
 $days = (int) (query_param('days') ?: 30);
 if (!isset($allowedRanges[$days])) $days = 30;
 
 $summary = get_visit_summary($days);
-$topPages = get_top_landing_pages($days, 8);
-$exitPages = get_top_exit_pages($days, 8);
-$topCourses = get_most_viewed_campuses($days, 8);
-$topCities = get_top_cities($days, 8);
-$deviceBreakdown = get_breakdown('device_type', $days);
-$browserBreakdown = get_breakdown('browser', $days);
-$osBreakdown = get_breakdown('os', $days);
+$series = get_daily_visits_series($days);
+$entryPages = get_top_landing_pages($days, 6);
+$exitPages = get_top_exit_pages($days, 6);
+$campusViews = get_most_viewed_campuses($days, 6);
+$cities = get_top_cities($days, 8);
+$devices = get_breakdown('device_type', $days);
+$browsers = array_slice(get_breakdown('browser', $days), 0, 5, true);
+$systems = array_slice(get_breakdown('os', $days), 0, 5, true);
 
-$deviceLabels = ['desktop' => 'Desktop', 'mobile' => 'Mobile', 'tablet' => 'Tablet'];
-
-
-$sourceLabels = [
-    'google' => ['label' => 'Google / Search', 'color' => '#0b00ff'],
-    'social' => ['label' => 'Social Media', 'color' => '#f5b301'],
-    'direct' => ['label' => 'Direct / Shared Link', 'color' => '#10b981'],
-    'other' => ['label' => 'Other Websites', 'color' => '#8b5cf6'],
-];
-$sourceTotal = array_sum($summary['sources']) ?: 1;
-
-// ---------------------------------------------------------------------
-// Daily visits chart — same smoothed-line treatment as the admin Revenue
-// tab's collections chart, plotting unique visitors per day.
-// ---------------------------------------------------------------------
-$visitsSeries = get_daily_visits_series($days);
-$dailyUnique = array_column($visitsSeries, 'unique_visitors');
-$bestDay = $dailyUnique ? max($dailyUnique) : 0;
-
+// Unique visitors this week against the week before.
+$dailyUnique = array_column($series, 'unique_visitors');
 $last7 = array_sum(array_slice($dailyUnique, -7));
 $prev7 = array_sum(array_slice($dailyUnique, -14, 7));
-$trendPct = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : null;
+$trendPct = $days > 7 && $prev7 > 0 ? round(($last7 - $prev7) / $prev7 * 100) : null;
 
-$chartW = 700; $chartH = 220; $padTop = 16; $padBottom = 4;
-$n = count($visitsSeries);
-$yMax = ($bestDay ?: 1) * 1.15; // headroom so the peak doesn't touch the ceiling
-$xStep = $n > 1 ? $chartW / ($n - 1) : 0;
-$points = [];
-foreach ($visitsSeries as $i => $row) {
-    $x = $i * $xStep;
-    $y = $padTop + ($chartH - $padTop - $padBottom) * (1 - $row['unique_visitors'] / $yMax);
-    $points[] = [$x, $y];
+$sourceMeta = [
+    'direct' => ['Direct or shared link', 'Typed address, bookmarks, links shared in chats', '#2b22ff', '#eeedff', '<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>'],
+    'social' => ['Social media', 'Facebook, Instagram, TikTok, X', '#6aa81e', '#eef6e4', '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>'],
+    'google' => ['Google and search', 'People searching for a topic', '#e0a20f', '#fdf3db', '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'],
+    'other' => ['Other websites', 'Links from other sites', '#9a9db8', '#f3f4f8', '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'],
+];
+$sources = $summary['sources'];
+arsort($sources);
+$sourceTotal = array_sum($sources);
+$topSource = $sourceTotal ? array_key_first($sources) : null;
+
+$deviceMeta = ['mobile' => ['Mobile', '#2b22ff'], 'desktop' => ['Desktop', '#6aa81e'], 'tablet' => ['Tablet', '#e0a20f']];
+$deviceTotal = array_sum($devices);
+// The ring's centre names the device most visits came from.
+$topDevice = 'mobile';
+foreach ($deviceMeta as $key => $m) if (($devices[$key] ?? 0) > ($devices[$topDevice] ?? 0)) $topDevice = $key;
+$topDeviceShare = $deviceTotal ? round(($devices[$topDevice] ?? 0) / $deviceTotal * 100) : 0;
+$topDeviceWords = ['mobile' => 'on a phone', 'desktop' => 'on a computer', 'tablet' => 'on a tablet'];
+
+// Campus icons and colours for the most-viewed list.
+$campusLook = [];
+$colors = ['#2b22ff', '#0f766e', '#b45309', '#be185d', '#6d28d9', '#15803d', '#475569', '#0369a1'];
+if (campuses_ready()) {
+    foreach (get_all_campuses() as $k => $c) $campusLook[$c['slug']] = [$c['icon'] ?: 'book', $colors[$k % count($colors)], $c['name']];
 }
-$linePath = smooth_svg_path($points);
-// Same curve, closed down to the baseline — the gradient-filled area under the line.
-$areaPath = $points ? $linePath . sprintf(' L%.2f,%d L0,%d Z', end($points)[0], $chartH, $chartH) : '';
-$labelIdxs = $n > 1 ? [0, (int) round(($n - 1) * 0.2), (int) round(($n - 1) * 0.4), (int) round(($n - 1) * 0.6), (int) round(($n - 1) * 0.8), $n - 1] : [0];
+
+$pct = fn(int $n, int $of) => $of > 0 ? round($n / $of * 100) : 0;
+$vxData = ['series' => array_map(fn($r) => ['d' => $r['date'], 'u' => (int) $r['unique_visitors'], 'v' => (int) $r['visits']], $series)];
+$ring = [];
+foreach ($deviceMeta as $key => [$label, $color]) $ring[] = ['p' => $deviceTotal ? ($devices[$key] ?? 0) / $deviceTotal : 0, 'c' => $color];
+$vxData['ring'] = $ring;
 
 $pageTitle = 'Visitors — Admin — Obin Academy';
+$dashClass = 'dash-ov';
+$pageCss = ['assets/css/admin-overview.css', 'assets/css/admin-visitors.css'];
 require __DIR__ . '/../../includes/dashboard_header.php';
+
+/** One ranked row with a bar: label on the left, count on the right. */
+function vx_rank_row(string $labelHtml, int $n, int $max, int $j): void {
+    $w = $max > 0 ? max(2, round($n / $max * 100)) : 0;
+    echo '<div class="vx-rk vx-whip" style="--j:' . $j . '"><span>' . $labelHtml . '</span><b>' . number_format($n) . '</b><div class="vx-bar"><i class="vx-snap" style="width:' . $w . '%;--j:' . $j . '"></i></div></div>';
+}
 ?>
-<div class="dash-page-head">
-  <div>
-    <h1 class="h2">Visitors</h1>
-    <p class="muted" style="margin-top:6px;">How many people are finding Obin Academy, and where they're coming from.</p>
-  </div>
-  <form method="get" class="row gap-2">
-    <select name="days" onchange="this.form.submit()" style="width:auto;">
+<div class="ov vx" data-vx>
+  <div class="vx-head vx-slam" style="--i:0">
+    <div><h1>Visitors</h1><p>How many people find Obin Academy, where they come from, and what they look at.</p></div>
+    <nav class="vx-seg" aria-label="Date range"><span class="vx-pill" aria-hidden="true"></span>
       <?php foreach ($allowedRanges as $val => $label): ?>
-        <option value="<?= $val ?>" <?= $days === $val ? 'selected' : '' ?>><?= e($label) ?></option>
+        <a href="<?= e(base_url('dashboard/admin/analytics.php?days=' . $val)) ?>" class="<?= $days === $val ? 'on' : '' ?>" <?= $days === $val ? 'aria-current="page"' : '' ?>><?= $label ?></a>
       <?php endforeach; ?>
-    </select>
-  </form>
-</div>
+    </nav>
+  </div>
 
-<div class="grid sm:grid-2 lg:grid-4" style="margin-top:20px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#0b00ff;">
-    <div class="icon"><?php dash_icon('globe'); ?></div>
-    <div class="value"><?= number_format($summary['visits']) ?></div><div class="label">Total Visits</div>
-  </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#10b981;">
-    <div class="icon"><?php dash_icon('users'); ?></div>
-    <div class="value"><?= number_format($summary['unique_visitors']) ?></div><div class="label">Unique Visitors</div>
-  </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#f5b301;">
-    <div class="icon"><?php dash_icon('sparkle'); ?></div>
-    <div class="value"><?= number_format($summary['new_visitors']) ?></div><div class="label">New Visitors</div>
-  </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#8b5cf6;">
-    <div class="icon"><?php dash_icon('trending-up'); ?></div>
-    <div class="value"><?= number_format($summary['returning_visitors']) ?></div><div class="label">Returning Visitors</div>
-  </div>
-</div>
-
-<div class="grid md:grid-2" style="margin-top:14px;">
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#06b6d4;">
-    <div class="icon"><?php dash_icon('clock'); ?></div>
-    <div class="value"><?= e(format_duration_short($summary['avg_session_duration'])) ?></div><div class="label">Avg. Session Duration</div>
-  </div>
-  <div class="stat-card" data-hoverable="true" style="--hover-color:#ec4899;">
-    <div class="icon"><?php dash_icon('file-text'); ?></div>
-    <div class="value"><?= number_format($summary['avg_pages_per_session'], 1) ?></div><div class="label">Avg. Pages / Session</div>
-  </div>
-</div>
-
-<div class="growth-layout" style="margin-top:28px;">
-  <div class="chart-card">
-    <div class="chart-card-head">
-      <div>
-        <h2 class="h3">Daily Visitors</h2>
-        <p class="muted small" style="margin-top:4px;">Unique visitors per day &middot; <?= e($allowedRanges[$days]) ?></p>
+  <div class="vx-kicker vx-type" style="--i:1"><span>Traffic</span></div>
+  <section class="vx-sec vx-traffic vx-slam" style="--i:1">
+    <div class="vx-tr-main">
+      <div class="vx-big">
+        <b data-scramble="<?= (int) $summary['unique_visitors'] ?>"><?= number_format($summary['unique_visitors']) ?></b>
+        <span>unique visitors in the last <?= $days ?> days</span>
+        <?php if ($trendPct !== null): ?><span class="vx-chip <?= $trendPct > 0 ? 'up' : ($trendPct < 0 ? 'down' : 'flat') ?>"><?= $trendPct > 0 ? '▲ ' : ($trendPct < 0 ? '▼ ' : '') ?><?= abs($trendPct) ?>% vs previous week</span><?php endif; ?>
       </div>
-      <?php if ($trendPct !== null): ?>
-        <div class="chart-trend <?= $trendPct >= 0 ? 'up' : 'down' ?>">
-          <?php dash_icon('trending-up'); ?><?= $trendPct >= 0 ? '+' : '' ?><?= $trendPct ?>% vs previous week
+      <div class="vx-legend"><span><i style="background:var(--ov-brand)"></i>Unique visitors</span><span><i style="background:var(--ov-kept)"></i>Visits (sessions)</span></div>
+      <div class="vx-chart" data-chart></div>
+    </div>
+    <div class="vx-tr-side">
+      <div class="vx-met"><span>Visits</span><b data-scramble="<?= (int) $summary['visits'] ?>"><?= number_format($summary['visits']) ?></b><small>Sessions started</small></div>
+      <div class="vx-met"><span>New visitors</span><b data-scramble="<?= (int) $summary['new_visitors'] ?>"><?= number_format($summary['new_visitors']) ?></b><small>First time on the site</small><div class="vx-bar"><i class="vx-snap" style="width:<?= $pct($summary['new_visitors'], max(1, $summary['unique_visitors'])) ?>%;--j:1"></i></div></div>
+      <div class="vx-met"><span>Returning visitors</span><b data-scramble="<?= (int) $summary['returning_visitors'] ?>"><?= number_format($summary['returning_visitors']) ?></b><small>Came back more than once</small><div class="vx-bar"><i class="vx-snap" style="width:<?= $pct($summary['returning_visitors'], max(1, $summary['unique_visitors'])) ?>%;--j:2;background:var(--ov-kept)"></i></div></div>
+      <div class="vx-met"><span>Time on site</span><b><?= e(format_duration_short($summary['avg_session_duration'])) ?></b><small>Average visit</small></div>
+      <div class="vx-met"><span>Pages per visit</span><b><?= e(number_format($summary['avg_pages_per_session'], 1)) ?></b><small>Average</small></div>
+    </div>
+  </section>
+
+  <div class="vx-kicker vx-type" style="--i:2"><span>Audience</span></div>
+  <div class="vx-two">
+    <section class="vx-sec vx-slam" style="--i:2">
+      <div class="vx-sec-h"><div><h2>Where they come from</h2><p>Share of unique visitors by source</p></div></div>
+      <div class="vx-src">
+        <div class="vx-stack">
+          <?php $j = 0; foreach ($sources as $key => $n): if (!$n) continue; ?><i class="vx-snap" style="width:<?= $n / max(1, $sourceTotal) * 100 ?>%;background:<?= $sourceMeta[$key][2] ?>;--j:<?= $j++ ?>"></i><?php endforeach; ?>
+          <?php if (!$sourceTotal): ?><i style="width:100%;background:var(--ov-line-soft)"></i><?php endif; ?>
         </div>
-      <?php endif; ?>
-    </div>
+        <div class="vx-src-list">
+          <?php $j = 0; foreach ($sources as $key => $n): [$label, $hint, $color, $tint, $icon] = $sourceMeta[$key]; ?>
+            <div class="vx-src-row vx-whip" style="--j:<?= $j++ ?>">
+              <span class="vx-src-ic" style="background:<?= $tint ?>;color:<?= $color ?>"><svg viewBox="0 0 24 24"><?= $icon ?></svg></span>
+              <div><b><?= e($label) ?></b><small><?= e($hint) ?></small></div>
+              <span class="n" data-scramble="<?= $n ?>"><?= number_format($n) ?></span>
+              <span class="p"><?= $pct($n, $sourceTotal) ?>%</span>
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <div class="vx-insight">
+          <?php if ($topSource && $sources[$topSource] > 0): ?>
+            <span><b><?= $pct($sources[$topSource], $sourceTotal) ?>%</b> of your visitors arrive from <b><?= e(strtolower($sourceMeta[$topSource][0])) ?></b>, your biggest source this period.</span>
+          <?php else: ?>
+            <span>No visits recorded in this period yet.</span>
+          <?php endif; ?>
+        </div>
+      </div>
+    </section>
 
-    <div class="chart-wrap">
-      <svg viewBox="0 0 <?= $chartW ?> <?= $chartH ?>" preserveAspectRatio="none" class="revenue-chart">
-        <defs>
-          <linearGradient id="dashAreaFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.22"/>
-            <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-        <?php for ($g = 1; $g <= 3; $g++): $gy = $padTop + ($chartH - $padTop - $padBottom) * ($g / 4); ?>
-          <line x1="0" y1="<?= round($gy, 1) ?>" x2="<?= $chartW ?>" y2="<?= round($gy, 1) ?>" class="chart-gridline"></line>
-        <?php endfor; ?>
-        <path d="<?= e($areaPath) ?>" class="chart-area-blue"></path>
-        <path d="<?= e($linePath) ?>" class="chart-line chart-line-blue"></path>
-        <?php foreach ($points as $i => [$px, $py]): ?>
-          <circle cx="<?= round($px, 1) ?>" cy="<?= round($py, 1) ?>" class="chart-point" tabindex="0"
-            data-chart-label="<?= e(format_date($visitsSeries[$i]['date'] . ' 00:00:00')) ?>"
-            data-chart-value="<?= (int) $visitsSeries[$i]['unique_visitors'] ?> visitors"></circle>
-        <?php endforeach; ?>
-        <?php if ($points): [$lx, $ly] = end($points); ?>
-          <circle cx="<?= round($lx, 1) ?>" cy="<?= round($ly, 1) ?>" r="5" class="chart-end-dot chart-end-dot-blue" style="pointer-events:none;"></circle>
-        <?php endif; ?>
-      </svg>
-      <div class="chart-x-labels">
-        <?php foreach ($labelIdxs as $idx): ?>
-          <span><?= e(date('M j', strtotime($visitsSeries[$idx]['date']))) ?></span>
+    <section class="vx-sec vx-slam" style="--i:3">
+      <div class="vx-sec-h"><div><h2>What they use</h2><p>Device, browser and system, by visit</p></div></div>
+      <div class="vx-dev">
+        <div class="vx-dev-top">
+          <div class="vx-ring"><svg viewBox="0 0 150 150" data-ring aria-hidden="true"></svg><div class="c"><div><b><?= $deviceTotal ? $topDeviceShare . '%' : '—' ?></b><span><?= $deviceTotal ? $topDeviceWords[$topDevice] : 'no visits yet' ?></span></div></div></div>
+          <div class="vx-dlist">
+            <?php $j = 0; foreach ($deviceMeta as $key => [$label, $color]): $n = (int) ($devices[$key] ?? 0); ?>
+              <div class="vx-whip" style="--j:<?= $j++ ?>"><i style="background:<?= $color ?>"></i><span><?= e($label) ?></span><b><?= number_format($n) ?><em><?= $pct($n, $deviceTotal) ?>%</em></b></div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <div>
+          <div class="vx-tabs" data-tabs><span class="vx-tbar" aria-hidden="true"></span>
+            <button type="button" class="on" data-tab="br">Browser</button>
+            <button type="button" data-tab="os">Operating system</button>
+          </div>
+          <?php foreach (['br' => $browsers, 'os' => $systems] as $key => $list): ?>
+            <div class="vx-pane <?= $key === 'br' ? 'on' : '' ?>" data-pane="<?= $key ?>">
+              <?php if (!$list): ?><p class="vx-none">No data yet in this range.</p><?php endif; ?>
+              <?php $max = $list ? max($list) : 0; $j = 0; foreach ($list as $label => $n) vx_rank_row(e($label), $n, $max, $j++); ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="vx-kicker vx-type" style="--i:4"><span>Journey</span></div>
+  <section class="vx-sec vx-slam" style="--i:4">
+    <div class="vx-three">
+      <?php foreach ([['Where visits start', 'The first page people land on', $entryPages, 'landing_path', 'visitors'], ['Where visits end', 'The last page before leaving', $exitPages, 'exit_path', 'n']] as [$title, $sub, $rows, $pathKey, $countKey]): ?>
+        <div>
+          <h3><?= e($title) ?><span>visits</span></h3><p class="vx-sub"><?= e($sub) ?></p>
+          <?php if (!$rows): ?><p class="vx-none">No visits recorded yet.</p><?php endif; ?>
+          <?php foreach ($rows as $j => $p): ?>
+            <div class="vx-pg vx-whip" style="--j:<?= $j ?>"><span class="ix"><?= $j + 1 ?></span><code title="<?= e($p[$pathKey]) ?>"><?= e($p[$pathKey]) ?></code><b><?= number_format((int) $p[$countKey]) ?></b></div>
+          <?php endforeach; ?>
+        </div>
+      <?php endforeach; ?>
+      <div>
+        <h3>Most-viewed campuses<span>views</span></h3><p class="vx-sub">Campus pages opened</p>
+        <?php if (!$campusViews): ?><p class="vx-none">No campus page views in this range yet.</p><?php endif; ?>
+        <?php foreach ($campusViews as $j => $c): [$icon, $color, $name] = $campusLook[$c['slug']] ?? ['book', '#475569', preg_replace('/ Campus$/', '', $c['title'])]; ?>
+          <div class="vx-pg vx-whip" style="--j:<?= $j ?>"><span class="bdg" style="background:<?= e($color) ?>"><?= campus_icon($icon, 2) ?></span><span class="nm"><?= e($name) ?></span><b><?= number_format((int) $c['views']) ?></b></div>
         <?php endforeach; ?>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="growth-side">
-    <div class="chart-card">
-      <h2 class="h3">Traffic Sources</h2>
-      <p class="muted small" style="margin-top:4px;">Where visitors came from &middot; <?= e($allowedRanges[$days]) ?></p>
-      <div style="margin-top:18px; display:flex; flex-direction:column; gap:14px;">
-        <?php foreach ($sourceLabels as $key => $meta): $count = $summary['sources'][$key]; $pct = round($count / $sourceTotal * 100); ?>
+  <div class="vx-kicker vx-type" style="--i:5"><span>Places</span></div>
+  <section class="vx-sec vx-slam" style="--i:5">
+    <div class="vx-sec-h"><div><h2>Where they are</h2><p>Towns and cities, by visit</p></div></div>
+    <?php if ($cities): $max = (int) $cities[0]['n']; ?>
+      <div class="vx-places">
+        <?php foreach (array_chunk($cities, (int) ceil(count($cities) / 2)) as $ci => $half): ?>
           <div>
-            <div class="row between" style="font-size:13px; font-weight:700;">
-              <span><?= e($meta['label']) ?></span>
-              <span class="muted" style="font-weight:600;"><?= number_format($count) ?> (<?= $pct ?>%)</span>
-            </div>
-            <div class="progress-track" style="margin-top:6px;">
-              <div class="progress-fill" style="width:<?= $pct ?>%; background:<?= e($meta['color']) ?>;"></div>
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  </div>
-</div>
-
-<h3 class="dash-section-label" style="margin-top:32px;">Device &amp; Browser</h3>
-<div class="grid md:grid-3" style="margin-top:14px;">
-  <div class="chart-card">
-    <h2 class="h3">Device Type</h2>
-    <?php render_bar_list($deviceBreakdown, $deviceLabels); ?>
-  </div>
-  <div class="chart-card">
-    <h2 class="h3">Browser</h2>
-    <?php render_bar_list($browserBreakdown); ?>
-  </div>
-  <div class="chart-card">
-    <h2 class="h3">Operating System</h2>
-    <?php render_bar_list($osBreakdown); ?>
-  </div>
-</div>
-
-<h3 class="dash-section-label" style="margin-top:32px;">Entry &amp; Exit Pages</h3>
-<div class="grid md:grid-2" style="margin-top:14px; gap:16px;">
-  <div>
-    <p class="muted small" style="margin-bottom:8px;">Where sessions started</p>
-    <?php if ($topPages): ?>
-      <div class="activity-feed">
-        <?php foreach ($topPages as $p): ?>
-          <div class="list-row">
-            <div class="list-row-main"><span class="small" style="font-weight:600; word-break:break-all;"><?= e($p['landing_path']) ?></span></div>
-            <div class="list-row-meta small muted"><?= number_format((int) $p['visitors']) ?></div>
+            <?php foreach ($half as $k => $c): vx_rank_row('<em class="cc" title="' . e(country_name($c['country'])) . '">' . e($c['country'] ?: '—') . '</em>' . e($c['city']), (int) $c['n'], $max, $ci * 4 + $k); endforeach; ?>
           </div>
         <?php endforeach; ?>
       </div>
     <?php else: ?>
-      <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet.</div>
+      <p class="vx-none" style="padding:22px">Locations are worked out gradually in the background. Check back shortly.</p>
     <?php endif; ?>
-  </div>
-  <div>
-    <p class="muted small" style="margin-bottom:8px;">Where sessions ended</p>
-    <?php if ($exitPages): ?>
-      <div class="activity-feed">
-        <?php foreach ($exitPages as $p): ?>
-          <div class="list-row">
-            <div class="list-row-main"><span class="small" style="font-weight:600; word-break:break-all;"><?= e($p['exit_path']) ?></span></div>
-            <div class="list-row-meta small muted"><?= number_format((int) $p['n']) ?></div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    <?php else: ?>
-      <div class="card" style="padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No visits recorded yet.</div>
-    <?php endif; ?>
-  </div>
+    <div class="vx-privacy">Approximate, worked out from the internet address. Never a precise location, and the address itself isn't kept.</div>
+  </section>
 </div>
-
-<h3 class="dash-section-label" style="margin-top:32px;">Most-Viewed Campuses</h3>
-<?php if ($topCourses): ?>
-  <div class="activity-feed" style="margin-top:14px;">
-    <?php foreach ($topCourses as $c): ?>
-      <div class="list-row">
-        <div class="list-row-main"><span class="small" style="font-weight:600;"><?= e($c['title']) ?></span></div>
-        <div class="list-row-meta small muted"><?= number_format($c['views']) ?> views</div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-<?php else: ?>
-  <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">No campus page views recorded yet in this range.</div>
-<?php endif; ?>
-
-<h3 class="dash-section-label" style="margin-top:32px;">Location</h3>
-<p class="muted small" style="margin-top:4px;">Approximate, resolved from IP address — never a precise location, and the address itself isn't kept.</p>
-<?php if ($topCities): ?>
-  <div class="activity-feed" style="margin-top:14px;">
-    <?php foreach ($topCities as $c): ?>
-      <div class="list-row">
-        <div class="list-row-main"><span class="small" style="font-weight:600;"><?= e($c['city']) ?></span><span class="small muted">&middot; <?= e(country_name($c['country'])) ?></span></div>
-        <div class="list-row-meta small muted"><?= number_format((int) $c['n']) ?> sessions</div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-<?php else: ?>
-  <div class="card" style="margin-top:14px; padding:28px; text-align:center; border-style:dashed; color:var(--muted);">Location data resolves gradually in the background — check back shortly.</div>
-<?php endif; ?>
+<script type="application/json" id="vx-data"><?= json_encode($vxData, JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+<script src="<?= e(versioned_asset('assets/js/admin-visitors.js')) ?>" defer></script>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
