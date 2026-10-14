@@ -97,10 +97,10 @@ require __DIR__ . '/includes/header.php';
       <?php endif; ?>
       <div class="cq-switch" data-switch data-plan="YEARLY">
         <span class="knob" aria-hidden="true"></span>
-        <button type="button" aria-pressed="true" data-plan="YEARLY" data-price="<?= (int) $yearly ?>" data-per="/ year" data-day="About <b><?= e($perDay($yearly, 365)) ?></b> a day" data-amount="<?= e(format_money($yearly)) ?>">Yearly<?php if ($savePct > 0): ?><span class="save">−<?= $savePct ?>%</span><?php endif; ?></button>
-        <button type="button" aria-pressed="false" data-plan="MONTHLY" data-price="<?= (int) $monthly ?>" data-per="/ month" data-day="About <b><?= e($perDay($monthly, 30)) ?></b> a day" data-amount="<?= e(format_money($monthly)) ?>">Monthly</button>
+        <button type="button" aria-pressed="true" data-plan="YEARLY" data-price="<?= (int) $yearly ?>" data-per-label="/ year" data-day-label="About <b><?= e($perDay($yearly, 365)) ?></b> a day" data-amount="<?= e(format_money($yearly)) ?>">Yearly<?php if ($savePct > 0): ?><span class="save">−<?= $savePct ?>%</span><?php endif; ?></button>
+        <button type="button" aria-pressed="false" data-plan="MONTHLY" data-price="<?= (int) $monthly ?>" data-per-label="/ month" data-day-label="About <b><?= e($perDay($monthly, 30)) ?></b> a day" data-amount="<?= e(format_money($monthly)) ?>">Monthly</button>
       </div>
-      <div class="cq-price"><span class="cur">UGX</span><span class="cq-odo" data-odo aria-live="polite"><?= e(number_format($yearly)) ?></span><span class="per" data-per>/ year</span></div>
+      <div class="cq-price"><span class="cur">UGX</span><span class="cq-odo" data-odo aria-hidden="true"><?= e(number_format($yearly)) ?></span><span class="cq-sr" data-price-text aria-live="polite"><?= e(number_format($yearly)) ?></span><span class="per" data-per>/ year</span></div>
       <p class="cq-daily" data-day>About <b><?= e($perDay($yearly, 365)) ?></b> a day</p>
 
       <?php if (!$viewer): ?>

@@ -47,8 +47,10 @@
     buttons.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
     const n = parseInt(b.dataset.price, 10) || 0;
     if (reduce) build(n); else roll(n);
-    root.querySelector('[data-per]').textContent = b.dataset.per;
-    root.querySelector('[data-day]').innerHTML = b.dataset.day;
+    root.querySelector('.cq-price [data-per]').textContent = b.dataset.perLabel;
+    root.querySelector('p[data-day]').innerHTML = b.dataset.dayLabel;
+    const said = root.querySelector('[data-price-text]');
+    if (said) said.textContent = n.toLocaleString('en-US');
     const widget = root.querySelector('[data-payment-widget]');
     if (widget) widget.dataset.plan = b.dataset.plan;
     const amt = root.querySelector('[data-pay-amount]');

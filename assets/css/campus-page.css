@@ -201,3 +201,7 @@
 @media (prefers-reduced-motion: reduce) {
   .cq-state .spin { animation: none; }
 }
+/* the real price for screen readers and copy; the rolling digits are decoration */
+.cq-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cq-odo { user-select: none; }
+.cq-price { position: relative; }
