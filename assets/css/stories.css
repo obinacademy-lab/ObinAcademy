@@ -81,3 +81,15 @@
 .vs-more .hx-more:hover { border-color: var(--hx-ink, #0d1024); transform: translateY(-2px); }
 .vs-more .hx-more svg { width: 17px; height: 17px; }
 .hx .vs-wall { margin-top: 52px; }
+
+/* the join button under each story: dark on light pages, lime on the dark stories page. Pinned to the
+   bottom of the card so the buttons line up across a row whatever the quote length. */
+.vs-card figcaption { flex: 1; }
+.vs-join { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 16px 0 18px; border-radius: 12px; background: var(--vs-deep); color: var(--vs-lime) !important; font-size: 14.5px; font-weight: 700; line-height: 1.25; text-decoration: none; transition: transform .35s var(--vs-spring), box-shadow .35s ease, background-color .35s ease; }
+.vs-join span { padding-block: 10px; }
+.vs-join svg { width: 18px; height: 18px; flex: none; transition: transform .35s var(--vs-spring); }
+.vs-join:hover { transform: translateY(-2px); background: var(--vs-brand); color: #fff !important; box-shadow: 0 14px 30px -14px rgba(59, 51, 255, .8); }
+.vs-join:hover svg { transform: translateX(4px); }
+.vs-join:focus-visible { outline: 3px solid var(--vs-brand); outline-offset: 3px; }
+.vs-dark .vs-join { background: var(--vs-lime); color: var(--vs-lime-ink) !important; }
+.vs-dark .vs-join:hover { background: #dcff86; color: var(--vs-lime-ink) !important; box-shadow: 0 14px 34px -12px rgba(205, 251, 94, .7); }

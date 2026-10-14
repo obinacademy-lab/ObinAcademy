@@ -18,7 +18,7 @@ function video_stories_ready(): bool {
 /** Every story with its campus name, in the order they show on the site. */
 function get_video_stories(?string $status = null): array {
     if (!video_stories_ready()) return [];
-    $sql = 'SELECT s.*, c.name AS campus_name, c.slug AS campus_slug FROM video_stories s LEFT JOIN campuses c ON c.id = s.campus_id';
+    $sql = 'SELECT s.*, c.name AS campus_name, c.slug AS campus_slug, c.status AS campus_status FROM video_stories s LEFT JOIN campuses c ON c.id = s.campus_id';
     $params = [];
     if ($status) { $sql .= ' WHERE s.status = ?'; $params[] = $status; }
     return db_all($sql . ' ORDER BY s.sort_order ASC, s.id DESC', $params);
@@ -38,10 +38,14 @@ function video_story_length(?int $seconds): string {
 
 /**
  * One story card for the public pages: the video (first frame as the cover, plays with sound on tap),
- * the pull quote, the student's name and campus. assets/css/stories.css + assets/js/stories.js.
+ * the pull quote, the student's name and campus, then a button to join: the story's own campus when it
+ * is open, otherwise the list of campuses. assets/css/stories.css + assets/js/stories.js.
  */
 function render_video_story_card(array $s): void {
     $len = video_story_length($s['duration_seconds'] !== null ? (int) $s['duration_seconds'] : null);
+    $open = !empty($s['campus_slug']) && ($s['campus_status'] ?? '') === 'PUBLISHED';
+    $ctaUrl = $open ? base_url('campus.php?slug=' . urlencode($s['campus_slug'])) : base_url('campuses.php');
+    $ctaText = $open ? 'Join this campus' : 'Explore the campuses';
     ?>
     <figure class="vs-card">
       <div class="vs-media">
@@ -53,6 +57,7 @@ function render_video_story_card(array $s): void {
       <figcaption>
         <q><?= e($s['quote']) ?></q>
         <span class="vs-who"><b><?= e($s['student_name']) ?></b><?= $s['campus_name'] ? '<small>' . e($s['campus_name']) . ' Campus</small>' : '' ?></span>
+        <a class="vs-join" href="<?= e($ctaUrl) ?>"<?= $open ? ' aria-label="Join the ' . e($s['campus_name']) . ' Campus"' : '' ?>><span><?= e($ctaText) ?></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </figcaption>
     </figure>
     <?php
