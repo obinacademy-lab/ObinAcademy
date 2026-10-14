@@ -215,6 +215,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
     <?php elseif ($tab === 'curriculum'): ?>
       <form method="post" class="cs-form cs-stages" id="stages-form">
         <?= $hidden('curriculum', 'curriculum') ?>
+        <?php if (!$paced): ?><div class="cs-setup"><b>Month pictures are being switched on</b><span>Obin Academy is finishing a quick update. Once it is done, a "+ Picture" box appears next to every month here, and you can mark months complete.</span></div><?php endif; ?>
         <p class="cs-lead"><?= $paced ? 'Build the whole year here. Students start on month 1 and see every month\'s picture and title, so they know what is coming. Each month opens for the class when you mark the month before it complete.' : 'One stage per month. Give each a clear title and a line on what it covers.' ?></p>
         <?php for ($m = 1; $m <= 12; $m++): $n = count($byMonth[$m] ?? []); $th = $stages[$m]['thumbnail_url'] ?? null; $st = $paced ? $stageState($m) : ''; ?>
           <div class="cs-stage acx-whip <?= trim((string) $stages[$m]['title']) !== '' ? 'done' : '' ?> <?= $paced ? 'paced' : '' ?>" style="--j:<?= $m - 1 ?>">

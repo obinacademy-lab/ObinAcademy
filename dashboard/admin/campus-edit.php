@@ -199,6 +199,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </form>
 
 <?php elseif ($tab === 'curriculum'): $paced = campus_progress_ready(); $done = campus_months_completed($campus); $classMonth = campus_open_month($campus); ?>
+  <?php if (!$paced): ?>
+    <div class="ld-panel ca-class" style="border-color:#f5b301;"><div><small>One step left</small><b>Month pictures and the Month complete button are not switched on yet</b><span>Run migration/add-month-completion.sql in phpMyAdmin (Obin Academy database, SQL tab, paste, Go). A "+ Picture" box then appears next to every month below, and the class progress control appears here.</span></div></div>
+  <?php endif; ?>
   <?php if ($paced): ?>
     <div class="ld-panel ca-class">
       <div><small>The class is on</small><b><?= $done >= 12 ? 'All 12 months complete' : 'Month ' . $classMonth . (trim((string) $stages[$classMonth]['title']) !== '' ? ' · ' . e($stages[$classMonth]['title']) : '') ?></b><span>Students see every month up to this one. The professor<?= $campus['professor_name'] ? ' (' . e($campus['professor_name']) . ')' : '' ?> marks it complete in Campus Studio to open the next month for everyone; you can do it here too.</span></div>

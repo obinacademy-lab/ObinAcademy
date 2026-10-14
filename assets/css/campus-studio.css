@@ -219,3 +219,4 @@
   .cs-stage.paced > input { grid-column: 2 / -1; }
   .cs-stage.paced .cs-side { grid-column: 3; grid-row: 1; justify-items: start; }
 }
+.cs-setup { display: grid; gap: 3px; padding: 14px 16px; border-radius: 12px; background: #fff7e6; border: 1px solid #f6d58a; font-size: 13px; color: #6b4a00; } .cs-setup b { font-size: 14px; color: #3d2a00; }
