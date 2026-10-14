@@ -82,6 +82,11 @@ $done = campus_months_completed($campus);
 $classMonth = campus_open_month($campus);
 $yearDone = $done >= 12;
 $stageState = fn(int $m) => $m <= $done ? 'done' : ($m === $classMonth && !$yearDone ? 'now' : 'later');
+// Groups by month (after migration/add-month-groups.sql): every student is on their own month.
+$groupsOn = campus_groups_ready();
+if ($groupsOn) campus_release_due_months($id);
+$groups = $groupsOn ? campus_month_groups($id) : [];
+if ($groupsOn) $stageState = fn(int $m) => isset($groups[$m]) ? 'now' : 'later';
 
 // The biggest file this server accepts: the smallest of our cap and PHP's upload and post limits.
 $iniBytes = function (string $v): int {
@@ -123,7 +128,27 @@ require __DIR__ . '/../includes/dashboard_header.php';
         <div><span>Lessons</span><b data-scramble="<?= $lessonTotal ?>"><?= $lessonTotal ?></b></div>
         <div><span>Active students</span><b data-scramble="<?= $members ?>"><?= $members ?></b></div>
       </div>
-      <?php if ($paced): ?>
+      <?php if ($paced && $groupsOn): ?>
+        <div class="cs-class cs-groups">
+          <div class="cs-class-now"><span>Your groups</span><small>Every new student starts at month 1. Completing a month moves only that group on, <?= CAMPUS_MONTH_UNDO_MINUTES ?> minutes later, so you can undo before anyone sees it.</small></div>
+          <?php if (!$groups): ?><p class="cs-gnone">No students yet.</p><?php endif; ?>
+          <?php foreach ($groups as $gm => $info): ?>
+            <div class="cs-group<?= $info['pending'] ? ' pending' : '' ?>">
+              <div><b><?= $gm > 12 ? 'Finished the year' : 'Month ' . $gm ?></b><small><?= $info['n'] === 1 ? '1 student' : $info['n'] . ' students' ?><?= $gm <= 12 ? ' · ' . count($byMonth[$gm] ?? []) . ' lesson' . (count($byMonth[$gm] ?? []) === 1 ? '' : 's') : '' ?><?= $info['pending'] ? ' · ' . ($gm < 12 ? 'month ' . ($gm + 1) . ' opens' : 'finishes') . ' at ' . e(date('g:i a', strtotime($info['opens_at']))) : '' ?></small></div>
+              <div class="cs-gacts">
+                <?php if ($info['pending']): ?>
+                  <form method="post"><?= $hidden('month_undo', $tab) ?><input type="hidden" name="month" value="<?= $gm ?>"><button type="submit" class="cs-gundo">Undo</button></form>
+                <?php elseif ($gm <= 12): ?>
+                  <form method="post" data-confirm="<?= e('Complete month ' . $gm . ' for ' . ($info['n'] === 1 ? 'this 1 student' : 'these ' . $info['n'] . ' students') . '? ' . ($gm < 12 ? 'Month ' . ($gm + 1) . (count($byMonth[$gm + 1] ?? []) ? '' : ' has no lessons yet, and it') . ' opens for them in ' . CAMPUS_MONTH_UNDO_MINUTES . ' minutes. You can undo until then.' : 'Their year finishes in ' . CAMPUS_MONTH_UNDO_MINUTES . ' minutes.')) ?>"><?= $hidden('month_complete', $tab) ?><input type="hidden" name="month" value="<?= $gm ?>"><button type="submit" class="cs-gdone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Complete</button></form>
+                <?php endif; ?>
+                <?php if ($gm > 1 && !$info['pending']): ?>
+                  <form method="post" data-confirm="<?= e('Move this group back to month ' . ($gm - 1) . '? Students may notice ' . ($gm > 12 ? 'the change' : 'month ' . $gm . ' close') . '.') ?>"><?= $hidden('month_back', $tab) ?><input type="hidden" name="month" value="<?= $gm ?>"><button type="submit" class="cs-gback" title="Move this group back a month" aria-label="Move this group back a month">↶</button></form>
+                <?php endif; ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php elseif ($paced): ?>
         <div class="cs-class <?= $yearDone ? 'finished' : '' ?>">
           <div class="cs-class-now">
             <span><?= $yearDone ? 'The year is complete' : 'The class is on' ?></span>
@@ -141,14 +166,14 @@ require __DIR__ . '/../includes/dashboard_header.php';
           <?php endif; ?>
         </div>
       <?php endif; ?>
-      <p class="cs-note"><?= $paced ? 'Students see every month up to the one the class is on. ' : '' ?>Prices, opening the campus and memberships are handled by Obin Academy.</p>
+      <p class="cs-note"><?= $paced ? ($groupsOn ? 'Students open every month up to their own. ' : 'Students see every month up to the one the class is on. ') : '' ?>Prices, opening the campus and memberships are handled by Obin Academy.</p>
     </div>
     <div>
-      <div class="lc-rx-h"><b>Your year</b><span><?= $paced ? $done . ' of 12 months complete' : 'tap a month to fill it' ?></span></div>
+      <div class="lc-rx-h"><b>Your year</b><span><?= $groupsOn ? ($groups ? 'lime = students are on it' : 'tap a month to fill it') : ($paced ? $done . ' of 12 months complete' : 'tap a month to fill it') ?></span></div>
       <div class="cs-year">
         <?php for ($m = 1; $m <= 12; $m++): $n = count($byMonth[$m] ?? []); $t = trim((string) $stages[$m]['title']); $st = $paced ? $stageState($m) : ''; $th = $stages[$m]['thumbnail_url'] ?? null; ?>
           <a href="<?= e(base_url(ltrim($here('lessons', ['month' => $m]), '/'))) ?>#studio" class="<?= $n ? 'has' : '' ?> <?= $t === '' ? 'untitled' : '' ?> <?= $tab === 'lessons' && $m === $month ? 'on' : '' ?> st-<?= $st ?> <?= $th ? 'pic' : '' ?>" style="--m:<?= $m ?>;<?= $th ? ' --pic:url(\'' . e(asset_src($th)) . '\')' : '' ?>">
-            <span class="cs-mn">M<?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?><?php if ($st === 'done'): ?><i class="cs-tick" title="Complete">✓</i><?php elseif ($st === 'now'): ?><i class="cs-here">Class is here</i><?php endif; ?></span>
+            <span class="cs-mn">M<?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?><?php if ($st === 'done'): ?><i class="cs-tick" title="Complete">✓</i><?php elseif ($st === 'now'): ?><i class="cs-here"><?= $groupsOn ? ($groups[$m]['n'] === 1 ? '1 student' : $groups[$m]['n'] . ' students') : 'Class is here' ?></i><?php endif; ?></span>
             <b><?= $t !== '' ? e($t) : 'No title yet' ?></b>
             <small><?= $n ?> lesson<?= $n === 1 ? '' : 's' ?></small>
           </a>
@@ -245,8 +270,8 @@ require __DIR__ . '/../includes/dashboard_header.php';
             <input name="summary[<?= $m ?>]" value="<?= e($stages[$m]['summary']) ?>" placeholder="What it covers (optional)" maxlength="255" aria-label="Month <?= $m ?> summary">
             <div class="cs-side">
               <?php if ($st === 'done'): ?><span class="cs-st done" title="<?= !empty($stages[$m]['completed_at']) ? 'Completed ' . e(date('j M Y', strtotime($stages[$m]['completed_at']))) : '' ?>">Complete</span>
-              <?php elseif ($st === 'now'): ?><span class="cs-st now">Class is here</span>
-              <?php elseif ($st === 'later'): ?><span class="cs-st later">Opens later</span><?php endif; ?>
+              <?php elseif ($st === 'now'): ?><span class="cs-st now"><?= $groupsOn ? ($groups[$m]['n'] === 1 ? '1 student here' : $groups[$m]['n'] . ' students here') : 'Class is here' ?></span>
+              <?php elseif ($st === 'later' && !$groupsOn): ?><span class="cs-st later">Opens later</span><?php endif; ?>
               <a class="cs-count" href="<?= e(base_url(ltrim($here('lessons', ['month' => $m]), '/'))) ?>#studio" title="Lessons in month <?= $m ?>"><?= $n ?> lesson<?= $n === 1 ? '' : 's' ?></a>
             </div>
           </div>

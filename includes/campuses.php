@@ -136,11 +136,85 @@ function campus_months_completed(array $campus): int {
     return max(0, min(CAMPUS_YEAR_MONTHS, (int) ($campus['months_completed'] ?? 0)));
 }
 
-/** The month a member can reach now: the month their campus's class is on. Takes a membership (or any row with campus_id) or a campus row. */
+// ---------------------------------------------------------------- groups by month
+
+/** Minutes between a professor completing a month and it opening for the group (the silent undo window). */
+const CAMPUS_MONTH_UNDO_MINUTES = 10;
+
+/**
+ * True once migration/add-month-groups.sql has been applied. From then on every student has their own
+ * place in the year (campus_memberships.month_open): new students start at month 1, students on the
+ * same month form a group, and the professor completes each group's month separately.
+ */
+function campus_groups_ready(): bool {
+    static $ready = null;
+    if ($ready !== null) return $ready;
+    try { db_one('SELECT month_open, next_month_at FROM campus_memberships LIMIT 1'); return $ready = true; } catch (Throwable $e) { return $ready = false; }
+}
+
+/**
+ * The month a member can open now, 1 to 12. A completed month counts only once its undo window has
+ * passed (next_month_at), so a month the professor undoes in time is never seen.
+ */
+function campus_member_month(array $m): int {
+    $open = (int) ($m['month_open'] ?? 1);
+    if (!empty($m['next_month_at']) && strtotime($m['next_month_at']) <= time()) $open++;
+    return max(1, min(CAMPUS_YEAR_MONTHS, $open));
+}
+
+/** The month a member can reach now. Takes a membership row; falls back to the whole-campus month before the groups migration. */
 function campus_current_month(array $m): int {
+    if (campus_groups_ready() && array_key_exists('month_open', $m)) return campus_member_month($m);
+    if (campus_groups_ready() && !empty($m['campus_id']) && !empty($m['user_id'])) {
+        $row = get_campus_membership((int) $m['campus_id'], (int) $m['user_id']);
+        if ($row) return campus_member_month($row);
+    }
     if (array_key_exists('months_completed', $m)) return campus_open_month($m);
     $campus = get_campus((int) ($m['campus_id'] ?? 0));
     return $campus ? campus_open_month($campus) : 1;
+}
+
+/**
+ * Opens the months whose undo window has passed: moves those students on and tells them. Safe to call
+ * often (campus pages, the professor's dashboard, the cron job). Returns how many students moved on.
+ */
+function campus_release_due_months(?int $campusId = null): int {
+    if (!campus_groups_ready()) return 0;
+    $rows = db_all(
+        'SELECT m.id, m.user_id, m.month_open, c.id AS campus_id, c.name, c.slug FROM campus_memberships m JOIN campuses c ON c.id = m.campus_id
+         WHERE m.next_month_at IS NOT NULL AND m.next_month_at <= NOW()' . ($campusId ? ' AND m.campus_id = ?' : ''),
+        $campusId ? [$campusId] : []
+    );
+    $moved = 0;
+    $titles = [];
+    foreach ($rows as $r) {
+        // Claim the row so two requests never move a student twice.
+        if (!db_run('UPDATE campus_memberships SET month_open = month_open + 1, next_month_at = NULL WHERE id = ? AND next_month_at IS NOT NULL AND next_month_at <= NOW()', [$r['id']])) continue;
+        $moved++;
+        $next = (int) $r['month_open'] + 1;
+        if ($next > CAMPUS_YEAR_MONTHS) {
+            create_user_notification((int) $r['user_id'], null, 'campus_year_done', 'You have reached the end of the ' . $r['name'] . ' Campus year. Finish your lessons to earn your certificate.', base_url('campus-learn.php?campus=' . $r['slug']));
+            continue;
+        }
+        $key = $r['campus_id'] . ':' . $next;
+        if (!isset($titles[$key])) $titles[$key] = trim((string) (db_one('SELECT title FROM campus_stages WHERE campus_id = ? AND month_no = ?', [$r['campus_id'], $next])['title'] ?? ''));
+        create_user_notification((int) $r['user_id'], null, 'campus_month_open', 'Month ' . $next . ($titles[$key] !== '' ? ': ' . $titles[$key] : '') . ' is now open in the ' . $r['name'] . ' Campus.', base_url('campus-learn.php?campus=' . $r['slug'] . '&view=lessons&month=' . $next));
+    }
+    return $moved;
+}
+
+/**
+ * A campus's active students grouped by the month they are on: [month => ['n' => students,
+ * 'pending' => students waiting to move on, 'opens_at' => when they do, or null]]. Month 13 means the
+ * group has finished the year. Sorted by month.
+ */
+function campus_month_groups(int $campusId): array {
+    if (!campus_groups_ready()) return [];
+    $out = [];
+    foreach (db_all('SELECT month_open, COUNT(*) AS n, SUM(next_month_at IS NOT NULL) AS pending, MIN(next_month_at) AS opens_at FROM campus_memberships WHERE campus_id = ? AND access_until > NOW() GROUP BY month_open ORDER BY month_open', [$campusId]) as $r) {
+        $out[(int) $r['month_open']] = ['n' => (int) $r['n'], 'pending' => (int) $r['pending'], 'opens_at' => $r['opens_at']];
+    }
+    return $out;
 }
 
 function campus_days_left(array $m): int {

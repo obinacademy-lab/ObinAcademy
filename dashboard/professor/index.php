@@ -29,23 +29,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         redirect($self . '#desk-switch');
     }
-    if ($a === 'month_complete') {
-        try { campus_content_handle('month_complete', $campus, $user); } catch (RuntimeException $e) { flash_set('error', $e->getMessage()); }
-        redirect($self);
+    if (in_array($a, ['month_complete', 'month_undo', 'month_back'], true)) {
+        try { campus_content_handle($a, $campus, $user); } catch (RuntimeException $e) { flash_set('error', $e->getMessage()); }
+        redirect($self . (str_contains($self, '?') ? '&' : '?') . 'g=' . (int) post('month'));
     }
     redirect($self);
 }
 
 $campus = get_campus($id) ?: $campus;
 $paced = campus_progress_ready();
-$done = campus_months_completed($campus);
-$classMonth = campus_open_month($campus);
-$yearDone = $done >= 12;
 $stages = get_campus_stages($id);
 $byMonth = get_campus_lessons_by_month($id);
+
+// Groups by month: every student is on their own month; the dial shows one group at a time.
+$groupsOn = campus_groups_ready();
+if ($groupsOn) campus_release_due_months($id);
+$groups = $groupsOn ? campus_month_groups($id) : [];
+if ($groupsOn) {
+    $g = (int) query_param('g');
+    if (!isset($groups[$g])) { $g = 0; foreach ($groups as $m => $info) if (!$g || $info['n'] > $groups[$g]['n']) $g = $m; }
+    $sel = $groups[$g] ?? ['n' => 0, 'pending' => 0, 'opens_at' => null];
+    $classMonth = max(1, min(12, $g ?: 1));
+    $done = max(0, ($g ?: 1) - 1);
+    $yearDone = $g > 12;
+} else {
+    $g = 0;
+    $sel = ['n' => 0, 'pending' => 0, 'opens_at' => null];
+    $done = campus_months_completed($campus);
+    $classMonth = campus_open_month($campus);
+    $yearDone = $done >= 12;
+}
 $nowTitle = trim((string) $stages[$classMonth]['title']) ?: 'Stage ' . $classMonth;
 $nowLessons = count($byMonth[$classMonth] ?? []);
 $nextLessons = $classMonth < 12 ? count($byMonth[$classMonth + 1] ?? []) : 0;
+$groupUrl = fn(int $m) => base_url(ltrim($self, '/')) . (str_contains($self, '?') ? '&' : '?') . 'g=' . $m;
 $active = (int) (db_one('SELECT COUNT(*) AS n FROM campus_memberships WHERE campus_id = ? AND access_until > NOW()', [$id])['n'] ?? 0);
 $newWeek = (int) (db_one('SELECT COUNT(*) AS n FROM campus_memberships WHERE campus_id = ? AND access_until > NOW() AND started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)', [$id])['n'] ?? 0);
 $trend = professor_student_trend($id, 8);
@@ -63,11 +80,17 @@ $first = explode(' ', trim($user['name']))[0];
 $monthsWord = fn(int $n) => $n === 1 ? '1 lesson' : $n . ' lessons';
 
 // This week's duties, worked out from the campus.
-$duties = [
-    [$liveThisWeek, 'Schedule this week\'s live class', $live ? date('D j M, g:i a', strtotime($live['starts_at'])) . ($live['join_url'] ? ' · link added' : ' · no join link yet') : 'No live class in the next 7 days', $liveThisWeek ? 'DONE' : 'TO DO', '/dashboard/campus-studio.php?tab=live&campus=' . $id],
-    [$nowLessons > 0, 'Lessons for month ' . $classMonth, $nowLessons ? $monthsWord($nowLessons) . ' live for the class' : 'The class is on this month and it is empty', $nowLessons ? 'DONE' : 'NEEDED', '/dashboard/campus-studio.php?tab=lessons&month=' . $classMonth . '&campus=' . $id],
-];
-if ($classMonth < 12) $duties[] = [$nextLessons > 0, 'Prepare month ' . ($classMonth + 1), $nextLessons ? $monthsWord($nextLessons) . ' ready to open' : 'Upload lessons before you open it', $nextLessons ? 'READY' : 'NEEDED', '/dashboard/campus-studio.php?tab=lessons&month=' . ($classMonth + 1) . '&campus=' . $id];
+$duties = [[$liveThisWeek, 'Schedule this week\'s live class', $live ? date('D j M, g:i a', strtotime($live['starts_at'])) . ($live['join_url'] ? ' · link added' : ' · no join link yet') : 'No live class in the next 7 days', $liveThisWeek ? 'DONE' : 'TO DO', '/dashboard/campus-studio.php?tab=live&campus=' . $id]];
+if ($groupsOn && $groups) {
+    // Every month a group is on needs lessons; the furthest group's next month needs preparing.
+    $empty = array_values(array_filter(array_keys($groups), fn($m) => $m <= 12 && empty($byMonth[$m])));
+    $duties[] = [!$empty, $empty ? 'Month ' . implode(', ', $empty) . ' ' . (count($empty) === 1 ? 'has' : 'have') . ' no lessons' : 'Lessons ready for every group', $empty ? 'Students are on ' . (count($empty) === 1 ? 'it' : 'them') . ' now' : count($groups) . ' group' . (count($groups) === 1 ? '' : 's') . ' learning right now', $empty ? 'NEEDED' : 'DONE', '/dashboard/campus-studio.php?tab=lessons&month=' . ($empty[0] ?? $classMonth) . '&campus=' . $id];
+    $far = min(12, max(array_keys($groups)));
+    if ($far < 12) { $farNext = count($byMonth[$far + 1] ?? []); $duties[] = [$farNext > 0, 'Prepare month ' . ($far + 1), $farNext ? $monthsWord($farNext) . ' ready for your furthest group' : 'Your furthest group is on month ' . $far, $farNext ? 'READY' : 'NEEDED', '/dashboard/campus-studio.php?tab=lessons&month=' . ($far + 1) . '&campus=' . $id]; }
+} else {
+    $duties[] = [$nowLessons > 0, 'Lessons for month ' . $classMonth, $nowLessons ? $monthsWord($nowLessons) . ' live for the class' : 'Students start here and it is empty', $nowLessons ? 'DONE' : 'NEEDED', '/dashboard/campus-studio.php?tab=lessons&month=' . $classMonth . '&campus=' . $id];
+    if ($classMonth < 12) $duties[] = [$nextLessons > 0, 'Prepare month ' . ($classMonth + 1), $nextLessons ? $monthsWord($nextLessons) . ' ready to open' : 'Upload lessons before you open it', $nextLessons ? 'READY' : 'NEEDED', '/dashboard/campus-studio.php?tab=lessons&month=' . ($classMonth + 1) . '&campus=' . $id];
+}
 $duties[] = [$unread === 0, $unread ? 'Answer ' . $unread . ' community message' . ($unread === 1 ? '' : 's') : 'Community is answered', $lastPost ? 'Since your last reply, ' . time_ago($lastPost) : 'You have not posted yet', $unread ? $unread . ' NEW' : 'DONE', '/campus-learn.php?campus=' . $campus['slug'] . '&view=community'];
 $dutiesDone = count(array_filter(array_column($duties, 0)));
 
@@ -80,7 +103,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <div class="pf" data-pf-overview>
   <div class="pf-greet" data-in>
     <div>
-      <h1><?= e($greet) ?>, <?= e($first) ?>. <em><?= $yearDone ? 'The year is complete.' : 'Month ' . $classMonth . ' is live.' ?></em></h1>
+      <h1><?= e($greet) ?>, <?= e($first) ?>. <em><?= $groupsOn ? (count($groups) > 1 ? count($groups) . ' groups are learning.' : ($groups ? 'Month ' . $classMonth . ' is live.' : 'Ready for your first students.')) : ($yearDone ? 'The year is complete.' : 'Month ' . $classMonth . ' is live.') ?></em></h1>
       <p><?= e($campus['name']) ?> Campus · <?= $active ?> student<?= $active === 1 ? '' : 's' ?><?= $campus['live_schedule'] ? ' · live ' . e($campus['live_schedule']) : '' ?></p>
     </div>
     <div class="pf-quick">
@@ -94,7 +117,12 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 
   <section class="pf-desk" data-desk>
     <article class="pf-tile dark pf-dial-tile" data-in>
-      <div class="pf-tile-h"><small>Your class</small><a href="<?= e(base_url('dashboard/campus-studio.php?tab=curriculum&campus=' . $id)) ?>" class="lime">Studio →</a></div>
+      <div class="pf-tile-h"><small><?= $groupsOn ? 'Your groups' : 'Your class' ?></small><a href="<?= e(base_url('dashboard/campus-studio.php?tab=curriculum&campus=' . $id)) ?>" class="lime">Studio →</a></div>
+      <?php if ($groupsOn && $groups): ?>
+        <nav class="pf-groups" aria-label="Groups by month">
+          <?php foreach ($groups as $m => $info): ?><a href="<?= e($groupUrl($m)) ?>" class="<?= $m === $g ? 'on' : '' ?>"<?= $m === $g ? ' aria-current="true"' : '' ?>><?= $m > 12 ? 'Finished' : 'Month ' . $m ?><em><?= $info['n'] ?></em><?= $info['pending'] ? '<i title="Moving on soon"></i>' : '' ?></a><?php endforeach; ?>
+        </nav>
+      <?php endif; ?>
       <div class="pf-dial-wrap">
         <div class="pf-dial">
           <svg viewBox="0 0 240 240" aria-label="Month <?= $classMonth ?> of 12">
@@ -103,21 +131,29 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             <circle class="arc" data-arc data-done="<?= $done ?>" data-now="<?= $yearDone ? 12 : $classMonth ?>" cx="120" cy="120" r="96" transform="rotate(-90 120 120)"/>
             <g data-ticks></g>
           </svg>
-          <div class="pf-dial-c"><small><?= $yearDone ? 'THE YEAR IS' : 'THE CLASS IS ON' ?></small><b><?= $yearDone ? '12' : $classMonth ?><sup>/12</sup></b><span><?= e($yearDone ? 'complete' : $nowTitle) ?></span></div>
+          <div class="pf-dial-c"><small><?= $yearDone ? 'THIS GROUP HAS' : ($groupsOn ? ($sel['n'] === 1 ? '1 STUDENT ON' : ($sel['n'] ?: 'NEW STUDENTS START ON')) . ($sel['n'] > 1 ? ' STUDENTS ON' : '') : 'THE CLASS IS ON') ?></small><b><?= $yearDone ? '12' : $classMonth ?><sup>/12</sup></b><span><?= e($yearDone ? 'finished the year' : $nowTitle) ?></span></div>
         </div>
       </div>
       <div class="pf-dial-foot">
         <?php if (!$paced): ?>
           <p>Completing months is being switched on by Obin Academy.</p>
+        <?php elseif ($groupsOn && !$groups): ?>
+          <p>No students yet. Every new student starts at month 1, and you complete each group's month when they are ready.</p>
+        <?php elseif ($groupsOn && $sel['pending']): ?>
+          <p>Month <?= $classMonth ?> is complete for this group. <?= $classMonth < 12 ? 'Month ' . ($classMonth + 1) . ' opens' : 'Their year finishes' ?> at <b data-opens-at="<?= e(date('c', strtotime($sel['opens_at']))) ?>"><?= e(date('g:i a', strtotime($sel['opens_at']))) ?></b>.</p>
+          <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="month_undo"><input type="hidden" name="month" value="<?= $g ?>"><button class="pf-undo" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>Undo · <span data-undo-left>10:00</span> left</button></form>
+          <p class="pf-hold-note">Students have not seen anything yet. Undo now and nobody is told.</p>
         <?php elseif ($yearDone): ?>
-          <p>All twelve months are complete. Students who finish every lesson get their certificate.</p>
+          <p>This group has finished the year. Students who finish every lesson get their certificate.</p>
+          <?php if ($groupsOn): ?><form method="post" data-confirm="Move this group back to month 12?"><?= csrf_field() ?><input type="hidden" name="_action" value="month_back"><input type="hidden" name="month" value="<?= $g ?>"><button class="pf-back" type="submit">Move this group back a month</button></form><?php endif; ?>
         <?php else: ?>
           <p><?= $monthsWord($nowLessons) ?> in month <?= $classMonth ?><?= $classMonth < 12 ? ' · month ' . ($classMonth + 1) . ($nextLessons ? ' has ' . $monthsWord($nextLessons) : ' has none yet') : '' ?></p>
           <form method="post" data-hold-form>
-            <?= csrf_field() ?><input type="hidden" name="_action" value="month_complete"><input type="hidden" name="month" value="<?= $classMonth ?>">
+            <?= csrf_field() ?><input type="hidden" name="_action" value="month_complete"><input type="hidden" name="month" value="<?= $groupsOn ? $g : $classMonth ?>">
             <button class="pf-hold" type="button" data-hold aria-describedby="pf-hold-note"><span class="fillbar" data-fillbar></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-hold-label>Hold to complete month <?= $classMonth ?></span></button>
           </form>
-          <p class="pf-hold-note" id="pf-hold-note">Press and hold, so a month never opens by accident. <?= $classMonth < 12 ? 'Opens month ' . ($classMonth + 1) . ' for ' . ($active === 1 ? 'your 1 student' : 'all ' . $active . ' students') . '.' : 'Finishes the year.' ?></p>
+          <p class="pf-hold-note" id="pf-hold-note"><?= $groupsOn ? 'Moves only this group (' . ($sel['n'] === 1 ? '1 student' : $sel['n'] . ' students') . ') to month ' . min(12, $classMonth + 1) . ', ' . CAMPUS_MONTH_UNDO_MINUTES . ' minutes after you finish holding. You can undo until then.' : 'Press and hold, so a month never opens by accident.' ?></p>
+          <?php if ($groupsOn && $g > 1): ?><form method="post" data-confirm="Move this group back to month <?= $g - 1 ?>? Students may notice month <?= $g ?> close."><?= csrf_field() ?><input type="hidden" name="_action" value="month_back"><input type="hidden" name="month" value="<?= $g ?>"><button class="pf-back" type="submit">Opened a month by mistake? Move this group back</button></form><?php endif; ?>
         <?php endif; ?>
       </div>
     </article>
@@ -174,7 +210,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <?php if (!$students): ?><p class="pf-empty">No students yet. They appear here as soon as someone joins.</p><?php endif; ?>
           <?php foreach ($students as $k => $s): $segs = max(1, min(12, $s['reached'])); $lit = $s['reached'] ? (int) round($s['done'] / $s['reached'] * $segs) : 0; ?>
             <div class="pf-stu"><span class="av" style="background:<?= $avColors[$k % count($avColors)] ?>"><?= e(professor_initials($s['name'])) ?></span>
-              <div><b><?= e($s['name']) ?></b><small><?= $s['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?> · joined <?= e(time_ago($s['started_at'])) ?></small></div>
+              <div><b><?= e($s['name']) ?></b><small>Month <?= (int) $s['month'] ?> · <?= $s['plan'] === 'YEARLY' ? 'yearly' : 'monthly' ?> · joined <?= e(time_ago($s['started_at'])) ?></small></div>
               <div class="pf-meter"><span><?= (int) $s['done'] ?> / <?= (int) $s['reached'] ?></span><span class="dots" style="grid-template-columns:repeat(<?= $segs ?>,1fr)"><?php for ($i = 0; $i < $segs; $i++): ?><i<?= $i < $lit ? ' class="y"' : '' ?>></i><?php endfor; ?></span></div>
             </div>
           <?php endforeach; ?>

@@ -58,3 +58,10 @@ cron_section('campus_renewal_reminders', function () {
     $sent = send_due_campus_reminders();
     echo '[' . date('Y-m-d H:i:s') . "] campus renewal reminders: sent=$sent\n";
 });
+
+// Groups by month: open the months whose 10-minute undo window has passed and tell those students.
+// (Campus pages and the professor's dashboard also do this when they load.)
+cron_section('campus_month_release', function () {
+    $moved = campus_release_due_months();
+    echo '[' . date('Y-m-d H:i:s') . "] campus months opened: students moved on=$moved\n";
+});

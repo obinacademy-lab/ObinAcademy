@@ -9,7 +9,7 @@
  * Needs includes/storage.php, includes/campuses.php and includes/audit.php.
  */
 
-const CAMPUS_CONTENT_ACTIONS = ['curriculum', 'stage_thumb', 'stage_thumb_remove', 'month_complete', 'month_undo', 'lesson_add', 'lesson_delete', 'lesson_move', 'lesson_rename', 'live_add', 'live_delete'];
+const CAMPUS_CONTENT_ACTIONS = ['curriculum', 'stage_thumb', 'stage_thumb_remove', 'month_complete', 'month_undo', 'month_back', 'lesson_add', 'lesson_delete', 'lesson_move', 'lesson_rename', 'live_add', 'live_delete'];
 
 /**
  * Runs one content action from the posted form for $campus. Returns where to go next as
@@ -52,7 +52,39 @@ function campus_content_handle(string $a, array $campus, array $user): array {
         flash_set('success', $a === 'stage_thumb' ? 'Picture saved for month ' . $month . '.' : 'Picture removed from month ' . $month . '.');
         return ['tab' => 'curriculum', 'month' => null];
     }
-    if ($a === 'month_complete') {
+    if ($a === 'month_complete' && campus_groups_ready()) {
+        // One group (the students on this month) moves on, CAMPUS_MONTH_UNDO_MINUTES from now.
+        $month = (int) post('month');
+        if ($month < 1 || $month > CAMPUS_YEAR_MONTHS) throw new RuntimeException('Choose the month to complete.');
+        campus_release_due_months($id);
+        $n = db_run('UPDATE campus_memberships SET next_month_at = DATE_ADD(NOW(), INTERVAL ' . CAMPUS_MONTH_UNDO_MINUTES . ' MINUTE) WHERE campus_id = ? AND month_open = ? AND next_month_at IS NULL AND access_until > NOW()', [$id, $month]);
+        if (!$n) throw new RuntimeException('No student is waiting on month ' . $month . ' right now.');
+        db_run('INSERT INTO campus_stages (campus_id, month_no, title, summary, completed_at) VALUES (?, ?, \'\', \'\', NOW()) ON DUPLICATE KEY UPDATE completed_at = NOW()', [$id, $month]);
+        $opens = date('g:i a', strtotime((string) db_one('SELECT MIN(next_month_at) AS t FROM campus_memberships WHERE campus_id = ? AND month_open = ? AND next_month_at IS NOT NULL', [$id, $month])['t']));
+        $log('month_completed', 'month ' . $month . ' complete for ' . $n . ' student' . ($n === 1 ? '' : 's') . ($month < CAMPUS_YEAR_MONTHS ? ', month ' . ($month + 1) . ' opens at ' . $opens : ', year finished'));
+        flash_set('success', 'Month ' . $month . ' is complete for ' . ($n === 1 ? '1 student' : $n . ' students') . '. ' . ($month < CAMPUS_YEAR_MONTHS ? 'Month ' . ($month + 1) . ' opens for them at ' . $opens : 'Their year finishes at ' . $opens) . '. Undo before then and they will not notice a thing.');
+        return ['tab' => $backTab, 'month' => null];
+    }
+    if ($a === 'month_undo' && campus_groups_ready()) {
+        // Within the undo window: nothing has been shown or sent yet, so cancelling is silent.
+        $month = (int) post('month');
+        $n = db_run('UPDATE campus_memberships SET next_month_at = NULL WHERE campus_id = ? AND month_open = ? AND next_month_at > NOW()', [$id, $month]);
+        if (!$n) throw new RuntimeException('Too late to undo quietly: month ' . ($month + 1) . ' is already open for that group. Use "Move back a month" if you need to.');
+        $log('month_complete_undone', 'month ' . $month . ' for ' . $n . ' student' . ($n === 1 ? '' : 's') . ', before anyone saw it');
+        flash_set('success', 'Undone. ' . ($n === 1 ? 'Your student stays' : 'All ' . $n . ' students stay') . ' on month ' . $month . ' and nobody was told.');
+        return ['tab' => $backTab, 'month' => null];
+    }
+    if ($a === 'month_back' && campus_groups_ready()) {
+        // After the window: put a group back a month. Students may notice the month close again.
+        $month = (int) post('month');
+        if ($month < 2) throw new RuntimeException('Month 1 is the start of the year.');
+        $n = db_run('UPDATE campus_memberships SET month_open = month_open - 1, next_month_at = NULL WHERE campus_id = ? AND month_open = ? AND access_until > NOW()', [$id, $month]);
+        if (!$n) throw new RuntimeException('No student is on month ' . $month . '.');
+        $log('month_moved_back', ($month > CAMPUS_YEAR_MONTHS ? 'finished year' : 'month ' . $month) . ' back to month ' . ($month - 1) . ' for ' . $n . ' student' . ($n === 1 ? '' : 's'));
+        flash_set('success', ($n === 1 ? '1 student is' : $n . ' students are') . ' back on month ' . ($month - 1) . '.');
+        return ['tab' => $backTab, 'month' => null];
+    }
+    if ($a === 'month_complete') { // before migration/add-month-groups.sql: the whole campus moves
         if (!campus_progress_ready()) throw new RuntimeException('Completing months is being set up. Try again shortly.');
         $fresh = get_campus($id);
         $done = campus_months_completed($fresh);
@@ -81,7 +113,7 @@ function campus_content_handle(string $a, array $campus, array $user): array {
         }
         return ['tab' => $backTab, 'month' => null];
     }
-    if ($a === 'month_undo') {
+    if ($a === 'month_undo') { // before migration/add-month-groups.sql
         if (!campus_progress_ready()) throw new RuntimeException('Completing months is being set up. Try again shortly.');
         $done = campus_months_completed(get_campus($id));
         if ($done < 1) throw new RuntimeException('No month has been completed yet.');

@@ -39,7 +39,8 @@ $photo = campus_photo($campus);
 $links = campus_professor_links($campus);
 $hasProf = trim((string) $campus['professor_name']) !== '';
 $initials = $hasProf ? mb_strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(preg_split('/\s+/', trim($campus['professor_name'])), 0, 2)))) : '?';
-$classMonth = campus_open_month($campus);
+// New members start at stage 1 (groups by month); before that migration, at the stage the class is on.
+$classMonth = campus_groups_ready() ? 1 : campus_open_month($campus);
 $arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 $tick = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 $lock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -48,7 +49,7 @@ $ic = fn(string $p) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 $faq = [
     ['Do I need any experience?', 'No. Every campus starts from the basics, and you can learn on a smartphone.'],
     ['How do I pay?', 'With MTN or Airtel Mobile Money. A prompt arrives on your phone; enter your PIN and your campus opens.'],
-    ['What if I join mid-year?', 'Every stage your class has reached opens for you, with recordings, so you can catch up.'],
+    ['What if I join mid-year?', campus_groups_ready() ? 'You always start at stage 1, with other new members, and move on stage by stage. You never land in the middle of a class that started before you.' : 'Every stage your class has reached opens for you, with recordings, so you can catch up.'],
     ['Can I stop any time?', 'Yes. Nothing renews by itself. We remind you before your access ends.'],
 ];
 if ($isTrading) $faq[] = ['Will I make money?', 'Trading carries a real risk of loss and nobody can promise profit. Lessons are educational and are not financial advice.'];
@@ -171,7 +172,7 @@ require __DIR__ . '/includes/header.php';
         <div class="cq-year" data-year>
           <?php for ($m = 1; $m <= 12; $m++): $reached = $m <= $classMonth; ?><i class="<?= $reached ? 'open' : '' ?>" style="--n:<?= $m - 1 ?>"><?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?><?= $reached ? '' : $lock ?></i><?php endfor; ?>
         </div>
-        <p class="cq-year-note"><?= $lock ?><?= $classMonth > 1 ? 'The class is on stage ' . $classMonth . '. New members get every stage up to it. ' : 'Each stage opens as your class moves forward. ' ?>Lessons are visible to members only.</p>
+        <p class="cq-year-note"><?= $lock ?><?= $classMonth > 1 ? 'The class is on stage ' . $classMonth . '. New members get every stage up to it. ' : 'You start at stage 1. Your professor opens each stage as your group completes the one before. ' ?>Lessons are visible to members only.</p>
       </section>
 
       <section class="cq-block cq-reveal cq-faq">

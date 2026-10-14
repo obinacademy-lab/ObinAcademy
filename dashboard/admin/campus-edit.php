@@ -214,11 +214,32 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <div><button class="btn btn-primary" type="submit">Save professor</button></div>
   </form>
 
-<?php elseif ($tab === 'curriculum'): $paced = campus_progress_ready(); $done = campus_months_completed($campus); $classMonth = campus_open_month($campus); ?>
+<?php elseif ($tab === 'curriculum'): $paced = campus_progress_ready(); $done = campus_months_completed($campus); $classMonth = campus_open_month($campus); $groupsOn = campus_groups_ready(); if ($groupsOn) campus_release_due_months($id); $groups = $groupsOn ? campus_month_groups($id) : []; if ($groupsOn) $done = 0; ?>
   <?php if (!$paced): ?>
     <div class="ld-panel ca-class" style="border-color:#f5b301;"><div><small>One step left</small><b>Month pictures and the Month complete button are not switched on yet</b><span>Run migration/add-month-completion.sql in phpMyAdmin (Obin Academy database, SQL tab, paste, Go). A "+ Picture" box then appears next to every month below, and the class progress control appears here.</span></div></div>
   <?php endif; ?>
-  <?php if ($paced): ?>
+  <?php if ($paced && $groupsOn): ?>
+    <div class="ld-panel ca-groups">
+      <div class="ca-groups-h"><small>Groups by month</small><span>Every new student starts at month 1. Completing a month moves only that group on, <?= CAMPUS_MONTH_UNDO_MINUTES ?> minutes later, so it can be undone before students see it. The professor<?= $campus['professor_name'] ? ' (' . e($campus['professor_name']) . ')' : '' ?> does this in Campus Studio; you can do it here too.</span></div>
+      <?php if (!$groups): ?><p class="muted small" style="margin:0;">No active students yet.</p><?php endif; ?>
+      <?php foreach ($groups as $gm => $info): ?>
+        <div class="ca-group<?= $info['pending'] ? ' pending' : '' ?>">
+          <div><b><?= $gm > 12 ? 'Finished the year' : 'Month ' . $gm . (trim((string) $stages[$gm]['title']) !== '' ? ' · ' . e($stages[$gm]['title']) : '') ?></b><small><?= $info['n'] === 1 ? '1 student' : $info['n'] . ' students' ?><?= $info['pending'] ? ' · ' . ($gm < 12 ? 'month ' . ($gm + 1) . ' opens' : 'finishes') . ' at ' . e(date('g:i a', strtotime($info['opens_at']))) : '' ?></small></div>
+          <div class="ca-group-acts">
+            <?php if ($info['pending']): ?>
+              <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="month_undo"><input type="hidden" name="month" value="<?= $gm ?>"><button class="ot-btn" type="submit">Undo</button></form>
+            <?php elseif ($gm <= 12): ?>
+              <form method="post" data-confirm="<?= e('Complete month ' . $gm . ' for ' . ($info['n'] === 1 ? '1 student' : $info['n'] . ' students') . '? It takes effect in ' . CAMPUS_MONTH_UNDO_MINUTES . ' minutes.') ?>"><?= csrf_field() ?><input type="hidden" name="_action" value="month_complete"><input type="hidden" name="month" value="<?= $gm ?>"><button class="btn btn-primary btn-sm" type="submit">Complete month <?= $gm ?></button></form>
+            <?php endif; ?>
+            <?php if ($gm > 1 && !$info['pending']): ?>
+              <form method="post" data-confirm="<?= e('Move this group back to month ' . ($gm - 1) . '?') ?>"><?= csrf_field() ?><input type="hidden" name="_action" value="month_back"><input type="hidden" name="month" value="<?= $gm ?>"><button class="ot-btn" type="submit">Move back</button></form>
+            <?php endif; ?>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <style>.ca-groups { display: grid; gap: 10px; padding: 16px 20px; } .ca-groups-h small { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; } .ca-groups-h span { font-size: 12.5px; color: var(--muted); } .ca-group { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--dash-border, #e4e7ec); } .ca-group.pending { border-color: #f5b301; background: rgba(245,179,1,.12); } .ca-group b { display: block; } .ca-group small { color: var(--muted); } .ca-group-acts { display: flex; gap: 6px; } .ca-group-acts form { margin: 0; }</style>
+  <?php elseif ($paced): ?>
     <div class="ld-panel ca-class">
       <div><small>The class is on</small><b><?= $done >= 12 ? 'All 12 months complete' : 'Month ' . $classMonth . (trim((string) $stages[$classMonth]['title']) !== '' ? ' · ' . e($stages[$classMonth]['title']) : '') ?></b><span>Students see every month up to this one. The professor<?= $campus['professor_name'] ? ' (' . e($campus['professor_name']) . ')' : '' ?> marks it complete in Campus Studio to open the next month for everyone; you can do it here too.</span></div>
       <?php if ($done < 12): ?>
@@ -231,7 +252,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <?php endif; ?>
   <form method="post" class="ld-panel ca-form" id="ca-stages" style="<?= $paced ? 'margin-top:16px;' : '' ?>">
     <?= csrf_field() ?><input type="hidden" name="_action" value="curriculum">
-    <p class="muted small" style="margin:0;"><?= $paced ? 'One stage per month, each with an optional picture students see in their year. A month opens for the whole class when the month before it is marked complete.' : 'One stage per month.' ?></p>
+    <p class="muted small" style="margin:0;"><?= $paced ? 'One stage per month, each with an optional picture students see in their year.' : 'One stage per month.' ?></p>
     <?php for ($m = 1; $m <= 12; $m++): $th = $stages[$m]['thumbnail_url'] ?? null; ?>
       <div class="ca-stage<?= $paced ? ' paced' : '' ?>"><span class="n">Month <?= str_pad((string) $m, 2, '0', STR_PAD_LEFT) ?><?= $paced && $m <= $done ? ' <em class="ca-done">✓</em>' : '' ?></span>
         <?php if ($paced): ?><label class="ca-thumb" title="<?= $th ? 'Change' : 'Add' ?> the picture for month <?= $m ?>" style="<?= $th ? 'background-image:url(\'' . e(asset_src($th)) . '\')' : '' ?>"><input type="file" name="thumb" accept="image/png,image/jpeg,image/webp" form="ca-th-<?= $m ?>" data-thumb aria-label="Picture for month <?= $m ?>"><span><?= $th ? 'Change' : '+ Picture' ?></span></label><?php endif; ?>

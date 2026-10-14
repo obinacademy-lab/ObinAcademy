@@ -58,8 +58,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $open) {
 $view = query_param('view', 'home');
 if (!in_array($view, ['home', 'lessons', 'lesson', 'live', 'community', 'certificate', 'membership'], true)) $view = 'home';
 $stages = get_campus_stages($campusId);
-$classMonth = campus_open_month($campus);
-$monthsDone = campus_months_completed($campus);
+// Where this student is in the year. With groups by month (migration/add-month-groups.sql) every
+// student has their own month; staff see the whole year.
+if (campus_groups_ready()) {
+    campus_release_due_months($campusId);
+    if ($membership) $membership = get_campus_membership($campusId, (int) $user['id']);
+    $classMonth = $isAdmin ? 12 : ($membership ? campus_member_month($membership) : 1);
+    $monthsDone = $isAdmin ? 0 : ($membership && (int) $membership['month_open'] > 12 ? 12 : $classMonth - 1);
+    if (!$isAdmin) $currentMonth = $classMonth;
+} else {
+    $classMonth = campus_open_month($campus);
+    $monthsDone = campus_months_completed($campus);
+}
 $byMonth = get_campus_lessons_by_month($campusId);
 $done = array_flip(campus_completed_lesson_ids((int) $user['id'], $campusId));
 $total = array_sum(array_map('count', $byMonth));
@@ -184,11 +194,11 @@ $flash = function_exists('flash_get') ? (flash_get('success') ?: null) : null;
         </div>
         <div class="cx-ring">
           <svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="40" fill="none" stroke="#e4e6ee" stroke-width="8"/><circle cx="48" cy="48" r="40" fill="none" stroke="#0a0f2c" stroke-width="8" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="<?= round(251.3 * (1 - $pct / 100), 1) ?>" transform="rotate(-90 48 48)"/><text x="48" y="54" text-anchor="middle" font-family="Newsreader, Georgia, serif" font-size="22" fill="#0e1124"><?= $pct ?>%</text></svg>
-          <div><b>Month <?= $classMonth ?> of 12</b><p><?= $monthsDone ? $monthsDone . ' month' . ($monthsDone === 1 ? '' : 's') . ' completed by your class. ' : '' ?>Your certificate comes after the full twelve-month path.</p></div>
+          <div><b>Month <?= $classMonth ?> of 12</b><p><?= $monthsDone ? $monthsDone . ' month' . ($monthsDone === 1 ? '' : 's') . ' completed. ' : '' ?>Your certificate comes after the full twelve-month path.</p></div>
         </div>
       </div>
       <section class="cx-year" aria-label="Your year">
-        <header><h2>Your year</h2><span><?= $monthsDone >= 12 ? 'All twelve months are open' : 'Your class is on month ' . $classMonth . '. Each month opens when your professor completes the one before.' ?></span></header>
+        <header><h2>Your year</h2><span><?= $monthsDone >= 12 ? 'All twelve months are open' : ($isAdmin ? 'You are viewing as staff, so every month is open.' : 'You are on month ' . $classMonth . '. Your professor opens each month when your group completes the one before.') ?></span></header>
         <div class="cx-year-grid">
           <?php for ($m = 1; $m <= 12; $m++): $openM = $m <= $currentMonth; $st = $m <= $monthsDone ? 'done' : ($m === $classMonth ? 'now' : 'later'); $th = $stages[$m]['thumbnail_url'] ?? null; $cnt = count($byMonth[$m] ?? []); ?>
             <?php if ($openM): ?><a href="<?= e($self(['view' => 'lessons', 'month' => $m])) ?>" class="cx-ym st-<?= $st ?>"><?php else: ?><div class="cx-ym st-later locked" title="Opens when your professor completes month <?= $m - 1 ?>"><?php endif; ?>
@@ -238,7 +248,7 @@ $flash = function_exists('flash_get') ? (flash_get('success') ?: null) : null;
       <section class="cx-box" style="margin-top:16px;">
         <header><h2><?= e($stages[$month]['summary'] !== '' ? $stages[$month]['summary'] : 'This month') ?></h2><span><?= count(array_filter($byMonth[$month] ?? [], fn($l) => isset($done[(int) $l['id']]))) ?> of <?= count($byMonth[$month] ?? []) ?> done</span></header>
         <div class="cx-les">
-          <?php if ($month > $currentMonth): ?><div class="cx-none" style="display:block;">This stage opens when your professor completes month <?= $month - 1 ?>. Your class is on month <?= $classMonth ?>.</div>
+          <?php if ($month > $currentMonth): ?><div class="cx-none" style="display:block;">This stage opens when your professor completes month <?= $month - 1 ?> for your group. You are on month <?= $classMonth ?>.</div>
           <?php elseif (empty($byMonth[$month])): ?><div class="cx-none" style="display:block;">Lessons for this month are on their way.</div><?php endif; ?>
           <?php if ($month <= $currentMonth): foreach ($byMonth[$month] ?? [] as $i => $l): ?>
             <a href="<?= e($self(['view' => 'lesson', 'lesson' => $l['id']])) ?>"><span class="cx-mono"><?= $month ?>.<?= $i + 1 ?></span><span><b><?= e($l['title']) ?></b><small><?= e($kindLabel($l)) ?></small></span><?= isset($done[(int) $l['id']]) ? '<span class="cx-pill good">Done</span>' : '<span class="cx-pill mute">To do</span>' ?></a>

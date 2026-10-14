@@ -252,3 +252,20 @@
   --dash-shadow: 0 1px 2px rgba(16,24,40,.03), 0 4px 16px -8px rgba(16,24,40,.08);
 }
 .pf-wrap > .ov, .pf-wrap > .dash-page-head { margin-top: 26px; }
+
+/* groups by month: chips above the dial, the undo window, moving a group back */
+.pf-groups { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.pf-groups a { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 99px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); color: var(--pf-on-2) !important; font-size: 12.5px; font-weight: 600; transition: background-color .3s, color .3s, border-color .3s; }
+.pf-groups a em { font: 700 10.5px var(--pf-mono); font-style: normal; padding: 1px 6px; border-radius: 99px; background: rgba(255,255,255,.1); color: var(--pf-on); }
+.pf-groups a i { width: 7px; height: 7px; border-radius: 50%; background: #ffb347; box-shadow: 0 0 0 3px rgba(255,179,71,.25); }
+.pf-groups a:hover { color: var(--pf-on) !important; border-color: rgba(255,255,255,.25); }
+.pf-groups a.on { background: var(--pf-lime); border-color: var(--pf-lime); color: var(--pf-lime-ink) !important; }
+.pf-groups a.on em { background: var(--pf-lime-ink); color: var(--pf-lime); }
+.pf-undo { width: 100%; height: 52px; border-radius: 14px; border: 1px solid rgba(255,179,71,.5); background: rgba(255,179,71,.12); color: #ffcf8a; font: 700 14.5px var(--pf-sans); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: background-color .3s; }
+.pf-undo svg { width: 17px; height: 17px; }
+.pf-undo:hover { background: rgba(255,179,71,.2); }
+.pf-undo span { font-family: var(--pf-mono); }
+.pf-dial-foot b { color: var(--pf-lime); }
+.pf-back { width: 100%; border: 0; background: none; color: var(--pf-on-3); font: 500 12px var(--pf-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 2px; }
+.pf-back:hover { color: var(--pf-on); }
+.pf-mcell b { display: block; font-size: 13.5px; } .pf-mcell small { display: block; color: var(--pf-muted); font-size: 12px; }

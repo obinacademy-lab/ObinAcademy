@@ -45,18 +45,24 @@ function professor_unread_messages(int $campusId, int $userId): int {
 
 /**
  * The class's students: name, plan, when they joined, whether access is open, lessons done out of the
- * lessons the class has reached, and their last finished lesson. No phone numbers or emails.
+ * lessons in the months they can open, the month they are on, and their last finished lesson. No phone
+ * numbers or emails.
  */
 function professor_students(array $campus, string $show = 'active', string $q = '', int $limit = 500): array {
     $id = (int) $campus['id'];
-    $reached = (int) (db_one('SELECT COUNT(*) AS n FROM campus_lessons WHERE campus_id = ? AND month_no <= ?', [$id, campus_open_month($campus)])['n'] ?? 0);
+    // Lessons in each month, added up, so progress counts the months each student can open.
+    $perMonth = array_map('count', get_campus_lessons_by_month($id));
+    $cum = [];
+    $sum = 0;
+    for ($m = 1; $m <= CAMPUS_YEAR_MONTHS; $m++) { $sum += $perMonth[$m] ?? 0; $cum[$m] = $sum; }
+    $groups = campus_groups_ready();
     $where = ['m.campus_id = ?'];
     $params = [$id];
     if ($show === 'active') $where[] = 'm.access_until > NOW()';
     if ($show === 'ended') $where[] = 'm.access_until <= NOW()';
     if ($q !== '') { $where[] = 'u.name LIKE ?'; $params[] = '%' . $q . '%'; }
     $rows = db_all(
-        'SELECT m.user_id, m.plan, m.started_at, m.access_until, m.certificate_code, u.name,
+        'SELECT m.user_id, m.plan, m.started_at, m.access_until, m.certificate_code, u.name,' . ($groups ? ' m.month_open, m.next_month_at,' : '') . '
                 (SELECT COUNT(*) FROM campus_lesson_progress p JOIN campus_lessons l ON l.id = p.lesson_id WHERE p.user_id = m.user_id AND l.campus_id = m.campus_id) AS done,
                 (SELECT MAX(p.completed_at) FROM campus_lesson_progress p JOIN campus_lessons l ON l.id = p.lesson_id WHERE p.user_id = m.user_id AND l.campus_id = m.campus_id) AS last_done
          FROM campus_memberships m JOIN users u ON u.id = m.user_id
@@ -64,9 +70,10 @@ function professor_students(array $campus, string $show = 'active', string $q = 
         $params
     );
     foreach ($rows as &$r) {
-        $r['reached'] = $reached;
+        $r['month'] = $groups ? campus_member_month($r) : campus_open_month($campus);
+        $r['reached'] = $cum[$r['month']] ?? 0;
         $r['open'] = strtotime($r['access_until']) > time();
-        $r['pct'] = $reached ? min(100, (int) round((int) $r['done'] / $reached * 100)) : 0;
+        $r['pct'] = $r['reached'] ? min(100, (int) round((int) $r['done'] / $r['reached'] * 100)) : 0;
     }
     return $rows;
 }

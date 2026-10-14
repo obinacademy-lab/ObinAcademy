@@ -36,8 +36,24 @@
     document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) { menu.hidden = true; meBtn.setAttribute('aria-expanded', 'false'); } });
   }
 
+  // Forms that need a yes first (moving a group back a month).
+  document.querySelectorAll('[data-pf-overview] form[data-confirm]').forEach(f => f.addEventListener('submit', e => { if (!confirm(f.dataset.confirm)) e.preventDefault(); }));
+
   const ov = document.querySelector('[data-pf-overview]');
   if (!ov) return;
+
+  // The undo window: count down to when the month opens, then refresh so the group shows as moved on.
+  const opensAt = ov.querySelector('[data-opens-at]'), left = ov.querySelector('[data-undo-left]');
+  if (opensAt && left) {
+    const at = new Date(opensAt.dataset.opensAt).getTime();
+    const tick = () => {
+      const ms = at - Date.now();
+      if (ms <= 0) { left.textContent = '0:00'; setTimeout(() => location.reload(), 1500); return; }
+      left.textContent = Math.floor(ms / 60000) + ':' + String(Math.floor(ms % 60000 / 1000)).padStart(2, '0');
+      setTimeout(tick, 1000);
+    };
+    tick();
+  }
 
   // 1. The desk deals itself: tiles start stacked at the centre, slightly turned, then glide to place.
   const tiles = [...ov.querySelectorAll('[data-in]')];
