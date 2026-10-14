@@ -1,8 +1,8 @@
 <?php
 /**
- * Admin: campuses. Key figures, a board showing the launch stage each campus has reached (needs a
- * professor, building, ready to open, open) with the next step on every card, and one workspace for
- * money, renewals due, this week's live classes and professor pay.
+ * Admin: campuses, as "launch control". A dark console with the key figures and a launch reactor (one
+ * lane per campus, one cell per launch step), a ledger with the next step for every campus, and one
+ * workspace for money, renewals due, this week's live classes and professor pay.
  *
  * Styles: assets/css/admin-campuses.css (scoped under .acx). Charts and switches: assets/js/admin-campuses.js.
  */
@@ -47,20 +47,9 @@ $renewals = campus_renewals_due(7, 30);
 $live = upcoming_campus_live_classes(7);
 $pay = professor_pay_summary();
 $launch = campus_launch_steps($o['campuses']);
-$delta = $o['collected_prev'] > 0 ? round(($o['collected'] - $o['collected_prev']) / $o['collected_prev'] * 100, 1) : null;
 $owedTotal = array_sum(array_column($pay, 'owed'));
 $owedCount = count(array_filter($pay, fn($c) => $c['owed'] > 0));
 $noLink = count(array_filter($live, fn($l) => trim((string) $l['join_url']) === ''));
-
-// Money collected per campus per day, last 30 days, for the small curves on open campuses.
-$daily = [];
-foreach (db_all(
-    "SELECT campus_id, DATEDIFF(CURDATE(), DATE(created_at)) AS ago, SUM(amount) AS s FROM payments
-     WHERE type = 'CAMPUS_MEMBERSHIP' AND status = 'SUCCESS' AND created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
-     GROUP BY campus_id, ago"
-) as $r) {
-    $daily[(int) $r['campus_id']][29 - (int) $r['ago']] = (float) $r['s'];
-}
 
 // Last 12 months: totals by plan, and what the professors earned from them.
 $total12 = array_sum(array_map(fn($s) => $s['MONTHLY'] + $s['YEARLY'], $o['series']));
@@ -74,15 +63,10 @@ if (professor_pay_ready()) {
     )['s'] ?? 0);
 }
 
-// The board: each campus in the column for the stage it has reached.
+// Every campus with its stage, the next step, and the first unlit cell of its reactor lane.
 $colors = ['#2b22ff', '#0f766e', '#b45309', '#be185d', '#6d28d9', '#15803d', '#475569', '#0369a1'];
-$stageInfo = [
-    ['Assign who teaches it', '#c42828', '#fdeaea'],
-    ['Curriculum and month 1 lessons', '#b45f06', '#fdf1e2'],
-    ['Everything learners need is in', '#2b22ff', '#eeedff'],
-    ['Learners can join and pay', '#12855a', '#e5f6ee'],
-];
 $cards = [];
+$litSteps = 0;
 foreach ($o['campuses'] as $k => $c) {
     $cid = (int) $c['id'];
     $l = $launch[$cid];
@@ -90,15 +74,11 @@ foreach ($o['campuses'] as $k => $c) {
     // The next step: the first of professor, curriculum and month 1 lessons still to do, then publishing.
     $next = 4;
     if ($stage < 2) foreach ([0, 1, 2] as $j) { if (!$l['steps'][$j][1]) { $next = $j; break; } }
-    // The one line a draft card shows: whatever its stage is waiting on.
-    $show = $stage === 2 ? 2 : ($l['steps'][1][1] ? 2 : 1);
-    $trend = array_replace(array_fill(0, 30, 0.0), $daily[$cid] ?? []);
-    ksort($trend);
-    $cards[] = $c + $l + ['stage' => $stage, 'next' => $next, 'show' => $show, 'color' => $colors[$k % count($colors)], 'trend' => array_values($trend)];
+    $glow = array_search(false, array_column($l['steps'], 1), true);
+    $litSteps += $l['done'];
+    $cards[] = $c + $l + ['stage' => $stage, 'next' => $next, 'glow' => $glow === false ? -1 : $glow, 'color' => $colors[$k % count($colors)], 'photo' => campus_photo($c)];
 }
-$byStage = [[], [], [], []];
-foreach ($cards as $c) $byStage[$c['stage']][] = $c;
-$short = fn(float $v) => $v >= 1000000 ? rtrim(rtrim(number_format($v / 1000000, 2), '0'), '.') . 'M' : ($v >= 1000 ? round($v / 1000) . 'K' : number_format($v));
+$openCount = count(array_filter($cards, fn($c) => $c['stage'] === 3));
 $edit = fn(int $id, string $tab = 'details') => base_url('dashboard/admin/campus-edit.php?id=' . $id . '&tab=' . $tab);
 
 $acxData = ['series' => array_map(fn($s, $i) => ['label' => $s['label'], 'm' => $s['MONTHLY'], 'y' => $s['YEARLY']], $o['series'], array_keys($o['series']))];
@@ -110,93 +90,75 @@ $pageCss = ['assets/css/admin-overview.css', 'assets/css/admin-campuses.css'];
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
 <div class="ov acx" data-acx>
-  <div class="acx-head acx-rise" style="--i:0">
+  <div class="acx-head acx-slam" style="--i:0">
     <div><h1>Campuses</h1><p>Build each campus, open it to learners, and keep members renewing.</p></div>
     <div class="acx-acts">
       <a class="acx-btn" href="<?= e(base_url('index.php#campuses')) ?>" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>View public page</a>
-      <a class="acx-btn primary" href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Professor pay</a>
+      <a class="acx-btn dark" href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Professor pay</a>
     </div>
   </div>
 
-  <div class="acx-strip acx-rise" style="--i:1">
-    <div><span>Collected · 30 days</span><b><small>UGX</small><em data-to="<?= (int) round($o['collected']) ?>"><?= e(number_format($o['collected'])) ?></em></b><i><?= $delta === null ? 'No earlier month to compare' : ($delta >= 0 ? '▲ ' : '▼ ') . abs($delta) . '% on the 30 days before' ?></i></div>
-    <div><span>Active members</span><b><em data-to="<?= (int) $o['active'] ?>"><?= number_format($o['active']) ?></em></b><i><?= number_format($o['new30']) ?> joined in the last 30 days</i></div>
-    <div class="<?= $o['ending'] ? 'warn' : '' ?>"><span>Ending in 7 days</span><b><em data-to="<?= (int) $o['ending'] ?>"><?= number_format($o['ending']) ?></em></b><i>Reminded by email automatically</i></div>
-    <div class="<?= $owedTotal > 0 ? 'warn' : '' ?>"><span>Owed to professors</span><b><small>UGX</small><em data-to="<?= (int) round($owedTotal) ?>"><?= e(number_format($owedTotal)) ?></em></b><i><?= $owedCount ? $owedCount . ' campus' . ($owedCount === 1 ? '' : 'es') . ' waiting to be paid' : 'Nothing owed right now' ?></i></div>
-    <div><span>Certificates issued</span><b><em data-to="<?= (int) $o['certificates'] ?>"><?= number_format($o['certificates']) ?></em></b><i>Full 12-month path completed</i></div>
-  </div>
-
-  <section class="acx-sec acx-rise" style="--i:2">
-    <div class="acx-sec-h">
-      <div><h2>Campus board</h2><p>Every campus sits in the stage it has reached. Do the next step on a card to move it right.</p></div>
-      <div class="acx-seg" data-seg="view"><span class="acx-pill" aria-hidden="true"></span>
-        <button type="button" class="on" data-view="board" aria-pressed="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>Board</button>
-        <button type="button" data-view="list" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>List</button>
+  <section class="lc-console acx-slam" style="--i:1">
+    <span class="lc-glow" aria-hidden="true"></span>
+    <div>
+      <span class="lc-eyebrow"><i></i>Launch control</span>
+      <div class="lc-big"><b><span data-scramble="<?= $openCount ?>"><?= $openCount ?></span><em>/<?= count($cards) ?></em></b><span>campus<?= $openCount === 1 ? '' : 'es' ?> open<br>to learners</span></div>
+      <p class="lc-copy">Every lane is a campus. Each lit cell is a launch step done. Light all five and it opens.</p>
+      <div class="lc-stats">
+        <div><span>Members</span><b data-scramble="<?= (int) $o['active'] ?>"><?= number_format($o['active']) ?></b></div>
+        <div><span>Collected · 30 days</span><b><small>UGX</small><span data-scramble="<?= (int) round($o['collected']) ?>"><?= e(number_format($o['collected'])) ?></span></b></div>
+        <div><span>Ending in 7 days</span><b data-scramble="<?= (int) $o['ending'] ?>"><?= number_format($o['ending']) ?></b></div>
+        <div><span>Owed to professors</span><b class="<?= $owedTotal > 0 ? 'red' : '' ?>"><small>UGX</small><span data-scramble="<?= (int) round($owedTotal) ?>"><?= e(number_format($owedTotal)) ?></span></b></div>
       </div>
     </div>
-
-    <div class="acx-view" data-viewpane="board">
-      <div class="acx-board play">
-        <?php foreach (CAMPUS_LAUNCH_STAGES as $si => $stageName): [$hint, $col, $bg] = $stageInfo[$si]; ?>
-          <div class="acx-col" style="--c:<?= $col ?>;--ci:<?= $si ?>">
-            <div class="acx-col-h">
-              <div class="t"><i style="background:<?= $bg ?>;color:<?= $col ?>"><?= $si + 1 ?></i><b><?= e($stageName) ?></b><span class="n"><?= count($byStage[$si]) ?></span></div>
-              <p><?= e($hint) ?></p>
-            </div>
-            <div class="acx-col-b">
-              <?php if (!$byStage[$si]): ?><div class="acx-empty">Nothing here right now</div><?php endif; ?>
-              <?php foreach ($byStage[$si] as $j => $c): $cid = (int) $c['id']; ?>
-                <article class="acx-card" style="--j:<?= $j ?>">
-                  <a class="acx-c-top" href="<?= e($edit($cid)) ?>">
-                    <span class="acx-bdg" style="background:<?= e($c['color']) ?>"><?= campus_icon($c['icon'] ?: 'book', 1.8) ?></span>
-                    <span><b><?= e($c['name']) ?></b><small><?= $c['professor_name'] ? e($c['professor_name']) : 'No professor yet' ?></small></span>
-                  </a>
-                  <?php if ($c['stage'] === 3): ?>
-                    <div class="acx-mx">
-                      <div><b><?= (int) $c['active'] ?></b><span>members</span></div>
-                      <div><b><small>UGX</small><?= e($short((float) $c['collected'])) ?></b><span>30 days</span></div>
-                    </div>
-                    <svg class="acx-sp" data-trend="<?= e(json_encode($c['trend'])) ?>" aria-hidden="true"></svg>
-                    <div class="acx-c-foot">
-                      <span class="<?= $c['live'] ? '' : 'w' ?>"><?= $c['live'] ? 'Live ' . e(date('D j · g a', strtotime($c['live']))) : 'No live class booked' ?></span>
-                      <span><?= (int) $c['ending'] ?> ending</span>
-                    </div>
-                  <?php else: ?>
-                    <div class="acx-dots"><?php foreach ($c['steps'] as $d => $st): ?><i class="<?= $st[1] ? 'd' : '' ?>" style="--d:<?= $d ?>"></i><?php endforeach; ?></div>
-                    <div class="acx-line"><span><?= e($c['steps'][$c['show']][0]) ?></span><b><?= e($c['steps'][$c['show']][2]) ?></b></div>
-                    <a class="acx-go <?= $c['next'] === 4 ? 'pub' : '' ?>" href="<?= e($edit($cid, $c['steps'][$c['next']][4])) ?>"><?= e($c['steps'][$c['next']][3]) ?><span>→</span></a>
-                  <?php endif; ?>
-                </article>
-              <?php endforeach; ?>
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-
-    <div class="acx-view" data-viewpane="list" hidden>
-      <div class="acx-tbl"><table>
-        <thead><tr><th>Campus</th><th>Stage</th><th>Professor</th><th class="r">Members</th><th>Monthly / yearly</th><th class="r">Collected · 30d</th><th class="r">Ending · 7d</th><th>Next step</th><th></th></tr></thead>
-        <tbody>
-          <?php foreach ($cards as $j => $c): $cid = (int) $c['id']; ?>
-            <tr style="--j:<?= $j ?>">
-              <td><a class="acx-c-top" href="<?= e($edit($cid)) ?>"><span class="acx-bdg" style="background:<?= e($c['color']) ?>"><?= campus_icon($c['icon'] ?: 'book', 1.8) ?></span><span><b><?= e($c['name']) ?></b><small><?= e(format_share(campus_professor_share($c))) ?> to the professor</small></span></a></td>
-              <td><span class="acx-stage" style="--c:<?= $stageInfo[$c['stage']][1] ?>"><?= e(CAMPUS_LAUNCH_STAGES[$c['stage']]) ?></span></td>
-              <td><?= $c['professor_name'] ? e($c['professor_name']) : '<span class="acx-muted">Not assigned</span>' ?></td>
-              <td class="r acx-num"><?= (int) $c['active'] ?: '—' ?></td>
-              <td class="acx-num"><?= $c['active'] ? (int) $c['monthly'] . ' / ' . (int) $c['yearly'] : '<span class="acx-muted">—</span>' ?></td>
-              <td class="r acx-num"><?= $c['collected'] > 0 ? e(number_format($c['collected'])) : '—' ?></td>
-              <td class="r acx-num"><?= (int) $c['ending'] ?: '—' ?></td>
-              <td><?= $c['stage'] === 3 ? '<span class="acx-muted">—</span>' : '<a class="acx-lnk" href="' . e($edit($cid, $c['steps'][$c['next']][4])) . '">' . e($c['steps'][$c['next']][3]) . ' →</a>' ?></td>
-              <td class="r"><a class="acx-lnk" href="<?= e($edit($cid)) ?>">Manage</a></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table></div>
+    <div class="lc-rx">
+      <div class="lc-rx-h"><b>Launch reactor</b><span><?= $litSteps ?> of <?= count($cards) * 5 ?> steps lit</span></div>
+      <div class="lc-rx-steps" aria-hidden="true"><span></span><span>Professor</span><span>Curriculum</span><span>Month 1</span><span>Live class</span><span>Open</span><span></span></div>
+      <?php foreach ($cards as $li => $c): ?>
+        <a class="lc-lane <?= $c['stage'] === 3 ? 'open' : '' ?>" href="<?= e($edit((int) $c['id'])) ?>" aria-label="<?= e($c['name']) ?>: <?= (int) $c['done'] ?> of 5 launch steps done">
+          <span class="nm"><?php if ($c['photo']): ?><i style="background-image:url('<?= e($c['photo']) ?>')"></i><?php else: ?><i class="badge" style="background:<?= e($c['color']) ?>"><?= campus_icon($c['icon'] ?: 'book', 2) ?></i><?php endif; ?><?= e($c['name']) ?></span>
+          <?php foreach ($c['steps'] as $si => $st): ?><span class="lc-cell <?= $st[1] ? 'on' : ($si === $c['glow'] ? 'next' : '') ?>" style="--l:<?= $li ?>;--s:<?= $si ?>" title="<?= e($st[0]) ?>: <?= e($st[2]) ?>"></span><?php endforeach; ?>
+          <span class="pc"><?= (int) $c['done'] * 20 ?>%</span>
+        </a>
+      <?php endforeach; ?>
     </div>
   </section>
 
-  <section class="acx-sec acx-rise" style="--i:3">
+  <section class="acx-sec acx-slam" style="--i:2" id="ledger">
+    <div class="lc-sec-h">
+      <div><h2>Campus ledger</h2><p>One line per campus, with the one thing it needs next</p></div>
+      <div class="lc-chips" data-filter-group>
+        <button type="button" class="on" data-filter="all">All <em><?= count($cards) ?></em></button>
+        <button type="button" data-filter="open">Open <em><?= $openCount ?></em></button>
+        <button type="button" data-filter="draft">Drafts <em><?= count($cards) - $openCount ?></em></button>
+      </div>
+    </div>
+    <div class="lc-grid lc-th"><span>Campus</span><span>Stage</span><span>Launch steps</span><span class="r">Members</span><span class="r">Collected · 30d</span><span>Next</span></div>
+    <?php foreach ($cards as $j => $c): $cid = (int) $c['id']; $open = $c['stage'] === 3;
+        if ($open) {
+            $nextLabel = $c['live'] ? 'Next live ' . date('D j · g a', strtotime($c['live'])) : 'Book a live class';
+            $nextUrl = $edit($cid, 'live');
+            $nextClass = $c['live'] ? 'quiet' : '';
+        } else {
+            $nextLabel = $c['steps'][$c['next']][3];
+            $nextUrl = $edit($cid, $c['steps'][$c['next']][4]);
+            $nextClass = $c['next'] === 4 ? 'pub' : '';
+        } ?>
+      <div class="lc-grid lc-row acx-whip" data-state="<?= $open ? 'open' : 'draft' ?>" style="--j:<?= $j ?>">
+        <a class="lc-camp" href="<?= e($edit($cid)) ?>">
+          <?php if ($c['photo']): ?><span class="ph" style="background-image:url('<?= e($c['photo']) ?>')"></span><?php else: ?><span class="ph badge" style="background:<?= e($c['color']) ?>"><?= campus_icon($c['icon'] ?: 'book', 1.8) ?></span><?php endif; ?>
+          <span><b><?= e($c['name']) ?></b><small class="<?= $c['professor_name'] ? '' : 'none' ?>"><?= $c['professor_name'] ? e($c['professor_name']) : 'No professor yet' ?></small></span>
+        </a>
+        <span class="lc-stage s<?= $c['stage'] ?>"><?= e(CAMPUS_LAUNCH_STAGES[$c['stage']]) ?></span>
+        <div class="lc-prog"><div class="lc-dots"><?php foreach ($c['steps'] as $d => $st): ?><i class="<?= $st[1] ? 'd' : '' ?>" style="--d:<?= $d ?>"></i><?php endforeach; ?></div><small><?= (int) $c['done'] ?> of 5 steps</small></div>
+        <div class="lc-num r"><?= $c['active'] ? number_format($c['active']) . '<small>members</small>' : '—' ?></div>
+        <div class="lc-num r"><?= $c['collected'] > 0 ? e(number_format($c['collected'])) . '<small>UGX</small>' : '—' ?></div>
+        <a class="lc-next <?= $nextClass ?>" href="<?= e($nextUrl) ?>"><?= e($nextLabel) ?><span>→</span></a>
+      </div>
+    <?php endforeach; ?>
+    <?php if (!$cards): ?><p class="acx-none" style="padding:28px 22px">No campuses yet.</p><?php endif; ?>
+  </section>
+  <section class="acx-sec acx-slam" style="--i:3">
     <div class="acx-tabs" data-tabs><span class="acx-bar" aria-hidden="true"></span>
       <button type="button" class="on" data-tab="money">Money</button>
       <button type="button" data-tab="renew">Renewals due <em class="<?= $renewals ? 'w' : '' ?>"><?= count($renewals) ?></em></button>

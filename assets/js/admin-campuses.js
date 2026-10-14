@@ -1,5 +1,5 @@
-/* Admin Campuses: board/list switch, workspace tabs, count-ups, card curves and the 12-month chart
-   for dashboard/admin/campuses.php. */
+/* Admin Campuses (launch control): scrambling console figures, the ledger filter, workspace tabs and
+   the 12-month chart for dashboard/admin/campuses.php. The reactor and rows animate in CSS. */
 (function () {
   const root = document.querySelector('[data-acx]');
   if (!root) return;
@@ -11,6 +11,7 @@
   const fmt = n => Math.round(n).toLocaleString('en-US');
   const short = n => n >= 1e6 ? +(n / 1e6).toFixed(n >= 1e7 ? 1 : 2) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'K' : String(Math.round(n));
   const ease = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+  const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   let uid = 0;
   function tween(dur, step, delay) {
     if (reduce) { step(1); return; }
@@ -40,67 +41,34 @@
     return d;
   }
   const nice = v => { const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e; };
-  function drawLine(path, delay) {
-    if (reduce || !path) return;
-    const L = path.getTotalLength();
-    path.style.strokeDasharray = L; path.style.strokeDashoffset = L;
-    tween(1200, p => { path.style.strokeDashoffset = L * (1 - p); }, delay);
-  }
 
-  /* ---------- figures count up ---------- */
-  root.querySelectorAll('.acx-strip [data-to]').forEach(n => {
-    const to = +n.dataset.to;
-    if (!reduce) n.textContent = '0';
-    tween(1400, p => { n.textContent = fmt(to * p); }, 350);
+  /* ---------- console figures scramble, then lock in left to right ---------- */
+  root.querySelectorAll('[data-scramble]').forEach((el, k) => {
+    const target = fmt(+el.dataset.scramble);
+    if (reduce) { el.textContent = target; return; }
+    const chars = target.split('');
+    el.textContent = chars.map(c => /\d/.test(c) ? '0' : c).join('');
+    setTimeout(() => {
+      const t0 = performance.now();
+      (function f(now) {
+        const p = Math.min(1, (now - t0) / 900), locked = Math.floor(easeInOut(p) * (chars.length + 1));
+        el.textContent = chars.map((c, i) => !/\d/.test(c) || i < locked ? c : String(Math.floor(Math.random() * 10))).join('');
+        if (p < 1) requestAnimationFrame(f); else el.textContent = target;
+      })(t0);
+    }, 380 + k * 60);
   });
 
-  /* ---------- small curves on open campus cards: money collected so far this month ---------- */
-  function sparks(delay) {
-    root.querySelectorAll('svg.acx-sp[data-trend]').forEach((svg, k) => {
-      let run = 0;
-      const v = JSON.parse(svg.dataset.trend).map(x => (run += x));
-      const w = svg.clientWidth || 200, h = svg.clientHeight || 34, max = run || 1, flat = run === 0;
-      const pts = v.map((x, i) => [i / (v.length - 1) * w, flat ? h - 3 : 3 + (1 - x / max) * (h - 6)]);
-      const d = curve(pts), id = 'acxs' + (++uid);
-      svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-      svg.innerHTML = `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.brand}" stop-opacity="${flat ? 0.04 : 0.15}"/><stop offset="1" stop-color="${C.brand}" stop-opacity="0"/></linearGradient></defs>
-        <path d="${d}L${w},${h}L0,${h}Z" fill="url(#${id})"/><path class="ln" d="${d}" fill="none" stroke="${C.brand}" stroke-width="1.6" stroke-linecap="round" stroke-opacity="${flat ? 0.3 : 1}"/>`;
-      drawLine(svg.querySelector('.ln'), (delay || 0) + k * 120);
+  /* ---------- ledger: all, open or draft campuses; the shown rows whip back in ---------- */
+  const chips = root.querySelector('[data-filter-group]');
+  if (chips) chips.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+    chips.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+    let n = 0;
+    root.querySelectorAll('.lc-row').forEach(row => {
+      const show = btn.dataset.filter === 'all' || row.dataset.state === btn.dataset.filter;
+      row.classList.toggle('hide', !show);
+      row.classList.remove('swap');
+      if (show) { void row.offsetWidth; row.style.setProperty('--n', n++); row.classList.add('swap'); }
     });
-  }
-
-  /* ---------- board / list ---------- */
-  function placePill(seg, instant) {
-    const pill = seg.querySelector('.acx-pill'), btn = seg.querySelector('button.on');
-    if (!pill || !btn) return;
-    if (instant) pill.style.transition = 'none';
-    pill.style.width = btn.offsetWidth + 'px';
-    pill.style.transform = `translateX(${btn.offsetLeft}px)`;
-    if (instant) { void pill.offsetWidth; pill.style.transition = ''; }
-  }
-  const seg = root.querySelector('[data-seg="view"]');
-  seg.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
-    if (btn.classList.contains('on')) return;
-    seg.querySelectorAll('button').forEach(b => { const on = b === btn; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-    placePill(seg);
-    const to = btn.dataset.view;
-    const panes = root.querySelectorAll('[data-viewpane]');
-    const swap = () => {
-      panes.forEach(p => {
-        const show = p.dataset.viewpane === to;
-        p.hidden = !show;
-        p.classList.remove('out', 'play');
-        if (show) {
-          void p.offsetWidth;
-          p.classList.add('play');
-          const board = p.querySelector('.acx-board');
-          if (board) { board.classList.remove('play'); void board.offsetWidth; board.classList.add('play'); sparks(700); }
-        }
-      });
-    };
-    if (reduce) { swap(); return; }
-    panes.forEach(p => { if (!p.hidden) p.classList.add('out'); });
-    setTimeout(swap, 240);
   }));
 
   /* ---------- workspace tabs ---------- */
@@ -173,9 +141,7 @@
   }
 
   function boot() {
-    placePill(seg, true);
     placeBar(true);
-    sparks(1200);
     moneyChart(true);
   }
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(boot);
@@ -183,10 +149,10 @@
   addEventListener('resize', () => {
     clearTimeout(t);
     t = setTimeout(() => {
-      placePill(seg, true); placeBar(true);
+      placeBar(true);
       if (Math.abs(root.clientWidth - lastW) < 8) return;
       lastW = root.clientWidth;
-      sparks(0); moneyChart(false);
+      moneyChart(false);
     }, 150);
   });
 })();
