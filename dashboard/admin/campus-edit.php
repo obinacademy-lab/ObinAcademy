@@ -2,11 +2,14 @@
 /**
  * Admin: set up one campus. Details and prices, the professor, the twelve-month curriculum, lessons
  * (video and PDF uploads per month), live classes, and members (including giving access by hand).
+ * Curriculum, lessons and live classes go through includes/campus_content.php, shared with the
+ * professor's Campus Studio; everything else here is admin-only.
  */
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/audit.php';
 require __DIR__ . '/../../includes/storage.php';
 require __DIR__ . '/../../includes/campuses.php';
+require __DIR__ . '/../../includes/campus_content.php';
 $user = require_role(['ADMIN']);
 
 if (!campuses_ready()) redirect('/dashboard/admin/campuses.php');
@@ -75,73 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash_set($note ? 'error' : 'success', 'Professor saved.' . $note);
             redirect($here('professor'));
         }
-        if ($a === 'curriculum') {
-            for ($m = 1; $m <= CAMPUS_YEAR_MONTHS; $m++) {
-                db_run(
-                    'INSERT INTO campus_stages (campus_id, month_no, title, summary) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE title = VALUES(title), summary = VALUES(summary)',
-                    [$id, $m, mb_substr(trim($_POST['title'][$m] ?? ''), 0, 160), mb_substr(trim($_POST['summary'][$m] ?? ''), 0, 255)]
-                );
-            }
-            $log('curriculum_updated');
-            flash_set('success', 'Curriculum saved.');
-            redirect($here('curriculum'));
-        }
-        if ($a === 'lesson_add') {
-            $month = max(1, min(12, (int) post('month')));
-            $kind = post('kind') === 'PDF' ? 'PDF' : 'VIDEO';
-            if (trim(post('title')) === '') throw new RuntimeException('Give the lesson a title.');
-            if (empty($_FILES['file']['name'])) throw new RuntimeException('Choose the ' . ($kind === 'PDF' ? 'PDF' : 'video') . ' file to upload.');
-            $key = save_upload($_FILES['file'], $kind === 'PDF' ? 'pdfs' : 'videos');
-            $sort = (int) (db_one('SELECT COALESCE(MAX(sort_order), 0) + 1 AS n FROM campus_lessons WHERE campus_id = ? AND month_no = ?', [$id, $month])['n'] ?? 1);
-            db_insert(
-                'INSERT INTO campus_lessons (campus_id, month_no, title, kind, file_url, file_name, duration_label, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [$id, $month, mb_substr(trim(post('title')), 0, 200), $kind, $key, mb_substr($_FILES['file']['name'], 0, 255), mb_substr(trim(post('duration')), 0, 40) ?: null, $sort]
-            );
-            $log('lesson_added', 'month ' . $month . ': ' . trim(post('title')));
-            flash_set('success', 'Lesson added to month ' . $month . '.');
-            redirect($here('lessons', ['month' => $month]));
-        }
-        if ($a === 'lesson_delete') {
-            $l = db_one('SELECT * FROM campus_lessons WHERE id = ? AND campus_id = ?', [(int) post('lesson'), $id]);
-            if ($l) {
-                db_run('DELETE FROM campus_lessons WHERE id = ?', [$l['id']]);
-                $path = resolve_private_path($l['file_url']);
-                if (is_file($path)) @unlink($path);
-                $log('lesson_removed', $l['title']);
-                flash_set('success', 'Lesson removed.');
-            }
-            redirect($here('lessons', ['month' => (int) ($l['month_no'] ?? 1)]));
-        }
-        if ($a === 'lesson_move') {
-            $l = db_one('SELECT * FROM campus_lessons WHERE id = ? AND campus_id = ?', [(int) post('lesson'), $id]);
-            if ($l) {
-                $dir = post('dir') === 'up' ? '<' : '>';
-                $order = $dir === '<' ? 'DESC' : 'ASC';
-                $other = db_one("SELECT * FROM campus_lessons WHERE campus_id = ? AND month_no = ? AND (sort_order $dir ? OR (sort_order = ? AND id $dir ?)) ORDER BY sort_order $order, id $order LIMIT 1", [$id, $l['month_no'], $l['sort_order'], $l['sort_order'], $l['id']]);
-                if ($other) {
-                    db_run('UPDATE campus_lessons SET sort_order = ? WHERE id = ?', [$other['sort_order'], $l['id']]);
-                    db_run('UPDATE campus_lessons SET sort_order = ? WHERE id = ?', [$l['sort_order'] === $other['sort_order'] ? $l['sort_order'] + ($dir === '<' ? 1 : -1) : $l['sort_order'], $other['id']]);
-                }
-            }
-            redirect($here('lessons', ['month' => (int) ($l['month_no'] ?? 1)]));
-        }
-        if ($a === 'live_add') {
-            $when = strtotime(post('date') . ' ' . post('time'));
-            if (trim(post('title')) === '' || !$when) throw new RuntimeException('Give the live class a title, date and time.');
-            $url = trim(post('url'));
-            if ($url !== '' && !preg_match('#^https://#i', $url)) throw new RuntimeException('The join link must start with https:// (a Zoom or Google Meet link).');
-            db_insert(
-                'INSERT INTO campus_live_classes (campus_id, title, starts_at, duration_minutes, join_url) VALUES (?, ?, ?, ?, ?)',
-                [$id, mb_substr(trim(post('title')), 0, 200), date('Y-m-d H:i:s', $when), max(15, min(300, (int) post('minutes') ?: 90)), $url ?: null]
-            );
-            $log('live_class_added', trim(post('title')) . ' on ' . date('j M, g:i a', $when));
-            flash_set('success', 'Live class added. Members see it on their campus page.');
-            redirect($here('live'));
-        }
-        if ($a === 'live_delete') {
-            db_run('DELETE FROM campus_live_classes WHERE id = ? AND campus_id = ?', [(int) post('live'), $id]);
-            flash_set('success', 'Live class removed.');
-            redirect($here('live'));
+        if (in_array($a, CAMPUS_CONTENT_ACTIONS, true)) {
+            // Stages, lessons and live classes: the same rules as the professor's Campus Studio.
+            $to = campus_content_handle($a, $campus, $user);
+            redirect($here($to['tab'], $to['month'] ? ['month' => $to['month']] : []));
         }
         if ($a === 'grant') {
             $member = db_one('SELECT id, name, email FROM users WHERE email = ?', [strtolower(trim(post('email')))]);
@@ -251,7 +191,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <label>Mobile money number <small>Where you send their pay</small><input name="payout_phone" type="tel" value="<?= e($campus['professor_payout_phone'] ?? '') ?>" placeholder="07XX XXX XXX" maxlength="32"></label>
           <label>Name on that number <small>To check before you send</small><input name="payout_name" value="<?= e($campus['professor_payout_name'] ?? '') ?>" maxlength="120"></label>
         </div>
-        <label style="max-width:420px;">Their Obin Academy account email <small><?= $acct ? 'Linked to ' . e($acct['name']) . '. They see their earnings and can teach in the campus.' : 'Optional. Once linked, they see every payment and their share in their dashboard, and post in the community as the professor.' ?></small><input name="account_email" type="email" value="<?= e($acct['email'] ?? '') ?>" placeholder="name@example.com"></label>
+        <label style="max-width:420px;">Their Obin Academy account email <small><?= $acct ? 'Linked to ' . e($acct['name']) . '. They build the stages, lessons and live classes in their Campus Studio, see their earnings, and post in the community as the professor.' : 'Optional. Once linked, they build the stages, lessons and live classes in their own Campus Studio (never prices), see every payment and their share, and post in the community as the professor.' ?></small><input name="account_email" type="email" value="<?= e($acct['email'] ?? '') ?>" placeholder="name@example.com"></label>
         <?php if ($owedNow > 0): ?><p class="ca-paynote">You owe this campus's professor <b><?= e(format_money($owedNow)) ?></b>. Pay it on <a href="<?= e(base_url('dashboard/admin/professor-pay.php?campus=' . $id)) ?>">Professor Pay</a> before you change the professor.</p><?php endif; ?>
       </div>
     <?php endif; ?>
@@ -282,7 +222,10 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <?php foreach ($ls as $i => $l): ?>
           <div>
             <span class="k"><?= $l['kind'] === 'PDF' ? 'PDF' : 'Video' ?></span>
-            <div style="min-width:0;"><b><?= $month ?>.<?= $i + 1 ?> &nbsp;<?= e($l['title']) ?></b><small><?= e($l['file_name'] ?: '') ?><?= $l['duration_label'] ? ' · ' . e($l['duration_label']) : '' ?></small></div>
+            <div style="min-width:0;"><b><?= $month ?>.<?= $i + 1 ?> &nbsp;<?= e($l['title']) ?></b><small><?= e($l['file_name'] ?: '') ?><?= $l['duration_label'] ? ' · ' . e($l['duration_label']) : '' ?></small>
+              <details class="ca-ledit"><summary>Edit</summary><form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="lesson_rename"><input type="hidden" name="lesson" value="<?= (int) $l['id'] ?>"><input type="hidden" name="month" value="<?= $month ?>">
+                <input name="title" maxlength="200" required value="<?= e($l['title']) ?>" aria-label="Title"><input name="duration" maxlength="40" value="<?= e($l['duration_label'] ?? '') ?>" placeholder="Length" aria-label="Length"><select name="to_month" aria-label="Month"><?php for ($mm = 1; $mm <= 12; $mm++): ?><option value="<?= $mm ?>"<?= $mm === $month ? ' selected' : '' ?>>Month <?= $mm ?></option><?php endfor; ?></select><button class="ot-btn" type="submit">Save</button></form></details>
+            </div>
             <div class="acts">
               <a class="ot-btn" href="<?= e(base_url('campus-learn.php?campus=' . $campus['slug'] . '&view=lesson&lesson=' . $l['id'])) ?>" target="_blank" rel="noopener">View</a>
               <?php foreach (['up' => '&uarr;', 'down' => '&darr;'] as $dir => $sym): ?>
@@ -375,6 +318,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     </form>
   </div>
 <?php endif; ?>
+<style>.ca-ledit summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--accent, #2b22ff); margin-top: 4px; } .ca-ledit form { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .ca-ledit input, .ca-ledit select { height: 34px; font-size: 13px; padding: 0 10px; } .ca-ledit input[name=title] { flex: 1 1 200px; } .ca-ledit input[name=duration] { width: 110px; }</style>
 <script>
 document.querySelectorAll('form[data-confirm]').forEach(function (f) { f.addEventListener('submit', function (e) { if (!confirm(f.dataset.confirm)) e.preventDefault(); }); });
 document.querySelectorAll('form[data-upload]').forEach(function (f) { f.addEventListener('submit', function () { var b = f.querySelector('[data-upload-btn]'); if (b) { b.disabled = true; b.textContent = 'Uploading…'; } var n = f.querySelector('[data-upload-note]'); if (n) n.hidden = false; }); });

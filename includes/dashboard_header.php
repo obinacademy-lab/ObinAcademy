@@ -46,10 +46,10 @@ $navByRole = [
 $navGroups = $navByRole[$user['role'] === 'ADMIN' ? 'ADMIN' : 'LEARNER'];
 $currentPath = current_path();
 
-// Campus professors (linked by account on the campus) get their pay page.
+// Campus professors (linked by account on the campus) get Campus Studio and their pay page.
 try {
     if ($user['role'] !== 'ADMIN' && db_one('SELECT 1 FROM campuses WHERE professor_user_id = ? LIMIT 1', [(int) $user['id']])) {
-        $navGroups = ['Teaching' => [['/dashboard/professor.php', 'My Campus Pay', 'banknote']]] + $navGroups;
+        $navGroups = ['Teaching' => [['/dashboard/campus-studio.php', 'Campus Studio', 'book-open'], ['/dashboard/professor.php', 'My Campus Pay', 'banknote']]] + $navGroups;
     }
 } catch (Throwable $e) {
     // Professor pay migration not applied yet.

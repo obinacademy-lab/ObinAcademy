@@ -1,0 +1,163 @@
+/* Campus Studio (dashboard/campus-studio.php): the professor's workspace for their own campus. Builds on
+   the console styles in admin-campuses.css; this file adds the year map, the tabs, the month strip,
+   the lesson list, the stage editor and the live classes. */
+
+.cs .lc-eyebrow.calm { color: #8b8fc0; }
+.cs .lc-eyebrow.calm i { background: #8b8fc0; }
+.cs .lc-stats b.lime { color: var(--lc-lime); text-shadow: 0 0 16px rgba(205, 251, 94, .4); }
+.cs .lc-stats b small { color: #8b8fc0; text-shadow: none; }
+.cs-pick select { height: 40px; padding: 0 34px 0 14px; border-radius: 10px; border: 1px solid var(--ov-line); background-color: var(--ov-panel); font: inherit; font-size: 13px; font-weight: 600; color: var(--ov-ink); cursor: pointer; }
+
+/* who: campus picture, name, role */
+.cs-who { display: flex; align-items: center; gap: 16px; margin-top: 18px; }
+.cs-ph { width: 74px; height: 58px; border-radius: 14px; flex: none; display: grid; place-items: center; background: #1c1f4a center / cover; color: var(--lc-lime); box-shadow: 0 0 0 1px rgba(205, 251, 94, .35), 0 16px 34px -18px rgba(205, 251, 94, .6); }
+.cs-ph svg { width: 26px; height: 26px; }
+.cs-who h2 { font-size: 24px; font-weight: 600; letter-spacing: -.025em; line-height: 1.15; color: #fff; }
+.cs-who p { margin-top: 3px; font-size: 13px; color: #a9acd0; }
+.cs-note { margin-top: 14px; font-size: 12px; color: #8b8fc0; display: flex; gap: 8px; align-items: center; }
+.cs-note::before { content: ""; width: 14px; height: 14px; flex: none; border-radius: 50%; border: 1.5px solid #6c70a0; background: radial-gradient(circle, #6c70a0 1.5px, transparent 2px) center 70% / 100% 100% no-repeat; }
+
+/* the year: twelve month tiles, lime once they have lessons */
+.cs-year { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.cs-year a { position: relative; display: grid; gap: 3px; align-content: start; min-height: 78px; padding: 10px 11px; border-radius: 11px; background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .08); color: #d6d8f5 !important; overflow: hidden; transition: transform .35s var(--lc-spring), border-color .3s ease, background-color .3s ease; }
+.cs-year a:hover { transform: translateY(-3px); border-color: rgba(205, 251, 94, .5); }
+.cs-year a.has { background: linear-gradient(160deg, rgba(205, 251, 94, .16), rgba(205, 251, 94, .03)); border-color: rgba(205, 251, 94, .3); }
+.cs-year a.on { border-color: var(--lc-lime); box-shadow: 0 0 0 1px var(--lc-lime), 0 0 22px -6px rgba(205, 251, 94, .7); }
+.cs-mn { font: 500 10px var(--ov-mono); letter-spacing: .1em; color: #8b8fc0; }
+.cs-year a.has .cs-mn { color: var(--lc-lime); }
+.cs-year b { font-size: 12px; font-weight: 600; line-height: 1.3; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cs-year a.untitled b { color: #6c70a0; font-weight: 500; font-style: italic; }
+.cs-year small { font: 400 10.5px var(--ov-mono); color: #8b8fc0; margin-top: auto; }
+.cs-year a.has small { color: #d6f5a0; }
+.cs-next { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding: 11px 14px; border-radius: 11px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .08); font-size: 12.5px; color: #a9acd0; }
+.cs-next b { color: #fff; font-weight: 600; }
+.cs-next a { margin-left: auto; color: var(--lc-lime) !important; font-weight: 600; }
+.cs-live-dot { width: 9px; height: 9px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 0 4px rgba(255, 59, 59, .2); flex: none; }
+.cs-live-dot.off { background: #6c70a0; box-shadow: none; }
+
+/* tabs and month strip */
+.cs-tabs { display: flex; gap: 4px; padding: 10px 14px 0; border-bottom: 1px solid var(--ov-line-soft); overflow-x: auto; }
+.cs-tabs a { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 14px; font-size: 13.5px; font-weight: 600; color: var(--ov-ink-3) !important; white-space: nowrap; transition: color .3s ease; }
+.cs-tabs a em { font: 500 11px var(--ov-mono); font-style: normal; padding: 2px 7px; border-radius: 20px; background: var(--ov-panel-2); color: var(--ov-ink-3); }
+.cs-tabs a::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--ov-ink); transform: scaleX(0); transition: transform .35s var(--lc-spring); }
+.cs-tabs a:hover { color: var(--ov-ink) !important; }
+.cs-tabs a[aria-current] { color: var(--ov-ink) !important; }
+.cs-tabs a[aria-current]::after { transform: scaleX(1); }
+.cs-tabs a[aria-current] em { background: var(--lc-void); color: var(--lc-lime); }
+.cs-months { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; padding: 16px 22px; border-bottom: 1px solid var(--ov-line-soft); background: var(--ov-panel-2); }
+.cs-months a { display: grid; place-items: center; gap: 1px; height: 50px; border-radius: 10px; border: 1px solid var(--ov-line); background: var(--ov-panel); font: 600 15px var(--ov-mono); color: var(--ov-ink-2) !important; transition: transform .3s var(--lc-spring), border-color .3s ease, background-color .3s ease; }
+.cs-months a small { font: 400 10px var(--ov-mono); color: var(--ov-ink-3); }
+.cs-months a.has { border-color: #c6e88a; background: #f6fde6; }
+.cs-months a:hover { transform: translateY(-2px); border-color: var(--ov-ink); }
+.cs-months a[aria-current] { background: var(--lc-void); border-color: var(--lc-void); color: var(--lc-lime) !important; }
+.cs-months a[aria-current] small { color: #a9acd0; }
+
+/* two columns: the list, and the form */
+.cs-two { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); }
+.cs-two > div { min-width: 0; border-right: 1px solid var(--ov-line-soft); }
+.cs-h { padding: 18px 22px 12px; }
+.cs-h h2 { font-size: 16px; font-weight: 600; letter-spacing: -.015em; color: var(--ov-ink); }
+.cs-h p { font-size: 12.5px; color: var(--ov-ink-3); margin-top: 2px; }
+.cs-empty { margin: 4px 22px 22px; padding: 26px 22px; border-radius: 14px; border: 1.5px dashed var(--ov-line); text-align: center; }
+.cs-empty b { font-size: 14px; color: var(--ov-ink); }
+.cs-empty p { margin-top: 4px; font-size: 12.5px; color: var(--ov-ink-3); }
+
+.cs-lessons, .cs-lives { padding: 0 12px 16px; }
+.cs-lesson, .cs-live { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 10px; border-radius: 12px; transition: background-color .3s ease; }
+.cs-lesson + .cs-lesson, .cs-live + .cs-live { border-top: 1px solid var(--ov-line-soft); }
+.cs-lesson:hover, .cs-live:hover { background: var(--ov-panel-2); }
+.cs-kind { height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--lc-void); color: var(--lc-lime); }
+.cs-kind.pdf { background: #eeedff; color: #2b22ff; }
+.cs-lt { min-width: 0; }
+.cs-lt b { display: flex; gap: 8px; align-items: baseline; font-size: 13.5px; font-weight: 600; color: var(--ov-ink); min-width: 0; }
+.cs-lt b span { font: 500 11.5px var(--ov-mono); color: var(--ov-ink-3); flex: none; }
+.cs-lt small { display: block; margin-top: 3px; font-size: 12px; color: var(--ov-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-lt small em { font-style: normal; color: #b45f06; }
+.cs-acts { display: flex; gap: 6px; }
+.cs-acts form { margin: 0; }
+.cs-ic { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--ov-line); background: var(--ov-panel); color: var(--ov-ink-2) !important; font-size: 15px; cursor: pointer; display: grid; place-items: center; transition: border-color .25s ease, color .25s ease, transform .3s var(--lc-spring); }
+.cs-ic:hover:not(:disabled) { border-color: var(--ov-ink); color: var(--ov-ink) !important; transform: translateY(-2px); }
+.cs-ic:disabled { opacity: .35; cursor: default; }
+.cs-ic svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cs-ic.del:hover { border-color: #e5302a; color: #e5302a !important; }
+.cs-edit { grid-column: 2 / -1; }
+.cs-edit summary { cursor: pointer; width: max-content; font-size: 12px; font-weight: 600; color: var(--ov-brand); list-style: none; }
+.cs-edit summary::-webkit-details-marker { display: none; }
+.cs-edit summary::after { content: " ↓"; }
+.cs-edit[open] summary::after { content: " ↑"; }
+.cs-edit form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 10px; align-items: end; margin-top: 10px; }
+
+.cs-live.past { opacity: .55; }
+.cs-date { width: 52px; height: 52px; border-radius: 12px; display: grid; place-content: center; text-align: center; background: var(--lc-void); color: #fff; }
+.cs-date small { font: 500 10px var(--ov-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--lc-lime); }
+.cs-date b { font: 600 19px/1.1 var(--ov-mono); }
+.cs-live.past .cs-date { background: var(--ov-panel-2); color: var(--ov-ink-3); }
+.cs-live.past .cs-date small { color: var(--ov-ink-3); }
+
+/* forms */
+.cs-form { display: grid; gap: 14px; padding: 22px; align-content: start; }
+.cs-form h3 { font-size: 15px; font-weight: 600; color: var(--ov-ink); }
+.cs-form label { display: grid; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--ov-ink-2); min-width: 0; }
+.cs-form label small { font-weight: 400; color: var(--ov-ink-3); }
+.cs input:not([type=file]):not([type=hidden]), .cs select, .cs textarea { width: 100%; height: 42px; border: 1px solid var(--ov-line); border-radius: 10px; background: var(--ov-panel); padding: 0 12px; font: inherit; font-size: 13.5px; font-weight: 400; color: var(--ov-ink); box-shadow: none; transition: border-color .3s ease, box-shadow .3s ease; }
+.cs input:not([type=file]):focus, .cs select:focus { outline: 0; border-color: var(--ov-brand); box-shadow: 0 0 0 4px var(--ov-brand-tint); }
+.cs-f2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cs-f3 { display: grid; grid-template-columns: 1.3fr 1fr .8fr; gap: 12px; }
+.cs-upload { background: var(--ov-panel-2); }
+.cs-file { position: relative; display: block !important; border: 1.5px dashed #c9cbe0; border-radius: 12px; background: var(--ov-panel); cursor: pointer; transition: border-color .3s ease, background-color .3s ease; }
+.cs-file:hover, .cs-file:focus-within { border-color: var(--ov-brand); background: var(--ov-brand-tint); }
+.cs-file.has { border-style: solid; border-color: var(--lc-void); }
+.cs-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cs-file > span { display: grid; justify-items: center; gap: 4px; padding: 20px 14px; text-align: center; }
+.cs-file svg { width: 24px; height: 24px; fill: none; stroke: var(--ov-brand); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cs-file b { font-size: 13px; color: var(--ov-ink); word-break: break-all; }
+.cs-file small { font-size: 11.5px; }
+.cs-btn { height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--ov-ink); background: var(--ov-ink); color: #fff; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: transform .3s var(--lc-spring), box-shadow .3s ease; }
+.cs-btn span { transition: transform .35s var(--lc-spring); }
+.cs-btn:hover { transform: translateY(-2px); }
+.cs-btn:hover span { transform: translateX(4px); }
+.cs-btn.lime { background: var(--lc-void); border-color: var(--lc-void); color: var(--lc-lime); }
+.cs-btn.lime:hover { box-shadow: 0 0 0 4px rgba(205, 251, 94, .25), 0 12px 24px -12px rgba(7, 8, 31, .8); }
+.cs-btn.sm { height: 42px; padding: 0 14px; font-size: 12.5px; }
+.cs-btn:disabled { opacity: .6; cursor: wait; transform: none; }
+.cs-uploading { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: var(--ov-ink-2); }
+.cs-uploading[hidden] { display: none; }
+.cs-uploading i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ov-line); border-top-color: var(--ov-brand); animation: cs-spin .8s linear infinite; }
+@keyframes cs-spin { to { transform: rotate(360deg); } }
+.cs-hint { font-size: 12px; color: var(--ov-ink-3); }
+
+/* the twelve stages */
+.cs-lead { font-size: 13px; color: var(--ov-ink-2); max-width: 680px; }
+.cs-stage { display: grid; grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1.3fr) 90px; gap: 12px; align-items: center; padding: 8px 10px 8px 0; border-radius: 12px; }
+.cs-sn { display: grid; justify-items: center; font: 600 18px/1 var(--ov-mono); color: var(--ov-ink-3); }
+.cs-sn small { font: 500 9.5px var(--ov-mono); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 3px; }
+.cs-stage.done .cs-sn { color: var(--ov-ink); }
+.cs-stage.done .cs-sn small { color: #6aa81e; }
+.cs-count { font: 500 11.5px var(--ov-mono); color: var(--ov-ink-3) !important; text-align: right; white-space: nowrap; }
+.cs-count:hover { color: var(--ov-brand) !important; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .cs-year a { animation: cs-tile .7s cubic-bezier(.2, 1.2, .35, 1) backwards; animation-delay: calc(.35s + var(--m, 1) * 45ms); }
+  @keyframes cs-tile { from { opacity: 0; transform: translateY(14px) scale(.94); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-uploading i { animation: none; }
+}
+@media (max-width: 1100px) {
+  .cs-two { grid-template-columns: 1fr; }
+  .cs-two > div { border-right: 0; border-bottom: 1px solid var(--ov-line-soft); }
+}
+@media (max-width: 760px) {
+  .cs-year { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cs-months { grid-template-columns: repeat(6, minmax(0, 1fr)); padding-inline: 14px; }
+  .cs-stage { grid-template-columns: 52px minmax(0, 1fr); }
+  .cs-stage input:last-of-type { grid-column: 2; }
+  .cs-count { grid-column: 2; text-align: left; }
+  .cs-edit form { grid-template-columns: 1fr 1fr; }
+  .cs-edit form label:first-child { grid-column: 1 / -1; }
+  .cs-f3 { grid-template-columns: 1fr 1fr; }
+  .cs-f3 label:first-child { grid-column: 1 / -1; }
+  .cs-lesson { grid-template-columns: 48px minmax(0, 1fr); }
+  .cs-acts { grid-column: 2; }
+  .cs-live { grid-template-columns: 52px minmax(0, 1fr) auto; }
+}
