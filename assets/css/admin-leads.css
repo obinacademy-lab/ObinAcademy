@@ -137,7 +137,9 @@
 .lx-act { display: flex; gap: 6px; justify-content: flex-end; }
 .lx-ic { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--ov-line); display: grid; place-items: center; color: var(--ov-ink-2) !important; transition: transform .3s var(--lx-spring), border-color .3s ease; }
 .lx-ic svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.lx-ic.wa { color: #128c4b !important; }
+.lx-ic.wa { background: #25d366; border-color: #25d366; color: #fff !important; box-shadow: 0 4px 12px -4px rgba(37, 211, 102, .7); }
+.lx-ic.wa:hover { background: #1ebe5b; border-color: #1ebe5b; }
+.lx-ic .wa-glyph { width: 18px; height: 18px; fill: currentColor; stroke: none; }
 .lx-ic:hover { transform: translateY(-2px) scale(1.08); border-color: currentColor; }
 .lx-ic.go { background: var(--ov-ink); border-color: var(--ov-ink); color: var(--lx-lime) !important; }
 .lx-foot { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px; font-size: 12.5px; color: var(--ov-ink-3); flex-wrap: wrap; gap: 10px; }

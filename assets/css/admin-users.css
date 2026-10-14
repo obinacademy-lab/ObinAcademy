@@ -41,9 +41,9 @@
 .ux-who small { display: block; font-size: 12px; color: var(--ov-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ux-you { font: 600 10px var(--ov-mono); font-style: normal; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; background: var(--lc-void); color: var(--lc-lime); }
 .ux-phone { display: flex; align-items: center; gap: 8px; font: 400 12.5px var(--ov-mono); color: var(--ov-ink-2); white-space: nowrap; overflow: hidden; }
-.ux-phone a { width: 26px; height: 26px; flex: none; border-radius: 7px; border: 1px solid var(--ov-line); display: grid; place-items: center; color: #128c4b !important; transition: transform .3s var(--lc-spring), border-color .3s ease; }
-.ux-phone a:hover { transform: scale(1.1); border-color: #128c4b; }
-.ux-phone svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+.ux-phone a { width: 30px; height: 30px; flex: none; border-radius: 8px; background: #25d366; display: grid; place-items: center; color: #fff !important; box-shadow: 0 4px 12px -4px rgba(37, 211, 102, .7); transition: transform .3s var(--lc-spring), box-shadow .3s ease, background-color .3s ease; }
+.ux-phone a:hover { transform: scale(1.12) rotate(-6deg); background: #1ebe5b; box-shadow: 0 8px 18px -6px rgba(37, 211, 102, .9); }
+.ux-phone svg { width: 17px; height: 17px; fill: currentColor; stroke: none; }
 .ux-in { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; padding: 4px 10px 4px 9px; border-radius: 20px; background: var(--lc-void); color: var(--lc-lime); white-space: nowrap; }
 .ux-in i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .ux .acx-muted { font-size: 12.5px; }
