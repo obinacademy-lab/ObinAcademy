@@ -52,6 +52,30 @@ if (campuses_ready()) {
     $liveClasses = upcoming_campus_live_classes(7);
 }
 
+// Launch steps for each campus card: what is done, and where to go for the next one.
+$campusCards = [];
+if ($overview['campuses']) {
+    $written = array_column(db_all("SELECT campus_id, COUNT(*) AS n FROM campus_stages WHERE TRIM(title) <> '' GROUP BY campus_id"), 'n', 'campus_id');
+    $monthOne = array_column(db_all('SELECT campus_id, COUNT(*) AS n FROM campus_lessons WHERE month_no = 1 GROUP BY campus_id'), 'n', 'campus_id');
+    foreach ($overview['campuses'] as $c) {
+        $cid = (int) $c['id'];
+        $w = (int) ($written[$cid] ?? 0);
+        $l = (int) ($monthOne[$cid] ?? 0);
+        $live = $nextLive[$cid] ?? null;
+        $steps = [
+            ['Professor', (bool) $c['professor_name'], $c['professor_name'] ?: 'Not assigned', 'Assign a professor', 'professor'],
+            ['Curriculum', $w >= CAMPUS_YEAR_MONTHS, $w . ' of ' . CAMPUS_YEAR_MONTHS . ' months', 'Write the curriculum', 'curriculum'],
+            ['Month 1 lessons', $l > 0, $l ? $l . ' lesson' . ($l === 1 ? '' : 's') : 'None yet', 'Upload month 1 lessons', 'lessons'],
+            ['Live class', $live !== null, $live ? date('D j M', strtotime($live)) : 'None booked', 'Book a live class', 'live'],
+            ['Publish', $c['status'] === 'PUBLISHED', $c['status'] === 'PUBLISHED' ? 'Open' : 'Draft', 'Publish the campus', 'details'],
+        ];
+        $trend = array_replace(array_fill(0, 30, 0.0), $campusDaily[$cid] ?? []);
+        ksort($trend);
+        $campusCards[] = $c + ['steps' => $steps, 'done' => count(array_filter(array_column($steps, 1))), 'live' => $live, 'trend' => array_values($trend)];
+    }
+}
+$openCampuses = count(array_filter($campusCards, fn($c) => $c['status'] === 'PUBLISHED'));
+
 // What needs a person.
 $todo = [];
 try {
@@ -243,36 +267,93 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   </section>
 
   <section class="ov-grid">
-    <article class="ov-card ov-c12 ov-in" style="--i:7">
-      <div class="ov-card-h"><div><h2>Campuses</h2><p>Members, plan mix and money per campus over the last 30 days</p></div><a class="ov-link" href="<?= e(base_url('dashboard/admin/campuses.php')) ?>">Manage campuses <span>→</span></a></div>
-      <?php if ($overview['campuses']): ?>
-      <div class="ov-tbl">
-        <table>
-          <thead><tr><th>Campus</th><th>Status</th><th class="r">Members</th><th>Monthly / yearly</th><th class="r">Collected · 30d</th><th>Trend</th><th class="r">Ending · 7d</th><th>Next live class</th></tr></thead>
-          <tbody>
-          <?php foreach ($overview['campuses'] as $k => $c):
-              $cid = (int) $c['id'];
-              $trend = array_replace(array_fill(0, 30, 0.0), $campusDaily[$cid] ?? []);
-              ksort($trend);
-              $active = (int) $c['active'];
-              $yearlyPct = $active ? round((int) $c['yearly'] / $active * 100) : 0;
-          ?>
-            <tr style="--j:<?= $k ?>" data-href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . $cid)) ?>">
-              <td><a class="ov-camp" href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . $cid)) ?>">
-                <span class="ov-camp-badge" style="background:<?= e($badgeColors[$k % count($badgeColors)]) ?>"><?= campus_icon($c['icon'] ?: 'book', 1.8) ?></span>
-                <span><b><?= e($c['name']) ?></b><small><?= $c['professor_name'] ? e($c['professor_name']) : 'No professor yet' ?></small></span>
-              </a></td>
-              <td><span class="ov-pill <?= $c['status'] === 'PUBLISHED' ? 'pub' : 'draft' ?>"><?= $c['status'] === 'PUBLISHED' ? 'Published' : 'Draft' ?></span></td>
-              <td class="r"><span class="ov-num"><?= $active ?></span></td>
-              <td><?php if ($active): ?><div class="ov-mix"><div class="ov-mix-bar"><i style="width:<?= 100 - $yearlyPct ?>%"></i><i style="width:<?= $yearlyPct ?>%"></i></div><span><?= (int) $c['monthly'] ?> / <?= (int) $c['yearly'] ?></span></div><?php else: ?><span class="ov-muted">—</span><?php endif; ?></td>
-              <td class="r"><span class="ov-num"><?= $c['collected'] > 0 ? e(number_format($c['collected'])) : '—' ?></span></td>
-              <td><?php if (array_sum($trend) > 0): ?><svg class="ov-trend" data-trend="<?= e(json_encode(array_values($trend))) ?>" aria-hidden="true"></svg><?php else: ?><span class="ov-muted">—</span><?php endif; ?></td>
-              <td class="r"><span class="ov-num"><?= (int) $c['ending'] ?: '—' ?></span></td>
-              <td class="<?= isset($nextLive[$cid]) ? '' : 'ov-muted' ?>"><?= isset($nextLive[$cid]) ? e(date('D j M · g:i a', strtotime($nextLive[$cid]))) : '—' ?></td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
+    <article class="ov-card ov-c12 ov-in ov-cc" style="--i:7" data-cc>
+      <div class="ov-cc-h">
+        <div>
+          <h2>Campuses</h2>
+          <p>Each campus at a glance: how it's doing once it's open, and what's left before it can open</p>
+          <div class="ov-cc-sum">
+            <div><b><?= $openCampuses ?> <small>of <?= count($campusCards) ?></small></b><span>open to learners</span></div>
+            <div><b><?= number_format((int) $overview['active']) ?></b><span>members</span></div>
+            <div><b><small>UGX</small><?= e(number_format((float) ($overview['collected'] ?? 0))) ?></b><span>last 30 days</span></div>
+          </div>
+        </div>
+        <div class="ov-cc-tools">
+          <div class="ov-seg sm" role="group" aria-label="Show campuses">
+            <span class="ov-seg-pill" aria-hidden="true"></span>
+            <button type="button" data-filter="all" class="on" aria-pressed="true">All <em><?= count($campusCards) ?></em></button>
+            <button type="button" data-filter="open">Open <em><?= $openCampuses ?></em></button>
+            <button type="button" data-filter="draft">Drafts <em><?= count($campusCards) - $openCampuses ?></em></button>
+          </div>
+          <a class="ov-link" href="<?= e(base_url('dashboard/admin/campuses.php')) ?>">Manage campuses <span>→</span></a>
+        </div>
+      </div>
+      <?php if ($campusCards): ?>
+      <div class="ov-cc-grid">
+        <?php foreach ($campusCards as $k => $c):
+            $cid = (int) $c['id'];
+            $isOpen = $c['status'] === 'PUBLISHED';
+            $active = (int) $c['active'];
+            $edit = fn(string $tab = 'details') => base_url('dashboard/admin/campus-edit.php?id=' . $cid . '&tab=' . $tab);
+            $next = null;
+            foreach ($c['steps'] as $j => $st) { if (!$st[1]) { $next = $j; break; } }
+        ?>
+          <article class="ov-cc-card" data-state="<?= $isOpen ? 'open' : 'draft' ?>" style="--k:<?= $k ?>">
+            <a class="ov-cc-top" href="<?= e($edit()) ?>">
+              <span class="ov-cc-badge" style="background:<?= e($badgeColors[$k % count($badgeColors)]) ?>"><?= campus_icon($c['icon'] ?: 'book', 1.8) ?></span>
+              <span class="ov-cc-status <?= $isOpen ? 'open' : '' ?>"><?= $isOpen ? 'Open' : 'Draft' ?></span>
+            </a>
+            <div class="ov-cc-name">
+              <b><?= e($c['name']) ?></b>
+              <?php if ($c['professor_name']): ?>
+                <span class="ov-cc-prof"><i><?= e($initials($c['professor_name'])) ?></i><?= e($c['professor_name']) ?></span>
+              <?php else: ?>
+                <span class="ov-cc-prof none"><i>?</i>No professor yet</span>
+              <?php endif; ?>
+            </div>
+            <div class="ov-cc-body">
+              <?php if ($isOpen): ?>
+                <div class="ov-cc-nums">
+                  <div><b data-count="<?= $active ?>"><?= $active ?></b><span>members</span></div>
+                  <div><b><small>UGX</small><?= e(number_format((float) $c['collected'])) ?></b><span>last 30 days</span></div>
+                </div>
+                <div>
+                  <div class="ov-cc-mix"><i style="width:<?= $active ? (int) $c['monthly'] / $active * 100 : 0 ?>%"></i><i style="width:<?= $active ? (int) $c['yearly'] / $active * 100 : 0 ?>%"></i></div>
+                  <div class="ov-cc-mix-l"><span><?= (int) $c['monthly'] ?> monthly</span><span><?= (int) $c['yearly'] ?> yearly</span></div>
+                </div>
+                <svg class="ov-cc-curve" data-trend="<?= e(json_encode($c['trend'])) ?>" aria-hidden="true"></svg>
+              <?php else: ?>
+                <div class="ov-cc-ready"><span>Ready to open</span><b><?= (int) $c['done'] ?> / 5</b></div>
+                <div class="ov-cc-segs"><?php foreach ($c['steps'] as $j => $st): ?><i class="<?= $st[1] ? 'd' : '' ?>" style="--d:<?= $j ?>"></i><?php endforeach; ?></div>
+                <ul class="ov-cc-steps">
+                  <?php foreach ($c['steps'] as $j => $st): $cls = $st[1] ? 'ok' : ($j === $next ? 'nx' : 'td'); ?>
+                    <li class="<?= $cls ?>" style="--d:<?= $j ?>">
+                      <?php if ($cls === 'ok'): ?><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><?php elseif ($cls === 'nx'): ?><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M10.5 9l3 3-3 3"/></svg><?php else: ?><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg><?php endif; ?>
+                      <span><?= e($st[0]) ?></span><em><?= e($st[2]) ?></em>
+                    </li>
+                  <?php endforeach; ?>
+                </ul>
+                <?php if ($next !== null): ?>
+                  <a class="ov-cc-next" href="<?= e($edit($c['steps'][$next][4])) ?>"><?= e($c['steps'][$next][3]) ?><span>→</span></a>
+                <?php endif; ?>
+              <?php endif; ?>
+            </div>
+            <div class="ov-cc-foot">
+              <?php if ($isOpen): ?>
+                <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><?= $c['live'] ? '<b>' . e(date('D j M · g:i a', strtotime($c['live']))) . '</b>' : '<span class="warn">No live class booked</span>' ?></span>
+                <span title="Memberships ending in the next 7 days"><b><?= (int) $c['ending'] ?></b> ending</span>
+              <?php else: ?>
+                <span>Not open to learners yet</span>
+                <a href="<?= e($edit()) ?>">Edit</a>
+              <?php endif; ?>
+            </div>
+          </article>
+        <?php endforeach; ?>
+        <a class="ov-cc-card ov-cc-add" data-state="draft" href="<?= e(base_url('dashboard/admin/instructor-applications.php')) ?>" style="--k:<?= count($campusCards) ?>">
+          <span class="ov-cc-plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+          <b>Grow the faculty</b>
+          <span>New professors and campuses come from Teach applications</span>
+        </a>
       </div>
       <?php else: ?>
         <p class="ov-empty">No campuses yet.</p>

@@ -314,11 +314,23 @@
     if (btn.classList.contains('on')) return;
     seg.querySelectorAll('button').forEach(b => { const on = b === btn; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
     placePill(seg);
-    if (btn.dataset.range) { range = +btn.dataset.range; render(true); } else { mode = btn.dataset.mode; drawMoney(true); }
+    if (btn.dataset.range) { range = +btn.dataset.range; render(true); }
+    else if (btn.dataset.filter) filterCards(btn.dataset.filter);
+    else { mode = btn.dataset.mode; drawMoney(true); }
   })));
 
   root.querySelectorAll('[data-count]').forEach(n => count(n, +n.dataset.count, 1400, 450));
-  root.querySelectorAll('tr[data-href]').forEach(tr => tr.addEventListener('click', e => { if (!e.target.closest('a')) location.href = tr.dataset.href; }));
+  /* Campus cards: show all, open or draft campuses; the shown cards settle back in one after another. */
+  function filterCards(f) {
+    let n = 0;
+    root.querySelectorAll('.ov-cc-card').forEach(card => {
+      const show = f === 'all' || card.dataset.state === f || (card.classList.contains('ov-cc-add') && f === 'draft');
+      card.classList.toggle('hide', !show);
+      card.classList.remove('swap');
+      if (show) { void card.offsetWidth; card.style.setProperty('--n', n++); card.classList.add('swap'); }
+    });
+    root.querySelectorAll('.ov-cc-card:not(.hide) svg[data-trend]').forEach((s, k) => spark(s, running(JSON.parse(s.dataset.trend)), C.brand, 200 + k * 60));
+  }
 
   function boot() {
     segs.forEach(sg => placePill(sg, true));
