@@ -76,7 +76,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <?php foreach ($payments as $p): ?>
         <tr class="cm-row" data-href="<?= e(base_url('dashboard/admin/payments.php?q=' . urlencode($q))) ?>">
           <td data-label="When"><?= e(format_date($p['created_at'])) ?><small class="cm-sub">#<?= (int) $p['id'] ?></small></td>
-          <td data-label="Buyer"><?= e($p['payer_name'] ?: ($p['guest_name'] ?: 'Guest')) ?><small class="cm-sub"><?= e($p['phone']) ?></small></td>
+          <td data-label="Buyer"><?= e($p['payer_name'] ?: 'Deleted account') ?><small class="cm-sub"><?= e($p['phone']) ?></small></td>
           <td data-label="For"><?= e(admin_payment_what($p)) ?></td>
           <td class="num" data-label="Amount"><?= e(format_money((float) $p['amount'])) ?></td>
           <td data-label="Status"><span class="badge <?= $badge[$p['status']] ?? 'badge-draft' ?>"><?= e(ucfirst(strtolower($p['status']))) ?></span></td>

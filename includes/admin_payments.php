@@ -3,8 +3,8 @@
  * Admin-side payment queries: the all-payments list (filters, search, paging, CSV) and the money
  * health numbers shown on the admin Overview. Read-only; the one write the Payments page offers
  * (re-check a pending payment with the provider) reuses resolve_payment_with_iotec(), which claims a
- * payment atomically and so can't double-credit. Payments are campus memberships; the odd row left
- * from the old per-course platform is listed as history.
+ * payment atomically and so can't double-credit. Every payment is a campus membership
+ * (migration/remove-old-payment-data.sql removed what was left of the old per-course platform).
  */
 
 const ADMIN_PAYMENT_TYPES = [
@@ -42,8 +42,8 @@ function admin_payment_where(array $f): array {
     if ($f['to'] !== '') { $where[] = 'p.created_at <= ?'; $params[] = $f['to'] . ' 23:59:59'; }
     if ($f['q'] !== '') {
         $like = '%' . addcslashes($f['q'], '%_\\') . '%';
-        $where[] = '(p.phone LIKE ? OR p.iotec_transaction_id LIKE ? OR p.guest_name LIKE ? OR p.guest_email LIKE ? OR u.name LIKE ? OR u.email LIKE ? OR ca.name LIKE ?)';
-        array_push($params, $like, $like, $like, $like, $like, $like, $like);
+        $where[] = '(p.phone LIKE ? OR p.iotec_transaction_id LIKE ? OR u.name LIKE ? OR u.email LIKE ? OR ca.name LIKE ?)';
+        array_push($params, $like, $like, $like, $like, $like);
     }
     return [implode(' AND ', $where), $params];
 }
@@ -74,7 +74,6 @@ function admin_get_payment(int $id): ?array {
 
 /** What a payment was for, in words: "Campus: Crypto Trading (yearly)". */
 function admin_payment_what(array $p): string {
-    if ($p['type'] !== 'CAMPUS_MEMBERSHIP') return 'Old platform payment';
     return 'Campus: ' . ($p['campus_name'] ?? 'a campus') . (!empty($p['campus_plan']) ? ' (' . strtolower($p['campus_plan']) . ')' : '');
 }
 
