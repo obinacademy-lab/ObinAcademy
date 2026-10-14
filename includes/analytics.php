@@ -384,7 +384,8 @@ function login_log_geo_backfill_sweep(int $limit = 20): int {
  * @param array{q:string,role:string,when:string} $filters
  * @return array{rows:array,total:int}
  */
-function get_login_log(array $filters, int $page, int $perPage = 30): array {
+/** WHERE clause and parameters for the login log filters (q, role, when), shared by the list and its day counts. */
+function login_log_where(array $filters): array {
     $where = [];
     $params = [];
     if ($filters['q']) {
@@ -403,7 +404,11 @@ function get_login_log(array $filters, int $page, int $perPage = 30): array {
     } elseif ($filters['when'] === '30d') {
         $where[] = 'l.logged_in_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
     }
-    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+    return [$where ? 'WHERE ' . implode(' AND ', $where) : '', $params];
+}
+
+function get_login_log(array $filters, int $page, int $perPage = 30): array {
+    [$whereSql, $params] = login_log_where($filters);
 
     $total = (int) db_one("SELECT COUNT(*) AS n FROM login_log l JOIN users u ON u.id = l.user_id $whereSql", $params)['n'];
 
@@ -416,6 +421,15 @@ function get_login_log(array $filters, int $page, int $perPage = 30): array {
         $params
     );
     return ['rows' => $rows, 'total' => $total];
+}
+
+/** Sign-ins per calendar day (Y-m-d => count) under the same filters, for the given days. */
+function get_login_day_counts(array $filters, array $days): array {
+    if (!$days) return [];
+    [$whereSql, $params] = login_log_where($filters);
+    $whereSql .= ($whereSql ? ' AND ' : 'WHERE ') . 'DATE(l.logged_in_at) IN (' . implode(',', array_fill(0, count($days), '?')) . ')';
+    $rows = db_all("SELECT DATE(l.logged_in_at) AS d, COUNT(*) AS n FROM login_log l JOIN users u ON u.id = l.user_id $whereSql GROUP BY DATE(l.logged_in_at)", array_merge($params, array_values($days)));
+    return array_map('intval', array_column($rows, 'n', 'd'));
 }
 
 /** @return array{country:?string,city:?string}|null */
