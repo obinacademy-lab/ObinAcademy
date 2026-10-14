@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
+require __DIR__ . '/includes/stories.php';
 require __DIR__ . '/includes/campuses.php';
 
 $campuses = get_published_campuses() ?: get_all_campuses();
@@ -20,7 +21,7 @@ $commitments = [
     ['📱', '#f97316', 'Built for your phone', 'Lessons, live classes and payments all work from a phone.'],
 ];
 
-$aboutTestimonials = array_slice(get_published_testimonials(), 0, 3);
+$aboutStories = get_published_video_stories(3);
 
 $aboutFaqs = [
     ['How do I pay?', 'With MTN or Airtel Mobile Money. You approve a prompt on your phone and your campus opens straight away.'],
@@ -127,41 +128,24 @@ require __DIR__ . '/includes/header.php';
   </div>
 </div>
 
-<?php if ($aboutTestimonials): ?>
-<div class="section testimonials-decor">
+<?php if ($aboutStories): ?>
+<link rel="stylesheet" href="<?= e(versioned_asset('assets/css/stories.css')) ?>">
+<div class="section">
   <div class="container">
     <div class="text-center" style="max-width:560px; margin:0 auto 40px;">
-      <span class="eyebrow">Real Results</span>
-      <h2 class="h2" style="margin-top:10px;">What Our Learners Say</h2>
+      <span class="eyebrow">Real Students</span>
+      <h2 class="h2" style="margin-top:10px;">In Their Own Words</h2>
+      <p class="muted" style="margin-top:10px;">Students on camera, talking about their campus. Tap a story to watch it with sound.</p>
     </div>
-    <div class="grid sm:grid-2 lg:grid-3">
-      <?php foreach ($aboutTestimonials as $t): ?>
-        <div class="testimonial-card">
-          <span class="quote-mark">&ldquo;</span>
-          <div class="rating-row">
-            <span class="stars"><?= str_repeat('★', (int) $t['rating']) . str_repeat('☆', 5 - (int) $t['rating']) ?></span>
-            <span class="rating-num"><?= number_format((float) $t['rating'], 1) ?></span>
-          </div>
-          <p class="quote"><?= e($t['quote']) ?></p>
-          <div class="author">
-            <div class="avatar">
-              <?php if (!empty($t['author_avatar_url'])): ?>
-                <img src="<?= e(asset_src($t['author_avatar_url'])) ?>" alt="">
-              <?php else: ?><?= e(mb_substr($t['author_name'], 0, 1)) ?><?php endif; ?>
-            </div>
-            <div>
-              <div class="name"><?= e($t['author_name']) ?></div>
-              <?php if (!empty($t['author_headline'])): ?><div class="role"><?= e($t['author_headline']) ?></div><?php endif; ?>
-            </div>
-          </div>
-        </div>
-      <?php endforeach; ?>
+    <div class="vs-wall three">
+      <?php foreach ($aboutStories as $s) render_video_story_card($s); ?>
     </div>
     <div class="text-center" style="margin-top:36px;">
-      <a href="<?= e(base_url('stories.php')) ?>" class="btn btn-dark">Read More Stories →</a>
+      <a href="<?= e(base_url('stories.php')) ?>" class="btn btn-dark">Watch Every Story →</a>
     </div>
   </div>
 </div>
+<script src="<?= e(versioned_asset('assets/js/stories.js')) ?>" defer></script>
 <?php endif; ?>
 
 <div class="section">

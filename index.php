@@ -1,12 +1,13 @@
 <?php
 /**
  * Home page: sells the campuses. A clear promise, "is this you?", old way vs a campus, the campuses,
- * what's inside, three steps, pricing, real stories (only admin-approved testimonials, never invented),
+ * what's inside, three steps, pricing, real students on video (only published video stories, never invented),
  * questions, and a closing call to action. Joining always goes through a campus page and payment.
  */
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/campuses.php';
+require __DIR__ . '/includes/stories.php';
 
 $viewer = current_user();
 $all = get_all_campuses();
@@ -25,14 +26,7 @@ $from = $samePrices ? '' : 'From ';
 $perDay = fn(float $v, int $days) => 'UGX ' . number_format(round($v / $days / 100) * 100);
 $firstLink = $published ? base_url('campus.php?slug=' . $published[0]['slug'] . '#join') : '#campuses';
 
-$stories = [];
-try {
-    foreach (get_published_testimonials() as $t) {
-        if (mb_strlen(trim($t['quote'])) < 20) continue;
-        $stories[] = $t;
-        if (count($stories) === 3) break;
-    }
-} catch (Throwable $e) {}
+$stories = get_published_video_stories(3);
 
 $check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 $cross = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
@@ -45,6 +39,7 @@ $extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,40
 require __DIR__ . '/includes/header.php';
 ?>
 <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/home-campus.css')) ?>">
+<?php if ($stories): ?><link rel="stylesheet" href="<?= e(versioned_asset('assets/css/stories.css')) ?>"><?php endif; ?>
 <div class="hx-yearline" aria-hidden="true"><i></i></div><div class="hx-month" aria-hidden="true">Month <b>01</b> of 12</div>
 <div class="hx">
   <section class="hx-hero">
@@ -191,13 +186,10 @@ require __DIR__ . '/includes/header.php';
   <section class="hx-light hx-sec">
     <div class="hx-wrap">
       <div class="hx-head"><span class="hx-eyebrow dark">Real people</span><h2>In their <em>own words.</em></h2></div>
-      <div class="hx-proof">
-        <?php foreach ($stories as $s): ?>
-          <div class="hx-story"><q><?= e(mb_strimwidth(trim($s['quote']), 0, 240, '…')) ?></q>
-            <div class="who"><i><?php if (!empty($s['author_avatar_url'])): ?><img src="<?= e(asset_src($s['author_avatar_url'])) ?>" alt=""><?php else: ?><?= e(mb_strtoupper(mb_substr($s['author_name'], 0, 1))) ?><?php endif; ?></i>
-              <div><b><?= e($s['author_name']) ?></b><small><?= e($s['author_headline'] ?: 'Obin Academy learner') ?></small></div></div></div>
-        <?php endforeach; ?>
+      <div class="vs-wall three">
+        <?php foreach ($stories as $s) render_video_story_card($s); ?>
       </div>
+      <p class="vs-more"><a class="hx-more" href="<?= e(base_url('stories.php')) ?>">Watch every story <?= $arrow ?></a></p>
     </div>
   </section>
   <?php endif; ?>
@@ -289,4 +281,5 @@ require __DIR__ . '/includes/header.php';
   }
 })();
 </script>
+<?php if ($stories): ?><script src="<?= e(versioned_asset('assets/js/stories.js')) ?>" defer></script><?php endif; ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>

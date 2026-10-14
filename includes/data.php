@@ -18,14 +18,6 @@ function get_platform_stats(): array {
     ];
 }
 
-function get_published_testimonials(): array {
-    return db_all("
-        SELECT t.*, u.name AS author_name, u.avatar_url AS author_avatar_url, u.headline AS author_headline
-        FROM testimonials t JOIN users u ON u.id = t.author_id
-        WHERE t.status = 'PUBLISHED' ORDER BY t.reviewed_at DESC
-    ");
-}
-
 /** Professors' share of the campus payments made on each day, keyed by Y-m-d. Empty before professor pay exists. */
 function campus_professor_share_by_day(string $fromDate, ?string $toDate = null): array {
     try {

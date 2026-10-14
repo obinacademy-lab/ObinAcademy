@@ -1,154 +1,53 @@
 <?php
+/**
+ * Stories: real students on video, talking about their campus. Uploaded and published by the admin
+ * (dashboard/admin/testimonials.php) with the student's permission. No profile pictures, no star
+ * ratings, nothing written for them: the video is the proof. Students who want to share theirs get
+ * in touch through the contact page and we record it with them.
+ */
 require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/data.php';
+require __DIR__ . '/includes/stories.php';
 
 $user = current_user();
-$errors = [];
-$submitted = false;
+$stories = get_published_video_stories();
+$campusCount = count(array_unique(array_filter(array_column($stories, 'campus_id'))));
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_verify();
-    if (!$user) {
-        $errors[] = 'You must be logged in to share your story.';
-    } else {
-        $quote = post('quote');
-        $rating = (int) post('rating', '5');
-        if (strlen($quote) < 20) $errors[] = 'Tell us a bit more — at least 20 characters.';
-        if ($rating < 1 || $rating > 5) $rating = 5;
-
-        if (!$errors) {
-            db_insert('INSERT INTO testimonials (quote, rating, author_id) VALUES (?, ?, ?)', [$quote, $rating, $user['id']]);
-            $submitted = true;
-        }
-    }
-}
-
-$testimonials = get_published_testimonials();
-$stats = get_platform_stats();
-
-$pageTitle = 'Stories — Obin Academy';
-$pageDescription = 'Real stories from learners building real skills — and real income — at Obin Academy.';
+$pageTitle = 'Student Stories — Obin Academy';
+$pageDescription = 'Real Obin Academy students on camera, in their own words: what they learned in their campus and what changed for them.';
+$extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400';
 require __DIR__ . '/includes/header.php';
 ?>
-<section class="home-hero-v3">
-  <div class="container" style="text-align:center;">
-    <h1>Stories From Our Community</h1>
-    <p class="summary" style="margin-left:auto; margin-right:auto;">Hear from learners building real skills and real income at Obin Academy.</p>
+<link rel="stylesheet" href="<?= e(versioned_asset('assets/css/stories.css')) ?>">
+<div class="vs-page">
+  <section class="vs-hero">
+    <span class="vs-eyebrow"><i></i>Recorded by our students</span>
+    <h1>Real students. <em>Their own words.</em></h1>
+    <p><?php if ($stories): ?><?= count($stories) ?> student<?= count($stories) === 1 ? '' : 's' ?><?= $campusCount > 1 ? ' from ' . $campusCount . ' campuses' : '' ?> on camera, talking about what they learned and what changed. Tap a story to watch it with sound.<?php else: ?>Our students are recording their stories now. Check back soon to hear them in their own words.<?php endif; ?></p>
+  </section>
 
-    <?php if ($testimonials): ?>
-      <div class="hero-trust-stat" style="justify-content:center; color:var(--ink); background:color-mix(in srgb, var(--gold) 12%, white); border:1px solid color-mix(in srgb, var(--gold) 30%, var(--border));">
-        <?php dash_icon('check-circle'); ?>
-        <span style="color:#92660a;"><?= count($testimonials) ?></span> verified <?= count($testimonials) === 1 ? 'story' : 'stories' ?> from real learners
-      </div>
-    <?php endif; ?>
-  </div>
-</section>
-
-<?php render_stat_strip($stats); ?>
-
-<div class="section testimonials-decor">
-  <div class="container">
-    <?php if ($testimonials): ?>
-      <div class="stories-slider" data-stories-slider>
-        <div class="stories-track" data-stories-track>
-          <?php foreach ($testimonials as $t): ?>
-            <div class="testimonial-card">
-              <span class="quote-mark">&ldquo;</span>
-              <div class="rating-row">
-                <span class="stars"><?= str_repeat('★', (int) $t['rating']) . str_repeat('☆', 5 - (int) $t['rating']) ?></span>
-                <span class="rating-num"><?= number_format((float) $t['rating'], 1) ?></span>
-              </div>
-              <p class="quote"><?= e($t['quote']) ?></p>
-              <div class="author">
-                <div class="avatar"><?= e(mb_substr($t['author_name'], 0, 1)) ?></div>
-                <div>
-                  <div class="name"><?= e($t['author_name']) ?></div>
-                  <?php if (!empty($t['author_headline'])): ?><div class="role"><?= e($t['author_headline']) ?></div><?php endif; ?>
-                  <div class="verified">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>
-                    Verified Learner
-                  </div>
-                </div>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        </div>
-        <?php if (count($testimonials) > 1): ?>
-          <button type="button" class="stories-nav prev" data-stories-prev aria-label="Previous story">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
-          </button>
-          <button type="button" class="stories-nav next" data-stories-next aria-label="Next story">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
-          </button>
-          <div class="stories-dots" data-stories-dots></div>
-        <?php endif; ?>
+  <div class="vs-body">
+    <?php if ($stories): ?>
+      <div class="vs-wall vs-dark">
+        <?php foreach ($stories as $s) render_video_story_card($s); ?>
       </div>
     <?php else: ?>
-      <p class="muted text-center">No stories published yet.</p>
+      <div class="vs-empty">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>
+        <b>The first stories are on their way</b>
+        <p>Every story here is a real student on camera, shared with their permission.</p>
+      </div>
     <?php endif; ?>
   </div>
-</div>
 
-<div class="section" style="background:var(--surface);">
-  <div class="container">
-    <div class="grid lg:grid-2" style="gap:48px; align-items:center; max-width:960px; margin:0 auto;">
-      <div class="reveal">
-        <span class="eyebrow">Join the Community</span>
-        <h2 class="h2" style="margin-top:14px;">Share Your Story</h2>
-        <p class="lede" style="margin-top:14px; max-width:none; font-size:16px; line-height:1.75; color:var(--muted);">
-          Finished a stage, landed a client, or grew your income with a skill you learned here? Your story could be the reason someone else takes the leap.
-        </p>
-        <ul class="check-list" style="margin-top:26px;">
-          <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span class="label-text">Takes less than a minute to submit</span></li>
-          <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span class="label-text">Featured right here on the Stories page</span></li>
-          <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span class="label-text">Reviewed before it goes live — no spam, ever</span></li>
-        </ul>
+  <section class="vs-share">
+    <div>
+      <div>
+        <h2>Is a campus working for you?</h2>
+        <p>Tell us. If you are happy to be filmed, we will help you record a short video (a phone is enough) and share it here, so the next student can see what is possible.</p>
       </div>
-
-      <div class="reveal reveal-delay-2">
-        <?php if ($submitted): ?>
-          <div class="alert alert-success">Thanks for sharing! Your story is pending review.</div>
-        <?php else: ?>
-          <?php if ($errors): ?><div class="alert alert-error" style="margin-bottom:16px;"><?= e(implode(' ', $errors)) ?></div><?php endif; ?>
-          <?php if (!$user): ?>
-            <div class="card card-pad" style="text-align:center;">
-              <p class="muted">Log in or create an account first to share your story.</p>
-              <div class="row gap-2 center" style="margin-top:14px;">
-                <a href="<?= e(base_url('login.php?redirect=/stories.php')) ?>" class="btn btn-outline">Log In</a>
-                <a href="<?= e(base_url('signup.php?redirect=/stories.php')) ?>" class="btn btn-primary">Sign Up</a>
-              </div>
-            </div>
-          <?php else: ?>
-      <form method="post" class="card card-pad">
-        <?= csrf_field() ?>
-        <div class="field">
-          <label>Your Rating</label>
-          <div class="row gap-1" data-star-input style="font-size:22px; color:var(--gold); cursor:pointer;">
-            <?php for ($i = 1; $i <= 5; $i++): ?><span data-star="<?= $i ?>">☆</span><?php endfor; ?>
-          </div>
-          <input type="hidden" name="rating" value="5" data-rating-input>
-        </div>
-        <div class="field"><label for="quote">Your Story</label><textarea id="quote" name="quote" rows="4" required placeholder="What did Obin Academy help you achieve?"></textarea></div>
-        <button type="submit" class="btn btn-primary btn-block">Submit Story</button>
-      </form>
-      <script>
-        (() => {
-          const wrap = document.querySelector('[data-star-input]');
-          const input = document.querySelector('[data-rating-input]');
-          if (!wrap) return;
-          wrap.querySelectorAll('[data-star]').forEach((s) => {
-            s.addEventListener('click', () => {
-              const val = Number(s.dataset.star);
-              input.value = String(val);
-              wrap.querySelectorAll('[data-star]').forEach((el) => { el.textContent = Number(el.dataset.star) <= val ? '★' : '☆'; });
-            });
-          });
-        })();
-      </script>
-    <?php endif; ?>
-  <?php endif; ?>
-      </div>
+      <a class="vs-cta" href="<?= e(base_url('contact.php')) ?>">Share your story <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     </div>
-  </div>
+  </section>
 </div>
+<script src="<?= e(versioned_asset('assets/js/stories.js')) ?>" defer></script>
 <?php require __DIR__ . '/includes/footer.php'; ?>

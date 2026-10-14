@@ -21,6 +21,11 @@ function storage_files_in_use(): array {
         array_column(db_all("SELECT avatar_url AS u FROM users WHERE avatar_url LIKE '/uploads/%'"), 'u'),
         array_column(db_all("SELECT professor_photo_url AS u FROM campuses WHERE professor_photo_url LIKE '/uploads/%'"), 'u')
     );
+    try {
+        $public = array_merge($public, array_column(db_all("SELECT video_url AS u FROM video_stories WHERE video_url LIKE '/uploads/%'"), 'u'));
+    } catch (Throwable $e) {
+        // Video stories not set up yet.
+    }
     foreach ($public as $u) {
         $path = public_uploads_root() . '/' . substr($u, strlen('/uploads/'));
         $used[realpath($path) ?: $path] = true;
@@ -32,7 +37,7 @@ function storage_files_in_use(): array {
 function storage_unused_files(): array {
     $used = storage_files_in_use();
     $out = [];
-    foreach (['Lesson videos and PDFs' => private_uploads_root(), 'Pictures' => public_uploads_root()] as $label => $root) {
+    foreach (['Lesson videos and PDFs' => private_uploads_root(), 'Pictures and story videos' => public_uploads_root()] as $label => $root) {
         if (!is_dir($root)) continue;
         $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
         foreach ($it as $file) {
