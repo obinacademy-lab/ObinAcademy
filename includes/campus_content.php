@@ -58,11 +58,11 @@ function campus_content_handle(string $a, array $campus, array $user): array {
         if ($month < 1 || $month > CAMPUS_YEAR_MONTHS) throw new RuntimeException('Choose the month to complete.');
         campus_release_due_months($id);
         $n = db_run('UPDATE campus_memberships SET next_month_at = DATE_ADD(NOW(), INTERVAL ' . CAMPUS_MONTH_UNDO_MINUTES . ' MINUTE) WHERE campus_id = ? AND month_open = ? AND next_month_at IS NULL AND access_until > NOW()', [$id, $month]);
-        if (!$n) throw new RuntimeException('No student is waiting on month ' . $month . ' right now.');
+        if (!$n) throw new RuntimeException('No student with an active subscription is on month ' . $month . ' right now.');
         db_run('INSERT INTO campus_stages (campus_id, month_no, title, summary, completed_at) VALUES (?, ?, \'\', \'\', NOW()) ON DUPLICATE KEY UPDATE completed_at = NOW()', [$id, $month]);
         $opens = date('g:i a', strtotime((string) db_one('SELECT MIN(next_month_at) AS t FROM campus_memberships WHERE campus_id = ? AND month_open = ? AND next_month_at IS NOT NULL', [$id, $month])['t']));
         $log('month_completed', 'month ' . $month . ' complete for ' . $n . ' student' . ($n === 1 ? '' : 's') . ($month < CAMPUS_YEAR_MONTHS ? ', month ' . ($month + 1) . ' opens at ' . $opens : ', year finished'));
-        flash_set('success', 'Month ' . $month . ' is complete for ' . ($n === 1 ? '1 student' : $n . ' students') . '. ' . ($month < CAMPUS_YEAR_MONTHS ? 'Month ' . ($month + 1) . ' opens for them at ' . $opens : 'Their year finishes at ' . $opens) . '. Undo before then and they will not notice a thing.');
+        flash_set('success', 'Month ' . $month . ' is complete for ' . ($n === 1 ? '1 student' : $n . ' students') . ' with an active subscription. ' . ($month < CAMPUS_YEAR_MONTHS ? 'Month ' . ($month + 1) . ' opens for them at ' . $opens : 'Their year finishes at ' . $opens) . '. Undo before then and they will not notice a thing.');
         return ['tab' => $backTab, 'month' => null];
     }
     if ($a === 'month_undo' && campus_groups_ready()) {

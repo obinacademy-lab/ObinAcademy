@@ -154,11 +154,12 @@ function campus_groups_ready(): bool {
 
 /**
  * The month a member can open now, 1 to 12. A completed month counts only once its undo window has
- * passed (next_month_at), so a month the professor undoes in time is never seen.
+ * passed (next_month_at), so a month the professor undoes in time is never seen, and only if the
+ * student's subscription was still active at that moment: no active subscription, no next month.
  */
 function campus_member_month(array $m): int {
     $open = (int) ($m['month_open'] ?? 1);
-    if (!empty($m['next_month_at']) && strtotime($m['next_month_at']) <= time()) $open++;
+    if (!empty($m['next_month_at']) && strtotime($m['next_month_at']) <= time() && (empty($m['access_until']) || strtotime($m['access_until']) >= strtotime($m['next_month_at']))) $open++;
     return max(1, min(CAMPUS_YEAR_MONTHS, $open));
 }
 
@@ -175,21 +176,24 @@ function campus_current_month(array $m): int {
 }
 
 /**
- * Opens the months whose undo window has passed: moves those students on and tells them. Safe to call
+ * Opens the months whose undo window has passed: moves those students on and tells them. Only students
+ * whose subscription is active when the month opens move on. Safe to call
  * often (campus pages, the professor's dashboard, the cron job). Returns how many students moved on.
  */
 function campus_release_due_months(?int $campusId = null): int {
     if (!campus_groups_ready()) return 0;
     $rows = db_all(
         'SELECT m.id, m.user_id, m.month_open, c.id AS campus_id, c.name, c.slug FROM campus_memberships m JOIN campuses c ON c.id = m.campus_id
-         WHERE m.next_month_at IS NOT NULL AND m.next_month_at <= NOW()' . ($campusId ? ' AND m.campus_id = ?' : ''),
+         WHERE m.next_month_at IS NOT NULL AND m.next_month_at <= NOW() AND m.access_until >= m.next_month_at' . ($campusId ? ' AND m.campus_id = ?' : ''),
         $campusId ? [$campusId] : []
     );
+    // Students whose subscription ran out before their month opened stay where they are, quietly.
+    db_run('UPDATE campus_memberships SET next_month_at = NULL WHERE next_month_at IS NOT NULL AND next_month_at <= NOW() AND access_until < next_month_at' . ($campusId ? ' AND campus_id = ?' : ''), $campusId ? [$campusId] : []);
     $moved = 0;
     $titles = [];
     foreach ($rows as $r) {
         // Claim the row so two requests never move a student twice.
-        if (!db_run('UPDATE campus_memberships SET month_open = month_open + 1, next_month_at = NULL WHERE id = ? AND next_month_at IS NOT NULL AND next_month_at <= NOW()', [$r['id']])) continue;
+        if (!db_run('UPDATE campus_memberships SET month_open = month_open + 1, next_month_at = NULL WHERE id = ? AND next_month_at IS NOT NULL AND next_month_at <= NOW() AND access_until >= next_month_at', [$r['id']])) continue;
         $moved++;
         $next = (int) $r['month_open'] + 1;
         if ($next > CAMPUS_YEAR_MONTHS) {

@@ -220,7 +220,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <?php endif; ?>
   <?php if ($paced && $groupsOn): ?>
     <div class="ld-panel ca-groups">
-      <div class="ca-groups-h"><small>Groups by month</small><span>Every new student starts at month 1. Completing a month moves only that group on, <?= CAMPUS_MONTH_UNDO_MINUTES ?> minutes later, so it can be undone before students see it. The professor<?= $campus['professor_name'] ? ' (' . e($campus['professor_name']) . ')' : '' ?> does this in Campus Studio; you can do it here too.</span></div>
+      <div class="ca-groups-h"><small>Groups by month</small><span>Every new student starts at month 1. Completing a month moves only that group on, <?= CAMPUS_MONTH_UNDO_MINUTES ?> minutes later, so it can be undone before students see it. Only students with an active subscription move on. The professor<?= $campus['professor_name'] ? ' (' . e($campus['professor_name']) . ')' : '' ?> does this in Campus Studio; you can do it here too.</span></div>
       <?php if (!$groups): ?><p class="muted small" style="margin:0;">No active students yet.</p><?php endif; ?>
       <?php foreach ($groups as $gm => $info): ?>
         <div class="ca-group<?= $info['pending'] ? ' pending' : '' ?>">

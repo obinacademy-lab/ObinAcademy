@@ -130,7 +130,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
       </div>
       <?php if ($paced && $groupsOn): ?>
         <div class="cs-class cs-groups">
-          <div class="cs-class-now"><span>Your groups</span><small>Every new student starts at month 1. Completing a month moves only that group on, <?= CAMPUS_MONTH_UNDO_MINUTES ?> minutes later, so you can undo before anyone sees it.</small></div>
+          <div class="cs-class-now"><span>Your groups</span><small>Every new student starts at month 1. Completing a month moves only that group on, <?= CAMPUS_MONTH_UNDO_MINUTES ?> minutes later, so you can undo before anyone sees it. Only students with an active subscription move on; anyone whose subscription has ended stays on their month until they renew.</small></div>
           <?php if (!$groups): ?><p class="cs-gnone">No students yet.</p><?php endif; ?>
           <?php foreach ($groups as $gm => $info): ?>
             <div class="cs-group<?= $info['pending'] ? ' pending' : '' ?>">
