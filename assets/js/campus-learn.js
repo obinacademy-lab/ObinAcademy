@@ -1,8 +1,22 @@
-/* A member's campus (campus-learn.php): live class countdown, and an instant tick when a lesson is
-   marked done from a checklist (the form still posts; the page comes back with the tick drawn). */
+/* A member's campus (campus-learn.php): the line along the steps runs to the current step, and the
+   live class countdown ticks. (The slide direction between pages is set in the page head.) */
 (function () {
-  function pad(n) { return String(n).padStart(2, '0'); }
+  // The blue line runs from the first step to the last done or current one. Offsets ignore the
+  // entrance transforms, so the length is right while the steps are still sliding in.
+  function spine() {
+    document.querySelectorAll('.cl-steps').forEach(function (ol) {
+      var reached = ol.querySelectorAll('.cl-step.done .cl-node, .cl-step.cur .cl-node'), first = ol.querySelector('.cl-node');
+      if (!reached.length || !first) { ol.style.setProperty('--reach', '0px'); return; }
+      var last = reached[reached.length - 1];
+      var y = function (n) { return n.closest('.cl-step').offsetTop + n.offsetTop; };
+      ol.style.setProperty('--reach', (y(last) - y(first)) + 'px');
+    });
+  }
+  spine();
+  addEventListener('resize', spine);
+  addEventListener('load', spine);
 
+  function pad(n) { return String(n).padStart(2, '0'); }
   var counts = document.querySelectorAll('[data-count]');
   function tick() {
     counts.forEach(function (c) {
@@ -18,16 +32,11 @@
   }
   if (counts.length) { tick(); setInterval(tick, 1000); }
 
-  // On narrow screens the year track scrolls: start it with the student's month in view.
-  var scroller = document.querySelector('.cl-scroll'), now = scroller && scroller.querySelector('.cl-stn.now');
-  if (now && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = Math.max(0, now.offsetLeft - scroller.clientWidth / 2 + now.offsetWidth / 2);
-
+  // One tap on "Mark as done": stop double posts.
   document.addEventListener('submit', function (e) {
-    var f = e.target.closest('.cl-tickf');
-    if (!f) return;
-    var row = f.closest('.cl-row'), btn = f.querySelector('button');
-    if (btn.disabled) { e.preventDefault(); return; }
-    btn.disabled = true;
-    if (row) { row.classList.add('is-done', 'is-just'); var st = row.querySelector('.cl-state'); if (st) { st.className = 'cl-state done'; st.textContent = 'Done'; } }
+    var b = e.target.querySelector('button[type="submit"]');
+    if (!b) return;
+    if (b.dataset.sent) { e.preventDefault(); return; }
+    b.dataset.sent = '1';
   });
 })();
