@@ -44,7 +44,7 @@ function video_story_length(?int $seconds): string {
 function render_video_story_card(array $s): void {
     $len = video_story_length($s['duration_seconds'] !== null ? (int) $s['duration_seconds'] : null);
     $open = !empty($s['campus_slug']) && ($s['campus_status'] ?? '') === 'PUBLISHED';
-    $ctaUrl = $open ? base_url('campus.php?slug=' . urlencode($s['campus_slug'])) : base_url('campuses.php');
+    $ctaUrl = $open ? base_url('campus.php?slug=' . urlencode($s['campus_slug'])) : base_url('index.php#campuses');
     $ctaText = $open ? 'Join this campus' : 'Explore the campuses';
     ?>
     <figure class="vs-card">
