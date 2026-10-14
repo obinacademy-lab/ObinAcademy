@@ -63,6 +63,7 @@ $unreadNotifCount = 0;
 if ($user['role'] === 'ADMIN') {
     $adminNotifications = get_admin_notifications(8);
     $unreadNotifCount = get_unread_notification_count();
+    try { $navBadges['/dashboard/admin/professor-pay.php'] = (int) db_one("SELECT COUNT(*) AS n FROM campus_payout_requests WHERE status = 'PENDING'")['n']; } catch (Throwable $e) {} // professors asking to be paid
     $navBadges['/dashboard/admin/leads.php'] = (int) db_one("SELECT COUNT(*) AS n FROM leads WHERE status='NEW'")['n'];
     try {
         $navBadges['/dashboard/admin/instructor-applications.php'] = (int) db_one("SELECT COUNT(*) AS n FROM instructor_applications WHERE status='NEW'")['n'];

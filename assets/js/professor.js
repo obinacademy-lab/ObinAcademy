@@ -37,7 +37,8 @@
   }
 
   // Forms that need a yes first (moving a group back a month).
-  document.querySelectorAll('[data-pf-overview] form[data-confirm]').forEach(f => f.addEventListener('submit', e => { if (!confirm(f.dataset.confirm)) e.preventDefault(); }));
+  document.querySelectorAll('form[data-confirm]').forEach(f => { if (f.closest('[data-pp]')) return; // Studio's own script asks there
+    f.addEventListener('submit', e => { if (!confirm(f.dataset.confirm)) e.preventDefault(); }); });
 
   const ov = document.querySelector('[data-pf-overview]');
   if (!ov) return;

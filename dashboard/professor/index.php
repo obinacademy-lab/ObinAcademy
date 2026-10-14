@@ -178,7 +178,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     </article>
 
     <article class="pf-tile pf-pay" data-in>
-      <div class="pf-tile-h"><small>Owed to you</small><a href="<?= e(base_url('dashboard/professor.php' . (count(professor_campuses($user)) > 1 ? '?campus=' . $id : ''))) ?>">My Pay →</a></div>
+      <div class="pf-tile-h"><small>Owed to you</small><?php $payHref = base_url('dashboard/professor.php' . (count(professor_campuses($user)) > 1 ? '?campus=' . $id : '')) . '#request'; $waiting = payout_request_pending($id); ?><?php if ($waiting): ?><a class="pf-req-wait" href="<?= e($payHref) ?>">● Requested <?= e(time_ago($waiting['requested_at'])) ?></a><?php elseif ((float) $pay['owed'] > 0 && payout_requests_ready()): ?><a class="pf-req-btn" href="<?= e($payHref) ?>">Request payment →</a><?php else: ?><a href="<?= e($payHref) ?>">My Pay →</a><?php endif; ?></div>
       <div class="pf-owed"><small>UGX</small><?= e(number_format((float) $pay['owed'])) ?></div>
       <div class="pf-pay-rows">
         <div><span>Earned, last 30 days</span><b><?= e(number_format((float) ($pay['earned30'] ?? 0))) ?></b></div>

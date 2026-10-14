@@ -715,6 +715,7 @@ function record_campus_professor_payout(int $campusId, string $method, string $s
     }
 
     $payout = db_one('SELECT * FROM campus_professor_payouts WHERE id = ?', [$payoutId]);
+    payout_request_mark_paid($campusId, (int) $payoutId, $adminId); // a waiting request from the professor is now paid
     if (!empty($campus['professor_user_id'])) {
         $prof = db_one('SELECT id, name, email FROM users WHERE id = ?', [$campus['professor_user_id']]);
         if ($prof) {
@@ -726,6 +727,83 @@ function record_campus_professor_payout(int $campusId, string $method, string $s
         }
     }
     return $payout;
+}
+
+// ---------------------------------------------------------------- payment requests from professors
+
+/** True once migration/add-payout-requests.sql has been applied. */
+function payout_requests_ready(): bool {
+    static $ready = null;
+    if ($ready !== null) return $ready;
+    try { db_one('SELECT 1 FROM campus_payout_requests LIMIT 1'); return $ready = true; } catch (Throwable $e) { return $ready = false; }
+}
+
+/** The open request for a campus, if any (at most one at a time). */
+function payout_request_pending(int $campusId): ?array {
+    if (!payout_requests_ready()) return null;
+    return db_one("SELECT * FROM campus_payout_requests WHERE campus_id = ? AND status = 'PENDING' ORDER BY id DESC LIMIT 1", [$campusId]);
+}
+
+/** A campus's requests, newest first. */
+function payout_requests_for_campus(int $campusId, int $limit = 20): array {
+    if (!payout_requests_ready()) return [];
+    return db_all('SELECT * FROM campus_payout_requests WHERE campus_id = ? ORDER BY requested_at DESC, id DESC LIMIT ' . (int) $limit, [$campusId]);
+}
+
+/** Every open request, oldest first, with the campus and what is owed on it now (for Admin, Professor Pay). */
+function payout_requests_open(): array {
+    if (!payout_requests_ready()) return [];
+    $rows = db_all(
+        "SELECT r.*, c.name AS campus_name, c.professor_name, u.name AS professor_account
+         FROM campus_payout_requests r JOIN campuses c ON c.id = r.campus_id LEFT JOIN users u ON u.id = r.professor_user_id
+         WHERE r.status = 'PENDING' ORDER BY r.requested_at ASC"
+    );
+    $owed = professor_pay_summary();
+    foreach ($rows as &$r) $r['owed_now'] = (float) ($owed[(int) $r['campus_id']]['owed'] ?? 0);
+    return $rows;
+}
+
+/**
+ * A professor asks to be paid everything owed on their campus now. Refused when nothing is owed, when a
+ * request is already waiting, or without a usable mobile money number. Tells the admins.
+ * @throws RuntimeException with a message for the professor.
+ */
+function payout_request_create(array $campus, array $professor, string $phone, string $payoutName, string $note): array {
+    if (!payout_requests_ready()) throw new RuntimeException('Payment requests are being switched on. Try again shortly.');
+    $owed = (float) (professor_pay_summary((int) $professor['id'])[(int) $campus['id']]['owed'] ?? 0);
+    if ($owed <= 0) throw new RuntimeException('Nothing is owed to you right now. Your share is added the moment a member pays.');
+    if (payout_request_pending((int) $campus['id'])) throw new RuntimeException('You already have a request waiting. Obin Academy will pay it soon.');
+    $phone = trim($phone);
+    if (strlen(preg_replace('/\D/', '', $phone)) < 9) throw new RuntimeException('Enter the mobile money number to send your money to, like 0772 123 456.');
+    $id = db_insert(
+        'INSERT INTO campus_payout_requests (campus_id, professor_user_id, amount, phone, payout_name, note) VALUES (?, ?, ?, ?, ?, ?)',
+        [$campus['id'], $professor['id'], $owed, mb_substr($phone, 0, 32), mb_substr(trim($payoutName), 0, 120) ?: null, mb_substr(trim($note), 0, 255) ?: null]
+    );
+    require_once __DIR__ . '/notifications.php';
+    try { create_admin_notification('payout_request', $professor['name'] . ' asked to be paid ' . format_money($owed) . ' for the ' . $campus['name'] . ' Campus.'); } catch (Throwable $e) {}
+    return db_one('SELECT * FROM campus_payout_requests WHERE id = ?', [$id]);
+}
+
+/** The professor withdraws their own waiting request. */
+function payout_request_cancel(int $campusId, int $professorUserId): bool {
+    if (!payout_requests_ready()) return false;
+    return (bool) db_run("UPDATE campus_payout_requests SET status = 'CANCELLED', decided_at = NOW() WHERE campus_id = ? AND professor_user_id = ? AND status = 'PENDING'", [$campusId, $professorUserId]);
+}
+
+/** The admin turns a request down, with a reason the professor sees. */
+function payout_request_decline(int $requestId, string $reason, int $adminId): ?array {
+    if (!payout_requests_ready()) return null;
+    $r = db_one("SELECT r.*, c.name AS campus_name FROM campus_payout_requests r JOIN campuses c ON c.id = r.campus_id WHERE r.id = ? AND r.status = 'PENDING'", [$requestId]);
+    if (!$r) return null;
+    db_run("UPDATE campus_payout_requests SET status = 'DECLINED', decline_reason = ?, decided_at = NOW(), decided_by = ? WHERE id = ?", [mb_substr(trim($reason), 0, 255), $adminId, $requestId]);
+    create_user_notification((int) $r['professor_user_id'], null, 'payout_declined', 'Your payment request of ' . format_money((float) $r['amount']) . ' was not paid: ' . trim($reason), base_url('dashboard/professor.php?campus=' . $r['campus_id']));
+    return $r;
+}
+
+/** Marks a campus's waiting request paid by a payout (called from record_campus_professor_payout()). */
+function payout_request_mark_paid(int $campusId, int $payoutId, int $adminId): void {
+    if (!payout_requests_ready()) return;
+    db_run("UPDATE campus_payout_requests SET status = 'PAID', payout_id = ?, decided_at = NOW(), decided_by = ? WHERE campus_id = ? AND status = 'PENDING'", [$payoutId, $adminId, $campusId]);
 }
 
 function upcoming_campus_live_classes(int $days = 7, ?int $campusId = null): array {

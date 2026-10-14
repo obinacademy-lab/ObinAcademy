@@ -3,7 +3,8 @@
  * Admin: professor pay, as a "pay desk". Every campus payment earns that campus's professor their share
  * (40% by default) the moment it succeeds. A dark console shows what is owed now and a lane per campus;
  * the ledger lists every campus with a Pay button; opening a campus (?campus=) shows each payment behind
- * the amount and records money sent (mobile money, bank or cash) with its reference.
+ * the amount and records money sent (mobile money, bank or cash) with its reference. Professors can ask
+ * to be paid (dashboard/professor.php): open requests are listed first, with Pay and Decline.
  *
  * Styles: assets/css/admin-campuses.css (console, ledger) + assets/css/admin-pay.css. Motion: assets/js/admin-pay.js.
  */
@@ -23,6 +24,15 @@ if (!campuses_ready() || !professor_pay_ready()) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $campusId = (int) post('campus');
+    if (post('_action') === 'decline_request') {
+        if (mb_strlen(trim(post('reason'))) < 4) {
+            flash_set('error', 'Write a short reason. The professor sees it.');
+        } elseif ($r = payout_request_decline((int) post('request'), post('reason'), (int) $user['id'])) {
+            log_admin_action((int) $user['id'], $user['name'], 'campus.payout_request_declined', 'Campus', $r['campus_name'], format_money((float) $r['amount']) . ': ' . trim(post('reason')));
+            flash_set('success', 'Request declined. The professor was told why.');
+        }
+        redirect('/dashboard/admin/professor-pay.php#requests');
+    }
     if (post('_action') === 'payout') {
         $campus = get_campus($campusId);
         $method = post('method');
@@ -54,6 +64,8 @@ $sel = isset($summary[(int) query_param('campus')]) ? $summary[(int) query_param
 $ledger = $sel ? get_campus_professor_earnings((int) $sel['id'], 200) : [];
 $payouts = $sel ? get_campus_professor_payouts((int) $sel['id']) : [];
 $wa = $sel ? whatsapp_number($sel['professor_payout_phone'] ?? '') : null;
+$requests = payout_requests_open();
+$selRequest = $sel ? payout_request_pending((int) $sel['id']) : null;
 
 $colors = ['#2b22ff', '#0f766e', '#b45309', '#be185d', '#6d28d9', '#15803d', '#475569', '#0369a1'];
 $look = [];
@@ -102,6 +114,24 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     </div>
   </section>
 
+  <?php if ($requests): ?>
+    <section class="acx-sec acx-slam pp-reqs" style="--i:2" id="requests">
+      <div class="lc-sec-h"><div><h2>Payment requests <em class="pp-req-n"><?= count($requests) ?></em></h2><p>Professors asking to be paid. Pay opens the campus with their number filled in; recording the payout marks the request paid.</p></div></div>
+      <?php foreach ($requests as $j => $r): ?>
+        <div class="pp-req acx-whip" style="--j:<?= $j ?>">
+          <div class="pp-req-who"><b><?= e($r['professor_name'] ?: ($r['professor_account'] ?: 'Professor')) ?></b><small><?= e($r['campus_name']) ?> Campus · asked <?= e(time_ago($r['requested_at'])) ?></small></div>
+          <div class="pp-req-amt"><b><?= e(format_money((float) $r['amount'])) ?></b><small><?= abs($r['owed_now'] - (float) $r['amount']) > 0.5 ? e(format_money($r['owed_now'])) . ' owed now' : 'owed now' ?></small></div>
+          <div class="pp-req-to"><b><?= e($r['phone']) ?></b><small><?= e($r['payout_name'] ?: '') ?><?= $r['note'] ? ($r['payout_name'] ? ' · ' : '') . '“' . e($r['note']) . '”' : '' ?></small></div>
+          <div class="pp-req-acts">
+            <a class="lc-next pub" href="<?= e($campusUrl((int) $r['campus_id'], '#pay')) ?>">Pay<span>→</span></a>
+            <details class="pp-decline"><summary>Decline</summary>
+              <form method="post"><?= csrf_field() ?><input type="hidden" name="_action" value="decline_request"><input type="hidden" name="request" value="<?= (int) $r['id'] ?>"><input name="reason" required minlength="4" maxlength="255" placeholder="Why, e.g. the number is not registered"><button type="submit">Decline</button></form>
+            </details>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </section>
+  <?php endif; ?>
   <section class="acx-sec acx-slam" style="--i:2">
     <div class="lc-sec-h"><div><h2>By campus</h2><p>Open a campus to pay its professor and see every payment behind the amount</p></div></div>
     <div class="pp-grid pp-th"><span>Campus</span><span class="r">Share</span><span class="r">Members</span><span class="r">Earned · 30d</span><span class="r">Paid to date</span><span class="r">Owed now</span><span></span></div>
@@ -153,14 +183,14 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <p class="pp-note"><?= $sel['owed'] > 0 ? (int) $sel['owed_count'] . ' payment' . ((int) $sel['owed_count'] === 1 ? '' : 's') . ' not yet paid out' : 'Nothing owed right now' ?></p>
           <?php if ($sel['owed'] > 0): ?>
             <ol class="pp-steps">
-              <li>Send <b><?= e(format_money($sel['owed'])) ?></b> to <?= $sel['professor_payout_phone'] ? '<b>' . e($sel['professor_payout_phone']) . '</b>' . ($sel['professor_payout_name'] ? ' (' . e($sel['professor_payout_name']) . ')' : '') : 'the professor (no payout number saved yet)' ?>.</li>
+              <li>Send <b><?= e(format_money($sel['owed'])) ?></b> to <?= $selRequest ? '<b>' . e($selRequest['phone']) . '</b>' . ($selRequest['payout_name'] ? ' (' . e($selRequest['payout_name']) . ')' : '') . ', the number in their request' : ($sel['professor_payout_phone'] ? '<b>' . e($sel['professor_payout_phone']) . '</b>' . ($sel['professor_payout_name'] ? ' (' . e($sel['professor_payout_name']) . ')' : '') : 'the professor (no payout number saved yet)') ?>.</li>
               <li>Copy the transaction ID from the confirmation message.</li>
               <li>Record it below. The amount is fixed to what is owed.</li>
             </ol>
             <form method="post" class="pp-form" data-confirm="Record <?= e(format_money($sel['owed'])) ?> as paid to <?= e($sel['professor_name'] ?: 'the professor') ?>?">
               <?= csrf_field() ?><input type="hidden" name="_action" value="payout"><input type="hidden" name="campus" value="<?= (int) $sel['id'] ?>">
               <label>Sent by<select name="method"><?php foreach (PROFESSOR_PAYOUT_METHODS as $k => $n): ?><option value="<?= e($k) ?>"><?= e($n) ?></option><?php endforeach; ?></select></label>
-              <label>Sent to<input name="sent_to" value="<?= e(trim(($sel['professor_payout_phone'] ?? '') . ($sel['professor_payout_name'] ? ' · ' . $sel['professor_payout_name'] : ''))) ?>" maxlength="120"></label>
+              <label>Sent to<?= $selRequest ? ' <small>From their request</small>' : '' ?><input name="sent_to" value="<?= e($selRequest ? trim($selRequest['phone'] . ($selRequest['payout_name'] ? ' · ' . $selRequest['payout_name'] : '')) : trim(($sel['professor_payout_phone'] ?? '') . ($sel['professor_payout_name'] ? ' · ' . $sel['professor_payout_name'] : ''))) ?>" maxlength="120"></label>
               <label>Transaction ID or reference<input name="reference" maxlength="120" placeholder="e.g. 12345678901"></label>
               <label>Note <small>Optional</small><input name="note" maxlength="255"></label>
               <button class="pp-submit" type="submit">Record <?= e(format_money($sel['owed'])) ?> paid <span>→</span></button>

@@ -94,3 +94,20 @@
   .pp-grid.lc-row > span.r { display: none; }
   .pp-lane { grid-template-columns: 100px minmax(0, 1fr) 70px; gap: 8px; }
 }
+
+/* payment requests from professors */
+.pp-reqs { border-color: #f4d9b0; }
+.pp-req-n { font: 600 12px var(--ov-mono); font-style: normal; margin-left: 8px; padding: 2px 9px; border-radius: 99px; background: #fdf1e2; color: #b45f06; vertical-align: middle; }
+.pp-req { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .9fr) minmax(0, 1.2fr) auto; gap: 18px; align-items: center; padding: 14px 22px; border-top: 1px solid var(--ov-line-soft); }
+.pp-req b { display: block; font-size: 14px; color: var(--ov-ink); }
+.pp-req small { display: block; margin-top: 2px; font-size: 12px; color: var(--ov-ink-3); overflow-wrap: anywhere; }
+.pp-req-amt b { font-family: var(--ov-mono); font-size: 15px; }
+.pp-req-to b { font-family: var(--ov-mono); font-size: 13.5px; }
+.pp-req-acts { display: flex; gap: 8px; align-items: center; position: relative; }
+.pp-decline summary { list-style: none; cursor: pointer; height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--ov-line); display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; color: var(--ov-ink-2); }
+.pp-decline summary::-webkit-details-marker { display: none; }
+.pp-decline[open] summary { border-color: #c42828; color: #c42828; }
+.pp-decline form { position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; display: flex; gap: 6px; width: 340px; padding: 10px; border-radius: 12px; background: var(--ov-panel); border: 1px solid var(--ov-line); box-shadow: 0 18px 40px -20px rgba(12,14,36,.5); }
+.pp-decline input { flex: 1; min-width: 0; height: 38px; border: 1px solid var(--ov-line); border-radius: 9px; padding: 0 10px; font: inherit; font-size: 13px; }
+.pp-decline button { height: 38px; padding: 0 12px; border: 0; border-radius: 9px; background: #c42828; color: #fff; font-weight: 600; cursor: pointer; }
+@media (max-width: 900px) { .pp-req { grid-template-columns: 1fr 1fr; } .pp-req-acts { grid-column: 1 / -1; } .pp-decline form { left: 0; right: auto; width: min(340px, 80vw); } }

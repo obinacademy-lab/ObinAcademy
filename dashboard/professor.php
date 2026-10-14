@@ -1,8 +1,9 @@
 <?php
 /**
  * A campus professor's pay: every payment in their campus, their share of it, what Obin Academy owes
- * them now and what has been sent. Shown to any account linked as a campus professor (Admin, Campus,
- * Professor tab), whatever its role.
+ * them now and what has been sent, and a Request payment card: the professor asks for everything owed
+ * to be sent to their mobile money; the admin pays it on Admin, Professor Pay (recording the payout marks
+ * the request paid) or declines it with a reason. Shown to any account linked as a campus professor.
  */
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/campuses.php';
@@ -18,6 +19,25 @@ $campusId = (int) $sel['id'];
 $ledger = get_campus_professor_earnings($campusId, 200);
 $payouts = get_campus_professor_payouts($campusId);
 $share = campus_professor_share($sel);
+$self = '/dashboard/professor.php' . (count($mine) > 1 ? '?campus=' . $campusId : '');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
+    try {
+        if (post('_action') === 'request') {
+            $req = payout_request_create($sel, $user, post('phone'), post('payout_name'), post('note'));
+            flash_set('success', 'Requested ' . format_money((float) $req['amount']) . '. Obin Academy will send it to ' . $req['phone'] . ' and you will get the transaction ID by email.');
+        } elseif (post('_action') === 'cancel_request') {
+            if (payout_request_cancel($campusId, (int) $user['id'])) flash_set('success', 'Request withdrawn.');
+        }
+    } catch (RuntimeException $e) {
+        flash_set('error', $e->getMessage());
+    }
+    redirect($self . '#request');
+}
+$pending = payout_request_pending($campusId);
+$requests = payout_requests_for_campus($campusId, 8);
+$reqLabels = ['PENDING' => ['Waiting', 'warn'], 'PAID' => ['Paid', 'good'], 'DECLINED' => ['Not paid', 'bad'], 'CANCELLED' => ['Withdrawn', 'mute']];
 
 $pageTitle = 'My Campus Pay — Obin Academy';
 require __DIR__ . '/../includes/dashboard_header.php';
@@ -63,11 +83,40 @@ require __DIR__ . '/../includes/dashboard_header.php';
   </div>
 
   <div class="pp-side">
+    <?php if (payout_requests_ready()): ?>
+      <section class="pf-request" id="request">
+        <span class="pf-req-label">Request payment</span>
+        <div class="pf-req-amt"><small>UGX</small><?= e(number_format($sel['owed'])) ?></div>
+        <?php if ($pending): ?>
+          <p class="pf-req-state"><span class="pf-req-dot"></span>Requested <?= e(time_ago($pending['requested_at'])) ?> · <?= e(format_money((float) $pending['amount'])) ?> to <?= e($pending['phone']) ?></p>
+          <p class="pf-req-sub">Obin Academy sends it to your mobile money and emails you the transaction ID. Anything you earn before then is included.</p>
+          <form method="post" data-confirm="Withdraw your payment request?"><?= csrf_field() ?><input type="hidden" name="_action" value="cancel_request"><button class="pf-req-cancel" type="submit">Withdraw request</button></form>
+        <?php elseif ($sel['owed'] > 0): ?>
+          <p class="pf-req-sub">Everything owed to you now, from <?= (int) $sel['owed_count'] ?> payment<?= (int) $sel['owed_count'] === 1 ? '' : 's' ?>, sent to your mobile money.</p>
+          <form method="post" class="pf-req-form" data-confirm="Request <?= e(format_money($sel['owed'])) ?> to be sent to your mobile money?">
+            <?= csrf_field() ?><input type="hidden" name="_action" value="request">
+            <label>Mobile money number<input name="phone" type="tel" inputmode="tel" required value="<?= e($sel['professor_payout_phone'] ?: ($user['phone'] ?? '')) ?>" placeholder="07XX XXX XXX"></label>
+            <label>Name on that number<input name="payout_name" value="<?= e($sel['professor_payout_name'] ?: $user['name']) ?>" maxlength="120"></label>
+            <label>Note <small>optional</small><input name="note" maxlength="255" placeholder="Anything Obin Academy should know"></label>
+            <button type="submit">Request <?= e(format_money($sel['owed'])) ?> <span>→</span></button>
+          </form>
+        <?php else: ?>
+          <p class="pf-req-sub">Nothing is owed right now. Your <?= e(format_share($share)) ?> is added the moment a member pays, and you can request it here.</p>
+        <?php endif; ?>
+        <?php if ($requests): ?>
+          <div class="pf-req-list">
+            <?php foreach ($requests as $r): [$lbl, $tone] = $reqLabels[$r['status']] ?? [$r['status'], 'mute']; ?>
+              <div><span><b><?= e(format_money((float) $r['amount'])) ?></b><small><?= e(date('j M Y', strtotime($r['requested_at']))) ?><?= $r['status'] === 'DECLINED' && $r['decline_reason'] ? ' · ' . e($r['decline_reason']) : '' ?></small></span><em class="<?= $tone ?>"><?= e($lbl) ?></em></div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      </section>
+    <?php endif; ?>
     <div class="ld-panel ld-card">
       <div class="ld-chead"><div><h2>How you are paid</h2></div></div>
       <ul class="pp-how">
         <li>Every monthly or yearly payment in your campus earns you <b><?= e(format_share($share)) ?></b> of it.</li>
-        <li>Obin Academy sends what you are owed to <b><?= e($sel['professor_payout_phone'] ?: 'your mobile money') ?></b>, and you get an email with the transaction ID.</li>
+        <li>Request your money any time with the card above. Obin Academy sends it to your mobile money and you get an email with the transaction ID.</li>
         <li>Questions about a payment? <a href="<?= e(base_url('contact.php')) ?>">Contact us</a>.</li>
       </ul>
     </div>
