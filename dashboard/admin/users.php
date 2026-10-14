@@ -140,31 +140,41 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <?php if (!$users): ?>
       <p class="ux-none">No users match<?= $q ? ' "' . e($q) . '"' : '' ?>.</p>
     <?php else: ?>
-      <div class="ux-grid ux-th"><span>Person</span><span>Phone</span><span>Campus</span><span>Last sign-in</span><span>Joined</span><span>Role</span><span></span></div>
+      <?php $waIcon = '<svg class="wa-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.88 9.88zm8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89a11.82 11.82 0 0 0-3.48-8.42z"/></svg>'; ?>
+      <div class="ux-grid ux-th"><span>Person</span><span>Phone</span><span>Activity</span><span>Joined</span><span class="r">Role and actions</span></div>
       <?php foreach ($users as $j => $u): $uid = (int) $u['id']; $isSelf = $uid === (int) $user['id']; $isAdmin = $u['role'] === 'ADMIN'; $wa = whatsapp_number($u['phone'] ?? ''); $nIn = $inCampus[$uid] ?? 0; $seen = $lastSeen[$uid] ?? null; ?>
         <div class="ux-grid lc-row acx-whip <?= $isAdmin ? 'admin' : '' ?>" style="--j:<?= min($j, 14) ?>">
           <a class="ux-who" href="<?= e(base_url('dashboard/admin/user.php?id=' . $uid)) ?>" title="Open <?= e($u['name']) ?>">
             <span class="ux-av"><?= e($initials($u['name'])) ?></span>
-            <span><b><?= e($u['name']) ?><?php if ($isSelf): ?><em class="ux-you">You</em><?php endif; ?></b><small><?= e($u['email']) ?></small></span>
+            <span class="ux-id"><b><?= e($u['name']) ?><?php if ($isSelf): ?><em class="ux-you">You</em><?php endif; ?></b><small><?= e($u['email']) ?></small></span>
           </a>
-          <span class="ux-phone"><?php if (!empty($u['phone'])): ?><span class="ux-num"><?= e($u['phone']) ?></span><?php if ($wa): ?><a href="https://wa.me/<?= e($wa) ?>" target="_blank" rel="noopener noreferrer" title="WhatsApp <?= e($u['name']) ?>"><svg class="wa-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.88 9.88zm8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89a11.82 11.82 0 0 0-3.48-8.42z"/></svg></a><?php endif; ?><?php else: ?><span class="acx-muted">—</span><?php endif; ?></span>
-          <span><?= $nIn ? '<span class="ux-in"><i></i>In ' . $nIn . ' campus' . ($nIn === 1 ? '' : 'es') . '</span>' : '<span class="acx-muted">No campus</span>' ?></span>
-          <span class="ux-t"><?= $seen ? e(time_ago($seen)) : '<span class="acx-muted">Never</span>' ?></span>
-          <span class="ux-t"><?= e(date('j M Y', strtotime($u['created_at']))) ?></span>
-          <form method="post" class="ux-role">
-            <?= csrf_field() ?><input type="hidden" name="_action" value="set_role"><input type="hidden" name="userId" value="<?= $uid ?>">
-            <select name="role" onchange="this.form.submit()" <?= $isSelf ? 'disabled' : '' ?> class="<?= $isAdmin ? 'admin' : '' ?>" aria-label="Role for <?= e($u['name']) ?>">
-              <?php foreach (['LEARNER' => 'Learner', 'ADMIN' => 'Admin'] as $r => $label): ?><option value="<?= $r ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?>
-            </select>
-          </form>
-          <span class="ux-act">
+          <div class="ux-phone">
+            <?php if (!empty($u['phone'])): ?>
+              <span class="ux-num"><?= e($u['phone']) ?></span>
+              <?php if ($wa): ?><a href="https://wa.me/<?= e($wa) ?>" target="_blank" rel="noopener noreferrer" title="WhatsApp <?= e($u['name']) ?>" aria-label="WhatsApp <?= e($u['name']) ?>"><?= $waIcon ?></a><?php endif; ?>
+            <?php else: ?><span class="acx-muted">No phone</span><?php endif; ?>
+          </div>
+          <div class="ux-activity">
+            <?= $nIn ? '<span class="ux-in"><i></i>In ' . $nIn . ' campus' . ($nIn === 1 ? '' : 'es') . '</span>' : '<span class="ux-none-chip">No campus</span>' ?>
+            <small><?= $seen ? 'Last sign-in <b>' . e(time_ago($seen)) . '</b>' : 'Never signed in' ?></small>
+          </div>
+          <div class="ux-joined"><?= e(date('j M Y', strtotime($u['created_at']))) ?></div>
+          <div class="ux-act">
+            <form method="post" class="ux-role">
+              <?= csrf_field() ?><input type="hidden" name="_action" value="set_role"><input type="hidden" name="userId" value="<?= $uid ?>">
+              <select name="role" onchange="this.form.submit()" <?= $isSelf ? 'disabled' : '' ?> class="<?= $isAdmin ? 'admin' : '' ?>" aria-label="Role for <?= e($u['name']) ?>">
+                <?php foreach (['LEARNER' => 'Learner', 'ADMIN' => 'Admin'] as $r => $label): ?><option value="<?= $r ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?>
+              </select>
+            </form>
             <?php if (!$isSelf): ?>
               <form method="post" data-confirm="Delete <?= e($u['name']) ?>? This cannot be undone. Accounts with payments or memberships are never deleted.">
                 <?= csrf_field() ?><input type="hidden" name="_action" value="delete"><input type="hidden" name="userId" value="<?= $uid ?>">
-                <button class="ux-del" type="submit" aria-label="Delete <?= e($u['name']) ?>"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+                <button class="ux-del" type="submit" aria-label="Delete <?= e($u['name']) ?>" title="Delete <?= e($u['name']) ?>"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
               </form>
+            <?php else: ?>
+              <span class="ux-del-slot" aria-hidden="true"></span>
             <?php endif; ?>
-          </span>
+          </div>
         </div>
       <?php endforeach; ?>
       <div class="ux-foot">
