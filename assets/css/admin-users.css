@@ -118,3 +118,4 @@
   .ux-chips { width: 100%; }
   .ux-chips a { flex: 1; justify-content: center; }
 }
+.ux-in.prof { background: #2b22ff; color: #fff; }

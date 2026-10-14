@@ -4,6 +4,13 @@
  * optionally $pageTitle, $pageCss (extra stylesheets) and $dashClass (a class on the shell) before include.
  */
 require_once __DIR__ . '/notifications.php';
+require_once __DIR__ . '/professor.php';
+
+// Professors get their own dashboard shell (a top dock, no student pages): includes/professor_header.php.
+if (is_professor($user)) {
+    require __DIR__ . '/professor_header.php';
+    return;
+}
 
 // Grouped as [group label => [href, label, icon name]] so the sidebar reads
 // as sections of related tasks rather than one flat list of links.
@@ -45,15 +52,6 @@ $navByRole = [
 // Anyone who is not an admin uses the learner dashboard (there are no other roles any more).
 $navGroups = $navByRole[$user['role'] === 'ADMIN' ? 'ADMIN' : 'LEARNER'];
 $currentPath = current_path();
-
-// Campus professors (linked by account on the campus) get Campus Studio and their pay page.
-try {
-    if ($user['role'] !== 'ADMIN' && db_one('SELECT 1 FROM campuses WHERE professor_user_id = ? LIMIT 1', [(int) $user['id']])) {
-        $navGroups = ['Teaching' => [['/dashboard/campus-studio.php', 'Campus Studio', 'book-open'], ['/dashboard/professor.php', 'My Campus Pay', 'banknote']]] + $navGroups;
-    }
-} catch (Throwable $e) {
-    // Professor pay migration not applied yet.
-}
 
 // Live counts shown as badges on the relevant nav item, and a small
 // role-specific snapshot widget — so the sidebar carries real information

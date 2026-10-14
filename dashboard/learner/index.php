@@ -3,6 +3,8 @@
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/campuses.php';
 $user = require_login();
+require_once __DIR__ . '/../../includes/professor.php';
+if (is_professor($user)) redirect('/dashboard/professor/index.php'); // professors have their own dashboard, no student pages
 
 $myCampuses = campuses_ready() ? db_all(
     'SELECT m.*, c.name, c.slug, c.icon, c.live_schedule FROM campus_memberships m JOIN campuses c ON c.id = m.campus_id WHERE m.user_id = ? ORDER BY m.access_until DESC',

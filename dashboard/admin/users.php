@@ -60,6 +60,9 @@ $usersUrl = function (array $over = []) use ($q, $roleFilter): string {
 };
 
 $totalUsers = (int) db_one('SELECT COUNT(*) AS n FROM users')['n'];
+// Accounts linked as a campus professor read as professors here.
+$profOf = [];
+try { foreach (db_all('SELECT professor_user_id, name FROM campuses WHERE professor_user_id IS NOT NULL') as $pc) $profOf[(int) $pc['professor_user_id']][] = $pc['name']; } catch (Throwable $e) {}
 $totalLearners = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role='LEARNER'")['n'];
 $totalAdmins = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role='ADMIN'")['n'];
 $totalMembers = 0;
@@ -155,7 +158,9 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             <?php else: ?><span class="acx-muted">No phone</span><?php endif; ?>
           </div>
           <div class="ux-activity">
+            <?php if (!empty($profOf[$uid])): ?><span class="ux-in prof"><i></i>Professor · <?= e(implode(', ', $profOf[$uid])) ?></span><?php else: ?>
             <?= $nIn ? '<span class="ux-in"><i></i>In ' . $nIn . ' campus' . ($nIn === 1 ? '' : 'es') . '</span>' : '<span class="ux-none-chip">No campus</span>' ?>
+            <?php endif; ?>
             <small><?= $seen ? 'Last sign-in <b>' . e(time_ago($seen)) . '</b>' : 'Never signed in' ?></small>
           </div>
           <div class="ux-joined"><?= e(date('j M Y', strtotime($u['created_at']))) ?></div>

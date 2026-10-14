@@ -9,7 +9,9 @@
  */
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/storage.php';
+require __DIR__ . '/../includes/professor.php';
 $user = require_login();
+$isProf = is_professor($user); // professors have no sidebar, so no sidebar colour
 
 $errors = [];
 $pwErrors = [];
@@ -72,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !in_array(post('formName'), ['theme
 // What the form shows: what was just typed when saving failed, otherwise what is stored.
 $val = fn(string $k) => $_SERVER['REQUEST_METHOD'] === 'POST' && $errors ? post($k) : (string) ($user[$k] ?? '');
 $initials = mb_strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(preg_split('/\s+/', trim($user['name'])) ?: [''], 0, 2)))) ?: '?';
-$roleLabel = ['ADMIN' => 'Admin', 'LEARNER' => 'Member', 'CREATOR' => 'Member'][$user['role']] ?? ucfirst(strtolower($user['role']));
+$roleLabel = $isProf ? 'Professor' : (['ADMIN' => 'Admin', 'LEARNER' => 'Member', 'CREATOR' => 'Member'][$user['role']] ?? ucfirst(strtolower($user['role'])));
 $checks = [
     ['Your name', trim($user['name']) !== ''],
     ['Profile photo', !empty($user['avatar_url'])],
@@ -109,7 +111,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
         <div><span>Email</span><b class="se-small" title="<?= e($user['email']) ?>"><?= e($user['email']) ?></b></div>
         <div><span>Phone</span><b class="se-small"><?= e($user['phone'] ?: 'Not added') ?></b></div>
         <div><span>Member since</span><b class="se-small"><?= e(date('j M Y', strtotime($user['created_at']))) ?></b></div>
-        <div><span>Dashboard colour</span><b class="se-small"><i class="se-dot" style="--sw:<?= e(DASHBOARD_THEMES[$currentTheme]['swatch']) ?>"></i><?= e(DASHBOARD_THEMES[$currentTheme]['label']) ?></b></div>
+        <?php if ($isProf): ?><div><span>Teaching</span><b class="se-small"><?= e(implode(', ', array_column(professor_campuses($user), 'name'))) ?></b></div><?php else: ?><div><span>Dashboard colour</span><b class="se-small"><i class="se-dot" style="--sw:<?= e(DASHBOARD_THEMES[$currentTheme]['swatch']) ?>"></i><?= e(DASHBOARD_THEMES[$currentTheme]['label']) ?></b></div><?php endif; ?>
       </div>
     </div>
     <div>
@@ -168,6 +170,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
         </form>
       </section>
 
+      <?php if (!$isProf): ?>
       <section class="acx-sec acx-slam" style="--i:4" id="look">
         <div class="se-h"><div><h2>Dashboard colour</h2><p>The colour of your sidebar. It changes as soon as you pick one.</p></div></div>
         <form method="post" id="theme-form" class="se-themes">
@@ -182,6 +185,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
           <?php endforeach; ?>
         </form>
       </section>
+      <?php endif; ?>
     </div>
   </div>
 </div>
