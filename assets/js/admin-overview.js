@@ -105,6 +105,7 @@
 
   /* ---------- sparklines ---------- */
   function spark(svg, data, color, delay) {
+    if (!svg) return; // the Overview desk has no sparklines
     svg.innerHTML = '';
     const w = svg.clientWidth || 260, h = svg.clientHeight || 58, pad = 6;
     svg.setAttribute('viewBox', `0 0 ${w} ${h}`);

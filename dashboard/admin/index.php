@@ -2,9 +2,11 @@
 /**
  * Admin Overview: money, members and what needs doing, across every campus.
  *
- * The page computes its figures here and hands them to assets/js/admin-overview.js as JSON, which
- * draws the charts, counts the numbers up and switches the date range (7 days, 30 days, 90 days,
- * 12 months) without reloading. Styles are scoped under .ov in assets/css/admin-overview.css.
+ * Laid out as the "Overview Desk" in the public campus page look: a deep blue hero (greeting, four
+ * numbers, campus photos), a dark "needs you" card that stays in view, and white blocks (money, campuses,
+ * growth, funnel, live classes, activity). The page computes its figures here and hands them to
+ * assets/js/admin-overview.js as JSON, which draws the charts, counts the numbers up and switches the
+ * date range without reloading. Chart styles: admin-overview.css; the desk: admin-desk.css + admin-desk.js.
  */
 require __DIR__ . '/../../includes/bootstrap.php';
 require __DIR__ . '/../../includes/data.php';
@@ -147,267 +149,203 @@ $ovData = [
     'activeNow' => (int) $overview['active'],
 ];
 
+// ---- the desk layout (approved "Admin Overview Desk" mockup) ----------------------------------
+// The most urgent things first: red (payments), amber (money owed), blue (setup), lime (leads).
+$toneOrder = ['r' => 0, 'w' => 1, 'b' => 2, 'g' => 3];
+usort($todo, fn($a, $b) => $toneOrder[$a['tone']] <=> $toneOrder[$b['tone']]);
+$dkShort = function (float $n): string {
+    if ($n >= 1e6) return rtrim(rtrim(number_format($n / 1e6, $n >= 1e7 ? 1 : 2), '0'), '.') . 'M';
+    if ($n >= 1e3) return rtrim(rtrim(number_format($n / 1e3, $n >= 1e4 ? 0 : 1), '0'), '.') . 'K';
+    return (string) (int) $n;
+};
+$dkBadge = fn(array $t) => $t['unit'] === 'UGX' ? $dkShort((float) str_replace(',', '', $t['value'])) : $t['value'];
+
+// This month, for the small card under the dark one.
+$monthStart = date('Y-m-01 00:00:00');
+$monthMoney = (float) db_one("SELECT COALESCE(SUM(amount), 0) AS s FROM payments WHERE type = 'CAMPUS_MEMBERSHIP' AND status = 'SUCCESS' AND created_at >= ?", [$monthStart])['s'];
+$monthSignups = (int) db_one("SELECT COUNT(*) AS n FROM users WHERE role <> 'ADMIN' AND created_at >= ?", [$monthStart])['n'];
+$monthVisitors = (int) db_one('SELECT COUNT(DISTINCT visitor_id) AS n FROM visitor_sessions WHERE started_at >= ?', [$monthStart])['n'];
+$owedNow = 0.0;
+try { $owedNow = (float) db_one('SELECT COALESCE(SUM(amount), 0) AS s FROM campus_professor_earnings WHERE payout_id IS NULL')['s']; } catch (Throwable $e) {}
+
+// Campus photos: open campuses first in the hero mosaic.
+$withPhoto = [];
+foreach ($campusCards as $c) { $p = campus_photo($c); if ($p) $withPhoto[] = $c + ['photo' => $p]; }
+usort($withPhoto, fn($a, $b) => ($b['status'] === 'PUBLISHED') <=> ($a['status'] === 'PUBLISHED'));
+$dkMosaic = array_slice($withPhoto, 0, 4);
+$dkPhoto = [];
+foreach ($withPhoto as $c) $dkPhoto[(int) $c['id']] = $c['photo'];
+$openCards = array_values(array_filter($campusCards, fn($c) => $c['status'] === 'PUBLISHED'));
+$draftCards = array_values(array_filter($campusCards, fn($c) => $c['status'] !== 'PUBLISHED'));
+$dkEdit = fn(int $cid, string $tab = 'details') => base_url('dashboard/admin/campus-edit.php?id=' . $cid . '&tab=' . $tab);
+$dkArrow = '<svg class="r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+$dkChev = '<svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+
 $pageTitle = 'Overview — Obin Academy Admin';
-$dashClass = 'dash-ov';
-$pageCss = ['assets/css/admin-overview.css'];
+$dashClass = 'dash-ov ovd-shell';
+$pageCss = ['assets/css/admin-overview.css', 'assets/css/admin-desk.css'];
 require __DIR__ . '/../../includes/dashboard_header.php';
 ?>
-<div class="ov" data-ov>
-  <section class="ov-head ov-in" style="--i:0">
-    <div>
-      <h1><?= e($greeting) ?>, <?= e($firstName) ?></h1>
-      <p>
-        <?php if ($todo): ?>
-          <span class="ov-status warn"><?= count($todo) ?> thing<?= count($todo) === 1 ? '' : 's' ?> need<?= count($todo) === 1 ? 's' : '' ?> you</span>
-        <?php else: ?>
-          <span class="ov-status">All caught up</span>
-        <?php endif; ?>
-        <span><?= e(date('l, j F Y')) ?></span>
-      </p>
-    </div>
-    <div class="ov-head-actions">
-      <div class="ov-seg" role="group" aria-label="Date range">
-        <span class="ov-seg-pill" aria-hidden="true"></span>
-        <button type="button" data-range="7">7D</button>
-        <button type="button" data-range="30" class="on" aria-pressed="true">30D</button>
-        <button type="button" data-range="90">90D</button>
-        <button type="button" data-range="365">12M</button>
+<div class="ov ovd" data-ov>
+  <section class="dk-hero">
+    <span class="dk-aurora" aria-hidden="true"><i></i><i></i><i></i></span>
+    <div class="dk-copy">
+      <span class="dk-chip"><i></i><?= e(date('l j F')) ?> · last 30 days</span>
+      <h1>
+        <span class="dk-line"><span style="--k:0"><?= e($greeting) ?>, <?= e($firstName) ?>.</span></span>
+        <span class="dk-line"><span style="--k:1"><?php if ($todo): ?><em><?= count($todo) ?> thing<?= count($todo) === 1 ? '' : 's' ?></em> need<?= count($todo) === 1 ? 's' : '' ?> you.<?php else: ?>You're <em>all caught up.</em><?php endif; ?></span></span>
+      </h1>
+      <p class="dk-lede">The academy collected <b>UGX <?= e(number_format($init['c'])) ?></b> in the last 30 days, with <?= number_format((int) $overview['active']) ?> member<?= (int) $overview['active'] === 1 ? '' : 's' ?> learning across <?= $openCampuses ?> open campus<?= $openCampuses === 1 ? '' : 'es' ?>.</p>
+      <div class="dk-kpis">
+        <div class="dk-kpi" style="--k:0"><small>Collected</small><b><span>UGX</span><i data-kpi="collected"><?= e(number_format($init['c'])) ?></i></b><span class="dk-meta" data-kpi-meta="collected"></span></div>
+        <div class="dk-kpi" style="--k:1"><small>Kept after professor pay</small><b><span>UGX</span><i data-kpi="kept"><?= e(number_format($init['k'])) ?></i></b><span class="dk-meta" data-kpi-meta="kept"></span></div>
+        <div class="dk-kpi" style="--k:2"><small>Active members</small><b><i data-kpi="members"><?= (int) $overview['active'] ?></i></b><span class="dk-meta" data-kpi-meta="members"></span></div>
+        <div class="dk-kpi" style="--k:3"><small>Renewals due in 7 days</small><b><i data-count="<?= (int) $renewalsDue ?>"><?= (int) $renewalsDue ?></i></b><span class="dk-meta"><?= $renewalsDue > 0 ? '<span class="ov-chip warn">UGX ' . e(number_format($renewalValue)) . '</span>up for renewal' : 'None ending this week' ?></span></div>
       </div>
-      <a class="ov-btn" href="<?= e(base_url('dashboard/admin/revenue.php')) ?>"><?php dash_icon('trending-up'); ?>Revenue</a>
-      <a class="ov-btn primary" href="<?= e(base_url('dashboard/admin/campuses.php')) ?>"><?php dash_icon('graduation-cap'); ?>Campuses</a>
     </div>
+    <?php if ($dkMosaic): ?>
+      <div class="dk-mosaic n<?= count($dkMosaic) ?>">
+        <?php foreach ($dkMosaic as $k => $c): ?><a href="<?= e($dkEdit((int) $c['id'])) ?>" style="--k:<?= $k ?>" data-l="<?= e($c['name']) ?>"><img src="<?= e($c['photo']) ?>" alt=""></a><?php endforeach; ?>
+      </div>
+    <?php endif; ?>
   </section>
 
-  <section class="ov-grid">
-    <article class="ov-card ov-kpi ov-c3 ov-in" style="--i:1">
-      <div class="ov-kpi-top"><span class="ov-kpi-label">Collected</span><span class="ov-kpi-ic"><?php dash_icon('trending-up'); ?></span></div>
-      <div class="ov-kpi-val"><small>UGX</small><span data-kpi="collected"><?= e(number_format($init['c'])) ?></span></div>
-      <div class="ov-kpi-meta" data-kpi-meta="collected"></div>
-      <svg class="ov-spark" data-spark="collected" aria-hidden="true"></svg>
-    </article>
-    <article class="ov-card ov-kpi ov-c3 ov-in" style="--i:2">
-      <div class="ov-kpi-top"><span class="ov-kpi-label">Kept after professor pay</span><span class="ov-kpi-ic"><?php dash_icon('wallet'); ?></span></div>
-      <div class="ov-kpi-val"><small>UGX</small><span data-kpi="kept"><?= e(number_format($init['k'])) ?></span></div>
-      <div class="ov-kpi-meta" data-kpi-meta="kept"></div>
-      <svg class="ov-spark" data-spark="kept" aria-hidden="true"></svg>
-    </article>
-    <article class="ov-card ov-kpi ov-c3 ov-in" style="--i:3">
-      <div class="ov-kpi-top"><span class="ov-kpi-label">Active members</span><span class="ov-kpi-ic"><?php dash_icon('users'); ?></span></div>
-      <div class="ov-kpi-val"><span data-kpi="members"><?= (int) $overview['active'] ?></span></div>
-      <div class="ov-kpi-meta" data-kpi-meta="members"></div>
-      <svg class="ov-spark" data-spark="members" aria-hidden="true"></svg>
-    </article>
-    <article class="ov-card ov-kpi ov-c3 ov-in" style="--i:4">
-      <div class="ov-kpi-top"><span class="ov-kpi-label">Renewals due in 7 days</span><span class="ov-kpi-ic"><?php dash_icon('calendar'); ?></span></div>
-      <div class="ov-kpi-val"><span data-count="<?= (int) $renewalsDue ?>"><?= (int) $renewalsDue ?></span></div>
-      <div class="ov-kpi-meta">
-        <?php if ($renewalsDue > 0): ?><span class="ov-chip warn">UGX <?= e(number_format($renewalValue)) ?></span>up for renewal<?php else: ?>No memberships ending this week<?php endif; ?>
-      </div>
-      <svg class="ov-spark" data-spark="renewals" aria-hidden="true"></svg>
-    </article>
-  </section>
+  <aside class="dk-side">
+    <div class="dk-dark">
+      <span class="dk-eb">Needs you today</span>
+      <h3><?= $todo ? count($todo) . ' thing' . (count($todo) === 1 ? '' : 's') . ' waiting' : 'Nothing waiting' ?></h3>
+      <?php if ($todo): ?>
+        <div class="dk-todo">
+          <?php foreach ($todo as $k => $t): ?>
+            <a href="<?= e(base_url($t['href'])) ?>" style="--j:<?= $k ?>"><span class="n <?= e($t['tone']) ?>"><?= e($dkBadge($t)) ?></span><span class="tx"><b><?= e($t['title']) ?></b><small><?= e($t['meta']) ?></small></span><?= $dkChev ?></a>
+          <?php endforeach; ?>
+        </div>
+        <a class="dk-btn lime full" href="<?= e(base_url($todo[0]['href'])) ?>">Start with <?= e(mb_strtolower($todo[0]['title'])) ?><?= $dkArrow ?></a>
+      <?php else: ?>
+        <p class="dk-clear">No applications, professor pay, stuck payments or new leads waiting on you.</p>
+      <?php endif; ?>
+      <div class="dk-pair"><a class="dk-btn ghost" href="<?= e(base_url('dashboard/admin/revenue.php')) ?>">Revenue</a><a class="dk-btn ghost" href="<?= e(base_url('dashboard/admin/payments.php')) ?>">Payments</a></div>
+      <span class="dk-upd">Updated <?= e(date('g:i a')) ?> · <a href="<?= e(base_url('dashboard/admin/index.php')) ?>">Refresh</a></span>
+    </div>
+    <div class="dk-white">
+      <h4>This <em>month</em></h4>
+      <div class="dk-mini"><span>Campus payments</span><b>UGX <?= e(number_format($monthMoney)) ?></b></div>
+      <div class="dk-mini"><span>New sign-ups</span><b><?= number_format($monthSignups) ?></b></div>
+      <div class="dk-mini"><span>Owed to professors</span><b>UGX <?= e(number_format($owedNow)) ?></b></div>
+      <div class="dk-mini"><span>Visitors</span><b><?= number_format($monthVisitors) ?></b></div>
+    </div>
+  </aside>
 
-  <section class="ov-grid">
-    <article class="ov-card ov-c8 ov-in" style="--i:5">
-      <div class="ov-card-h">
-        <div><h2>Collections</h2><p data-chart-note>Campus payments, and what Obin Academy keeps after professor pay</p></div>
-        <div class="ov-card-tools">
-          <div class="ov-legend"><span><i class="c-brand"></i>Collected</span><span><i class="c-kept"></i>Kept</span></div>
+  <div class="dk-col">
+    <section class="dk-block" style="--b:0">
+      <div class="dk-block-h">
+        <h2>Money <em>collected</em></h2>
+        <div class="dk-tools">
           <div class="ov-seg sm" role="group" aria-label="Chart view">
             <span class="ov-seg-pill" aria-hidden="true"></span>
             <button type="button" data-mode="total" class="on" aria-pressed="true">Running total</button>
             <button type="button" data-mode="day">Per period</button>
           </div>
-        </div>
-      </div>
-      <div class="ov-totals">
-        <div><span><i class="c-brand"></i>Collected</span><b data-total="collected">UGX <?= e(number_format($init['c'])) ?></b></div>
-        <div><span><i class="c-muted"></i>Professors</span><b data-total="professors">UGX <?= e(number_format($init['p'])) ?></b></div>
-        <div><span><i class="c-kept"></i>Kept</span><b data-total="kept">UGX <?= e(number_format($init['k'])) ?></b></div>
-        <div><span>Payments</span><b data-total="payments"><?= (int) $init['n'] ?></b></div>
-      </div>
-      <div class="ov-card-b ov-chart-b"><div class="ov-chart" data-chart="money" style="height:300px"></div></div>
-    </article>
-
-    <article class="ov-card ov-c4 ov-in" style="--i:6">
-      <div class="ov-card-h"><div><h2>Needs your attention</h2><p><?= $todo ? count($todo) . ' item' . (count($todo) === 1 ? '' : 's') . ' waiting on you' : 'Nothing waiting on you' ?></p></div></div>
-      <?php if ($todo): ?>
-        <div class="ov-todo">
-          <?php foreach ($todo as $k => $t): ?>
-            <a href="<?= e(base_url($t['href'])) ?>" style="--j:<?= $k ?>">
-              <span class="ov-t-ic <?= e($t['tone']) ?>"><?php dash_icon($t['icon']); ?></span>
-              <span class="ov-t-text"><b><?= e($t['title']) ?></b><small><?= e($t['meta']) ?></small></span>
-              <span class="ov-t-val"><?= e($t['value']) ?><em><?= e($t['unit']) ?></em></span>
-              <svg class="ov-t-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-            </a>
-          <?php endforeach; ?>
-        </div>
-      <?php else: ?>
-        <div class="ov-clear">
-          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20"/><path d="M15 24.5l6 6 12-13"/></svg>
-          <b>You're all caught up</b>
-          <span>No applications, professor pay, stuck payments or new leads waiting.</span>
-        </div>
-      <?php endif; ?>
-      <div class="ov-todo-foot"><span>Updated <?= e(date('g:i a')) ?></span><a href="<?= e(base_url('dashboard/admin/index.php')) ?>">Refresh</a></div>
-    </article>
-  </section>
-
-  <section class="ov-grid">
-    <article class="ov-card ov-c12 ov-in ov-cc" style="--i:7" data-cc>
-      <div class="ov-cc-h">
-        <div>
-          <h2>Campuses</h2>
-          <p>Each campus at a glance: how it's doing once it's open, and what's left before it can open</p>
-          <div class="ov-cc-sum">
-            <div><b><?= $openCampuses ?> <small>of <?= count($campusCards) ?></small></b><span>open to learners</span></div>
-            <div><b><?= number_format((int) $overview['active']) ?></b><span>members</span></div>
-            <div><b><small>UGX</small><?= e(number_format((float) ($overview['collected'] ?? 0))) ?></b><span>last 30 days</span></div>
-          </div>
-        </div>
-        <div class="ov-cc-tools">
-          <div class="ov-seg sm" role="group" aria-label="Show campuses">
+          <div class="ov-seg" role="group" aria-label="Date range">
             <span class="ov-seg-pill" aria-hidden="true"></span>
-            <button type="button" data-filter="all" class="on" aria-pressed="true">All <em><?= count($campusCards) ?></em></button>
-            <button type="button" data-filter="open">Open <em><?= $openCampuses ?></em></button>
-            <button type="button" data-filter="draft">Drafts <em><?= count($campusCards) - $openCampuses ?></em></button>
+            <button type="button" data-range="7">7D</button>
+            <button type="button" data-range="30" class="on" aria-pressed="true">30D</button>
+            <button type="button" data-range="90">90D</button>
+            <button type="button" data-range="365">12M</button>
           </div>
-          <a class="ov-link" href="<?= e(base_url('dashboard/admin/campuses.php')) ?>">Manage campuses <span>→</span></a>
         </div>
       </div>
-      <?php if ($campusCards): ?>
-      <div class="ov-cc-grid">
-        <?php foreach ($campusCards as $k => $c):
-            $cid = (int) $c['id'];
-            $isOpen = $c['status'] === 'PUBLISHED';
-            $active = (int) $c['active'];
-            $edit = fn(string $tab = 'details') => base_url('dashboard/admin/campus-edit.php?id=' . $cid . '&tab=' . $tab);
-            $next = null;
-            foreach ($c['steps'] as $j => $st) { if (!$st[1]) { $next = $j; break; } }
-        ?>
-          <article class="ov-cc-card" data-state="<?= $isOpen ? 'open' : 'draft' ?>" style="--k:<?= $k ?>">
-            <a class="ov-cc-top" href="<?= e($edit()) ?>">
-              <span class="ov-cc-badge" style="background:<?= e($badgeColors[$k % count($badgeColors)]) ?>"><?= campus_icon($c['icon'] ?: 'book', 1.8) ?></span>
-              <span class="ov-cc-status <?= $isOpen ? 'open' : '' ?>"><?= $isOpen ? 'Open' : 'Draft' ?></span>
-            </a>
-            <div class="ov-cc-name">
-              <b><?= e($c['name']) ?></b>
-              <?php if ($c['professor_name']): ?>
-                <span class="ov-cc-prof"><i><?= e($initials($c['professor_name'])) ?></i><?= e($c['professor_name']) ?></span>
-              <?php else: ?>
-                <span class="ov-cc-prof none"><i>?</i>No professor yet</span>
-              <?php endif; ?>
-            </div>
-            <div class="ov-cc-body">
-              <?php if ($isOpen): ?>
-                <div class="ov-cc-nums">
-                  <div><b data-count="<?= $active ?>"><?= $active ?></b><span>members</span></div>
-                  <div><b><small>UGX</small><?= e(number_format((float) $c['collected'])) ?></b><span>last 30 days</span></div>
-                </div>
-                <div>
-                  <div class="ov-cc-mix"><i style="width:<?= $active ? (int) $c['monthly'] / $active * 100 : 0 ?>%"></i><i style="width:<?= $active ? (int) $c['yearly'] / $active * 100 : 0 ?>%"></i></div>
-                  <div class="ov-cc-mix-l"><span><?= (int) $c['monthly'] ?> monthly</span><span><?= (int) $c['yearly'] ?> yearly</span></div>
-                </div>
-                <svg class="ov-cc-curve" data-trend="<?= e(json_encode($c['trend'])) ?>" aria-hidden="true"></svg>
-              <?php else: ?>
-                <div class="ov-cc-ready"><span>Ready to open</span><b><?= (int) $c['done'] ?> / 5</b></div>
-                <div class="ov-cc-segs"><?php foreach ($c['steps'] as $j => $st): ?><i class="<?= $st[1] ? 'd' : '' ?>" style="--d:<?= $j ?>"></i><?php endforeach; ?></div>
-                <ul class="ov-cc-steps">
-                  <?php foreach ($c['steps'] as $j => $st): $cls = $st[1] ? 'ok' : ($j === $next ? 'nx' : 'td'); ?>
-                    <li class="<?= $cls ?>" style="--d:<?= $j ?>">
-                      <?php if ($cls === 'ok'): ?><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><?php elseif ($cls === 'nx'): ?><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M10.5 9l3 3-3 3"/></svg><?php else: ?><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg><?php endif; ?>
-                      <span><?= e($st[0]) ?></span><em><?= e($st[2]) ?></em>
-                    </li>
-                  <?php endforeach; ?>
-                </ul>
-                <?php if ($next !== null): ?>
-                  <a class="ov-cc-next" href="<?= e($edit($c['steps'][$next][4])) ?>"><?= e($c['steps'][$next][3]) ?><span>→</span></a>
-                <?php endif; ?>
-              <?php endif; ?>
-            </div>
-            <div class="ov-cc-foot">
-              <?php if ($isOpen): ?>
-                <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><?= $c['live'] ? '<b>' . e(date('D j M · g:i a', strtotime($c['live']))) . '</b>' : '<span class="warn">No live class booked</span>' ?></span>
-                <span title="Memberships ending in the next 7 days"><b><?= (int) $c['ending'] ?></b> ending</span>
-              <?php else: ?>
-                <span>Not open to learners yet</span>
-                <a href="<?= e($edit()) ?>">Edit</a>
-              <?php endif; ?>
-            </div>
-          </article>
-        <?php endforeach; ?>
-        <a class="ov-cc-card ov-cc-add" data-state="draft" href="<?= e(base_url('dashboard/admin/instructor-applications.php')) ?>" style="--k:<?= count($campusCards) ?>">
-          <span class="ov-cc-plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
-          <b>Grow the faculty</b>
-          <span>New professors and campuses come from Teach applications</span>
-        </a>
+      <div class="dk-stats">
+        <div><small><i style="background:#2b22ff"></i>Collected</small><b data-total="collected">UGX <?= e(number_format($init['c'])) ?></b></div>
+        <div><small><i style="background:#8b8fa9"></i>Professors</small><b data-total="professors">UGX <?= e(number_format($init['p'])) ?></b></div>
+        <div><small><i style="background:#6aa81e"></i>Kept</small><b data-total="kept">UGX <?= e(number_format($init['k'])) ?></b></div>
+        <div><small>Payments</small><b data-total="payments"><?= (int) $init['n'] ?></b></div>
       </div>
-      <?php else: ?>
-        <p class="ov-empty">No campuses yet.</p>
-      <?php endif; ?>
-    </article>
-  </section>
+      <p class="dk-note" data-chart-note>Running total over the period</p>
+      <div class="ov-chart" data-chart="money" style="height:280px"></div>
+    </section>
 
-  <section class="ov-grid">
-    <article class="ov-card ov-c8 ov-in" style="--i:8">
-      <div class="ov-card-h">
-        <div><h2>Member growth</h2><p>Members with campus access at the end of each month</p></div>
-        <div class="ov-legend"><span><i class="c-brand"></i>All members</span><span><i class="c-kept"></i>Yearly plan</span></div>
-      </div>
-      <div class="ov-card-b ov-chart-b"><div class="ov-chart" data-chart="members" style="height:250px"></div></div>
-    </article>
-    <article class="ov-card ov-c4 ov-in" style="--i:9">
-      <div class="ov-card-h"><div><h2>Visitor to member</h2><p>Last 30 days</p></div></div>
-      <div class="ov-card-b">
-        <div class="ov-funnel">
+    <section class="dk-block" style="--b:1">
+      <div class="dk-block-h"><h2>Your <em>campuses</em></h2><span><?= $openCampuses ?> open · <?= count($draftCards) ?> draft<?= count($draftCards) === 1 ? '' : 's' ?> · <a href="<?= e(base_url('dashboard/admin/campuses.php')) ?>">Manage campuses →</a></span></div>
+      <?php if (!$campusCards): ?><p class="dk-empty">No campuses yet.</p><?php endif; ?>
+      <?php if ($openCards): ?>
+        <span class="dk-sub">Open</span>
+        <div class="dk-camps">
+          <?php foreach ($openCards as $k => $c): $cid = (int) $c['id']; $active = (int) $c['active']; ?>
+            <a class="dk-cc" href="<?= e($dkEdit($cid)) ?>" style="--i:<?= $k ?>">
+              <span class="ph"><?php if (isset($dkPhoto[$cid])): ?><img src="<?= e($dkPhoto[$cid]) ?>" alt=""><?php else: ?><span class="ic"><?= campus_icon($c['icon'] ?: 'book', 1.8) ?></span><?php endif; ?><span class="st">Open</span></span>
+              <span class="bd">
+                <b class="t"><?= e($c['name']) ?></b>
+                <span class="pf"><?= $c['professor_name'] ? 'Prof. ' . e($c['professor_name']) : 'No professor yet' ?></span>
+                <span class="nums"><span><small>Members</small><b data-count="<?= $active ?>"><?= $active ?></b></span><span><small>30 days</small><b>UGX <?= e($dkShort((float) $c['collected'])) ?></b></span></span>
+                <svg class="curve" data-trend="<?= e(json_encode($c['trend'])) ?>" aria-hidden="true"></svg>
+                <span class="ft"><?= $c['live'] ? 'Live ' . e(date('D j M · g:i a', strtotime($c['live']))) : '<span class="warn">No live class booked</span>' ?><span><?= (int) $c['ending'] ?> ending</span></span>
+              </span>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+      <?php if ($draftCards): ?>
+        <span class="dk-sub">Drafts · getting ready</span>
+        <div class="dk-drafts">
+          <?php foreach ($draftCards as $k => $c): $cid = (int) $c['id']; $dkNext = null; foreach ($c['steps'] as $j => $st) { if (!$st[1]) { $dkNext = $j; break; } } ?>
+            <div class="dk-dr" style="--i:<?= $k ?>">
+              <a class="ph" href="<?= e($dkEdit($cid)) ?>"><?php if (isset($dkPhoto[$cid])): ?><img src="<?= e($dkPhoto[$cid]) ?>" alt=""><?php else: ?><span class="ic"><?= campus_icon($c['icon'] ?: 'book', 1.8) ?></span><?php endif; ?></a>
+              <span class="tx"><a href="<?= e($dkEdit($cid)) ?>"><b><?= e($c['name']) ?></b></a><small><?= (int) $c['done'] ?> of 5 ready · <?= $c['professor_name'] ? 'Prof. ' . e($c['professor_name']) : 'no professor yet' ?></small></span>
+              <span class="steps" title="<?= e(implode(' · ', array_map(fn($st) => $st[0] . ($st[1] ? ' ✓' : ''), $c['steps']))) ?>"><?php foreach ($c['steps'] as $st): ?><i class="<?= $st[1] ? 'on' : '' ?>"></i><?php endforeach; ?></span>
+              <?php if ($dkNext !== null): ?><a class="nx" href="<?= e($dkEdit($cid, $c['steps'][$dkNext][4])) ?>"><?= e($c['steps'][$dkNext][3]) ?> →</a><?php else: ?><a class="nx" href="<?= e($dkEdit($cid)) ?>">Ready to publish →</a><?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+      <a class="dk-more" href="<?= e(base_url('dashboard/admin/instructor-applications.php')) ?>">Grow the faculty: Teach applications →</a>
+    </section>
+
+    <div class="dk-two">
+      <section class="dk-block" style="--b:2">
+        <div class="dk-block-h"><h2>Member <em>growth</em></h2><span>Members with access, by month</span></div>
+        <div class="dk-legend"><span><i style="background:#2b22ff"></i>All members</span><span><i style="background:#6aa81e"></i>Yearly plan</span></div>
+        <div class="ov-chart" data-chart="members" style="height:230px"></div>
+      </section>
+      <section class="dk-block" style="--b:3">
+        <div class="dk-block-h"><h2>Visitor <em>to member</em></h2><span>30 days</span></div>
+        <div class="dk-funnel">
           <?php foreach ($funnel as $k => [$label, $n]): ?>
-            <div class="ov-f-row" style="--j:<?= $k ?>">
-              <span><?= e($label) ?></span>
-              <b><?= e(number_format($n)) ?><?php if ($k > 0): ?><em><?= $funnel[$k - 1][1] > 0 ? e(number_format($n / $funnel[$k - 1][1] * 100, 1)) . '%' : '—' ?></em><?php endif; ?></b>
-              <div class="ov-f-bar"><i style="width:<?= max(1.5, round(sqrt($n / $funnelTop) * 100, 1)) ?>%"></i></div>
+            <div class="fr" style="--i:<?= $k ?>">
+              <span class="tp"><?= e($label) ?><b><?= e(number_format($n)) ?><?php if ($k > 0): ?><em><?= $funnel[$k - 1][1] > 0 ? e(number_format($n / $funnel[$k - 1][1] * 100, 1)) . '%' : '—' ?></em><?php endif; ?></b></span>
+              <span class="bar"><i style="width:<?= max(1.5, round(sqrt($n / $funnelTop) * 100, 1)) ?>%"></i></span>
             </div>
           <?php endforeach; ?>
         </div>
-        <div class="ov-f-foot"><span>Visitor to paid member</span><b><?= $funnel[0][1] > 0 ? e(number_format($funnel[4][1] / $funnel[0][1] * 100, 2)) . '%' : '—' ?></b></div>
-      </div>
-    </article>
-  </section>
+        <div class="dk-mini last"><span>Visitor to paid member</span><b><?= $funnel[0][1] > 0 ? e(number_format($funnel[4][1] / $funnel[0][1] * 100, 2)) . '%' : '—' ?></b></div>
+      </section>
+    </div>
 
-  <section class="ov-grid">
-    <article class="ov-card ov-c6 ov-in" style="--i:10">
-      <div class="ov-card-h"><div><h2>Live classes this week</h2><p><?= $liveClasses ? count($liveClasses) . ' scheduled' : 'None scheduled in the next 7 days' ?></p></div><a class="ov-link" href="<?= e(base_url('dashboard/admin/campuses.php')) ?>">Campuses <span>→</span></a></div>
-      <?php if ($liveClasses): ?>
-        <div class="ov-list">
-          <?php foreach (array_slice($liveClasses, 0, 5) as $k => $l): $hasLink = trim((string) $l['join_url']) !== ''; ?>
-            <a class="ov-li" style="--j:<?= $k ?>" href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . (int) $l['campus_id'] . '&tab=live')) ?>">
-              <span class="ov-date"><small><?= e(strtoupper(date('D', strtotime($l['starts_at'])))) ?></small><b><?= e(date('j', strtotime($l['starts_at']))) ?></b></span>
-              <span class="ov-li-text"><b><?= e($l['title']) ?></b><small><?= e($l['campus_name']) ?> · <?= e(date('g:i a', strtotime($l['starts_at']))) ?></small></span>
-              <span class="ov-li-r <?= $hasLink ? 'ok' : 'no' ?>"><?= $hasLink ? 'Link ready' : 'No link yet' ?></span>
-            </a>
-          <?php endforeach; ?>
-        </div>
-      <?php else: ?>
-        <p class="ov-empty">Add live classes from each campus's Live classes tab.</p>
-      <?php endif; ?>
-    </article>
-    <article class="ov-card ov-c6 ov-in" style="--i:11">
-      <div class="ov-card-h"><div><h2>Recent activity</h2><p>From the audit log</p></div><a class="ov-link" href="<?= e(base_url('dashboard/admin/audit-log.php')) ?>">Audit log <span>→</span></a></div>
-      <?php if ($recentActivity): ?>
-        <div class="ov-list ov-act">
-          <?php foreach ($recentActivity as $k => $log): ?>
-            <div class="ov-li" style="--j:<?= $k ?>">
-              <span class="ov-av"><?= e($initials($log['actor_name'] ?: '?')) ?></span>
-              <span class="ov-li-text"><b><strong><?= e($log['actor_name']) ?></strong> <?= e(str_replace(['.', '_'], ' ', strtolower($log['action']))) ?> <span><?= e($log['target_label']) ?></span></b><small><?= $log['detail'] ? e($log['detail']) : e(format_date($log['created_at'])) ?></small></span>
-              <span class="ov-li-r"><?= e(time_ago($log['created_at'])) ?></span>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      <?php else: ?>
-        <p class="ov-empty">No activity logged yet.</p>
-      <?php endif; ?>
-    </article>
-  </section>
+    <div class="dk-two even">
+      <section class="dk-block" style="--b:4">
+        <div class="dk-block-h"><h2>Live <em>this week</em></h2><a href="<?= e(base_url('dashboard/admin/campuses.php')) ?>">All campuses →</a></div>
+        <?php if ($liveClasses): ?>
+          <div class="dk-rows">
+            <?php foreach (array_slice($liveClasses, 0, 5) as $l): $hasLink = trim((string) $l['join_url']) !== ''; $at = strtotime($l['starts_at']); ?>
+              <a class="dk-row" href="<?= e($dkEdit((int) $l['campus_id'], 'live')) ?>"><span class="date"><small><?= e(date('D', $at)) ?></small><b><?= e(date('j', $at)) ?></b></span><span class="tx"><b><?= e($l['title']) ?></b><small><?= e($l['campus_name']) ?> · <?= e(date('g:i a', $at)) ?></small></span><span class="pill <?= $hasLink ? 'g' : 'w' ?>"><?= $hasLink ? 'Link ready' : 'No link yet' ?></span></a>
+            <?php endforeach; ?>
+          </div>
+        <?php else: ?><p class="dk-empty">None in the next 7 days. Add live classes from each campus's Live classes tab.</p><?php endif; ?>
+      </section>
+      <section class="dk-block" style="--b:5">
+        <div class="dk-block-h"><h2>Recent <em>activity</em></h2><a href="<?= e(base_url('dashboard/admin/audit-log.php')) ?>">Audit log →</a></div>
+        <?php if ($recentActivity): ?>
+          <div class="dk-rows">
+            <?php foreach (array_slice($recentActivity, 0, 5) as $k => $log): ?>
+              <div class="dk-row"><span class="av" style="background:<?= e($badgeColors[abs(crc32((string) $log['actor_name'])) % count($badgeColors)]) ?>"><?= e($initials($log['actor_name'] ?: '?')) ?></span><span class="tx"><b><?= e($log['actor_name']) ?> <span><?= e(str_replace(['.', '_'], ' ', strtolower($log['action']))) ?></span></b><small><?= e($log['target_label']) ?><?= $log['detail'] ? ' · ' . e(mb_strimwidth($log['detail'], 0, 70, '…')) : '' ?></small></span><small class="ago"><?= e(time_ago($log['created_at'])) ?></small></div>
+            <?php endforeach; ?>
+          </div>
+        <?php else: ?><p class="dk-empty">No activity logged yet.</p><?php endif; ?>
+      </section>
+    </div>
+  </div>
 </div>
 <script type="application/json" id="ov-data"><?= json_encode($ovData, JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
 <script src="<?= e(versioned_asset('assets/js/admin-overview.js')) ?>" defer></script>
+<script src="<?= e(versioned_asset('assets/js/admin-desk.js')) ?>" defer></script>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>
