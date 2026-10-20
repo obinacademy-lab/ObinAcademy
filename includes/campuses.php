@@ -42,14 +42,75 @@ function campus_icon(string $key, float $stroke = 1.6): string {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' . $stroke . '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $paths . '</svg>';
 }
 
-/** The campus photo URL (assets/img/campuses/{slug}.jpg), or null when that campus has none yet. */
+/** The campus photo URL: the one uploaded in Admin (campuses.photo_url, migration/add-campus-photo.sql), else
+ * the built-in assets/img/campuses/{slug}.jpg, or null when the campus has none yet. */
 function campus_photo(array $campus): ?string {
+    if (!empty($campus['photo_url'])) return asset_src($campus['photo_url']);
     $rel = 'assets/img/campuses/' . $campus['slug'] . '.jpg';
     // public/ locally, the web root itself on the live server.
     foreach ([__DIR__ . '/../public/' . $rel, __DIR__ . '/../' . $rel] as $path) {
         if (is_file($path)) return versioned_asset($rel);
     }
     return null;
+}
+
+/** True once campuses can hold their own uploaded photo (migration/add-campus-photo.sql). */
+function campus_photo_ready(): bool {
+    static $ready = null;
+    if ($ready === null) { try { db_one('SELECT photo_url FROM campuses LIMIT 1'); $ready = true; } catch (Throwable $e) { $ready = false; } }
+    return $ready;
+}
+
+/** A web address for a new campus, unique among campuses (ai-technology, ai-technology-2, ...). */
+function campus_unique_slug(string $name): string {
+    $slug = slugify(preg_replace('/\s+campus$/i', '', trim($name))) ?: 'campus';
+    $base = $slug; $n = 2;
+    while (db_one('SELECT id FROM campuses WHERE slug = ?', [$slug])) $slug = $base . '-' . $n++;
+    return $slug;
+}
+
+/** Creates a draft campus at the end of the list and returns its id. */
+function campus_create(string $name, string $tagline, string $icon, float $monthly, float $yearly): int {
+    $name = mb_substr(trim(preg_replace('/\s+campus$/i', '', trim($name))), 0, 120);
+    if ($name === '' || $monthly <= 0 || $yearly <= 0) throw new RuntimeException('Give the campus a name and a monthly and yearly price above zero.');
+    if (db_one('SELECT id FROM campuses WHERE LOWER(name) = LOWER(?)', [$name])) throw new RuntimeException('There is already a campus called ' . $name . '.');
+    $sort = (int) (db_one('SELECT COALESCE(MAX(sort_order), 0) + 1 AS n FROM campuses')['n'] ?? 99);
+    return (int) db_insert(
+        "INSERT INTO campuses (slug, name, tagline, icon, monthly_price, yearly_price, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, 'DRAFT', ?)",
+        [campus_unique_slug($name), $name, mb_substr(trim($tagline), 0, 255), array_key_exists($icon, CAMPUS_ICON_PATHS) ? $icon : 'book', $monthly, $yearly, $sort]
+    );
+}
+
+/**
+ * What stops a campus from being deleted: anyone who ever joined it, any successful payment for it, or
+ * professor pay earned in it. Deleting those would erase students' access and the money records, so a
+ * campus with any of them can only be unpublished (moved back to draft).
+ */
+function campus_delete_blockers(int $campusId): array {
+    $n = fn(string $sql) => (int) (db_one($sql, [$campusId])['n'] ?? 0);
+    $out = [
+        'members' => $n('SELECT COUNT(*) AS n FROM campus_memberships WHERE campus_id = ?'),
+        'payments' => $n("SELECT COUNT(*) AS n FROM payments WHERE campus_id = ? AND status = 'SUCCESS'"),
+    ];
+    try { $out['earnings'] = $n('SELECT COUNT(*) AS n FROM campus_professor_earnings WHERE campus_id = ?'); } catch (Throwable $e) { $out['earnings'] = 0; }
+    return $out;
+}
+
+/** Deletes a campus that has no members, payments or professor pay, with its lessons (and their files), months, live classes and messages. */
+function campus_delete(int $campusId): void {
+    if (array_sum(campus_delete_blockers($campusId))) throw new RuntimeException('This campus has members or payments, so it cannot be deleted. Unpublish it instead.');
+    foreach (db_all('SELECT file_url FROM campus_lessons WHERE campus_id = ?', [$campusId]) as $l) {
+        $key = (string) $l['file_url'];
+        if ($key !== '' && !preg_match('#^(https?:)?//#', $key) && function_exists('resolve_private_path')) {
+            $path = resolve_private_path($key);
+            if (is_file($path)) @unlink($path);
+        }
+    }
+    try { db_run('UPDATE instructor_applications SET campus_id = NULL WHERE campus_id = ?', [$campusId]); } catch (Throwable $e) {}
+    try { db_run('UPDATE video_stories SET campus_id = NULL WHERE campus_id = ?', [$campusId]); } catch (Throwable $e) {}
+    try { db_run('DELETE FROM campus_payout_requests WHERE campus_id = ?', [$campusId]); } catch (Throwable $e) {}
+    db_run('UPDATE payments SET campus_id = NULL WHERE campus_id = ?', [$campusId]); // unpaid attempts only; paid ones block the delete
+    db_run('DELETE FROM campuses WHERE id = ?', [$campusId]); // lessons, months, live classes and posts follow (ON DELETE CASCADE)
 }
 
 /** True once the campus tables exist (migration/add-campuses.sql applied). */

@@ -263,3 +263,20 @@ tbody tr:hover .acx-bdg { transform: rotate(-7deg) scale(1.06); }
   .acx-panel { padding: 16px; }
   .acx-head h1 { font-size: 24px; }
 }
+
+/* New campus: a button that opens a small form under it */
+.acx-new { position: relative; }
+.acx-new > summary { list-style: none; cursor: pointer; }
+.acx-new > summary::-webkit-details-marker { display: none; }
+.acx-btn.lime { background: var(--lc-lime, #cdfb5e); border-color: var(--lc-lime, #cdfb5e); color: var(--lc-void, #07081f) !important; font-weight: 600; }
+.acx-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.acx-new-form { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: min(360px, calc(100vw - 32px)); display: grid; gap: 12px; padding: 18px; border-radius: 16px; background: var(--ov-panel); border: 1px solid var(--ov-line); box-shadow: 0 24px 48px -20px rgba(12, 14, 36, .45); animation: acx-new-in .35s var(--ov-ease-out, ease) both; }
+.acx-new-form b { font-size: 16px; color: var(--ov-ink); }
+.acx-new-form small { font-size: 12.5px; color: var(--ov-ink-3); margin-top: -6px; }
+.acx-new-form label { display: grid; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--ov-ink-2); }
+.acx-new-form input, .acx-new-form select { height: 40px; border: 1px solid var(--ov-line); border-radius: 10px; padding: 0 12px; font: inherit; font-size: 14px; background: #fff; color: var(--ov-ink); }
+.acx-new-form input:focus, .acx-new-form select:focus { outline: 2px solid var(--ov-brand); outline-offset: 0; }
+.acx-new-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.acx-new-form .acx-btn { justify-content: center; height: 42px; }
+@keyframes acx-new-in { from { opacity: 0; transform: translateY(-6px); } }
+@media (max-width: 640px) { .acx-new-form { position: fixed; left: 16px; right: 16px; top: 90px; width: auto; } }

@@ -1597,3 +1597,18 @@ a.stat-card-link { text-decoration: none; color: inherit; display: block; }
   .ca-lessons > div { grid-template-columns: 1fr; }
   .ca-lessons .acts { justify-content: flex-start; }
 }
+
+/* Admin campus details: photo and delete */
+.ca-photo-row { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; align-items: center; }
+.ca-photo-pic { position: relative; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden; background: var(--dash-panel-2, #f4f5f9); display: grid; place-items: center; border: 1px solid var(--dash-border, #e4e7ec); }
+.ca-photo-pic img { width: 100%; height: 100%; object-fit: cover; }
+.ca-photo-pic em { font-style: normal; font-size: 13px; color: var(--muted, #8b8fa9); }
+.ca-photo b, .ca-danger > b { display: block; font-size: 15px; }
+.ca-photo small, .ca-danger > small { display: block; margin-top: 4px; font-size: 13px; color: var(--muted, #8b8fa9); max-width: 62ch; }
+.ca-danger { border-color: rgba(220, 38, 38, .35) !important; }
+.ca-danger > b { color: #c42828; }
+.ca-danger-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 4px; }
+.ca-danger-form label { flex: 1 1 260px; }
+.ca-danger-btn { background: #c42828; border: 1px solid #c42828; color: #fff; }
+.ca-danger-btn:hover { background: #a61f1f; }
+@media (max-width: 640px) { .ca-photo-row { grid-template-columns: 1fr; } }

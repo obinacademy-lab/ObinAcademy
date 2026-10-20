@@ -40,6 +40,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash_set('success', 'Saved.');
             redirect($here('details'));
         }
+        if ($a === 'photo' && campus_photo_ready()) {
+            if (post('remove') === '1') {
+                db_run('UPDATE campuses SET photo_url = NULL WHERE id = ?', [$id]);
+                $log('photo_removed');
+                flash_set('success', 'Photo removed.');
+            } else {
+                if (empty($_FILES['photo']['name'])) throw new RuntimeException('Choose a photo first.');
+                $url = save_upload($_FILES['photo'], 'thumbnails');
+                db_run('UPDATE campuses SET photo_url = ? WHERE id = ?', [$url, $id]);
+                $log('photo_updated');
+                flash_set('success', 'Photo saved. It shows on the campus page, the student area and your dashboards.');
+            }
+            redirect($here('details') . '#photo');
+        }
+        if ($a === 'delete_campus') {
+            if (mb_strtolower(trim(post('confirm_name'))) !== mb_strtolower(trim($campus['name']))) throw new RuntimeException('Type the campus name exactly to delete it.');
+            campus_delete($id);
+            log_admin_action((int) $user['id'], $user['name'], 'campus.deleted', 'Campus', $campus['name'], 'no members or payments');
+            flash_set('success', $campus['name'] . ' Campus was deleted.');
+            redirect('/dashboard/admin/campuses.php');
+        }
         if ($a === 'status') {
             $to = post('to') === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
             if ($to === 'PUBLISHED') {
@@ -173,6 +194,46 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <div><button class="btn btn-primary" type="submit">Save details</button></div>
   </form>
 
+  <?php if (campus_photo_ready()): $cPhoto = campus_photo($campus); ?>
+    <form method="post" enctype="multipart/form-data" class="ld-panel ca-form ca-photo" id="photo">
+      <?= csrf_field() ?><input type="hidden" name="_action" value="photo">
+      <div class="ca-photo-row">
+        <span class="ca-photo-pic"><?php if ($cPhoto): ?><img src="<?= e($cPhoto) ?>" alt="" data-photo-preview><?php else: ?><img src="" alt="" data-photo-preview hidden><em>No photo yet</em><?php endif; ?></span>
+        <div>
+          <b>Campus photo</b>
+          <small>Shown at the top of the public campus page, in the student area and on your dashboards. A wide photo works best (at least 1200 px across).<?= empty($campus['photo_url']) && $cPhoto ? ' This campus uses the built-in photo until you upload one.' : '' ?></small>
+          <div class="row gap-2 wrap" style="margin-top:10px;">
+            <label class="btn btn-outline btn-sm" style="cursor:pointer;">Choose a photo<input type="file" name="photo" accept="image/png,image/jpeg,image/webp" hidden data-photo-input></label>
+            <button class="btn btn-primary btn-sm" type="submit">Save photo</button>
+            <?php if (!empty($campus['photo_url'])): ?><button class="btn btn-outline btn-sm" type="submit" name="remove" value="1" formnovalidate>Remove</button><?php endif; ?>
+          </div>
+        </div>
+      </div>
+    </form>
+  <?php endif; ?>
+
+  <?php $blockers = campus_delete_blockers($id); $blocked = array_sum($blockers) > 0; ?>
+  <div class="ld-panel ca-form ca-danger" id="delete">
+    <b>Delete this campus</b>
+    <?php if ($blocked): ?>
+      <small>
+        This campus can't be deleted because it has
+        <?= implode(', ', array_filter([
+            $blockers['members'] ? $blockers['members'] . ' member' . ($blockers['members'] === 1 ? '' : 's') : '',
+            $blockers['payments'] ? $blockers['payments'] . ' payment' . ($blockers['payments'] === 1 ? '' : 's') : '',
+            $blockers['earnings'] ? 'professor pay records' : '',
+        ])) ?>. Deleting it would erase students' access and your money records.
+        <?= $campus['status'] === 'PUBLISHED' ? 'To stop new students joining, unpublish it (the button at the top).' : 'It is already a draft, so new students cannot join it.' ?>
+      </small>
+    <?php else: ?>
+      <small>Removes the campus with its months, lessons and their files, live classes and messages. Nobody has joined or paid, so no student or money record is lost. This can't be undone.</small>
+      <form method="post" class="ca-danger-form" data-confirm="<?= e('Delete ' . $campus['name'] . ' Campus for good?') ?>">
+        <?= csrf_field() ?><input type="hidden" name="_action" value="delete_campus">
+        <label>Type <b><?= e($campus['name']) ?></b> to confirm<input name="confirm_name" autocomplete="off" required></label>
+        <button class="btn btn-sm ca-danger-btn" type="submit">Delete campus</button>
+      </form>
+    <?php endif; ?>
+  </div>
 <?php elseif ($tab === 'professor'): ?>
   <form method="post" enctype="multipart/form-data" class="ld-panel ca-form">
     <?= csrf_field() ?><input type="hidden" name="_action" value="professor">
@@ -406,6 +467,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
 <style>.ca-ledit summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--accent, #2b22ff); margin-top: 4px; } .ca-ledit form { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .ca-ledit input, .ca-ledit select { height: 34px; font-size: 13px; padding: 0 10px; } .ca-ledit input[name=title] { flex: 1 1 200px; } .ca-ledit input[name=duration] { width: 110px; }</style>
 <script>
 document.querySelectorAll('form[data-confirm]').forEach(function (f) { f.addEventListener('submit', function (e) { if (!confirm(f.dataset.confirm)) e.preventDefault(); }); });
+document.querySelectorAll('[data-photo-input]').forEach(function (i) { i.addEventListener('change', function () { var f = i.files[0], p = document.querySelector('[data-photo-preview]'); if (!f || !p) return; p.src = URL.createObjectURL(f); p.hidden = false; var em = p.parentNode.querySelector('em'); if (em) em.remove(); }); });
 document.querySelectorAll('form[data-upload]').forEach(function (f) { f.addEventListener('submit', function () { var b = f.querySelector('[data-upload-btn]'); if (b) { b.disabled = true; b.textContent = 'Uploading…'; } var n = f.querySelector('[data-upload-note]'); if (n) n.hidden = false; }); });
 </script>
 <?php require __DIR__ . '/../../includes/dashboard_footer.php'; ?>

@@ -22,6 +22,19 @@ if (!campuses_ready()) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $action = post('_action');
+    if ($action === 'create') {
+        try {
+            $money = fn(string $v) => (float) str_replace([',', ' ', 'UGX', 'ugx'], '', $v);
+            $newId = campus_create(post('name'), post('tagline'), post('icon'), $money(post('monthly_price')), $money(post('yearly_price')));
+            $new = get_campus($newId);
+            log_admin_action((int) $user['id'], $user['name'], 'campus.created', 'Campus', $new['name'], 'draft');
+            flash_set('success', $new['name'] . ' Campus is created as a draft. Add its photo and description here, then the professor, curriculum and month 1 lessons, and publish it.');
+            redirect('/dashboard/admin/campus-edit.php?id=' . $newId . '&tab=details');
+        } catch (RuntimeException $e) {
+            flash_set('error', $e->getMessage());
+            redirect('/dashboard/admin/campuses.php#new');
+        }
+    }
     if ($action === 'remind') {
         $m = db_one(
             'SELECT m.*, c.name AS campus_name, c.slug AS campus_slug, c.monthly_price, u.name AS user_name, u.email AS user_email
@@ -93,6 +106,19 @@ require __DIR__ . '/../../includes/dashboard_header.php';
   <div class="acx-head acx-slam" style="--i:0">
     <div><h1>Campuses</h1><p>Build each campus, open it to learners, and keep members renewing.</p></div>
     <div class="acx-acts">
+      <details class="acx-new" id="new">
+        <summary class="acx-btn lime"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New campus</summary>
+        <form method="post" class="acx-new-form">
+          <?= csrf_field() ?><input type="hidden" name="_action" value="create">
+          <b>New campus</b>
+          <small>It starts as a draft that only you can see. You add the photo, professor and lessons next.</small>
+          <label>Campus name<input name="name" required maxlength="120" placeholder="e.g. Real Estate"></label>
+          <label>One-line summary<input name="tagline" maxlength="255" placeholder="What students will be able to do"></label>
+          <label>Icon<select name="icon"><?php foreach (['biz' => 'Business', 'crypto' => 'Chart', 'fx' => 'Globe', 'content' => 'Video', 'fit' => 'Fitness', 'ai' => 'Chip', 'shop' => 'Cart', 'book' => 'Book'] as $k => $n): ?><option value="<?= e($k) ?>"><?= e($n) ?></option><?php endforeach; ?></select></label>
+          <span class="acx-new-2"><label>Monthly (UGX)<input name="monthly_price" inputmode="numeric" required value="100000"></label><label>Yearly (UGX)<input name="yearly_price" inputmode="numeric" required value="1000000"></label></span>
+          <button type="submit" class="acx-btn dark">Create the campus</button>
+        </form>
+      </details>
       <a class="acx-btn" href="<?= e(base_url('index.php#campuses')) ?>" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>View public page</a>
       <a class="acx-btn dark" href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Professor pay</a>
     </div>
