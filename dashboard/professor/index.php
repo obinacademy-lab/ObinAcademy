@@ -11,6 +11,7 @@ require __DIR__ . '/../../includes/audit.php';
 require __DIR__ . '/../../includes/storage.php';
 require __DIR__ . '/../../includes/professor.php';
 require __DIR__ . '/../../includes/campus_content.php';
+require __DIR__ . '/../../includes/class_room.php';
 $user = require_login();
 if (!is_professor($user)) redirect('/dashboard.php');
 
@@ -22,10 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $a = post('_action');
     if ($a === 'reply') {
-        $body = trim(mb_substr(post('body'), 0, 2000));
-        if ($body !== '') {
-            db_insert('INSERT INTO campus_posts (campus_id, user_id, body) VALUES (?, ?, ?)', [$id, $user['id'], $body]);
-            flash_set('success', 'Posted to your class.');
+        if (trim(post('body')) !== '') {
+            // Through the class room, so every student is notified.
+            try { class_room_post($user, $campus, ['kind' => 'TEXT', 'text' => post('body')]); flash_set('success', 'Posted to your class.'); }
+            catch (RuntimeException $e) { flash_set('error', $e->getMessage()); }
         }
         redirect($self . '#desk-switch');
     }
@@ -218,7 +219,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <div data-pane="community" hidden>
           <?php if (!$posts): ?><p class="pf-empty">No messages yet. Start the conversation with your class.</p><?php endif; ?>
           <?php foreach ($posts as $p): $mine = (int) $p['user_id'] === (int) $user['id']; ?>
-            <div class="pf-post"><span class="av<?= $mine ? ' me' : '' ?>"><?= e(professor_initials($p['name'])) ?></span><div><b><?= e($mine ? 'You' : $p['name']) ?></b><p><?= e(mb_strimwidth($p['body'], 0, 220, '…')) ?></p></div><time><?= e(time_ago($p['created_at'])) ?></time></div>
+            <div class="pf-post"><span class="av<?= $mine ? ' me' : '' ?>"><?= e(professor_initials($p['name'])) ?></span><div><b><?= e($mine ? 'You' : $p['name']) ?></b><p><?= e(class_room_preview($p)) ?></p></div><time><?= e(time_ago($p['created_at'])) ?></time></div>
           <?php endforeach; ?>
           <form method="post" class="pf-answer"><?= csrf_field() ?><input type="hidden" name="_action" value="reply"><input name="body" maxlength="2000" required aria-label="Reply to your class" placeholder="Reply to your class…"><button type="submit">Send</button></form>
         </div>

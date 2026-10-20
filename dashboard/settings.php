@@ -26,6 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('formName') === 'theme') {
     redirect('/dashboard/settings.php#look');
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('formName') === 'sound') {
+    csrf_verify();
+    // Class room alerts: the short sound when someone posts in a campus class room.
+    try { db_run('UPDATE users SET chat_sound = ? WHERE id = ?', [post('chatSound') === '1' ? 1 : 0, $user['id']]); } catch (Throwable $e) {}
+    flash_set('success', post('chatSound') === '1' ? 'Notification sound is on.' : 'Notification sound is off. You still get notifications, without the sound.');
+    redirect('/dashboard/settings.php#alerts');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('formName') === 'password') {
     csrf_verify();
     $current = $_POST['current_password'] ?? '';
@@ -43,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('formName') === 'password') {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !in_array(post('formName'), ['theme', 'password'], true)) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !in_array(post('formName'), ['theme', 'password', 'sound'], true)) {
     csrf_verify();
     $name = trim(post('name'));
     $phone = trim(post('phone'));
@@ -170,8 +178,18 @@ require __DIR__ . '/../includes/dashboard_header.php';
         </form>
       </section>
 
+      <?php $soundOn = !array_key_exists('chat_sound', $user) || (int) $user['chat_sound'] === 1; ?>
+      <section class="acx-sec acx-slam" style="--i:4" id="alerts">
+        <div class="se-h"><div><h2>Notifications</h2><p>When someone posts or replies in your campus class room, you get a notification and a short sound.</p></div></div>
+        <form method="post" class="se-form se-sound">
+          <?= csrf_field() ?><input type="hidden" name="formName" value="sound"><input type="hidden" name="chatSound" value="<?= $soundOn ? '0' : '1' ?>">
+          <div class="se-sound-row"><span><b>Notification sound</b><small><?= $soundOn ? 'On. A short sound plays for new class room messages.' : 'Off. You still see notifications, just without the sound.' ?></small></span>
+            <button type="submit" class="se-switch" role="switch" aria-checked="<?= $soundOn ? 'true' : 'false' ?>" aria-label="Notification sound"></button></div>
+        </form>
+      </section>
+
       <?php if (!$isProf): ?>
-      <section class="acx-sec acx-slam" style="--i:4" id="look">
+      <section class="acx-sec acx-slam" style="--i:5" id="look">
         <div class="se-h"><div><h2>Dashboard colour</h2><p>The colour of your sidebar. It changes as soon as you pick one.</p></div></div>
         <form method="post" id="theme-form" class="se-themes">
           <?= csrf_field() ?>

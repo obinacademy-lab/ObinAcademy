@@ -4,12 +4,14 @@
 // ever reachable through campus-media.php, which checks the campus membership first.
 // Thumbnails/avatars and student video stories are marketing material and stay under
 // public/uploads/, directly web-accessible (the web server streams story videos itself).
+// Class room photos (chat/) are there too, under random names that are only shown to the class.
 
 const UPLOAD_MAX_BYTES = [
     'videos' => 3 * 1024 * 1024 * 1024, // 3GB
     'pdfs' => 500 * 1024 * 1024,        // 500MB
     'thumbnails' => 5 * 1024 * 1024,    // 5MB
     'stories' => 500 * 1024 * 1024,     // 500MB: student video stories
+    'chat' => 8 * 1024 * 1024,          // 8MB: photos in a campus class room (shrunk after upload)
 ];
 
 const UPLOAD_ALLOWED_TYPES = [
@@ -17,6 +19,7 @@ const UPLOAD_ALLOWED_TYPES = [
     'pdfs' => ['application/pdf'],
     'thumbnails' => ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
     'stories' => ['video/mp4', 'video/webm', 'video/quicktime'],
+    'chat' => ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
 ];
 
 function private_uploads_root(): string {
@@ -61,7 +64,7 @@ function save_upload(array $file, string $folder): string {
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     $safeName = bin2hex(random_bytes(16)) . ($ext ? ".$ext" : '');
 
-    if ($folder === 'thumbnails' || $folder === 'stories') {
+    if ($folder === 'thumbnails' || $folder === 'stories' || $folder === 'chat') {
         $dir = public_uploads_root() . "/$folder";
         if (!is_dir($dir)) mkdir($dir, 0755, true);
         $dest = "$dir/$safeName";

@@ -455,9 +455,11 @@ function campus_email_html(string $heading, string $bodyHtml, string $cta, strin
 // ---------------------------------------------------------------- community
 
 function get_campus_posts(int $campusId, int $limit = 40, int $afterId = 0): array {
+    // Main class room only (not the comments under a win) once the class room migration has run.
+    $room = function_exists('class_room_ready') && class_room_ready() ? ' AND p.parent_id IS NULL' : '';
     return db_all(
-        'SELECT p.id, p.body, p.created_at, p.user_id, u.name, u.role FROM campus_posts p JOIN users u ON u.id = p.user_id
-         WHERE p.campus_id = ? AND p.deleted_at IS NULL AND p.id > ? ORDER BY p.id DESC LIMIT ' . (int) $limit,
+        'SELECT p.*, u.name, u.role FROM campus_posts p JOIN users u ON u.id = p.user_id
+         WHERE p.campus_id = ? AND p.deleted_at IS NULL AND p.id > ?' . $room . ' ORDER BY p.id DESC LIMIT ' . (int) $limit,
         [$campusId, $afterId]
     );
 }

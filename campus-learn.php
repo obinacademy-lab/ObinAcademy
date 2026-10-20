@@ -12,6 +12,7 @@
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/campuses.php';
 require __DIR__ . '/includes/campus_pages.php';
+require __DIR__ . '/includes/class_room.php';
 
 $user = current_user();
 $slug = query_param('campus');
@@ -48,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $open) {
         redirect(post('next') !== '' ? $self(['view' => 'lesson', 'lesson' => (int) post('next'), 'just' => $just]) : $self(['month' => (int) ($lesson['month_no'] ?? 1), 'just' => $just]) . '#cl-month');
     }
     if ($action === 'post') {
-        $body = trim(mb_substr(post('body'), 0, 2000));
-        if ($body !== '') db_insert('INSERT INTO campus_posts (campus_id, user_id, body) VALUES (?, ?, ?)', [$campusId, $user['id'], $body]);
+        // Without the class room script (old browsers): a plain message, still with notifications.
+        try { class_room_post($user, $campus, ['kind' => 'TEXT', 'text' => post('body')]); } catch (RuntimeException $e) { flash_set('success', $e->getMessage()); }
         redirect($self(['view' => 'community']));
     }
     if ($action === 'delete_post' && $isAdmin) {
@@ -174,6 +175,8 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
   </script>
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/campus-learn.css')) ?>">
   <script src="<?= e(versioned_asset('assets/js/campus-learn.js')) ?>" defer></script>
+  <?php if ($view === 'community'): ?><link rel="stylesheet" href="<?= e(versioned_asset('assets/css/class-room.css')) ?>"><?php endif; ?>
+  <script src="<?= e(versioned_asset('assets/js/chat-alerts.js')) ?>" data-base="<?= e(rtrim(base_url(''), '/')) ?>" defer></script>
 <?php endif; ?>
 </head>
 <?php if (!$open): ?>
@@ -218,7 +221,7 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
     $nextInMonth = null; foreach ($monthLs as $l) { if (!isset($done[(int) $l['id']])) { $nextInMonth = (int) $l['id']; break; } }
     $sideMonth = $isAdmin ? $homeMonth : $classMonth; $sideLs = $byMonth[$sideMonth] ?? []; $sideDone = $monthDone($sideMonth);
 ?>
-<body class="cl-body">
+<body class="cl-body"<?= $view === 'community' ? ' data-chat-room="' . e($campus['slug']) . '"' : '' ?>>
 <header class="cl-site"><div class="cl-site-in">
   <a class="cl-logo" href="<?= e(base_url('dashboard.php')) ?>"><i><?= $svg('cap') ?></i>Obin Academy</a>
   <span class="cl-site-r"><a class="cl-site-link" href="<?= e(base_url('index.php#campuses')) ?>">All campuses</a><a class="cl-me" href="<?= e($self(['view' => 'membership'])) ?>" title="<?= e($user['name']) ?> · Membership"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></a></span>
@@ -235,6 +238,7 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
 </div>
 <?php endif; ?>
 
+<?php if ($view === 'community'): require __DIR__ . '/includes/class_room_view.php'; else: ?>
 <main class="cl-page<?= $view === 'lesson' ? ' is-lesson' : '' ?>">
 <?php // ---------------------------------------------------------------- hero ?>
 <?php if ($view === 'lesson'): $media = base_url('campus-media.php?lesson=' . $lesson['id']); ?>
@@ -406,12 +410,12 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
         <?php foreach ($posts as $p): [$who, $tag, $staff] = $poster($p); ?>
           <div class="cl-post"><span class="av" style="background:<?= $staff ? 'var(--cl-brand)' : $avColor($who) ?>"><?= e(mb_strtoupper(mb_substr($who, 0, 1))) ?></span>
             <div><b><?= e($who) ?><?= $tag ? '<em>' . e($tag) . '</em>' : '' ?><time datetime="<?= e($p['created_at']) ?>"><?= e(time_ago($p['created_at'])) ?></time></b>
-              <p><?= $view === 'home' ? e(mb_strimwidth($p['body'], 0, 180, '…')) : nl2br(e($p['body'])) ?></p>
+              <p><?= $view === 'home' ? e(class_room_preview($p)) : nl2br(e($p['body'])) ?></p>
               <?php if ($isAdmin && $view === 'community'): ?><form method="post" class="cl-remove"><?= csrf_field() ?><input type="hidden" name="_action" value="delete_post"><input type="hidden" name="post" value="<?= (int) $p['id'] ?>"><button type="submit">Remove</button></form><?php endif; ?>
             </div></div>
         <?php endforeach; ?>
       </div>
-      <?php if ($view === 'home'): ?><a class="cl-btn blue" href="<?= e($self(['view' => 'community'])) ?>">Open the community<?= $arrow ?></a><?php endif; ?>
+      <?php if ($view === 'home'): ?><a class="cl-btn blue" href="<?= e($self(['view' => 'community'])) ?>">Open the class room<span class="cl-unread" data-chat-unread="<?= e($campus['slug']) ?>" hidden></span><?= $arrow ?></a><?php endif; ?>
     </section>
 <?php endif; ?>
 
@@ -450,6 +454,7 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
 <?php endif; ?>
   </div>
 </main>
+<?php endif; ?>
 
 <?php if ($view === 'home' && $nextLesson): ?>
 <div class="cl-mbar"><span>Up next<b><?= e($nextLesson['title']) ?></b></span><a class="cl-btn lime" href="<?= e($self(['view' => 'lesson', 'lesson' => $nextLesson['id']])) ?>">Continue<?= $arrow ?></a></div>

@@ -35,5 +35,6 @@
   <script src="<?= e(versioned_asset('assets/js/visitor-tracker.js')) ?>"></script>
   <script src="<?= e(versioned_asset('assets/js/lead-capture.js')) ?>"></script>
   <script src="<?= e(versioned_asset('assets/js/notifications.js')) ?>"></script>
+<?php if (!empty($user)): ?><script src="<?= e(versioned_asset('assets/js/chat-alerts.js')) ?>" data-base="<?= e(rtrim(base_url(''), '/')) ?>" defer></script><?php endif; ?>
 </body>
 </html>
