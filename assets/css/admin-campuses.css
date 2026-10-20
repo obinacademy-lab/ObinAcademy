@@ -279,4 +279,7 @@ tbody tr:hover .acx-bdg { transform: rotate(-7deg) scale(1.06); }
 .acx-new-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .acx-new-form .acx-btn { justify-content: center; height: 42px; }
 @keyframes acx-new-in { from { opacity: 0; transform: translateY(-6px); } }
-@media (max-width: 640px) { .acx-new-form { position: fixed; left: 16px; right: 16px; top: 90px; width: auto; } }
+/* The heading row sits above the console below it: the slam-in animation gives each section its own
+   layer, and without this the open form is drawn underneath the Launch Control panel. */
+.acx-head { position: relative; z-index: 20; }
+@media (max-width: 640px) { .acx-new-form { right: auto; left: 0; width: calc(100vw - 32px); } }
