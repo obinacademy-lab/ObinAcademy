@@ -1,40 +1,32 @@
 <?php
 /**
- * Shell for auth pages (login, signup, forgot/reset password): a white rounded card over a blurred photo —
- * the form on the left, a photo with floating glass callouts on the right. Callers may set, before requiring
- * this file:
+ * Shell for auth pages (login, signup, forgot/reset password): one frosted-glass card centred on a
+ * full-screen night photo. The page body (heading, form, switch link) goes between this file and
+ * auth_footer.php. Callers may set, before requiring this file:
  *   $redirectTo   — kept for callers that pass it; the pages build their own switch links.
  */
-// One slide = a photo, a bottom pill and two glass callouts, all true of every campus.
-$authSlides = [
-    ['img' => 'auth-slide-1.jpg', 'pill' => 'Free to join',
-     'a' => ['7 campuses', 'One skill, mastered in a year'], 'b' => ['Monthly or yearly', 'you choose']],
-    ['img' => 'auth-slide-2.jpg', 'pill' => 'Live every week',
-     'a' => ['Your professor', 'Teaching live'], 'b' => ['52 classes', 'in a year']],
-    ['img' => 'auth-slide-3.jpg', 'pill' => 'Learn anywhere',
-     'a' => ['On your phone', 'Videos and PDF guides'], 'b' => ['MTN + Airtel', 'Mobile Money']],
-    ['img' => 'auth-slide-4.jpg', 'pill' => 'Earn a certificate',
-     'a' => ['After 12 months', 'Share it anywhere'], 'b' => ['Included', 'with every campus']],
-];
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
   <meta name="robots" content="noindex, follow">
+  <meta name="theme-color" content="#070b24">
   <title><?= e($pageTitle ?? 'Obin Academy') ?></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
   <?php require __DIR__ . '/pwa-head.php'; ?>
-  <style>body.auth-body::before { background-image: url('<?= e(versioned_asset('assets/img/auth-bg.jpg')) ?>'); }</style>
+  <style>.ag-bg { background-image: url('<?= e(versioned_asset('assets/img/auth-slide-2.jpg')) ?>'); }</style>
 </head>
 <body class="auth-body">
-<div class="auth-shell">
-  <div class="auth-card">
-    <section class="auth-left">
-      <div class="auth-brand"><?php render_logo(true); ?></div>
-
-      <div class="auth-form-side">
+<div class="ag-bg" aria-hidden="true"></div><div class="ag-tint" aria-hidden="true"></div>
+<div class="ag-glow ag-glow-a" aria-hidden="true"></div><div class="ag-glow ag-glow-b" aria-hidden="true"></div><div class="ag-stars" aria-hidden="true"></div>
+<main class="auth-shell">
+  <section class="auth-card">
+    <div class="auth-brand">
+      <a class="auth-mark" href="<?= e(base_url('index.php')) ?>" aria-label="Obin Academy home"><?php dash_icon('graduation-cap'); ?></a>
+      <span class="auth-wordmark"><b>Obin</b> Academy</span>
+    </div>

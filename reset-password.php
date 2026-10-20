@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = 'Reset Password — Obin Academy';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1 class="auth-headline">Choose a New Password</h1>
+  <h1 class="auth-headline" style="--i:0">Choose a new <em>password</em></h1>
 
   <?php if ($success): ?>
     <div class="alert alert-success" style="margin-top:14px;">Your password has been reset.</div>
@@ -43,15 +43,15 @@ require __DIR__ . '/includes/auth_header.php';
     <form method="post">
       <?= csrf_field() ?>
       <input type="hidden" name="token" value="<?= e($token) ?>">
-      <div class="field">
-        <label for="password">New Password</label>
-        <input id="password" name="password" type="password" required minlength="8" placeholder="New Password">
+      <div class="field" style="--i:1">
+        <label for="password">New password</label>
+        <input id="password" name="password" type="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
       </div>
-      <div class="field">
-        <label for="confirmPassword">Confirm Password</label>
-        <input id="confirmPassword" name="confirmPassword" type="password" required minlength="8" placeholder="Confirm Password">
+      <div class="field" style="--i:2">
+        <label for="confirmPassword">Confirm password</label>
+        <input id="confirmPassword" name="confirmPassword" type="password" required minlength="8" placeholder="Type it again" autocomplete="new-password">
       </div>
-      <button type="submit" class="btn btn-primary">Reset Password <span class="btn-arrow">→</span></button>
+      <button type="submit" class="btn btn-primary" style="--i:3">Reset password <span class="btn-arrow">→</span></button>
     </form>
   <?php endif; ?>
 <?php require __DIR__ . '/includes/auth_footer.php'; ?>

@@ -37,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = 'Forgot Password — Obin Academy';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1 class="auth-headline">Reset Your Password</h1>
-  <p class="auth-sub">Enter your email and we'll send you a reset link.</p>
+  <h1 class="auth-headline" style="--i:0">Reset your <em>password</em></h1>
+  <p class="auth-sub" style="--i:1">Enter your email and we'll send you a reset link.</p>
 
   <?php if ($sent): ?>
     <div class="alert alert-success" style="margin-top:14px;">If an account exists for that email, a reset link is on its way.</div>
@@ -48,15 +48,15 @@ require __DIR__ . '/includes/auth_header.php';
     <?php endif; ?>
     <form method="post">
       <?= csrf_field() ?>
-      <div class="field">
+      <div class="field" style="--i:2">
         <label for="email">Email</label>
-        <input id="email" name="email" type="email" required placeholder="Email address">
+        <input id="email" name="email" type="email" required placeholder="Enter your email" autocomplete="email">
       </div>
-      <button type="submit" class="btn btn-primary">Send Reset Link <span class="btn-arrow">→</span></button>
+      <button type="submit" class="btn btn-primary" style="--i:3">Send reset link <span class="btn-arrow">→</span></button>
     </form>
   <?php endif; ?>
 
-  <p class="switch-line">
-    <a href="<?= e(base_url('login.php')) ?>">Back to Log In</a>
+  <p class="switch-line" style="--i:4">
+    <a href="<?= e(base_url('login.php')) ?>">Back to log in</a>
   </p>
 <?php require __DIR__ . '/includes/auth_footer.php'; ?>

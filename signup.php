@@ -40,8 +40,8 @@ $pageTitle = 'Sign Up — Obin Academy';
 $authTab = 'signup';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1 class="auth-headline">Start your learning journey</h1>
-  <p class="auth-sub">Join a campus and master one skill in a year. Free to sign up.</p>
+  <h1 class="auth-headline" style="--i:0">Start your <em>journey</em></h1>
+  <p class="auth-sub" style="--i:1">Join a campus and master one skill in a year. Free to sign up.</p>
 
   <?php if ($errors): ?>
     <div class="alert alert-error" style="margin-top:14px;"><?= e(implode(' ', $errors)) ?></div>
@@ -50,26 +50,26 @@ require __DIR__ . '/includes/auth_header.php';
   <form method="post">
     <?= csrf_field() ?>
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
-    <div class="field">
-      <label for="name">Full Name</label>
-      <input id="name" name="name" type="text" required value="<?= e($name) ?>" placeholder="Full name">
+    <div class="field" style="--i:2">
+      <label for="name">Full name</label>
+      <input id="name" name="name" type="text" required value="<?= e($name) ?>" placeholder="Your full name" autocomplete="name">
     </div>
-    <div class="field">
+    <div class="field" style="--i:3">
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Email">
+      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Enter your email" autocomplete="email">
     </div>
-    <div class="field">
-      <label for="phone">Phone Number (optional)</label>
-      <input id="phone" name="phone" type="tel" placeholder="Phone number (optional)" value="<?= e($phone) ?>">
+    <div class="field" style="--i:4">
+      <label for="phone">Phone <i>(optional)</i></label>
+      <input id="phone" name="phone" type="tel" placeholder="+256 …" value="<?= e($phone) ?>" autocomplete="tel">
     </div>
-    <div class="field">
+    <div class="field" style="--i:5">
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" required minlength="8" placeholder="Password (min. 8 characters)">
+      <input id="password" name="password" type="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
     </div>
-    <button type="submit" class="btn btn-primary">Start <span class="btn-arrow">→</span></button>
+    <button type="submit" class="btn btn-primary" style="--i:6">Create my account <span class="btn-arrow">→</span></button>
   </form>
 
-  <p class="switch-line">
+  <p class="switch-line" style="--i:7">
     Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode($redirectTo))) ?>">Log In</a>
   </p>
 <?php require __DIR__ . '/includes/auth_footer.php'; ?>

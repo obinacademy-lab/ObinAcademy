@@ -26,8 +26,8 @@ $pageTitle = 'Log In — Obin Academy';
 $authTab = 'login';
 require __DIR__ . '/includes/auth_header.php';
 ?>
-  <h1 class="auth-headline">Welcome back</h1>
-  <p class="auth-sub">Log in to continue at your campus.</p>
+  <h1 class="auth-headline" style="--i:0">Welcome <em>back!</em></h1>
+  <p class="auth-sub" style="--i:1">Log in to continue at your campus.</p>
 
   <?php if ($errors): ?>
     <div class="alert alert-error" style="margin-top:14px;"><?= e(implode(' ', $errors)) ?></div>
@@ -36,21 +36,24 @@ require __DIR__ . '/includes/auth_header.php';
   <form method="post">
     <?= csrf_field() ?>
     <input type="hidden" name="redirect" value="<?= e($redirectTo) ?>">
-    <div class="field">
+    <div class="field" style="--i:2">
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Email">
+      <input id="email" name="email" type="email" required value="<?= e($email) ?>" placeholder="Enter your email" autocomplete="email">
     </div>
-    <div class="field">
+    <div class="field" style="--i:3">
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" required placeholder="Your password">
-      <div class="field-row">
-        <a href="<?= e(base_url('forgot-password.php')) ?>" class="forgot-link">Forgot password?</a>
-      </div>
+      <input id="password" name="password" type="password" required placeholder="Enter your password" autocomplete="current-password">
     </div>
-    <button type="submit" class="btn btn-primary">Log In <span class="btn-arrow">→</span></button>
+    <div class="field-row" style="--i:4">
+      <a href="<?= e(base_url('forgot-password.php')) ?>" class="forgot-link">Forgot password?</a>
+    </div>
+    <button type="submit" class="btn btn-primary" style="--i:5">Log In <span class="btn-arrow">→</span></button>
   </form>
 
-  <p class="switch-line">
+  <div class="auth-or" style="--i:6">Or</div>
+  <a class="auth-ghost" style="--i:6" href="<?= e(base_url('index.php#campuses')) ?>"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Explore the campuses</a>
+
+  <p class="switch-line" style="--i:7">
     Don't have an account? <a href="<?= e(base_url('signup.php?redirect=' . urlencode($redirectTo))) ?>">Sign Up</a>
   </p>
 <?php require __DIR__ . '/includes/auth_footer.php'; ?>
