@@ -54,6 +54,38 @@ function campus_photo(array $campus): ?string {
     return null;
 }
 
+/**
+ * The two numbers on a campus card on the home page, by campus id: 'enrolled' = everyone who has ever
+ * joined it (current and past members), 'viewed' = people who opened its campus page (one per visitor).
+ * Counted from campus_memberships and visitor_pageviews, and cached for 10 minutes so the home page
+ * stays fast.
+ */
+function campus_card_stats(array $campuses): array {
+    $file = rtrim(sys_get_temp_dir(), '/\\') . '/obin-campus-card-stats.json';
+    if (is_file($file) && filemtime($file) > time() - 600 && ($hit = json_decode((string) file_get_contents($file), true)) && is_array($hit)) {
+        $ok = true;
+        foreach ($campuses as $c) if (!isset($hit[(int) $c['id']])) { $ok = false; break; }
+        if ($ok) return $hit;
+    }
+    $out = [];
+    $slugToId = [];
+    foreach ($campuses as $c) { $out[(int) $c['id']] = ['enrolled' => 0, 'viewed' => 0]; $slugToId[(string) $c['slug']] = (int) $c['id']; }
+    try {
+        foreach (db_all('SELECT campus_id, COUNT(*) AS n FROM campus_memberships GROUP BY campus_id') as $r) {
+            if (isset($out[(int) $r['campus_id']])) $out[(int) $r['campus_id']]['enrolled'] = (int) $r['n'];
+        }
+    } catch (Throwable $e) {}
+    try {
+        $seen = [];
+        foreach (db_all("SELECT DISTINCT visitor_id, path FROM visitor_pageviews WHERE path LIKE '%campus.php?%'") as $r) {
+            parse_str((string) parse_url($r['path'], PHP_URL_QUERY), $q);
+            $id = $slugToId[(string) ($q['slug'] ?? '')] ?? null;
+            if ($id && empty($seen[$id][$r['visitor_id']])) { $seen[$id][$r['visitor_id']] = true; $out[$id]['viewed']++; }
+        }
+    } catch (Throwable $e) {}
+    @file_put_contents($file, json_encode($out));
+    return $out;
+}
 /** True once campuses can hold their own uploaded photo (migration/add-campus-photo.sql). */
 function campus_photo_ready(): bool {
     static $ready = null;

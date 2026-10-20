@@ -288,3 +288,13 @@ a.hx-cc:hover .pic img { transform: scale(1.05); }
 /* stronger selector: the section reset (.hx p { margin: 0 }) was overriding this gap */
 .hx .hx-you-close { margin-top: 64px; }
 @media (max-width: 760px) { .hx .hx-you-close { margin-top: 44px; } }
+
+/* Campus card footer: price with who has enrolled and viewed, and Join now on the same line */
+.hx-cc .ft .price { display: grid; gap: 5px; min-width: 0; color: var(--hx-on); font-weight: 700; white-space: normal; }
+.hx-cc .ft .price b { font-weight: 700; }
+.hx-cc .ft .stats { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; font-weight: 500; color: var(--hx-on-2); }
+.hx-cc .ft .stats i { display: inline-flex; align-items: center; gap: 5px; font-style: normal; white-space: nowrap; }
+.hx-cc .ft .stats i b { color: var(--hx-on); font-weight: 700; font-variant-numeric: tabular-nums; }
+.hx-cc .ft .stats svg { width: 14px; height: 14px; fill: none; stroke: var(--hx-lime); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hx-cc .ft .go { align-self: flex-end; color: var(--hx-lime); font-weight: 700; white-space: nowrap; }
+.hx-cc .ft:has(.stats) { align-items: flex-end; }

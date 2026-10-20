@@ -14,6 +14,7 @@ $all = get_all_campuses();
 $published = array_values(array_filter($all, fn($c) => $c['status'] === 'PUBLISHED'));
 $upcoming = array_values(array_filter($all, fn($c) => $c['status'] !== 'PUBLISHED'));
 $grid = array_merge($published, $upcoming);
+$cardStats = campus_card_stats($grid); // enrolled and viewed, for the Join now line on each card
 $extra = (3 - count($grid) % 3) % 3; // wide cards so the last row is always full
 
 $priced = $published ?: $all;
@@ -124,7 +125,10 @@ require __DIR__ . '/includes/header.php';
               <h3><?= e($c['name']) ?> Campus</h3>
               <p><?= e($c['tagline']) ?></p>
               <span class="ft">
-                <?php if ($open): ?><b><?= e(format_money((float) $c['monthly_price'])) ?> / month</b><span>Join now →</span>
+                <?php if ($open): $st = $cardStats[(int) $c['id']] ?? ['enrolled' => 0, 'viewed' => 0]; ?>
+                  <span class="price"><b><?= e(format_money((float) $c['monthly_price'])) ?> / month</b>
+                    <small class="stats"><i><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.3c2.1.7 3.5 2.6 3.5 5.7"/></svg><b><?= number_format($st['enrolled']) ?></b> enrolled</i><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><b><?= number_format($st['viewed']) ?></b> viewed</i></small></span>
+                  <span class="go">Join now →</span>
                 <?php else: ?><b>Opening soon</b><?php endif; ?>
               </span>
             </span>
