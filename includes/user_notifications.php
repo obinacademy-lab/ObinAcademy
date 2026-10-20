@@ -1,11 +1,11 @@
 <?php
 /**
- * In-app notifications for a logged-in user's own activity — currently
- * fired only from includes/comments.php (a reply to your comment, a like
- * on your comment, a new top-level comment on your own course). The
- * header bell (includes/header.php) polls get_unread_user_notification_count()
- * via api/get-notifications.php every ~20s for a near-instant feel without
- * a WebSocket server — same polling approach as assets/js/chat-poll.js.
+ * In-app notifications (the bell), campus only. Types in use:
+ *   members:    campus_joined, campus_renewal, campus_month_open, campus_year_done, campus_certificate
+ *   class room: campus_chat (one row per campus that updates), campus_reply, campus_comment
+ *   professors: professor_earning, professor_paid, payout_declined
+ * Notifications from the old course platform were removed (migration/remove-old-notifications.sql).
+ * The header bell polls api/get-notifications.php; class room alerts with sound: assets/js/chat-alerts.js.
  */
 
 /** Never notifies a user about their own action — every call site passes its actor and skips the call itself when actor === recipient, but this is a second real guard, not just a convention. */

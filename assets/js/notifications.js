@@ -1,8 +1,7 @@
-// Header notification bell — polls for new comment replies/likes/course
-// comments every ~20s. No WebSocket server on this host, so polling is the
-// deliberate choice, same pattern as chat-poll.js (which polls every 4s for
-// an active chat; this is lower-frequency since it's a background badge,
-// not a live conversation someone is staring at).
+// Header notification bell on the public pages — polls every ~20s for new campus notifications
+// (access, renewals, months opening, certificates, class room replies, professor pay). No WebSocket
+// server on this host, so polling is the deliberate choice; class room alerts with sound are in
+// chat-alerts.js.
 (() => {
   if (!window.OBIN_LOGGED_IN) return;
 
