@@ -56,6 +56,11 @@ if ($isTrading) $faq[] = ['Will I make money?', 'Trading carries a real risk of 
 
 $pageTitle = $campus['name'] . ' Campus — Obin Academy';
 $pageDescription = $campus['tagline'] ?: ('A year-long ' . $campus['name'] . ' programme at Obin Academy.');
+if ($photo) $pageImage = $photo; // the picture WhatsApp, Facebook and X show when the link is shared
+$shareUrl = base_url('campus.php?slug=' . $campus['slug']);
+$shareText = 'Join me in the ' . $campus['name'] . ' Campus on Obin Academy. ' . ($campus['tagline'] ?: 'A year-long programme with a professor, live classes and a certificate.');
+$sp = fn(string $k) => CAMPUS_PROFESSOR_SOCIALS[$k][1];
+$shareIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
 $extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Geist+Mono:wght@500;600';
 require __DIR__ . '/includes/header.php';
 ?>
@@ -79,6 +84,7 @@ require __DIR__ . '/includes/header.php';
           <span><?= $ic('<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>') ?>On your phone</span>
           <span><?= $ic('<circle cx="12" cy="8" r="6"/><path d="M15.5 13 17 22l-5-3-5 3 1.5-9"/>') ?>Certificate</span>
         </div>
+        <?php if ($published): ?><div class="cq-fade" style="--d:.9s"><button type="button" class="cq-share" data-share-open aria-haspopup="dialog"><?= $shareIc ?>Share campus</button></div><?php endif; ?>
       </div>
       <?php if ($photo): ?><div class="cq-hero-pic"><img src="<?= e($photo) ?>" alt="" data-parallax></div><?php endif; ?>
     </section>
@@ -182,8 +188,29 @@ require __DIR__ . '/includes/header.php';
     </div>
   </div>
 
+  <?php if ($published): ?>
+  <div class="cq-sharescrim" data-share-close hidden></div>
+  <div class="cq-sharebox" role="dialog" aria-modal="true" aria-labelledby="cq-share-h" hidden data-share data-url="<?= e($shareUrl) ?>" data-text="<?= e($shareText) ?>" data-title="<?= e($campus['name']) ?> Campus · Obin Academy">
+    <div class="cq-share-h">
+      <div><span class="cq-label">Share this campus</span><h3 id="cq-share-h">Send it to a friend</h3><p>Someone you know who wants to learn <?= e($campus['name']) ?>.</p></div>
+      <button type="button" class="cq-share-x" data-share-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="cq-share-link"><input type="text" readonly value="<?= e($shareUrl) ?>" aria-label="Campus link" data-share-input><button type="button" data-share-copy><?= $ic('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>') ?><span>Copy link</span></button></div>
+    <div class="cq-share-grid">
+      <a class="s whatsapp" data-net="whatsapp" target="_blank" rel="noopener" href="#"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="<?= $sp('whatsapp') ?>"/></svg></i>WhatsApp</a>
+      <a class="s facebook" data-net="facebook" target="_blank" rel="noopener" href="#"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="<?= $sp('facebook') ?>"/></svg></i>Facebook</a>
+      <a class="s x" data-net="x" target="_blank" rel="noopener" href="#"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="<?= $sp('x') ?>"/></svg></i>X</a>
+      <a class="s linkedin" data-net="linkedin" target="_blank" rel="noopener" href="#"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="<?= $sp('linkedin') ?>"/></svg></i>LinkedIn</a>
+      <button type="button" class="s tiktok" data-net="tiktok"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="<?= $sp('tiktok') ?>"/></svg></i>TikTok</button>
+      <button type="button" class="s instagram" data-net="instagram"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="<?= $sp('instagram') ?>"/></svg></i>Instagram</button>
+    </div>
+    <button type="button" class="cq-share-more" data-share-native hidden><?= $shareIc ?>More ways to share</button>
+    <p class="cq-share-note" data-share-note role="status" aria-live="polite"></p>
+  </div>
+  <?php endif; ?>
   <div class="cq-paybar"><div><small><?= e(mb_strtoupper($campus['name'])) ?></small><b><?= $open ? 'You are a member' : e(format_money($monthly)) . ' / month' ?></b></div><a href="<?= $open ? e($learnUrl) : '#join' ?>"><?= $open ? 'Open' : 'Join' ?> <?= $arrow ?></a></div>
 </div>
 <script src="<?= e(versioned_asset('assets/js/campus-page.js')) ?>" defer></script>
+<script src="<?= e(versioned_asset('assets/js/share-campus.js')) ?>" defer></script>
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
 <?php require __DIR__ . '/includes/footer.php'; ?>
