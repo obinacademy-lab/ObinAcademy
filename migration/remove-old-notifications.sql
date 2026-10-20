@@ -2,6 +2,9 @@
 -- comments, sales, withdrawals and the like) and keeps only the campus ones. Run in phpMyAdmin with the
 -- Obin Academy database selected. Safe to run more than once. This deletes rows for good.
 
+-- Teach-application alerts saved before admin_notifications.type was widened lost their type; keep them.
+UPDATE admin_notifications SET type = 'instructor_application' WHERE type = '' AND message LIKE '%applied to teach%';
+
 -- Members' and professors' bell: keep only campus notifications.
 DELETE FROM user_notifications
 WHERE type NOT IN (
