@@ -6,6 +6,7 @@
  *   $pageImage       — absolute or base_url()-relative image for social share previews (falls back to a default photo)
  *   $pageType        — og:type, e.g. 'website' (default) or 'article'
  *   $noindex         — set true on pages that shouldn't be indexed (defaults false)
+ *   $canonicalUrl    — the page's own canonical address, for pages that differ only by their query string (campus.php)
  * Usage: require __DIR__ . '/../includes/header.php';
  */
 $user = current_user();
@@ -15,7 +16,7 @@ $seoTitle = $pageTitle ?? 'Obin Academy Campuses — Learn a skill for one year'
 $seoDescription = $pageDescription ?? 'Obin Academy Campuses: year-long programmes in business, trading, content creation, fitness, AI and e-commerce, taught by professors we choose. Lessons, PDF guides and a weekly live class, paid monthly or yearly with MTN or Airtel Mobile Money.';
 $seoImage = isset($pageImage) ? (str_starts_with($pageImage, 'http') ? $pageImage : base_url($pageImage)) : base_url('assets/img/hero-couch-learner.jpg');
 $seoType = $pageType ?? 'website';
-$canonicalUrl = base_url(ltrim($currentPath, '/'));
+$canonicalUrl = $canonicalUrl ?? base_url(ltrim($currentPath, '/')); // a page whose address carries ?slug= sets its own
 ?><!DOCTYPE html>
 <html lang="en">
 <head>

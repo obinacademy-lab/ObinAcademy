@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/../includes/bootstrap.php';
 
 if (is_logged_in()) redirect('/dashboard.php');
 
@@ -13,18 +13,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = post('password');
     $redirectTo = safe_local_redirect_path(post('redirect', ''), '/dashboard.php');
 
-    $user = db_one('SELECT * FROM users WHERE email = ?', [$email]);
-    if (!$user || !verify_password($password, $user['password_hash'])) {
-        $errors[] = 'Invalid email or password.';
+    $ip = get_client_ip();
+    if (rate_limited('login-email', $email, 8, 900) || rate_limited('login-ip', $ip, 60, 900)) {
+        $errors[] = 'Too many sign-in attempts. Please wait a few minutes and try again.';
     } else {
-        login_user($user);
-        redirect($redirectTo);
+        $user = db_one('SELECT * FROM users WHERE email = ?', [$email]);
+        if (!$user || !verify_password($password, $user['password_hash'])) {
+            rate_limit_record('login-email', $email, 900);   // only failures count
+            rate_limit_record('login-ip', $ip, 900);
+            $errors[] = 'Invalid email or password.';
+        } else {
+            login_user($user);
+            redirect($redirectTo);
+        }
     }
 }
 
 $pageTitle = 'Log In — Obin Academy';
 $authTab = 'login';
-require __DIR__ . '/includes/auth_header.php';
+require __DIR__ . '/../includes/auth_header.php';
 ?>
   <h1 class="auth-headline" style="--i:0">Welcome <em>back!</em></h1>
   <p class="auth-sub" style="--i:1">Log in to continue at your campus.</p>
@@ -56,4 +63,4 @@ require __DIR__ . '/includes/auth_header.php';
   <p class="switch-line" style="--i:7">
     Don't have an account? <a href="<?= e(base_url('signup.php?redirect=' . urlencode($redirectTo))) ?>">Sign Up</a>
   </p>
-<?php require __DIR__ . '/includes/auth_footer.php'; ?>
+<?php require __DIR__ . '/../includes/auth_footer.php'; ?>

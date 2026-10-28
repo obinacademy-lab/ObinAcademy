@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/../includes/bootstrap.php';
 
 if (is_logged_in()) redirect('/dashboard.php');
 
@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = post('password');
     $redirectTo = safe_local_redirect_path(post('redirect', ''), '/dashboard.php');
 
+    if (!rate_limit_take('signup-ip', get_client_ip(), 30, 3600)) $errors[] = 'Too many sign-ups from this connection. Please try again later.';
     if (strlen($name) < 2) $errors[] = 'Enter your full name.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Enter a valid email address.';
     if ($phone !== '' && !preg_match('/^[0-9+\s-]{9,}$/', $phone)) $errors[] = 'Enter a valid phone number.';
@@ -38,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'Sign Up — Obin Academy';
 $authTab = 'signup';
-require __DIR__ . '/includes/auth_header.php';
+require __DIR__ . '/../includes/auth_header.php';
 ?>
   <h1 class="auth-headline" style="--i:0">Start your <em>journey</em></h1>
   <p class="auth-sub" style="--i:1">Join a campus and master one skill in a year. Free to sign up.</p>
@@ -72,4 +73,4 @@ require __DIR__ . '/includes/auth_header.php';
   <p class="switch-line" style="--i:7">
     Already have an account? <a href="<?= e(base_url('login.php?redirect=' . urlencode($redirectTo))) ?>">Log In</a>
   </p>
-<?php require __DIR__ . '/includes/auth_footer.php'; ?>
+<?php require __DIR__ . '/../includes/auth_footer.php'; ?>

@@ -22,6 +22,13 @@ const UPLOAD_ALLOWED_TYPES = [
     'chat' => ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
 ];
 
+/** The only extensions an upload is ever stored with, keyed by its detected MIME type. */
+const UPLOAD_EXTENSIONS = [
+    'image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp', 'image/gif' => 'gif',
+    'video/mp4' => 'mp4', 'video/webm' => 'webm', 'video/ogg' => 'ogg', 'video/quicktime' => 'mov',
+    'application/pdf' => 'pdf',
+];
+
 function private_uploads_root(): string {
     return __DIR__ . '/../private-uploads';
 }
@@ -61,8 +68,13 @@ function save_upload(array $file, string $folder): string {
         throw new RuntimeException("Unsupported file type \"$mime\" for $folder.");
     }
 
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $safeName = bin2hex(random_bytes(16)) . ($ext ? ".$ext" : '');
+    // The stored extension comes from the detected type, never from the uploaded file's own name: a name like
+    // "x.php" on image-looking content would otherwise be saved as a script in a web-served folder.
+    $ext = UPLOAD_EXTENSIONS[$mime] ?? null;
+    if ($ext === null) {
+        throw new RuntimeException("Unsupported file type \"$mime\" for $folder.");
+    }
+    $safeName = bin2hex(random_bytes(16)) . ".$ext";
 
     if ($folder === 'thumbnails' || $folder === 'stories' || $folder === 'chat') {
         $dir = public_uploads_root() . "/$folder";

@@ -1,13 +1,14 @@
 <?php
 // A campus certificate, public by its code so anyone can verify it.
-require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/campuses.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/campuses.php';
 
 $cert = get_campus_certificate(query_param('code'));
 $pageTitle = $cert ? $cert['learner_name'] . ' — ' . $cert['campus_name'] . ' Campus certificate' : 'Certificate not found — Obin Academy';
 $noindex = true;
+if (!$cert) http_response_code(404);
 $extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400';
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/campuses.css')) ?>">
 <main class="cx" style="padding-block:8px 40px;">
@@ -30,4 +31,4 @@ require __DIR__ . '/includes/header.php';
     <p class="cx-noprint" style="text-align:center;"><button class="cx-btn" type="button" onclick="window.print()">Print or save as PDF</button></p>
   <?php endif; ?>
 </main>
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

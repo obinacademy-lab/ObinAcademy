@@ -1,9 +1,9 @@
 <?php
 // Serves a campus lesson's video or PDF from private-uploads/, only to a member whose access is open and whose
 // year has reached that lesson's month (or an admin).
-require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/storage.php';
-require __DIR__ . '/includes/campuses.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/storage.php';
+require __DIR__ . '/../includes/campuses.php';
 
 $user = current_user();
 if (!campuses_ready()) { http_response_code(404); exit('Not found'); }
@@ -26,9 +26,13 @@ $end = $size - 1;
 $isRange = false;
 if (!empty($_SERVER['HTTP_RANGE']) && preg_match('/bytes=(\d*)-(\d*)/', $_SERVER['HTTP_RANGE'], $m)) {
     $isRange = true;
-    if ($m[1] !== '') $start = (int) $m[1];
-    if ($m[2] !== '') $end = (int) $m[2];
-    if ($start > $end || $end >= $size) { $start = 0; $end = $size - 1; }
+    if ($m[1] === '' && $m[2] !== '') {
+        $start = max(0, $size - (int) $m[2]);                 // "bytes=-500" means the LAST 500 bytes
+    } else {
+        if ($m[1] !== '') $start = (int) $m[1];
+        if ($m[2] !== '') $end = min((int) $m[2], $size - 1);   // an end past the file is clamped, not ignored
+    }
+    if ($start > $end || $start >= $size) { $start = 0; $end = $size - 1; }
 }
 $length = $end - $start + 1;
 

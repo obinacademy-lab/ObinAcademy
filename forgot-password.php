@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/../includes/bootstrap.php';
 
 const RESET_TOKEN_TTL_SECONDS = 3600;
 
@@ -14,7 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Enter a valid email address.';
     } else {
         $user = db_one('SELECT * FROM users WHERE email = ?', [$email]);
-        if ($user) {
+        // Past the limit we still answer the same way, but send nothing (stops reset-email floods).
+        $allowed = rate_limit_take('reset-email', $email, 3, 3600) && rate_limit_take('reset-ip', get_client_ip(), 20, 3600);
+        if ($user && $allowed) {
             db_run('UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL', [$user['id']]);
 
             $token = bin2hex(random_bytes(32));
@@ -35,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Forgot Password — Obin Academy';
-require __DIR__ . '/includes/auth_header.php';
+require __DIR__ . '/../includes/auth_header.php';
 ?>
   <h1 class="auth-headline" style="--i:0">Reset your <em>password</em></h1>
   <p class="auth-sub" style="--i:1">Enter your email and we'll send you a reset link.</p>
@@ -59,4 +61,4 @@ require __DIR__ . '/includes/auth_header.php';
   <p class="switch-line" style="--i:4">
     <a href="<?= e(base_url('login.php')) ?>">Back to log in</a>
   </p>
-<?php require __DIR__ . '/includes/auth_footer.php'; ?>
+<?php require __DIR__ . '/../includes/auth_footer.php'; ?>

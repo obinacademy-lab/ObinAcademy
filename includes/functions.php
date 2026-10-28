@@ -346,3 +346,56 @@ function api_require_login(): array {
     if (!$user) json_response(['error' => 'You must be logged in.'], 401);
     return $user;
 }
+
+// ---------------------------------------------------------------------
+// Rate limiting. A small file-based limiter (no database table), kept under private-uploads/rate-limit/ — a
+// folder the web server never serves. It slows password guessing, sign-up and reset-email floods, lead-form
+// spam and payment-prompt abuse. If the folder can't be written, it fails open (nobody is locked out).
+// A bucket + key pair (e.g. 'login-email' + the address) keeps a list of hit times inside its window.
+// ---------------------------------------------------------------------
+function rate_limit_file(string $bucket, string $key): string {
+    return __DIR__ . '/../private-uploads/rate-limit/' . sha1($bucket . '|' . $key) . '.json';
+}
+
+/** @return int[] timestamps of this bucket+key inside the last $windowSeconds */
+function rate_limit_hits(string $bucket, string $key, int $windowSeconds): array {
+    $file = rate_limit_file($bucket, $key);
+    if (!is_file($file)) return [];
+    $list = json_decode((string) @file_get_contents($file), true);
+    if (!is_array($list)) return [];
+    $cut = time() - $windowSeconds;
+    return array_values(array_filter($list, fn($t) => is_int($t) && $t > $cut));
+}
+
+/** True once this bucket+key has already used up $max hits inside the window. Does not count a hit. */
+function rate_limited(string $bucket, string $key, int $max, int $windowSeconds): bool {
+    return count(rate_limit_hits($bucket, $key, $windowSeconds)) >= $max;
+}
+
+/** Counts one hit against this bucket+key. */
+function rate_limit_record(string $bucket, string $key, int $windowSeconds): void {
+    $file = rate_limit_file($bucket, $key);
+    $dir = dirname($file);
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) return;
+    $fp = @fopen($file, 'c+');
+    if (!$fp) return;
+    if (flock($fp, LOCK_EX)) {
+        $list = json_decode((string) stream_get_contents($fp), true);
+        $cut = time() - $windowSeconds;
+        $list = array_values(array_filter(is_array($list) ? $list : [], fn($t) => is_int($t) && $t > $cut));
+        $list[] = time();
+        ftruncate($fp, 0); rewind($fp); fwrite($fp, json_encode($list));
+        flock($fp, LOCK_UN);
+    }
+    fclose($fp);
+    if (random_int(1, 300) === 1) { // now and then, drop files nobody has touched for two days
+        foreach (glob($dir . '/*.json') ?: [] as $old) if (filemtime($old) < time() - 172800) @unlink($old);
+    }
+}
+
+/** Counts a hit and returns true while the bucket+key is still inside its limit; false once it is over. */
+function rate_limit_take(string $bucket, string $key, int $max, int $windowSeconds): bool {
+    if (rate_limited($bucket, $key, $max, $windowSeconds)) return false;
+    rate_limit_record($bucket, $key, $windowSeconds);
+    return true;
+}

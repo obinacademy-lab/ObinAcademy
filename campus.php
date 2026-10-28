@@ -7,9 +7,9 @@
  * Paid through the shared payment widget (assets/js/payment.js). Draft campuses: admins only, as a preview.
  * Styles: assets/css/campus-page.css. Motion: assets/js/campus-page.js.
  */
-require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/campuses.php';
-require __DIR__ . '/includes/campus_pages.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/campuses.php';
+require __DIR__ . '/../includes/campus_pages.php';
 
 $campus = get_campus_by_slug(query_param('slug'));
 $viewer = current_user();
@@ -17,9 +17,9 @@ $isAdmin = $viewer && $viewer['role'] === 'ADMIN';
 if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) {
     http_response_code(404);
     $pageTitle = 'Campus not found — Obin Academy';
-    require __DIR__ . '/includes/header.php';
+    require __DIR__ . '/../includes/header.php';
     echo '<div class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Campus not found</h1><p class="muted" style="margin-top:8px;"><a href="' . e(base_url('index.php#campuses')) . '">See all campuses</a></p></div>';
-    require __DIR__ . '/includes/footer.php';
+    require __DIR__ . '/../includes/footer.php';
     exit;
 }
 
@@ -58,11 +58,12 @@ $pageTitle = $campus['name'] . ' Campus — Obin Academy';
 $pageDescription = $campus['tagline'] ?: ('A year-long ' . $campus['name'] . ' programme at Obin Academy.');
 if ($photo) $pageImage = $photo; // the picture WhatsApp, Facebook and X show when the link is shared
 $shareUrl = base_url('campus.php?slug=' . $campus['slug']);
+$canonicalUrl = $shareUrl; // otherwise every campus declares /campus.php (no slug, a 404) as its canonical and og:url
 $shareText = 'Join me in the ' . $campus['name'] . ' Campus on Obin Academy. ' . ($campus['tagline'] ?: 'A year-long programme with a professor, live classes and a certificate.');
 $sp = fn(string $k) => CAMPUS_PROFESSOR_SOCIALS[$k][1];
 $shareIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
 $extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Geist+Mono:wght@500;600';
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/campus-page.css')) ?>">
 <div class="cq" data-cq>
@@ -213,4 +214,4 @@ require __DIR__ . '/includes/header.php';
 <script src="<?= e(versioned_asset('assets/js/campus-page.js')) ?>" defer></script>
 <script src="<?= e(versioned_asset('assets/js/share-campus.js')) ?>" defer></script>
 <script src="<?= e(versioned_asset('assets/js/payment.js')) ?>"></script>
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
