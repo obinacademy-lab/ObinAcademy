@@ -154,6 +154,30 @@ function get_affiliate_earnings(int $userId, int $limit = 100): array {
     );
 }
 
+/**
+ * Everyone this affiliate has referred — every friend who signed up through their link, paying or not —
+ * sorted by what they've earned the affiliate (most first), then by when the friend joined. A friend who
+ * hasn't paid yet still appears, with earned/payments/campus/last_paid_at all zero or null, so "My
+ * Referrals" can show them as "waiting" rather than only ever showing the people who already paid.
+ */
+function get_affiliate_friends(int $userId): array {
+    if (!affiliates_ready()) return [];
+    return db_all(
+        'SELECT u.id, u.name, u.created_at AS joined_at,
+                COALESCE(e.earned, 0) AS earned, COALESCE(e.payments, 0) AS payments, e.campus_name, e.last_paid_at
+         FROM users u
+         LEFT JOIN (
+             SELECT referred_user_id, SUM(amount) AS earned, COUNT(*) AS payments,
+                    SUBSTRING_INDEX(GROUP_CONCAT(campus_name ORDER BY created_at DESC), ",", 1) AS campus_name,
+                    MAX(created_at) AS last_paid_at
+             FROM campus_affiliate_earnings WHERE affiliate_user_id = ? GROUP BY referred_user_id
+         ) e ON e.referred_user_id = u.id
+         WHERE u.referred_by_user_id = ?
+         ORDER BY earned DESC, u.created_at DESC',
+        [$userId, $userId]
+    );
+}
+
 function get_affiliate_payouts(int $userId, int $limit = 50): array {
     if (!affiliates_ready()) return [];
     return db_all('SELECT * FROM campus_affiliate_payouts WHERE affiliate_user_id = ? ORDER BY paid_at DESC, id DESC LIMIT ' . (int) $limit, [$userId]);

@@ -1,0 +1,82 @@
+/* "My Referrals" (dashboard/learner/affiliate.php), page-specific additions to the shared desk system
+   (admin-overview.css + admin-desk.css, same shell as the learner home page). Everything generic — the
+   hero, KPI tiles, dark/white cards, blocks, two-column rows, buttons, ripple, every keyframe — already
+   exists there; this file only adds what's unique to a money/referrals page: the big amount in the
+   Request Payment card, the payout-request form, the link widgets, the friends list and the tip rows. */
+
+/* ---------- request payment (inside .dk-dark) ---------- */
+.dk-amt { font: 400 38px/1 var(--dk-serif); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.dk-amt span { font: 600 13px var(--dk-mono); color: var(--dk-on-3); margin-right: 6px; }
+.dk-sub2 { font-size: 13px; color: var(--dk-on-2); line-height: 1.5; }
+.dk-pend { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--dk-on-2); background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 10px 12px; }
+.dk-pend i { width: 7px; height: 7px; border-radius: 50%; background: var(--dk-amber); flex: none; animation: dk-beat 1.6s ease-in-out infinite; }
+.dk-cancel { background: none; border: 0; padding: 0; color: var(--dk-on-3); font-size: 12px; font-weight: 600; text-decoration: underline; cursor: pointer; justify-self: start; }
+.dk-cancel:hover { color: var(--dk-on); }
+.dk-reqlist { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
+.dk-reqlist div { display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: 12.5px; }
+.dk-reqlist b { font: 600 12.5px var(--dk-mono); color: var(--dk-on); }
+.dk-reqlist small { display: block; color: var(--dk-on-3); font-size: 11px; }
+.dk-reqlist em { font: 700 10px var(--dk-mono); font-style: normal; padding: 3px 8px; border-radius: 99px; }
+.dk-reqlist em.warn { background: rgba(255,181,71,.18); color: var(--dk-amber); }
+.dk-reqlist em.good { background: rgba(205,251,94,.16); color: var(--dk-lime); }
+.dk-reqlist em.bad { background: rgba(255,90,95,.16); color: #ff9a9d; }
+.dk-reqlist em.mute { background: rgba(255,255,255,.08); color: var(--dk-on-3); }
+
+/* the request form itself (dark, glassy inputs) */
+.dk-field { display: grid; gap: 10px; }
+.dk-field label { display: grid; gap: 6px; font-size: 12px; font-weight: 600; color: var(--dk-on-2); }
+.dk-field label small { font-weight: 400; color: var(--dk-on-3); }
+.dk-field input { height: 44px; border-radius: 11px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: var(--dk-on); padding: 0 13px; font: inherit; font-size: 13.5px; }
+.dk-field input::placeholder { color: var(--dk-on-3); }
+.dk-field input:focus { outline: 0; border-color: var(--dk-lime); box-shadow: 0 0 0 3px rgba(205,251,94,.18); background: rgba(255,255,255,.1); }
+
+/* ---------- your link widget (white card) ---------- */
+.dk-link-box { display: flex; align-items: center; gap: 0; background: var(--dk-ground); border: 1px solid var(--dk-line); border-radius: 12px; overflow: hidden; }
+.dk-link-box code { flex: 1; min-width: 0; padding: 12px 13px; font-family: var(--dk-mono); font-size: 12px; color: var(--dk-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dk-copy { flex: none; display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 13px; background: var(--dk-blue); color: #fff; font-weight: 700; font-size: 12.5px; border: 0; cursor: pointer; }
+.dk-copy svg { width: 14px; height: 14px; }
+.dk-copy.done { background: #0f8a4b; }
+.dk-copy .ck { display: none; }
+.dk-copy.done .cp { display: none; }
+.dk-copy.done .ck { display: block; }
+.dk-share2 { display: flex; align-items: center; justify-content: center; gap: 8px; height: 42px; border-radius: 12px; background: var(--dk-ground); color: var(--dk-ink) !important; font-weight: 700; font-size: 13px; border: 1px solid var(--dk-line); cursor: pointer; width: 100%; }
+.dk-share2:hover { background: #eceef4; }
+.dk-share2 svg { width: 15px; height: 15px; }
+
+/* ---------- referral-link hero block (main column) ---------- */
+.dk-linkhero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px 22px; border-radius: 18px; background: linear-gradient(120deg, var(--dk-ground), #fff); }
+.dk-linkhero-ic { width: 50px; height: 50px; border-radius: 14px; background: var(--dk-deep); color: var(--dk-lime); display: grid; place-items: center; flex: none; }
+.dk-linkhero-ic svg { width: 22px; height: 22px; }
+.dk-linkhero-tx b { display: block; font-size: 14.5px; }
+.dk-linkhero-tx span { display: block; color: var(--dk-muted); font-size: 13px; margin-top: 2px; }
+.dk-linkhero code { display: block; min-width: 0; margin-top: 10px; font-family: var(--dk-mono); font-size: 13px; color: var(--dk-ink-2); background: #fff; border: 1px dashed var(--dk-line); border-radius: 10px; padding: 10px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- friends list ---------- */
+.dk-friends { display: grid; gap: 10px; }
+.dk-fr { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--dk-line); border-radius: 16px; transition: transform .4s var(--dk-ease), box-shadow .4s; animation: dk-deal .7s var(--dk-ease) both; animation-delay: calc(.5s + var(--i) * .07s); }
+.dk-fr:hover { transform: translateY(-3px); box-shadow: 0 20px 34px -26px rgba(7,11,36,.3); }
+.dk-fr.wait { opacity: .75; }
+.dk-fr-av { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px; flex: none; }
+.dk-fr-tx { min-width: 0; }
+.dk-fr-tx b { display: block; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dk-fr-tx span { display: block; font-size: 12.5px; color: var(--dk-muted); margin-top: 2px; }
+.dk-fr-amt { text-align: right; flex: none; }
+.dk-fr-amt b { display: block; font: 600 15px var(--dk-mono); color: #0f8a4b; }
+.dk-fr-amt.wait b { color: var(--dk-muted); font-weight: 600; }
+.dk-fr-amt span { display: block; font-size: 11.5px; color: var(--dk-muted); margin-top: 2px; }
+
+/* ---------- how-you-earn tips ---------- */
+.dk-tips { display: grid; gap: 12px; }
+.dk-tip { display: flex; gap: 12px; align-items: flex-start; }
+.dk-tip-ic { width: 30px; height: 30px; border-radius: 9px; background: var(--dk-ground); color: var(--dk-brand); display: grid; place-items: center; flex: none; }
+.dk-tip-ic svg { width: 15px; height: 15px; }
+.dk-tip p { font-size: 13.5px; color: var(--dk-ink-2); line-height: 1.5; margin: 0; }
+.dk-tip p b { color: var(--dk-ink); }
+
+@media (max-width: 980px) {
+  .dk-linkhero { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "ic tx" "code code" "btn btn"; }
+  .dk-linkhero-ic { grid-area: ic; }
+  .dk-linkhero-tx { grid-area: tx; }
+  .dk-linkhero code { grid-area: code; }
+  .dk-linkhero > a { grid-area: btn; width: 100%; }
+}
