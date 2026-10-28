@@ -2,8 +2,8 @@
 // Join or renew a campus with mobile money. Same poll endpoint as every other payment (api/poll-payment.php).
 set_time_limit(45);
 
-require __DIR__ . '/../../includes/bootstrap.php';
-require __DIR__ . '/../../includes/payments.php';
+require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/../includes/payments.php';
 
 $user = current_user();
 $body = json_body();

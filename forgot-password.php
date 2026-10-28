@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/../includes/bootstrap.php';
+require __DIR__ . '/includes/bootstrap.php';
 
 const RESET_TOKEN_TTL_SECONDS = 3600;
 
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Forgot Password — Obin Academy';
-require __DIR__ . '/../includes/auth_header.php';
+require __DIR__ . '/includes/auth_header.php';
 ?>
   <h1 class="auth-headline" style="--i:0">Reset your <em>password</em></h1>
   <p class="auth-sub" style="--i:1">Enter your email and we'll send you a reset link.</p>
@@ -61,4 +61,4 @@ require __DIR__ . '/../includes/auth_header.php';
   <p class="switch-line" style="--i:4">
     <a href="<?= e(base_url('login.php')) ?>">Back to log in</a>
   </p>
-<?php require __DIR__ . '/../includes/auth_footer.php'; ?>
+<?php require __DIR__ . '/includes/auth_footer.php'; ?>
