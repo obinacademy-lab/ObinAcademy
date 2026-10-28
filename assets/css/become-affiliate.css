@@ -1,0 +1,131 @@
+/* Become an Affiliate (become-affiliate.php) — student referral program. Scoped under .af-*; reuses
+   the site's .btn/.container primitives and brand tokens (--brand-*, --lime, --ink, --muted, --surface). */
+.af-mono { font-family: "Geist Mono", ui-monospace, monospace; }
+
+/* ---- hero ---- */
+.af-hero { background: linear-gradient(155deg, var(--brand-950), var(--brand-900) 55%, var(--brand-800)); color: #fff; padding: 76px 0 108px; position: relative; overflow: hidden; }
+.af-hero::after { content: ""; position: absolute; right: -120px; top: -120px; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(205,251,94,.18), transparent 70%); pointer-events: none; }
+.af-hero-in { position: relative; display: grid; gap: 20px; max-width: 640px; }
+.af-pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(205,251,94,.14); border: 1px solid rgba(205,251,94,.35); color: var(--lime); font-weight: 700; font-size: 13px; padding: 7px 16px 7px 10px; border-radius: var(--radius-full); width: fit-content; }
+.af-pill b { font-family: "Geist Mono", ui-monospace, monospace; background: var(--lime); color: var(--lime-ink); border-radius: var(--radius-full); padding: 2px 9px; font-size: 12.5px; }
+.af-hero h1 { font-size: clamp(32px, 5vw, 50px); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; text-wrap: balance; color: #fff; margin: 0; }
+.af-hero h1 em { font-style: normal; color: var(--lime); }
+.af-lede { font-size: 17px; color: rgba(255,255,255,.78); max-width: 52ch; line-height: 1.6; margin: 0; }
+.af-hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 2px; align-items: center; }
+.af-btn-ghost { display: inline-flex; align-items: center; gap: 8px; border-radius: var(--radius-full); font-weight: 700; font-size: 14.5px; padding: 14px 24px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.28); text-decoration: none; transition: background-color .15s ease; }
+.af-btn-ghost:hover { background: rgba(255,255,255,.17); }
+.af-hero-trust { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 14px; font-size: 13px; color: rgba(255,255,255,.65); }
+.af-hero-trust b { color: #fff; font-weight: 800; display: block; font-size: 19px; font-family: "Geist Mono", ui-monospace, monospace; }
+
+/* floating referral-link card, overlapping into the next section (only shown to logged-in students) */
+.af-link-card { position: relative; max-width: 1180px; margin: -64px auto 0; padding: 0 20px; }
+.af-link-card-in { background: #fff; border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 30px 60px -24px rgba(6,0,60,.35); padding: 22px 26px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.af-link-ic { width: 46px; height: 46px; border-radius: 13px; background: #eeeeff; color: var(--brand-800); display: grid; place-items: center; flex: none; }
+.af-link-ic svg { width: 21px; height: 21px; }
+.af-link-tx { flex: 1; min-width: 200px; }
+/* Fixed colours, not var(--ink)/var(--muted): this card is always white, but on the dashboard page those
+   same variable names are redefined per dashboard theme for text on a DARK panel (e.g. the blue theme sets
+   --ink to near-white) — inheriting them here would wash this white card's text out to near-invisible. */
+.af-link-tx b { display: block; font-size: 14.5px; color: #16181a; }
+.af-link-tx span { display: block; color: #5b6670; font-size: 13px; margin-top: 2px; }
+.af-link-box { display: flex; align-items: center; gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex: 1; min-width: 240px; max-width: 420px; }
+.af-link-box code { flex: 1; padding: 12px 14px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 12.5px; color: #16181a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.af-link-box a { border: 0; background: var(--brand-800); color: #fff; font-weight: 700; font-size: 13px; padding: 12px 16px; text-decoration: none; white-space: nowrap; }
+.af-link-box a:hover { background: var(--brand-900); }
+
+/* ---- section shell ---- */
+.af-sec { padding: 72px 0; }
+.af-eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--brand-800); }
+.af-eyebrow-lime { color: var(--lime); }
+.af-sec-h { max-width: 620px; margin-bottom: 44px; }
+.af-sec-h h2 { font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -.025em; font-weight: 800; margin: 10px 0 0; text-wrap: balance; color: var(--ink); }
+.af-sec-h p { color: var(--muted); margin: 12px 0 0; font-size: 15.5px; line-height: 1.6; }
+
+/* ---- 3 steps ---- */
+.af-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+.af-step { position: relative; padding: 0 26px 0 0; }
+.af-step:not(:last-child)::after { content: ""; position: absolute; top: 26px; right: -2px; width: 46px; height: 2px; background: repeating-linear-gradient(90deg, var(--border) 0 8px, transparent 8px 14px); }
+.af-step-n { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(155deg, var(--brand-700), var(--brand-900)); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 19px; font-family: "Geist Mono", ui-monospace, monospace; }
+.af-step h3 { margin: 18px 0 0; font-size: 18px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+.af-step p { margin: 8px 0 0; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+
+/* ---- recurring ledger demo ---- */
+.af-recur { background: linear-gradient(180deg, var(--brand-950), #040055); border-radius: 28px; padding: 48px 44px; color: #fff; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.af-recur-tx h2 { font-size: clamp(22px, 2.8vw, 28px); letter-spacing: -.02em; font-weight: 800; text-wrap: balance; margin: 10px 0 0; color: #fff; }
+.af-recur-tx p { margin: 12px 0 0; color: rgba(255,255,255,.72); font-size: 14.5px; line-height: 1.6; max-width: 42ch; }
+.af-recur-foot { margin-top: 20px; display: flex; gap: 24px; }
+.af-recur-foot div b { display: block; font-size: 21px; font-family: "Geist Mono", ui-monospace, monospace; color: var(--lime); }
+.af-recur-foot div span { font-size: 12.5px; color: rgba(255,255,255,.6); }
+.af-ledger { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 18px; padding: 8px; }
+.af-ledger-row { display: grid; grid-template-columns: 70px 1fr auto; gap: 14px; align-items: center; padding: 13px 14px; border-radius: 12px; }
+.af-ledger-row.hl { background: rgba(205,251,94,.1); }
+.af-ledger-row .m { font-family: "Geist Mono", ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,.55); }
+.af-ledger-row .d { font-size: 13.5px; color: rgba(255,255,255,.85); }
+.af-ledger-row .a { font-family: "Geist Mono", ui-monospace, monospace; font-weight: 700; font-size: 14.5px; color: var(--lime); text-align: right; }
+.af-ledger-row.sum { margin-top: 4px; border-top: 1px dashed rgba(255,255,255,.18); border-radius: 0; padding-top: 16px; }
+.af-ledger-row.sum .d { font-weight: 700; color: #fff; }
+.af-ledger-row.sum .a { font-size: 18px; }
+
+/* ---- faq ---- */
+.af-faq { display: grid; gap: 10px; max-width: 760px; }
+.af-faq-item { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.af-faq-item summary { list-style: none; cursor: pointer; padding: 19px 22px; display: flex; justify-content: space-between; align-items: center; gap: 14px; font-weight: 700; font-size: 15px; color: var(--ink); }
+.af-faq-item summary::-webkit-details-marker { display: none; }
+.af-faq-item summary .x { width: 26px; height: 26px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; flex: none; transition: transform .2s ease; color: var(--ink); font-weight: 400; }
+.af-faq-item[open] summary .x { transform: rotate(45deg); }
+.af-faq-item .b { padding: 0 22px 20px; color: var(--muted); font-size: 14.5px; line-height: 1.6; max-width: 62ch; }
+
+/* ---- final cta ---- */
+.af-cta-band { background: var(--lime); border-radius: 28px; padding: 50px 46px; display: flex; align-items: center; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
+.af-cta-band h2 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -.025em; font-weight: 800; color: var(--lime-ink); max-width: 28ch; margin: 0; }
+.af-btn-dark { display: inline-flex; align-items: center; gap: 8px; border-radius: var(--radius-full); font-weight: 700; font-size: 14.5px; padding: 14px 26px; background: var(--brand-800); color: #fff; text-decoration: none; }
+.af-btn-dark:hover { background: var(--brand-900); }
+
+@media (max-width: 860px) {
+  .af-link-card-in { flex-direction: column; align-items: stretch; text-align: center; }
+  .af-link-box { max-width: none; }
+  .af-steps { grid-template-columns: 1fr; gap: 28px; }
+  .af-step:not(:last-child)::after { display: none; }
+  .af-recur { grid-template-columns: 1fr; }
+  .af-cta-band { flex-direction: column; text-align: center; }
+}
+@media (max-width: 560px) {
+  .af-hero { padding: 56px 0 84px; }
+  .af-sec { padding: 52px 0; }
+  .af-recur { padding: 30px 22px; }
+}
+
+/* ---- dashboard-only additions (dashboard/learner/affiliate.php): the link card's Share button, and the
+   Request payment card, styled with the dashboard's own light-friendly tokens (--dash-panel/--accent/etc.)
+   so it follows whichever of the five dashboard themes the student picked, same as every .ld-panel card. ---- */
+.af-share-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer; border-radius: 12px; font: inherit; font-weight: 700; font-size: 13.5px; padding: 12px 18px; background: var(--brand-800); color: #fff; white-space: nowrap; }
+.af-share-btn:hover { background: var(--brand-900); }
+.af-share-btn svg { width: 15px; height: 15px; }
+
+.af-request { background: linear-gradient(155deg, var(--brand-950), var(--brand-900)); border-radius: 18px; padding: 24px 26px; color: #fff; position: relative; overflow: hidden; }
+.af-request::before { content: ""; position: absolute; inset: -40% -30% auto auto; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(205,251,94,.16), transparent 70%); pointer-events: none; }
+.af-req-label { position: relative; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.65); }
+.af-req-amt { position: relative; margin-top: 8px; font-size: 36px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.af-req-amt small { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.55); margin-right: 6px; letter-spacing: .04em; }
+.af-req-sub { position: relative; margin-top: 10px; font-size: 13px; color: rgba(255,255,255,.72); line-height: 1.5; }
+.af-req-state { position: relative; margin-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #fff; }
+.af-req-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px rgba(205,251,94,.2); flex: none; }
+.af-req-form { position: relative; display: grid; gap: 10px; margin-top: 14px; }
+.af-req-form label { display: grid; gap: 6px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.8); }
+.af-req-form label small { font-weight: 400; color: rgba(255,255,255,.5); }
+.af-req-form input { height: 42px; border-radius: 10px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.07); color: #fff; padding: 0 12px; font: inherit; font-size: 13.5px; }
+.af-req-form input::placeholder { color: rgba(255,255,255,.4); }
+.af-req-form input:focus { outline: 0; border-color: var(--lime); box-shadow: 0 0 0 3px rgba(205,251,94,.18); }
+.af-req-form button { margin-top: 4px; height: 46px; border: 0; border-radius: 12px; background: var(--lime); color: var(--lime-ink); font-weight: 800; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.af-req-form button:hover { background: var(--lime-dark); }
+.af-req-cancel { position: relative; margin-top: 12px; border: 0; background: none; padding: 0; color: rgba(255,255,255,.6); font-size: 12.5px; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.af-req-cancel:hover { color: #fff; }
+.af-req-list { position: relative; margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); display: grid; gap: 10px; }
+.af-req-list div { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.af-req-list b { display: block; font-size: 13px; font-weight: 700; }
+.af-req-list small { display: block; font-size: 11.5px; color: rgba(255,255,255,.55); }
+.af-req-list em { font-size: 10px; font-weight: 700; font-style: normal; letter-spacing: .03em; padding: 3px 8px; border-radius: 999px; }
+.af-req-list em.warn { background: rgba(255,179,71,.18); color: #ffcf8a; }
+.af-req-list em.good { background: rgba(205,251,94,.16); color: var(--lime); }
+.af-req-list em.bad { background: rgba(255,90,90,.16); color: #ff9b9b; }
+.af-req-list em.mute { background: rgba(255,255,255,.08); color: rgba(255,255,255,.6); }

@@ -11,6 +11,8 @@
  */
 $user = current_user();
 $currentPath = current_path();
+require_once __DIR__ . '/affiliates.php';
+ensure_referral_cookie(); // remembers ?ref=CODE for up to 30 days, in case this visitor signs up later
 
 $seoTitle = $pageTitle ?? 'Obin Academy Campuses — Learn a skill for one year';
 $seoDescription = $pageDescription ?? 'Obin Academy Campuses: year-long programmes in business, trading, content creation, fitness, AI and e-commerce, taught by professors we choose. Lessons, PDF guides and a weekly live class, paid monthly or yearly with MTN or Airtel Mobile Money.';

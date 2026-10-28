@@ -21,6 +21,7 @@ require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/email.php';
 require_once __DIR__ . '/iotec.php';
 require_once __DIR__ . '/user_notifications.php';
+require_once __DIR__ . '/affiliates.php';
 
 const CAMPUS_MONTH_DAYS = 30;
 const CAMPUS_YEAR_MONTHS = 12;
@@ -474,6 +475,11 @@ function apply_campus_payment_success(array $payment): void {
         record_campus_professor_earning($payment);
     } catch (Throwable $e) {
         error_log('[campus] professor earning not recorded for payment ' . $payment['id'] . ': ' . $e->getMessage());
+    }
+    try {
+        record_affiliate_earning($payment);
+    } catch (Throwable $e) {
+        error_log('[campus] affiliate earning not recorded for payment ' . $payment['id'] . ': ' . $e->getMessage());
     }
     try {
         send_admin_sale_notification_email($payment['campus_name'] . ' Campus', $plan === 'YEARLY' ? 'Campus, yearly' : 'Campus, monthly', (string) ($payment['learner_name'] ?: 'A member'), (float) $payment['amount'], 'Obin Academy');

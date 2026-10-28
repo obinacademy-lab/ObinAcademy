@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+require __DIR__ . '/includes/affiliates.php';
 
 if (is_logged_in()) redirect('/dashboard.php');
 
@@ -30,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, ?)',
                 [$name, $email, $phone ?: null, hash_password($password), 'LEARNER']
             );
+            attribute_referral_at_signup($id);
             $user = db_one('SELECT * FROM users WHERE id = ?', [$id]);
             login_user($user);
             redirect($redirectTo);

@@ -1,16 +1,13 @@
 Options -Indexes
 
-# The app now lives directly in the web root (no nested public/ folder), so
-# these support files sit alongside the pages — block direct web access to them.
-<FilesMatch "\.(sql|md|dist|example\.php|gitignore|gitattributes)$">
-  Require all denied
-</FilesMatch>
-RedirectMatch 404 (?i)/(config|includes|migration|private-uploads)(/|$)
-
 # The old per-course platform was removed: its pages send visitors to the campuses (permanent redirect).
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteRule ^(courses/.*|learn\.php|stream\.php|access\.php|profile\.php|bundle\.php|gift\.php|claim-gift\.php|certificate\.php|skills\.php|school-followers\.php|become-creator\.php|become-affiliate\.php|dashboard/creator/.*|dashboard/affiliate\.php|dashboard/gifts\.php|dashboard/learner/(following|payment-plans|subscriptions)\.php)$ /index.php#campuses [R=301,NE,QSD,L]
+  RewriteBase /OA/public/
+  # become-affiliate.php and dashboard/affiliate.php are deliberately NOT in this list: those filenames
+  # are back in use for the new student referral program (public/become-affiliate.php, public/dashboard/
+  # learner/affiliate.php — a different path from the old dashboard/affiliate.php below, so no clash).
+  RewriteRule ^(courses/.*|learn\.php|stream\.php|access\.php|profile\.php|bundle\.php|gift\.php|claim-gift\.php|certificate\.php|skills\.php|school-followers\.php|become-creator\.php|dashboard/creator/.*|dashboard/affiliate\.php|dashboard/gifts\.php|dashboard/learner/(following|payment-plans|subscriptions)\.php)$ index.php#campuses [R=301,NE,QSD,L]
 </IfModule>
 
 # PDF.js's viewer.mjs/pdf.mjs/pdf.worker.mjs are loaded as native ES module

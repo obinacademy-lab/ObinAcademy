@@ -20,6 +20,9 @@ $navByRole = [
             ['/dashboard/learner/index.php', 'My Campuses', 'graduation-cap'],
             ['/index.php#campuses', 'All campuses', 'book-open'],
         ],
+        'Earn' => [
+            ['/dashboard/learner/affiliate.php', 'My Referrals', 'users'],
+        ],
         'Account' => [
             ['/dashboard/settings.php', 'Settings', 'settings'],
         ],
@@ -40,6 +43,7 @@ $navByRole = [
             ['/dashboard/admin/users.php', 'Users', 'users'],
             ['/dashboard/admin/revenue.php', 'Revenue', 'trending-up'],
             ['/dashboard/admin/payments.php', 'Payments', 'wallet'],
+            ['/dashboard/admin/affiliate-pay.php', 'Affiliate Pay', 'share'],
             ['/dashboard/admin/testimonials.php', 'Stories', 'quote'],
         ],
         'System' => [

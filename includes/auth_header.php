@@ -5,6 +5,8 @@
  * auth_footer.php. Callers may set, before requiring this file:
  *   $redirectTo   — kept for callers that pass it; the pages build their own switch links.
  */
+require_once __DIR__ . '/affiliates.php';
+ensure_referral_cookie(); // a referral link can land straight on signup.php, not just the homepage
 ?><!DOCTYPE html>
 <html lang="en">
 <head>

@@ -111,3 +111,11 @@
 .pp-decline input { flex: 1; min-width: 0; height: 38px; border: 1px solid var(--ov-line); border-radius: 9px; padding: 0 10px; font: inherit; font-size: 13px; }
 .pp-decline button { height: 38px; padding: 0 12px; border: 0; border-radius: 9px; background: #c42828; color: #fff; font-weight: 600; cursor: pointer; }
 @media (max-width: 900px) { .pp-req { grid-template-columns: 1fr 1fr; } .pp-req-acts { grid-column: 1 / -1; } .pp-decline form { left: 0; right: auto; width: min(340px, 80vw); } }
+
+/* Affiliate Pay reuses every rule above (it's the same console/ledger/pay-desk shapes, just keyed by
+   affiliate instead of campus) — this is the one addition: an initial-letter avatar where a campus
+   lane/row shows a campus photo, since an affiliate (a student) has no photo of their own. */
+.afp-av { display: grid; place-items: center; color: #fff; font-weight: 700; }
+.pp-dot.afp-av { font-size: 10px; }
+.lc-camp .ph.afp-av { width: 40px; height: 40px; border-radius: 50%; font-size: 14px; }
+.pp-sel-h .ph.afp-av { width: 48px; height: 48px; border-radius: 50%; font-size: 16px; }
