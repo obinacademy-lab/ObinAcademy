@@ -1,289 +1,230 @@
 <?php
 /**
- * Home page: sells the campuses. A clear promise, "is this you?", old way vs a campus, the campuses,
- * what's inside, three steps, pricing, real students on video (only published video stories, never invented),
- * questions, and a closing call to action. Joining always goes through a campus page and payment.
+ * Home page, "The Offer": a long-form sales page. The promise, "does this sound like you?", the old way vs a campus,
+ * everything inside one campus, every campus with its real monthly price and price per day, why joining is safe,
+ * why Obin Academy exists, questions, and a closing call. Campuses and prices always come from the database.
  */
 require __DIR__ . '/includes/bootstrap.php';
-require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/campuses.php';
-require __DIR__ . '/includes/stories.php';
 
-$viewer = current_user();
 $all = get_all_campuses();
 $published = array_values(array_filter($all, fn($c) => $c['status'] === 'PUBLISHED'));
 $upcoming = array_values(array_filter($all, fn($c) => $c['status'] !== 'PUBLISHED'));
-$grid = array_merge($published, $upcoming);
-$cardStats = campus_card_stats($grid); // enrolled and viewed, for the Join now line on each card
-$extra = (3 - count($grid) % 3) % 3; // wide cards so the last row is always full
+$rows = array_merge($published, $upcoming);
 
+$perDay = fn(float $v) => format_money(round($v / 30 / 100) * 100);
 $priced = $published ?: $all;
-$monthly = $priced ? min(array_map(fn($c) => (float) $c['monthly_price'], $priced)) : 100000;
-$yearly = $priced ? min(array_map(fn($c) => (float) $c['yearly_price'], $priced)) : 1000000;
-$saving = max(0, $monthly * 12 - $yearly);
-// Each campus sets its own prices. When they differ, show the lowest as "From ..." and only promise a saving that is true for every campus.
-$samePrices = count(array_unique(array_map(fn($c) => (float) $c['monthly_price'] . '|' . (float) $c['yearly_price'], $priced ?: [['monthly_price' => $monthly, 'yearly_price' => $yearly]]))) === 1;
-$from = $samePrices ? '' : 'From ';
-$perDay = fn(float $v, int $days) => 'UGX ' . number_format(round($v / $days / 100) * 100);
-$firstLink = $published ? base_url('campus.php?slug=' . $published[0]['slug'] . '#join') : '#campuses';
+$from = $priced ? min(array_map(fn($c) => (float) $c['monthly_price'], $priced)) : 0.0;
+$fromText = $from > 0 ? format_money($from) : null;
+$joinUrl = fn(array $c) => base_url('campus.php?slug=' . rawurlencode($c['slug']) . '#join');
 
-$stories = get_published_video_stories(3);
+$newest = null;
+foreach ($published as $c) {
+    if (!$newest || strcmp((string) $c['created_at'], (string) $newest['created_at']) > 0) $newest = $c;
+}
 
-$check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-$cross = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-$arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-$names = $all ? array_column($all, 'name') : ['Business & Finance', 'Crypto Trading', 'Forex Trading', 'Content Creation', 'Fitness & Nutrition', 'AI & Technology', 'E-Commerce'];
+$icon = fn(string $id) => '<svg class="ho-i" aria-hidden="true"><use href="#ho-' . $id . '"/></svg>';
 
-$pageTitle = 'Obin Academy Campuses — Earning is a skill. Master it in 12 months.';
-$pageDescription = 'Join an Obin Academy campus: a year-long programme with a professor who does it for a living. Step-by-step lessons, a live class every week and a private community, paid monthly or yearly with MTN or Airtel Money.';
-$extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400';
+$pageTitle = 'Obin Academy Campuses — Learn a skill that pays, in 12 months';
+$pageDescription = 'Join an Obin Academy campus: a year-long programme with a professor who does it for a living. Step-by-step lessons, a live class every week and a private community'
+    . ($fromText ? ', from ' . $fromText . ' a month' : '') . ', paid with MTN or Airtel Money.';
+$extraGoogleFont = 'Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Geist+Mono:wght@500;600';
 require __DIR__ . '/includes/header.php';
 ?>
-<link rel="stylesheet" href="<?= e(versioned_asset('assets/css/home-campus.css')) ?>">
-<?php if ($stories): ?><link rel="stylesheet" href="<?= e(versioned_asset('assets/css/stories.css')) ?>"><?php endif; ?>
-<div class="hx-yearline" aria-hidden="true"><i></i></div><div class="hx-month" aria-hidden="true">Month <b>01</b> of 12</div>
-<div class="hx">
-  <section class="hx-hero">
-    <div class="hx-wrap">
-      <span class="hx-eyebrow">Obin Academy Campuses</span>
-      <h1><span class="w" style="--w:0">Earning</span> <span class="w" style="--w:1">is</span> <span class="w" style="--w:2">a</span> <span class="w" style="--w:3">skill.</span><br><em><span class="w" style="--w:4">Master</span> <span class="w" style="--w:5">it</span> <span class="w" style="--w:6">in</span> <span class="w" style="--w:7">12</span> <span class="w" style="--w:8">months.</span></em></h1>
-      <p class="lede">School taught you to look for a job. We teach you to make money with a skill. Join a campus, learn step by step from a professor who does it for a living, and build income you control.</p>
-      <div class="acts">
-        <a class="hx-cta" href="#campuses">Choose your campus <?= $arrow ?></a>
-        <a class="hx-ghost" href="#how">How it works</a>
-      </div>
-      <div class="hx-trust">
-        <span><?= $check ?>Pay with MTN or Airtel Money</span>
-        <span><?= $check ?>Live class every week</span>
-        <span><?= $check ?>Stop any time</span>
-        <span><?= $check ?>Certificate at the end</span>
-      </div>
-    </div>
-    <div class="hx-marquee" aria-hidden="true"><div>
-      <?php for ($r = 0; $r < 2; $r++) foreach ($names as $n): ?><span><?= e($n) ?></span><b>✦</b><?php endforeach; ?>
-    </div></div>
-    <div class="hx-wrap hx-stats">
-      <div><b><?= max(7, count($all)) ?></b><span>Campuses to choose from</span></div>
-      <div><b>52</b><span>Live classes in your year</span></div>
-      <div><b>12</b><span>Months, step by step</span></div>
-      <div><b>1</b><span>Certificate when you finish</span></div>
-    </div>
-  </section>
+<link rel="stylesheet" href="<?= e(versioned_asset('assets/css/home-offer.css')) ?>">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ho-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="ho-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="ho-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="ho-video" viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="14" rx="3"/><path d="m16 10 5-3v10l-5-3"/></symbol>
+  <symbol id="ho-live" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></symbol>
+  <symbol id="ho-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></symbol>
+  <symbol id="ho-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="ho-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></symbol>
+  <symbol id="ho-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></symbol>
+  <symbol id="ho-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="ho-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 9v6M14 9v6"/></symbol>
+  <symbol id="ho-redo" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+</svg>
 
-  <section class="hx-light hx-sec">
-    <div class="hx-wrap">
-      <div class="hx-head"><span class="hx-eyebrow dark">Be honest with yourself</span><h2>Does this sound <em>like you?</em></h2></div>
-      <div class="hx-you">
+<div class="ho">
+  <?php if ($newest): ?>
+    <div class="ho-ann">Now open: the <b><?= e($newest['name']) ?> Campus</b> — <?= e(format_money((float) $newest['monthly_price'])) ?> a month.<a href="<?= e(base_url('campus.php?slug=' . rawurlencode($newest['slug']))) ?>">See it <?= $icon('arrow') ?></a></div>
+  <?php endif; ?>
+
+  <header class="ho-hero" id="ho-hero">
+    <div class="ho-wrap">
+      <span class="ho-kick">OBIN ACADEMY CAMPUSES · KAMPALA, UGANDA</span>
+      <h1 class="ho-h1">School taught you to look for a job. <span class="ho-mark" id="ho-mark"><i>We teach you to earn</i></span> with a skill.</h1>
+      <p class="ho-sub">Join a campus, learn step by step from a professor who does it for a living, and build income you control — in twelve months, on your phone.</p>
+      <div class="ho-acts">
+        <a class="ho-btn blue" href="#prices">Choose your campus <?= $icon('arrow') ?></a>
+        <a class="ho-btn line" href="#offer">See everything you get</a>
+      </div>
+      <?php if ($fromText): ?><p class="ho-from">From <b><?= e($fromText) ?></b> a month — about <b><?= e($perDay($from)) ?></b> a day.</p><?php endif; ?>
+      <div class="ho-trust">
+        <span><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN Mobile Money" width="26" height="26"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel Money" width="26" height="26"></span>
+        <span><?= $icon('check') ?>Stop any time</span>
+        <span><?= $icon('check') ?>Certificate at the end</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="ho-strip">
+    <figure data-rv style="--d:0"><img src="<?= e(versioned_asset('assets/img/home/offer-students.jpg')) ?>" alt="Two students learning together on a laptop" loading="lazy"><figcaption>Learn together</figcaption></figure>
+    <figure data-rv style="--d:1"><img src="<?= e(versioned_asset('assets/img/home/offer-professor.jpg')) ?>" alt="A professor teaching at a whiteboard" style="object-position:center 30%"><figcaption>Taught by people who do it</figcaption></figure>
+    <figure data-rv style="--d:2"><img src="<?= e(versioned_asset('assets/img/home/offer-couch.jpg')) ?>" alt="A learner studying on a laptop at home" loading="lazy"><figcaption>From your couch</figcaption></figure>
+  </div>
+
+  <section class="ho-sec">
+    <div class="ho-col">
+      <span class="ho-eb" data-rv>Be honest with yourself</span>
+      <h2 class="ho-h2" data-rv>Does this sound <i>like you?</i></h2>
+      <div class="ho-you">
         <?php foreach ([
             'Your salary or allowance is finished before the month is.',
             'You finished school, and the job you were promised never came.',
             'You have watched hundreds of free videos, and nothing changed.',
             'You want a skill you can use from your phone, anywhere in Uganda.',
-            'You know you can do more, but nobody around you shows you how.',
             'You are ready to put in the work if someone gives you a clear plan.',
-        ] as $line): ?><div><?= $check ?><span><?= e($line) ?></span></div><?php endforeach; ?>
+        ] as $i => $line): ?>
+          <div data-rv style="--d:<?= $i ?>"><span class="ho-tick"><?= $icon('check') ?></span><?= e($line) ?></div>
+        <?php endforeach; ?>
       </div>
-      <p class="hx-you-close">If you nodded at even one of these, a campus was built <em>for you.</em> Not for people who only want to think about it, but for people who are ready to move.</p>
+      <p class="ho-pull" data-rv>If you nodded at even one, a campus was built <b>for you</b> — not for people who only think about it, but for people ready to move.</p>
     </div>
   </section>
 
-  <section class="hx-light hx-sec flush">
-    <div class="hx-wrap">
-      <div class="hx-head c"><span class="hx-eyebrow dark">A better way to learn</span><h2>Four years of theory, or <em>one year of practice?</em></h2></div>
-      <div class="hx-vs">
-        <div class="old"><h3>The old way</h3><ul>
-          <li><?= $cross ?><span>Three to four years before you earn anything</span></li>
-          <li><?= $cross ?><span>Millions of shillings in fees</span></li>
-          <li><?= $cross ?><span>Taught by people who have never done it</span></li>
-          <li><?= $cross ?><span>Notes to memorise, then hope for a job</span></li>
-        </ul></div>
-        <div class="new"><h3>An Obin <em>campus</em></h3><ul>
-          <li><?= $check ?><span>Twelve practical stages, taught as a class</span></li>
-          <li><?= $check ?><span>From <?= e(format_money($monthly)) ?> a month, paid on your phone</span></li>
-          <li><?= $check ?><span>Taught by a professor who earns from the skill</span></li>
-          <li><?= $check ?><span>You practise every week and use the skill as you learn</span></li>
-        </ul></div>
+  <section class="ho-sec flush">
+    <div class="ho-col ho-center"><span class="ho-eb" data-rv>A better way to learn</span><h2 class="ho-h2" data-rv>Four years of theory, or <i>one year of practice?</i></h2></div>
+    <div class="ho-vs">
+      <div class="old" data-rv="left"><h3>The old way</h3><ul>
+        <li><?= $icon('x') ?><span>Three to four years before you earn anything</span></li>
+        <li><?= $icon('x') ?><span>Millions of shillings in fees</span></li>
+        <li><?= $icon('x') ?><span>Taught by people who have never done it</span></li>
+        <li><?= $icon('x') ?><span>Notes to memorise, then hope for a job</span></li>
+      </ul></div>
+      <div class="new" data-rv="right"><h3>An Obin <i>campus</i></h3><ul>
+        <li><?= $icon('check') ?><span>Twelve practical stages, taught as a class</span></li>
+        <li><?= $icon('check') ?><span><?= $fromText ? 'From ' . e($fromText) . ' a month, paid on your phone' : 'Paid monthly or yearly, on your phone' ?></span></li>
+        <li><?= $icon('check') ?><span>Taught by a professor who earns from the skill</span></li>
+        <li><?= $icon('check') ?><span>You practise every week and use the skill as you learn</span></li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="ho-sec flush" id="offer">
+    <div class="ho-col">
+      <span class="ho-eb" data-rv>The offer</span>
+      <h2 class="ho-h2" data-rv>Here's <i>everything</i> you get.</h2>
+      <p class="ho-lead" data-rv>One membership opens all of it for your campus, on your phone or computer.</p>
+      <div class="ho-stack" data-rv="zoom">
+        <?php foreach ([
+            ['video', 'Step-by-step video lessons', 'A new stage each time your class is ready, in the right order.'],
+            ['live', 'A live class every week', "52 live classes across your year. Missed one? It's recorded."],
+            ['user', 'A professor who does it for a living', 'Chosen by Obin Academy for real results in the skill they teach.'],
+            ['chat', 'A private community', 'Share your wins, ask for help and stay accountable.'],
+            ['file', 'PDF guides and worksheets', 'Checklists and notes to download and use while you practise.'],
+            ['award', 'Your Obin Academy certificate', 'Finish your twelve months and receive it.'],
+        ] as [$ic, $title, $text]): ?>
+          <div class="ho-item"><span class="ic"><?= $icon($ic) ?></span><div><h3><?= e($title) ?></h3><p><?= e($text) ?></p></div><span class="tag">INCLUDED</span></div>
+        <?php endforeach; ?>
+        <div class="ho-stack-ft"><p>All of it, for <b>one simple monthly price</b><?= $fromText ? ' — from ' . e($fromText) : '' ?>.</p><a class="ho-btn lime sm" href="#prices">See the prices <?= $icon('arrow') ?></a></div>
       </div>
     </div>
   </section>
 
-  <section class="hx-deep hx-sec" id="campuses">
-    <div class="hx-wrap">
-      <div class="hx-head"><span class="hx-eyebrow">The campuses</span><h2>Pick the skill <em>that will pay you.</em></h2><p>Each campus has its own professor, its own year-long programme, a weekly live class and a private community.</p></div>
-      <div class="hx-cgrid">
-        <?php foreach ($grid as $i => $c):
-            $open = $c['status'] === 'PUBLISHED';
-            $wide = ($i === 0 && $extra >= 1) || ($i === count($grid) - 1 && $extra >= 2);
-            $cls = 'hx-cc' . ($wide ? ' wide' : '') . ($i === 0 && $open ? ' feature' : '');
-            $tag = $open ? 'a' : 'div';
-            $photo = campus_photo($c);
-        ?>
-          <<?= $tag ?> class="<?= $cls ?><?= $photo ? ' has-pic' : '' ?>"<?= $open ? ' href="' . e(base_url('campus.php?slug=' . $c['slug'])) . '"' : '' ?>>
-            <?php if ($photo): ?><span class="pic"><img src="<?= e($photo) ?>" alt="" loading="lazy"><span class="ic"><?= campus_icon($c['icon'], 1.7) ?></span></span><?php endif; ?>
-            <span class="body">
-              <?php if (!$photo): ?><span class="ic"><?= campus_icon($c['icon'], 1.7) ?></span><?php endif; ?>
-              <h3><?= e($c['name']) ?> Campus</h3>
-              <p><?= e($c['tagline']) ?></p>
-              <span class="ft">
-                <?php if ($open): $st = $cardStats[(int) $c['id']] ?? ['enrolled' => 0, 'viewed' => 0]; ?>
-                  <span class="price"><b><?= e(format_money((float) $c['monthly_price'])) ?> / month</b>
-                    <small class="stats"><i><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.3c2.1.7 3.5 2.6 3.5 5.7"/></svg><b><?= number_format($st['enrolled']) ?></b> enrolled</i><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><b><?= number_format($st['viewed']) ?></b> viewed</i></small></span>
-                  <span class="go">Join now →</span>
-                <?php else: ?><b>Opening soon</b><?php endif; ?>
-              </span>
-            </span>
-          </<?= $tag ?>>
+  <section class="ho-sec flush" id="prices">
+    <div class="ho-wrap" style="max-width:1000px">
+      <div class="ho-center"><span class="ho-eb" data-rv>Pick your campus</span><h2 class="ho-h2" data-rv>Less than you spend on <i>airtime.</i></h2><p class="ho-lead" data-rv>Each campus sets its own price. Pay monthly, or once for the whole year. Nothing is charged automatically.</p></div>
+      <?php if ($rows): ?>
+        <div class="ho-prices" data-rv>
+          <div class="ho-phead"><span></span><span>Campus</span><span>Per month</span><span class="d">Per day</span><span class="x"></span></div>
+          <?php foreach ($rows as $c):
+              $open = $c['status'] === 'PUBLISHED';
+              $photo = campus_photo($c);
+          ?>
+            <div class="ho-prow<?= $open ? '' : ' soon' ?>">
+              <span class="ph"><?= $photo ? '<img src="' . e($photo) . '" alt="" loading="lazy">' : campus_icon($c['icon'], 1.7) ?></span>
+              <div><h3><?= e($c['name']) ?></h3><small><?= e($c['tagline']) ?></small></div>
+              <?php if ($open): ?>
+                <span class="m"><?= e(format_money((float) $c['monthly_price'])) ?></span>
+                <span class="d">≈ <?= e($perDay((float) $c['monthly_price'])) ?>/day</span>
+                <a class="ho-btn blue sm" href="<?= e($joinUrl($c)) ?>">Join <?= $icon('arrow') ?></a>
+              <?php else: ?>
+                <span class="m">Opening soon</span><span class="d"></span><span></span>
+              <?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+      <div class="ho-safe">
+        <div data-rv style="--d:0"><span class="ic"><?= $icon('shield') ?></span><h3>No auto-charges</h3><p>Nothing is ever taken from your phone without your PIN.</p></div>
+        <div data-rv style="--d:1"><span class="ic"><?= $icon('pause') ?></span><h3>Stop any time</h3><p>On monthly? Don't pay again and your access simply ends.</p></div>
+        <div data-rv style="--d:2"><span class="ic"><?= $icon('redo') ?></span><h3>Progress kept</h3><p>Come back later and pick up exactly where you stopped.</p></div>
+        <div data-rv style="--d:3"><span class="ic"><?= $icon('video') ?></span><h3>Never miss a class</h3><p>Every live class is recorded and added to your lessons.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ho-sec flush">
+    <div class="ho-wrap" style="max-width:1000px">
+      <div class="ho-note" data-rv>
+        <img src="<?= e(versioned_asset('assets/img/founder.jpg')) ?>" alt="The founder of Obin Academy" loading="lazy">
+        <div><span class="ho-eb">Why Obin Academy exists</span><p>Obin Academy was started in Uganda so that a practical, earning skill doesn't take four years and millions of shillings — it takes twelve months, a phone, and a professor who has done it.</p><small>The founder, Obin Academy</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ho-sec flush" id="faq">
+    <div class="ho-col">
+      <span class="ho-eb" data-rv>Questions</span>
+      <h2 class="ho-h2" data-rv>Before you <i>join.</i></h2>
+      <div class="ho-faq">
+        <?php foreach ([
+            ['Do I need any experience?', 'No. Every campus starts from the basics in month one and builds up step by step. If you can use a smartphone, you can follow along.'],
+            ['Can I learn on my phone?', 'Yes. Lessons, PDFs, live classes and the community all work on a smartphone. A computer helps for some campuses, but it is not required to start.'],
+            ['How do I pay?', 'With MTN or Airtel Mobile Money. A prompt arrives on your phone; enter your PIN to confirm. Pay monthly (30 days at a time) or once for the year.'],
+            ['What if I miss a live class?', 'Every live class is recorded and added to your lessons, so you can watch it later.'],
+            ['Can I stop any time?', "Yes. Nothing is charged automatically. If you're on the monthly plan and don't pay again, your access simply ends. Your progress is kept if you come back."],
+            ['Can I join more than one campus?', 'Yes. Each campus has its own membership, so you can join a second one whenever you are ready.'],
+            ['Will I make money?', "The campuses teach practical skills that people use to earn. Your results depend on how much you practise and apply what you learn. We don't promise any income."],
+        ] as $i => [$q, $a]): ?>
+          <details<?= $i === 0 ? ' open' : '' ?>><summary><?= e($q) ?><i></i></summary><p><?= e($a) ?></p></details>
         <?php endforeach; ?>
       </div>
     </div>
   </section>
 
-  <section class="hx-light hx-sec" id="inside">
-    <div class="hx-wrap">
-      <div class="hx-head"><span class="hx-eyebrow dark">What you get</span><h2>Everything inside <em>one campus.</em></h2><p>One membership opens all of it for your campus, on your phone or computer.</p></div>
-      <div class="hx-inside">
-        <div><?= campus_icon('content', 1.8) ?><h3>Step-by-step video lessons</h3><p>A new stage each time your class is ready, in the right order. You always know what to do next.</p></div>
-        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg><h3>A live class every week</h3><p>Learn live with your professor and ask your questions. Missed it? The recording waits for you.</p></div>
-        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg><h3>A professor who does it</h3><p>Every professor is chosen by Obin Academy for real results in the skill they teach.</p></div>
-        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><h3>A private community</h3><p>Share your wins, ask for help and stay accountable with people on the same path.</p></div>
-        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><h3>PDF guides and worksheets</h3><p>Checklists and notes to download and use while you practise.</p></div>
-        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg><h3>A certificate at the end</h3><p>Finish your twelve months and receive your Obin Academy certificate.</p></div>
-      </div>
+  <section class="ho-final">
+    <div class="ho-wrap">
+      <h2 data-rv>Your year starts<br><i>the day you join.</i></h2>
+      <p data-rv style="--d:1">Twelve months from now you will wish you had started today.</p>
+      <a class="ho-btn lime" href="#prices" data-rv style="--d:2">Choose your campus <?= $icon('arrow') ?></a>
     </div>
   </section>
 
-  <section class="hx-light hx-sec flush" id="how">
-    <div class="hx-wrap">
-      <div class="hx-head"><span class="hx-eyebrow dark">How it works</span><h2>Three steps. <em>Start today.</em></h2></div>
-      <div class="hx-steps">
-        <div><b>1</b><h3>Choose your campus</h3><p>Pick the skill you want to build and meet the professor who teaches it.</p></div>
-        <div><b>2</b><h3>Pay with mobile money</h3><p>Monthly or for the whole year. A prompt arrives on your phone; enter your PIN and you are in.</p></div>
-        <div><b>3</b><h3>Learn, apply, earn</h3><p>Follow the monthly stages, join the live class every week and put the skill to work.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="hx-deep hx-sec" id="pricing">
-    <div class="hx-wrap">
-      <div class="hx-head c"><span class="hx-eyebrow">Pricing</span><h2>Less than a cup of tea <em>a day.</em></h2><p><?= $samePrices ? 'Prices are per campus.' : 'Each campus has its own price, shown on its card and its page.' ?> Pay with MTN or Airtel Money. Nothing is charged automatically.</p></div>
-      <div class="hx-plans">
-        <div class="hx-plan">
-          <div class="nm">Monthly</div>
-          <div class="amt"><?php if ($from): ?><small>From</small> <?php endif; ?><?= e(format_money($monthly)) ?> <small>/ month</small></div>
-          <p class="eq">About <?= e($perDay($monthly, 30)) ?> a day</p>
-          <ul><li><?= $check ?>Full access for 30 days</li><li><?= $check ?>Every lesson, live class and PDF</li><li><?= $check ?>A reminder before your month ends</li></ul>
-          <a class="hx-ghost" href="<?= e($firstLink) ?>">Start monthly</a>
-        </div>
-        <div class="hx-plan best">
-          <div class="nm">Yearly <?php if ($samePrices && $saving > 0): ?><span class="tag">Save <?= e(format_money($saving)) ?></span><?php elseif (!$samePrices): ?><span class="tag">Best value</span><?php endif; ?></div>
-          <div class="amt"><?php if ($from): ?><small>From</small> <?php endif; ?><?= e(format_money($yearly)) ?> <small>/ year</small></div>
-          <p class="eq"><?= $samePrices && $saving >= $monthly ? floor($saving / $monthly) . ' month' . (floor($saving / $monthly) >= 2 ? 's' : '') . ' free · ' : '' ?>about <?= e($perDay($yearly, 365)) ?> a day</p>
-          <ul><li><?= $check ?>Full access for 12 months</li><li><?= $check ?>Pay once, nothing to renew</li><li><?= $check ?>Your certificate at the end</li></ul>
-          <a class="hx-cta" href="<?= e($firstLink) ?>">Start yearly</a>
-        </div>
-      </div>
-      <p class="hx-price-note">Your twelve months start the day you join. Join this week and you are in this week's live class.</p>
-    </div>
-  </section>
-
-  <?php if ($stories): ?>
-  <section class="hx-light hx-sec">
-    <div class="hx-wrap">
-      <div class="hx-head"><span class="hx-eyebrow dark">Real people</span><h2>In their <em>own words.</em></h2></div>
-      <div class="vs-wall three">
-        <?php foreach ($stories as $s) render_video_story_card($s); ?>
-      </div>
-      <p class="vs-more"><a class="hx-more" href="<?= e(base_url('stories.php')) ?>">Watch every story <?= $arrow ?></a></p>
-    </div>
-  </section>
-  <?php endif; ?>
-
-  <section class="hx-light hx-sec<?= $stories ? ' flush' : '' ?>" id="faq">
-    <div class="hx-wrap">
-      <div class="hx-head c"><span class="hx-eyebrow dark">Questions</span><h2>Before you <em>join.</em></h2></div>
-      <div class="hx-faq">
-        <details open><summary>Do I need any experience?</summary><p>No. Every campus starts from the basics in month one and builds up step by step. If you can use a smartphone, you can follow along.</p></details>
-        <details><summary>Can I learn on my phone?</summary><p>Yes. Lessons, PDFs, live classes and the community all work on a smartphone. A computer helps for some campuses, but it is not required to start.</p></details>
-        <details><summary>How do I pay?</summary><p>With MTN or Airtel Mobile Money. A prompt arrives on your phone; enter your PIN to confirm. Pay monthly (30 days at a time) or once for the year.</p></details>
-        <details><summary>What if I miss a live class?</summary><p>Every live class is recorded and added to your lessons, so you can watch it later.</p></details>
-        <details><summary>Can I stop any time?</summary><p>Yes. Nothing is charged automatically. If you are on the monthly plan and don't pay again, your access simply ends. Your progress is kept if you come back.</p></details>
-        <details><summary>Can I join more than one campus?</summary><p>Yes. Each campus has its own membership, so you can join a second one whenever you are ready.</p></details>
-        <details><summary>Will I make money?</summary><p>The campuses teach practical skills that people use to earn. Your results depend on how much you practise and apply what you learn. We don't promise any income.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <section class="hx-deep hx-final">
-    <div class="hx-wrap">
-      <h2><span class="w" style="--w:0">Your</span> <span class="w" style="--w:1">year</span> <span class="w" style="--w:2">starts</span><br><em><span class="w" style="--w:3">the</span> <span class="w" style="--w:4">day</span> <span class="w" style="--w:5">you</span> <span class="w" style="--w:6">join.</span></em></h2>
-      <p>Twelve months from now you will wish you had started today. Choose your campus and take the first step.</p>
-      <a class="hx-cta" href="#campuses">Choose your campus <?= $arrow ?></a>
-    </div>
-  </section>
-  <div class="hx-mbar"><a class="hx-cta" href="#campuses">Choose your campus</a></div>
+  <div class="ho-sticky" id="ho-sticky"><?= $fromText ? 'From <b>' . e($fromText) . '</b>/month · ' : '' ?>Pay with MTN or Airtel <a class="ho-btn lime sm" href="#prices">Choose your campus</a></div>
+  <div class="ho-mbar" id="ho-mbar"><div class="mp"><?= $fromText ? 'From<b>' . e($fromText) . ' / month</b>' : 'Obin Academy<b>Campuses</b>' ?></div><a class="ho-btn blue sm" href="#prices">Choose campus</a></div>
 </div>
 <script>
-// "The year in motion": the year line's month counter, rolling stat counters, self-drawing icons and a
-// light cursor tilt. Scroll-linked effects live in CSS (scroll timelines); nothing here hides any content.
+// Lime highlighter on the promise, sections rising in as they arrive, and the join bar once the hero has scrolled
+// away. Content is fully visible without this script; it only opts elements into the entrance.
 (function () {
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var body = document.body;
-  // On this site the page scrolls inside <body>, not the window.
-  var scroller = (body.scrollHeight > body.clientHeight + 4 && /(auto|scroll)/.test(getComputedStyle(body).overflowY)) ? body : (document.scrollingElement || document.documentElement);
-  var line = document.querySelector('.hx-yearline i'), month = document.querySelector('.hx-month'), monthB = month && month.querySelector('b');
-  var cssTimeline = window.CSS && CSS.supports && CSS.supports('animation-timeline: view()');
-  var tick = function () {
-    var max = scroller.scrollHeight - scroller.clientHeight, p = max > 0 ? Math.min(1, Math.max(0, scroller.scrollTop / max)) : 0;
-    if (line && !reduce) line.style.transform = 'scaleX(' + p.toFixed(4) + ')';
-    if (month) { month.classList.toggle('on', p > .04 && p < .985); if (monthB) monthB.textContent = String(Math.min(12, 1 + Math.floor(p * 12))).padStart(2, '0'); }
-  };
-  var busy = false;
-  document.addEventListener('scroll', function () { if (!busy) { busy = true; requestAnimationFrame(function () { busy = false; tick(); }); } }, { passive: true, capture: true });
-  tick();
-  if (reduce) return;
-
-  // Odometer: each digit is a column of 0-9 that rolls to its value when the numbers come into view.
-  var odos = [];
-  document.querySelectorAll('.hx-stats b').forEach(function (b) {
-    var txt = b.textContent.trim(); if (!/^\d+$/.test(txt)) return;
-    b.setAttribute('aria-label', txt);
-    var wrap = document.createElement('span'); wrap.className = 'hx-odo'; wrap.setAttribute('aria-hidden', 'true');
-    txt.split('').forEach(function (d, i) {
-      var col = document.createElement('span'); col.style.setProperty('--d', i);
-      for (var n = 0; n <= 9; n++) { var c = document.createElement('span'); c.textContent = n; col.appendChild(c); }
-      col.dataset.v = d; wrap.appendChild(col);
-    });
-    b.textContent = ''; b.appendChild(wrap); odos.push(wrap);
-  });
-  var roll = function (wrap) { wrap.querySelectorAll(':scope > span').forEach(function (col) { col.style.transform = 'translateY(' + (-col.dataset.v) + 'em)'; }); };
-
-  // Icons draw themselves when their card arrives.
-  var cards = document.querySelectorAll('.hx-inside > div');
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        io.unobserve(en.target);
-        if (en.target.classList.contains('hx-odo')) roll(en.target); else en.target.classList.add('hx-draw');
-      });
-    }, { threshold: 0.35 });
-    odos.forEach(function (o) { io.observe(o); });
-    cards.forEach(function (c) { io.observe(c); });
-  } else { odos.forEach(roll); }
-  setTimeout(function () { odos.forEach(roll); }, 4000); // never leave a number showing 0
-
-  // A light tilt toward the cursor on cards (mouse only).
-  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    document.querySelectorAll('.hx-cc, .hx-inside > div, .hx-plan').forEach(function (el) {
-      el.classList.add('hx-tilt');
-      el.addEventListener('pointermove', function (ev) {
-        var r = el.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width - .5, y = (ev.clientY - r.top) / r.height - .5;
-        el.style.rotate = (-y).toFixed(3) + ' ' + x.toFixed(3) + ' 0 ' + (Math.hypot(x, y) * 7).toFixed(2) + 'deg';
-      });
-      el.addEventListener('pointerleave', function () { el.style.rotate = ''; });
-    });
-  }
+  var root = document.querySelector('.ho');
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mark = document.getElementById('ho-mark');
+  setTimeout(function () { mark.classList.add('go'); }, 300);
+  if (reduce || !('IntersectionObserver' in window)) return;
+  root.classList.add('ho-js');
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+  }, { threshold: .12, rootMargin: '0px 0px -6% 0px' });
+  root.querySelectorAll('[data-rv]').forEach(function (el) { io.observe(el); });
+  var bars = [document.getElementById('ho-sticky'), document.getElementById('ho-mbar')];
+  new IntersectionObserver(function (es) {
+    es.forEach(function (en) { var past = !en.isIntersecting && en.boundingClientRect.top < 0; bars.forEach(function (b) { b.classList.toggle('show', past); }); });
+  }).observe(document.getElementById('ho-hero'));
 })();
 </script>
-<?php if ($stories): ?><script src="<?= e(versioned_asset('assets/js/stories.js')) ?>" defer></script><?php endif; ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>
