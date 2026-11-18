@@ -18,7 +18,7 @@ if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) {
     http_response_code(404);
     $pageTitle = 'Campus not found — Obin Academy';
     require __DIR__ . '/includes/header.php';
-    echo '<div class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Campus not found</h1><p class="muted" style="margin-top:8px;"><a href="' . e(base_url('index.php#campuses')) . '">See all campuses</a></p></div>';
+    echo '<div class="container" style="padding:80px 0; text-align:center;"><h1 class="h2">Campus not found</h1><p class="muted" style="margin-top:8px;"><a href="' . e(base_url('campuses.php')) . '">See all campuses</a></p></div>';
     require __DIR__ . '/includes/footer.php';
     exit;
 }
@@ -77,7 +77,7 @@ require __DIR__ . '/includes/header.php';
     <section class="cq-hero">
       <div class="cq-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="cq-hero-copy">
-        <p class="cq-crumb cq-fade" style="--d:.05s"><a href="<?= e(base_url('index.php#campuses')) ?>">Campuses</a> / <?= e($campus['name']) ?></p>
+        <p class="cq-crumb cq-fade" style="--d:.05s"><a href="<?= e(base_url('campuses.php')) ?>">Campuses</a> / <?= e($campus['name']) ?></p>
         <span class="cq-chip cq-fade" style="--d:.1s"><i></i><?= $published ? 'OPEN · JOIN ANY TIME' : 'OPENING SOON' ?></span>
         <h1><?php foreach ($headline as $i => $line): ?><span class="cq-line"><span style="--l:<?= $i ?>"><?= $i === count($headline) - 1 ? '<em>' . e($line) . '</em>' : e($line) ?></span></span><?php endforeach; ?></h1>
         <p class="cq-lede cq-fade" style="--d:.6s"><?= e($lede) ?></p>

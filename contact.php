@@ -119,7 +119,7 @@ require __DIR__ . '/includes/header.php';
     <p class="summary" style="margin-left:auto; margin-right:auto;">Whether you're a learner, a future professor, a business or a partner, our team is ready to answer your questions.</p>
     <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:26px;">
       <a href="#contact-form" class="btn btn-gold">Contact Support <span class="btn-arrow">→</span></a>
-      <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-outline">See the campuses</a>
+      <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-outline">See the campuses</a>
     </div>
     <div class="hero-trust-row">
       <span class="item"><?= ci('shield-check') ?> Secure &amp; Trusted</span>
@@ -405,7 +405,7 @@ require __DIR__ . '/includes/header.php';
       <p style="margin-top:12px; color:rgba(255,255,255,0.7); max-width:480px; margin-left:auto; margin-right:auto;">We are building a faculty of people who have done the work. Apply, and we will call you to talk it through.</p>
       <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:26px;">
         <a href="<?= e(base_url('teach.php')) ?>" class="btn btn-gold btn-lg">Apply to Teach <span class="btn-arrow">→</span></a>
-        <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-outline-light btn-lg">See the Campuses</a>
+        <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-outline-light btn-lg">See the Campuses</a>
       </div>
     </div>
   </div>

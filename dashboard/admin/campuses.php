@@ -119,7 +119,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <button type="submit" class="acx-btn dark">Create the campus</button>
         </form>
       </details>
-      <a class="acx-btn" href="<?= e(base_url('index.php#campuses')) ?>" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>View public page</a>
+      <a class="acx-btn" href="<?= e(base_url('campuses.php')) ?>" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>View public page</a>
       <a class="acx-btn dark" href="<?= e(base_url('dashboard/admin/professor-pay.php')) ?>"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Professor pay</a>
     </div>
   </div>

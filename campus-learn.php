@@ -22,7 +22,7 @@ $campus = get_campus_by_slug($slug);
 $isProf = $campus && campus_is_professor($user, $campus);
 $isAdmin = $user['role'] === 'ADMIN' || $isProf;
 $staffLabel = $isProf ? 'Professor' : 'Admin preview';
-if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) redirect('/index.php#campuses');
+if (!$campus || ($campus['status'] !== 'PUBLISHED' && !$isAdmin)) redirect('/campuses.php');
 
 $campusId = (int) $campus['id'];
 $membership = get_campus_membership($campusId, (int) $user['id']);
@@ -227,7 +227,7 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
 <body class="cl-body"<?= $view === 'community' ? ' data-chat-room="' . e($campus['slug']) . '"' : '' ?>>
 <header class="cl-site"><div class="cl-site-in">
   <a class="cl-logo" href="<?= e(base_url('dashboard.php')) ?>"><i><?= $svg('cap') ?></i>Obin Academy</a>
-  <span class="cl-site-r"><a class="cl-site-link" href="<?= e(base_url('index.php#campuses')) ?>">All campuses</a><a class="cl-me" href="<?= e($self(['view' => 'membership'])) ?>" title="<?= e($user['name']) ?> · Membership"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></a></span>
+  <span class="cl-site-r"><a class="cl-site-link" href="<?= e(base_url('campuses.php')) ?>">All campuses</a><a class="cl-me" href="<?= e($self(['view' => 'membership'])) ?>" title="<?= e($user['name']) ?> · Membership"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></a></span>
 </div></header>
 
 <?php if ($flash || (!$isAdmin && $daysLeft !== null && $daysLeft <= 7 && $view !== 'membership')): ?>
@@ -458,7 +458,7 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
           <form method="post" class="cl-remind"><?= csrf_field() ?><input type="hidden" name="_action" value="reminders"><input type="hidden" name="off" value="<?= (int) $membership['reminders_off'] ? '0' : '1' ?>"><button type="submit"><?= (int) $membership['reminders_off'] ? 'Turn reminders back on' : 'Stop reminders (cancel)' ?></button></form>
         </div>
       <?php endif; ?>
-      <div class="cl-row-acts"><a class="cl-btn light" href="<?= e(base_url('dashboard.php')) ?>">Your dashboard</a><a class="cl-btn light" href="<?= e(base_url('index.php#campuses')) ?>">All campuses</a></div>
+      <div class="cl-row-acts"><a class="cl-btn light" href="<?= e(base_url('dashboard.php')) ?>">Your dashboard</a><a class="cl-btn light" href="<?= e(base_url('campuses.php')) ?>">All campuses</a></div>
     </section>
 <?php endif; ?>
   </div>

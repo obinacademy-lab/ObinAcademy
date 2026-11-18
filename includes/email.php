@@ -132,7 +132,7 @@ function send_lead_welcome_email(string $to, string $name, array $campuses, stri
     resend_send($to, 'Welcome to Obin Academy', lead_email_html(
         'Welcome, ' . (trim(explode(' ', trim($name))[0] ?? '') ?: 'there'),
         "<p>Thanks for your interest, {$first}. Obin Academy runs year-long campuses: one stage of lessons each month, a live class every week and a community of people learning the same skill.</p>" . lead_email_campus_rows($campuses),
-        'See the campuses', base_url('index.php#campuses'), $unsubscribeUrl
+        'See the campuses', base_url('campuses.php'), $unsubscribeUrl
     ));
 }
 
@@ -146,7 +146,7 @@ function send_lead_day3_email(string $to, string $name, string $unsubscribeUrl):
         . '<li style="margin-bottom:10px;">Every week your professor teaches a live class, with time for questions.</li>'
         . '<li style="margin-bottom:10px;">Pay monthly or for the year with MTN or Airtel Mobile Money. Nothing renews by itself.</li>'
         . '<li style="margin-bottom:10px;">Finish the twelve stages and you earn your certificate.</li></ul>',
-        'Choose your campus', base_url('index.php#campuses'), $unsubscribeUrl
+        'Choose your campus', base_url('campuses.php'), $unsubscribeUrl
     ));
 }
 
@@ -156,7 +156,7 @@ function send_lead_day5_email(string $to, string $name, array $campuses, string 
     resend_send($to, 'Which skill will you master this year?', lead_email_html(
         "Still deciding, {$first}?",
         '<p>Here are the campuses open right now. Each one is a full year, taught live.</p>' . lead_email_campus_rows($campuses),
-        'See the campuses', base_url('index.php#campuses'), $unsubscribeUrl
+        'See the campuses', base_url('campuses.php'), $unsubscribeUrl
     ));
 }
 
@@ -166,6 +166,6 @@ function send_lead_day7_email(string $to, string $name, string $unsubscribeUrl):
     resend_send($to, "Whenever you're ready, {$first}", lead_email_html(
         "No pressure, {$first}",
         '<p>If now isn\'t the right time, that is fine. When you are ready, your campus will be here, and you can start any day: your year begins the day you join.</p>',
-        'See the campuses', base_url('index.php#campuses'), $unsubscribeUrl
+        'See the campuses', base_url('campuses.php'), $unsubscribeUrl
     ));
 }

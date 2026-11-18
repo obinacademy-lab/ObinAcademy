@@ -58,7 +58,7 @@ require __DIR__ . '/includes/auth_header.php';
   </form>
 
   <div class="auth-or" style="--i:6">Or</div>
-  <a class="auth-ghost" style="--i:6" href="<?= e(base_url('index.php#campuses')) ?>"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Explore the campuses</a>
+  <a class="auth-ghost" style="--i:6" href="<?= e(base_url('campuses.php')) ?>"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Explore the campuses</a>
 
   <p class="switch-line" style="--i:7">
     Don't have an account? <a href="<?= e(base_url('signup.php?redirect=' . urlencode($redirectTo))) ?>">Sign Up</a>

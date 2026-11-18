@@ -41,7 +41,7 @@ function lead_message_default_for(array $lead): string {
 }
 
 function lead_message_link(array $lead, string $template): string {
-    return base_url('index.php#campuses');
+    return base_url('campuses.php');
 }
 
 function lead_message_render(string $text, array $lead, string $template): string {

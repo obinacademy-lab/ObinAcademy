@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             resend_send($app['email'], 'Your application to teach at Obin Academy', campus_email_html(
                 'Thank you, ' . campus_first_name($app['name']),
                 'Thank you for applying to teach at Obin Academy. We are not able to offer you a campus right now, but we keep every application and may contact you as new campuses open.',
-                'See the campuses', base_url('index.php#campuses')
+                'See the campuses', base_url('campuses.php')
             ), ['reply_to' => $user['email']]);
         }
         log_admin_action((int) $user['id'], $user['name'], 'instructor.' . strtolower($to), 'Teach application', $app['name']);

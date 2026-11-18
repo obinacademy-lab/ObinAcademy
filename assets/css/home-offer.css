@@ -7,9 +7,9 @@
   --ho-navy: var(--brand-950, #06007a);
   --ho-lime: var(--lime, #cdfb5e);
   --ho-ink: #0a0a14;
-  --ho-ivory: #f7f5ee;
+  --ho-ivory: #f1f3fa;
   --ho-mute: #5d5b70;
-  --ho-line: #e6e4dc;
+  --ho-line: #e1e5f3;
   --ho-serif: 'Newsreader', Georgia, serif;
   --ho-sans: var(--font-sans, 'Geist', system-ui, sans-serif);
   --ho-mono: 'Geist Mono', ui-monospace, monospace;
@@ -74,7 +74,7 @@
 @keyframes ho-up { from { opacity: 0; transform: translateY(22px); } }
 
 .ho-strip { display: grid; grid-template-columns: 1.1fr 1.4fr 1.1fr; gap: 16px; align-items: end; max-width: 1100px; margin: 0 auto; padding: 0 28px; }
-.ho-strip figure { border-radius: 22px; overflow: hidden; position: relative; background: #e9e7de; }
+.ho-strip figure { border-radius: 22px; overflow: hidden; position: relative; background: #e4e8f5; }
 .ho-strip figure img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.4s var(--ho-ease); }
 .ho-strip figure:hover img { transform: scale(1.05); }
 .ho-strip figure:nth-child(1) { height: 320px; }
@@ -100,7 +100,7 @@
 
 .ho-vs { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: 1000px; margin: 44px auto 0; padding: 0 28px; }
 .ho-vs > div { border-radius: 22px; padding: 30px; }
-.ho-vs .old { background: #ecebe4; color: #55545f; }
+.ho-vs .old { background: #e4e8f5; color: #55545f; }
 .ho-vs .new { background: var(--ho-ink); color: #fff; box-shadow: 0 40px 70px -40px rgba(11,0,255,.6); }
 .ho-vs h3 { font: 500 26px var(--ho-serif); margin-bottom: 18px; }
 .ho-vs .new h3 i { color: var(--ho-lime); }
@@ -124,7 +124,7 @@
 /* ---------- prices ---------- */
 .ho-prices { margin-top: 36px; border-radius: 24px; overflow: hidden; border: 1px solid var(--ho-line); background: #fff; }
 .ho-phead, .ho-prow { display: grid; grid-template-columns: 56px minmax(0, 1fr) 150px 130px 120px; gap: 16px; align-items: center; padding: 14px 20px; }
-.ho-phead { background: #f3f2ec; font: 600 11px var(--ho-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ho-mute); padding-top: 12px; padding-bottom: 12px; }
+.ho-phead { background: #eaedf8; font: 600 11px var(--ho-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ho-mute); padding-top: 12px; padding-bottom: 12px; }
 .ho-prow { border-top: 1px solid var(--ho-line); transition: background .25s; }
 .ho-prow:hover { background: #faf9ff; }
 .ho-prow .ph { width: 56px; height: 56px; border-radius: 14px; overflow: hidden; background: #eeedfb; color: var(--ho-blue); display: grid; place-items: center; }

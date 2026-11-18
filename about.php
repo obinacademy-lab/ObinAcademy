@@ -41,7 +41,7 @@ require __DIR__ . '/includes/header.php';
     <h1>One skill. One year. Mastered.</h1>
     <p class="summary" style="margin-left:auto; margin-right:auto;">Obin Academy runs year-long campuses led by professors who have done the work, so you learn a skill that changes what you earn, not just what you know.</p>
     <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:34px;">
-      <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-gold">See the campuses <span class="btn-arrow">→</span></a>
+      <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-gold">See the campuses <span class="btn-arrow">→</span></a>
       <a href="<?= e(base_url('teach.php')) ?>" class="btn btn-outline">Teach at Obin Academy</a>
     </div>
   </div>
@@ -105,7 +105,7 @@ require __DIR__ . '/includes/header.php';
           </div>
         <?php endforeach; ?>
       </div>
-      <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-primary" style="margin-top:26px; position:relative; z-index:1;">Choose your campus <span class="btn-arrow">→</span></a>
+      <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-primary" style="margin-top:26px; position:relative; z-index:1;">Choose your campus <span class="btn-arrow">→</span></a>
     </div>
   </div>
 </div>
@@ -176,7 +176,7 @@ require __DIR__ . '/includes/header.php';
       <span class="eyebrow" style="background:rgba(255,255,255,0.1); color:var(--gold);">Your year starts the day you join</span>
       <h2 class="h2" style="margin-top:14px; color:#fff;">Ready to master one skill?</h2>
       <div class="row gap-2" style="justify-content:center; margin-top:28px;">
-        <a href="<?= e(base_url('index.php#campuses')) ?>" class="btn btn-gold btn-lg">Choose your campus <span class="btn-arrow">→</span></a>
+        <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-gold btn-lg">Choose your campus <span class="btn-arrow">→</span></a>
       </div>
     </div>
   </div>

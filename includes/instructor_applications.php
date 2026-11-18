@@ -69,7 +69,7 @@ function submit_instructor_application(array $in, ?array $user, string $ip): arr
     resend_send($email, 'We received your application to teach at Obin Academy', campus_email_html(
         'Thank you, ' . campus_first_name($name),
         'We received your application to teach ' . e($what) . '. We read every one, and if it is a fit we will call or WhatsApp you on ' . e($phone) . ' to talk it through.',
-        'See the campuses', base_url('index.php#campuses')
+        'See the campuses', base_url('campuses.php')
     ));
     return ['ok' => true, 'id' => $appId];
 }

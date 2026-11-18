@@ -5,6 +5,7 @@
  */
 require_once __DIR__ . '/notifications.php';
 require_once __DIR__ . '/professor.php';
+require_once __DIR__ . '/platform.php';
 
 // Professors get their own dashboard shell (a top dock, no student pages): includes/professor_header.php.
 if (is_professor($user)) {
@@ -18,7 +19,7 @@ $navByRole = [
     'LEARNER' => [
         'Learning' => [
             ['/dashboard/learner/index.php', 'My Campuses', 'graduation-cap'],
-            ['/index.php#campuses', 'All campuses', 'book-open'],
+            ['/campuses.php', 'All campuses', 'book-open'],
         ],
         'Earn' => [
             ['/dashboard/learner/affiliate.php', 'My Referrals', 'users'],
@@ -107,72 +108,29 @@ if ($user['role'] === 'ADMIN') {
   <link rel="apple-touch-icon" href="<?= e(versioned_asset('apple-touch-icon.png')) ?>" sizes="180x180">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/dashboard.css')) ?>">
+  <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/platform.css')) ?>">
   <?php foreach ($pageCss ?? [] as $css): ?><link rel="stylesheet" href="<?= e(versioned_asset($css)) ?>">
   <?php endforeach; ?>
   <?php require __DIR__ . '/pwa-head.php'; ?>
 </head>
-<body>
-<div class="dash dash-premium theme-<?= e(dashboard_theme_for_user($user)) ?> <?= e($dashClass ?? '') ?>">
-  <div class="dash-overlay" data-dash-overlay data-dash-close></div>
-  <aside class="dash-sidebar" data-dash-sidebar>
-    <div class="dash-sidebar-head">
-      <?php render_logo(true); ?>
-      <button data-dash-close aria-label="Close menu">✕</button>
-    </div>
-
-    <div class="dash-me">
-      <span class="dash-me-av"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></span>
-      <span class="dash-me-text"><b><?= e($user['name']) ?></b><small><?= e(ucfirst(strtolower($user['role']))) ?></small></span>
-    </div>
-
-    <div class="dash-nav-scroll">
-      <?php foreach ($navGroups as $groupLabel => $items): ?>
-        <div class="dash-nav-group">
-          <div class="dash-nav-group-label"><?= e($groupLabel) ?></div>
-          <nav class="dash-nav">
-            <?php foreach ($items as [$href, $label, $icon]): $badge = $navBadges[$href] ?? 0; ?>
-              <a href="<?= e(base_url($href)) ?>" class="<?= $currentPath === $href ? 'active' : '' ?>">
-                <span class="nav-ic"><?php dash_icon($icon); ?></span><span class="nav-t"><?= e($label) ?></span>
-                <?php if ($badge > 0): ?><span class="nav-badge"><?= $badge ?></span><?php endif; ?>
-              </a>
-            <?php endforeach; ?>
-          </nav>
-        </div>
-      <?php endforeach; ?>
-    </div>
-
-    <?php if ($sidebarWidget): ?>
-      <div class="dash-widget">
-        <div class="dash-widget-head"><?php dash_icon($sidebarWidget['icon']); ?><?= e($sidebarWidget['title']) ?></div>
-        <?php foreach ($sidebarWidget['rows'] as $row): ?>
-          <div class="dash-widget-row"><span><?= e($row['label']) ?></span><strong><?= e($row['value']) ?></strong></div>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
-
-    <div class="dash-sidebar-foot">
-      <a href="<?= e(base_url('index.php')) ?>" target="_blank" rel="noopener">Visit site</a>
-      <a href="<?= e(base_url('logout.php')) ?>">Sign out</a>
-    </div>
-  </aside>
-
+<body class="pl pl-dashbody">
+<div class="dash dash-premium pl-dash theme-<?= e(dashboard_theme_for_user($user)) ?> <?= e($dashClass ?? '') ?>">
   <div class="dash-main">
-    <div class="dash-header">
-      <div class="dash-header-left">
-        <button data-dash-open class="dash-hamburger" aria-label="Open menu">☰</button>
-        <?php render_logo(true, 'dash-header-logo'); ?>
-        <?php if ($user['role'] === 'ADMIN'): ?>
-        <form class="dash-search" method="get" action="<?= e(base_url('dashboard/admin/search.php')) ?>" role="search">
+<?php
+$plSearch = '';
+$plBell = '';
+if ($user['role'] === 'ADMIN') {
+    ob_start(); ?>
+        <form class="pl-search" method="get" action="<?= e(base_url('dashboard/admin/search.php')) ?>" role="search">
           <?php dash_icon('search'); ?>
           <input type="search" name="q" value="" placeholder="Search people and payments…" aria-label="Search people and payments" autocomplete="off" enterkeyhint="search">
         </form>
-        <?php endif; ?>
-      </div>
-      <div class="dash-header-right">
-        <?php if ($user['role'] === 'ADMIN'): ?>
+<?php
+    $plSearch = ob_get_clean();
+    ob_start(); ?>
         <div class="account-menu dash-notif-menu">
           <button class="dash-icon-btn" aria-label="Notifications">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -201,28 +159,20 @@ if ($user['role'] === 'ADMIN') {
             <?php endif; ?>
           </div>
         </div>
-        <?php endif; ?>
-        <div class="account-menu dash-account">
-          <button class="dash-who">
-            <span class="avatar"><?= e(mb_substr($user['name'], 0, 1)) ?></span>
-            <span class="who-text">
-              <span class="name"><?= e($user['name']) ?></span>
-              <span class="role"><?= e(ucfirst(strtolower($user['role']))) ?></span>
-            </span>
-            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
-          </button>
-          <div class="account-dropdown">
-            <div class="account-dropdown-head">
-              <div class="name"><?= e($user['name']) ?></div>
-              <div class="email"><?= e($user['email']) ?></div>
-            </div>
-            <a href="<?= e(base_url('dashboard/settings.php')) ?>"><?php dash_icon('settings'); ?>Settings</a>
-            <a href="<?= e(base_url('logout.php')) ?>" class="danger"><?php dash_icon('log-out'); ?>Sign Out</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
+<?php
+    $plBell = ob_get_clean();
+}
+pl_render_head($user, [
+    'search' => $plSearch,
+    'bell' => $plBell,
+    'account' => [
+        ['dashboard/settings.php', 'Settings', '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>', false],
+        ['index.php', 'Visit site', '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/>', false],
+        ['logout.php', 'Sign Out', '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>', true],
+    ],
+]);
+pl_render_tabs($user['role'] === 'ADMIN' ? $navGroups : ['Menu' => array_merge(...array_values($navGroups))], $navBadges);
+?>
     <div class="dash-content">
       <?php
         $flashError = flash_get('error');

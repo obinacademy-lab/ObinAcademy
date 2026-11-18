@@ -151,7 +151,7 @@ $mainNext = $main['next'] ?? null;
         <span class="dk-eb">Get started</span>
         <h3>Join a campus</h3>
         <p class="ld-sub">Pick a campus, pay with MTN or Airtel Money, and start month 1 today.</p>
-        <a class="dk-btn lime full" href="<?= e(base_url('index.php#campuses')) ?>">See the campuses<?= $ic['arrow'] ?></a>
+        <a class="dk-btn lime full" href="<?= e(base_url('campuses.php')) ?>">See the campuses<?= $ic['arrow'] ?></a>
       <?php endif; ?>
       <?php if ($main): $dl = campus_days_left($main); ?>
         <div class="ld-checks">
@@ -167,7 +167,7 @@ $mainNext = $main['next'] ?? null;
     <section class="dk-block" style="--b:0">
       <div class="dk-block-h"><h2>My <em>campuses</em></h2><span><?= count($myCampuses) ?> joined</span></div>
       <?php if (!$myCampuses): ?>
-        <div class="ld-empty"><div><b>Join a campus</b><p>A year-long programme with a professor: lessons, PDF guides and a live class every week, ending with a certificate.</p></div><a class="dk-btn ld-blue" href="<?= e(base_url('index.php#campuses')) ?>">See the campuses</a></div>
+        <div class="ld-empty"><div><b>Join a campus</b><p>A year-long programme with a professor: lessons, PDF guides and a live class every week, ending with a certificate.</p></div><a class="dk-btn ld-blue" href="<?= e(base_url('campuses.php')) ?>">See the campuses</a></div>
       <?php else: ?>
         <div class="ld-mine">
           <?php foreach ($myCampuses as $k => $m): $month = (int) $m['month']; $ended = !$m['open']; ?>
@@ -208,7 +208,7 @@ $mainNext = $main['next'] ?? null;
         <?php else: ?><p class="dk-empty"><?= $open ? 'No live class in the next 7 days. It will show here with a Join button.' : 'Live classes from your campuses show here.' ?></p><?php endif; ?>
       </section>
       <section class="dk-block" style="--b:2">
-        <div class="dk-block-h"><h2>Explore <em>more</em></h2><a href="<?= e(base_url('index.php#campuses')) ?>">All campuses →</a></div>
+        <div class="dk-block-h"><h2>Explore <em>more</em></h2><a href="<?= e(base_url('campuses.php')) ?>">All campuses →</a></div>
         <?php if ($explore): ?>
           <div class="ld-explore">
             <?php foreach ($explore as $c): ?><a class="ex" href="<?= e(base_url('campus.php?slug=' . $c['slug'])) ?>"><?php if ($c['photo']): ?><img src="<?= e($c['photo']) ?>" alt=""><?php endif; ?><span><?= e($c['name']) ?></span></a><?php endforeach; ?>
@@ -220,7 +220,7 @@ $mainNext = $main['next'] ?? null;
     <section class="dk-block" style="--b:3">
       <div class="dk-block-h"><h2>Quick <em>actions</em></h2></div>
       <div class="ld-qa">
-        <a href="<?= e(base_url('index.php#campuses')) ?>"><span class="ic"><?= $ic['campus'] ?></span><b>Explore campuses</b><small>Year-long campuses with a professor</small></a>
+        <a href="<?= e(base_url('campuses.php')) ?>"><span class="ic"><?= $ic['campus'] ?></span><b>Explore campuses</b><small>Year-long campuses with a professor</small></a>
         <a href="<?= e(base_url('dashboard/settings.php')) ?>"><span class="ic"><?= $ic['settings'] ?></span><b>Account settings</b><small>Your name, photo and password</small></a>
         <a href="<?= e(base_url('contact.php')) ?>"><span class="ic"><?= $ic['chat'] ?></span><b>Get help</b><small>Talk to the Obin Academy team</small></a>
       </div>

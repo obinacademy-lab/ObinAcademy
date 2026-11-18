@@ -1,28 +1,6 @@
   </main>
 
-  <?php // The same slim bar obinacademy.com uses: logo on the left, links, copyright on the right. (Community = the WhatsApp community.) ?>
-  <footer class="site-footer-minimal">
-    <div class="container footer-minimal-inner">
-      <?php render_logo(true); ?>
-      <nav class="footer-minimal-links" aria-label="Footer">
-        <a href="<?= e(base_url('index.php#campuses')) ?>">Campuses</a>
-        <a href="<?= e(base_url('teach.php')) ?>">Teach</a>
-        <a href="<?= e(base_url('become-affiliate.php')) ?>">Earn</a>
-        <a href="<?= e(base_url('about.php')) ?>">About us</a>
-        <a href="<?= e(base_url('contact.php')) ?>">Contact us</a>
-        <a href="<?= e(base_url('terms.php')) ?>">Terms</a>
-        <a href="<?= e(base_url('privacy.php')) ?>">Privacy</a>
-        <a href="<?= e(WHATSAPP_COMMUNITY_URL) ?>" target="_blank" rel="noopener noreferrer">Community</a>
-        <a href="#" data-install-app hidden>Install the app</a>
-        <?php if (!empty($user)): ?>
-          <a href="<?= e(base_url('dashboard.php')) ?>">Dashboard</a>
-        <?php else: ?>
-          <a href="<?= e(base_url('login.php')) ?>">Sign in</a>
-        <?php endif; ?>
-      </nav>
-      <p class="footer-minimal-copy">&copy; <?= date('Y') ?> Obin Academy</p>
-    </div>
-  </footer>
+  <?php pl_render_footer($user ?? null); ?>
 
   <?php require __DIR__ . '/consent_banner.php'; ?>
   <?php require __DIR__ . '/lead_popup.php'; ?>

@@ -11,6 +11,7 @@ $urls = [];
 // Creators' courses and school pages are no longer public, so they are left out.
 $staticPages = [
     ['index.php', 'daily', '1.0'],
+    ['campuses.php', 'daily', '0.9'],
     ['stories.php', 'weekly', '0.5'],
     ['about.php', 'monthly', '0.4'],
     ['teach.php', 'monthly', '0.5'],
