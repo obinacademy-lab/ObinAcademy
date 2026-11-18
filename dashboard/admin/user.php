@@ -67,7 +67,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <?php foreach ($memberships as $m): $isOpen = strtotime($m['access_until']) > time(); ?>
           <tr>
             <td data-label="Campus"><a href="<?= e(base_url('dashboard/admin/campus-edit.php?id=' . (int) $m['campus_id'] . '&tab=members')) ?>" style="color:inherit; font-weight:700;"><?= e($m['campus_name']) ?> Campus</a><?php if ($m['certificate_code']): ?><small class="cm-sub">Certificate <?= e($m['certificate_code']) ?></small><?php endif; ?></td>
-            <td data-label="Plan"><?= $m['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></td>
+            <td data-label="Plan"><?= e(campus_plan_label($m['plan'])) ?></td>
             <td data-label="Joined"><?= e(format_date($m['started_at'])) ?></td>
             <td data-label="Access until"><span class="badge <?= $isOpen ? 'badge-published' : 'badge-rejected' ?>"><?= $isOpen ? '' : 'Ended ' ?><?= e(format_date($m['access_until'])) ?></span></td>
           </tr>

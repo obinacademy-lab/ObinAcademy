@@ -17,6 +17,10 @@ $priced = $published ?: $all;
 $from = $priced ? min(array_map(fn($c) => (float) $c['monthly_price'], $priced)) : 0.0;
 $fromText = $from > 0 ? format_money($from) : null;
 $joinUrl = fn(array $c) => base_url('campus.php?slug=' . rawurlencode($c['slug']) . '#join');
+// Day pass (24 hours), once migration/add-daily-plan.sql has run. Until then the page reads exactly as before.
+$hasDay = campus_daily_ready();
+$dayPrices = $hasDay ? array_filter(array_map(fn($c) => (float) $c['daily_price'], $published), fn($v) => $v > 0) : [];
+$dayFrom = $dayPrices ? min($dayPrices) : 0.0;
 
 $newest = null;
 foreach ($published as $c) {
@@ -61,7 +65,8 @@ require __DIR__ . '/includes/header.php';
         <a class="ho-btn blue" href="#prices">Choose your campus <?= $icon('arrow') ?></a>
         <a class="ho-btn line" href="#offer">See everything you get</a>
       </div>
-      <?php if ($fromText): ?><p class="ho-from">From <b><?= e($fromText) ?></b> a month — about <b><?= e($perDay($from)) ?></b> a day.</p><?php endif; ?>
+      <?php if ($fromText && $dayFrom > 0): ?><p class="ho-from">From <b><?= e($fromText) ?></b> a month — or <b><?= e(format_money($dayFrom)) ?></b> for a single day.</p>
+      <?php elseif ($fromText): ?><p class="ho-from">From <b><?= e($fromText) ?></b> a month — about <b><?= e($perDay($from)) ?></b> a day.</p><?php endif; ?>
       <div class="ho-trust">
         <span><img src="<?= e(versioned_asset('assets/img/trust-mtn-logo.jpg')) ?>" alt="MTN Mobile Money" width="26" height="26"><img src="<?= e(versioned_asset('assets/img/trust-airtel-logo.png')) ?>" alt="Airtel Money" width="26" height="26"></span>
         <span><?= $icon('check') ?>Stop any time</span>
@@ -136,10 +141,10 @@ require __DIR__ . '/includes/header.php';
 
   <section class="ho-sec flush" id="prices">
     <div class="ho-wrap" style="max-width:1000px">
-      <div class="ho-center"><span class="ho-eb" data-rv>Pick your campus</span><h2 class="ho-h2" data-rv>Less than you spend on <i>airtime.</i></h2><p class="ho-lead" data-rv>Each campus sets its own price. Pay monthly, or once for the whole year. Nothing is charged automatically.</p></div>
+      <div class="ho-center"><span class="ho-eb" data-rv>Pick your campus</span><h2 class="ho-h2" data-rv>Less than you spend on <i>airtime.</i></h2><p class="ho-lead" data-rv>Each campus sets its own price. <?= $dayFrom > 0 ? 'Pay for a single day, a month, or the whole year.' : 'Pay monthly, or once for the whole year.' ?> Nothing is charged automatically.</p></div>
       <?php if ($rows): ?>
         <div class="ho-prices" data-rv>
-          <div class="ho-phead"><span></span><span>Campus</span><span>Per month</span><span class="d">Per day</span><span class="x"></span></div>
+          <div class="ho-phead"><span></span><span>Campus</span><span>Per month</span><span class="d"><?= $hasDay ? 'Day pass' : 'Per day' ?></span><span class="x"></span></div>
           <?php foreach ($rows as $c):
               $open = $c['status'] === 'PUBLISHED';
               $photo = campus_photo($c);
@@ -149,7 +154,8 @@ require __DIR__ . '/includes/header.php';
               <div><h3><?= e($c['name']) ?></h3><small><?= e($c['tagline']) ?></small></div>
               <?php if ($open): ?>
                 <span class="m"><?= e(format_money((float) $c['monthly_price'])) ?></span>
-                <span class="d">≈ <?= e($perDay((float) $c['monthly_price'])) ?>/day</span>
+                <?php if ($hasDay): ?><span class="d"><?= (float) $c['daily_price'] > 0 ? e(format_money((float) $c['daily_price'])) . ' / 24h' : '—' ?></span>
+                <?php else: ?><span class="d">≈ <?= e($perDay((float) $c['monthly_price'])) ?>/day</span><?php endif; ?>
                 <a class="ho-btn blue sm" href="<?= e($joinUrl($c)) ?>">Join <?= $icon('arrow') ?></a>
               <?php else: ?>
                 <span class="m">Opening soon</span><span class="d"></span><span></span>
@@ -184,7 +190,7 @@ require __DIR__ . '/includes/header.php';
         <?php foreach ([
             ['Do I need any experience?', 'No. Every campus starts from the basics in month one and builds up step by step. If you can use a smartphone, you can follow along.'],
             ['Can I learn on my phone?', 'Yes. Lessons, PDFs, live classes and the community all work on a smartphone. A computer helps for some campuses, but it is not required to start.'],
-            ['How do I pay?', 'With MTN or Airtel Mobile Money. A prompt arrives on your phone; enter your PIN to confirm. Pay monthly (30 days at a time) or once for the year.'],
+            ['How do I pay?', 'With MTN or Airtel Mobile Money. A prompt arrives on your phone; enter your PIN to confirm. ' . ($dayFrom > 0 ? 'Pay for a single day (24 hours, then the campus closes until you pay again), monthly (30 days at a time) or once for the year.' : 'Pay monthly (30 days at a time) or once for the year.')],
             ['What if I miss a live class?', 'Every live class is recorded and added to your lessons, so you can watch it later.'],
             ['Can I stop any time?', "Yes. Nothing is charged automatically. If you're on the monthly plan and don't pay again, your access simply ends. Your progress is kept if you come back."],
             ['Can I join more than one campus?', 'Yes. Each campus has its own membership, so you can join a second one whenever you are ready.'],

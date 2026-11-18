@@ -32,7 +32,7 @@ require __DIR__ . '/includes/header.php';
       <a class="af-btn-ghost" href="#how">See how it works</a>
     </div>
     <div class="af-hero-trust">
-      <div><b><?= (int) AFFILIATE_COMMISSION_PERCENT ?>%</b><span>of every payment</span></div>
+      <div><b><?= (int) AFFILIATE_COMMISSION_PERCENT ?>%</b><span>of every monthly &amp; yearly payment</span></div>
       <div><b>Forever</b><span>while they stay</span></div>
       <div><b>Any campus</b><span>all <?= (int) $campusCount ?>, no limit</span></div>
     </div>
@@ -100,7 +100,7 @@ require __DIR__ . '/includes/header.php';
     </details>
     <details class="af-faq-item">
       <summary>Does the commission ever stop?<span class="x">+</span></summary>
-      <div class="b">Only if your friend stops paying. As long as they keep renewing their campus — monthly or yearly — you keep earning <?= (int) AFFILIATE_COMMISSION_PERCENT ?>% of every payment, with no end date.</div>
+      <div class="b">Only if your friend stops paying. As long as they keep renewing their campus — monthly or yearly — you keep earning <?= (int) AFFILIATE_COMMISSION_PERCENT ?>% of every payment, with no end date. (One-day passes don't earn commission.)</div>
     </details>
     <details class="af-faq-item">
       <summary>Does it work for every campus?<span class="x">+</span></summary>

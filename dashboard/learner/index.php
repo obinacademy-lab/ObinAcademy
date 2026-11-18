@@ -175,7 +175,7 @@ $mainNext = $main['next'] ?? null;
               <a class="ph" href="<?= e($ended ? base_url('campus.php?slug=' . $m['slug'] . '#join') : $learnUrl($m)) ?>"><?php if ($m['photo']): ?><img src="<?= e($m['photo']) ?>" alt=""><?php else: ?><span class="ic"><?= campus_icon($m['icon'] ?: 'book', 1.8) ?></span><?php endif; ?><span class="st"><?= $ended ? 'Ended' : 'Open' ?></span></a>
               <div class="bd">
                 <div class="row1">
-                  <div><b class="t"><?= e($m['name']) ?></b><span class="pf"><?= $m['professor_name'] ? 'Prof. ' . e($m['professor_name']) . ' · ' : '' ?><?= $m['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></span></div>
+                  <div><b class="t"><?= e($m['name']) ?></b><span class="pf"><?= $m['professor_name'] ? 'Prof. ' . e($m['professor_name']) . ' · ' : '' ?><?= e(campus_plan_label($m['plan'])) ?></span></div>
                   <?php if ($ended): ?><a class="dk-btn ld-light" href="<?= e(base_url('campus.php?slug=' . $m['slug'] . '#join')) ?>">Renew</a><?php else: ?><a class="dk-btn ld-blue" href="<?= e($learnUrl($m)) ?>">Open campus</a><?php endif; ?>
                 </div>
                 <div class="ld-yr"><?php for ($i = 1; $i <= 12; $i++): ?><i class="<?= $i < $month ? 'd' : ($i === $month ? 'c' : '') ?>"></i><?php endfor; ?></div>

@@ -64,7 +64,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <?php foreach ($rows as $k => $s): $segs = max(1, min(12, $s['reached'])); $lit = $s['reached'] ? (int) round($s['done'] / $s['reached'] * $segs) : 0; ?>
           <div class="pf-tr" style="--j:<?= min($k, 14) ?>">
             <span class="pf-who"><span class="av" style="background:<?= $avColors[$k % count($avColors)] ?>"><?= e(professor_initials($s['name'])) ?></span><span><b><?= e($s['name']) ?></b><small>Joined <?= e(date('j M Y', strtotime($s['started_at']))) ?></small></span></span>
-            <span class="pf-mcell"><b>Month <?= (int) $s['month'] ?></b><small><?= $s['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></small></span>
+            <span class="pf-mcell"><b>Month <?= (int) $s['month'] ?></b><small><?= e(campus_plan_label($s['plan'])) ?></small></span>
             <span class="pf-meter wide"><span><?= (int) $s['done'] ?> / <?= (int) $s['reached'] ?><?= $s['certificate_code'] ? ' · certificate' : '' ?></span><span class="dots" style="grid-template-columns:repeat(<?= $segs ?>,1fr)"><?php for ($i = 0; $i < $segs; $i++): ?><i<?= $i < $lit ? ' class="y"' : '' ?>></i><?php endfor; ?></span></span>
             <span class="muted-c"><?= $s['last_done'] ? e(time_ago($s['last_done'])) : 'Not started' ?></span>
             <span><span class="pf-pill <?= $s['open'] ? 'green' : 'grey' ?>"><?= $s['open'] ? 'Until ' . e(date('j M', strtotime($s['access_until']))) : 'Ended' ?></span></span>

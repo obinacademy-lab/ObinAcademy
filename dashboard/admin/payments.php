@@ -206,7 +206,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           </div>
           <div class="px-campus">
             <?php if ($l && $l['photo']): ?><i style="background-image:url('<?= e($l['photo']) ?>')"></i><?php elseif ($l): ?><i class="badge" style="background:<?= e($l['color']) ?>"><?= campus_icon($l['icon'], 1.8) ?></i><?php else: ?><i class="badge" style="background:#475569"></i><?php endif; ?>
-            <span><b><?= e($p['campus_name'] ?: 'A campus') ?></b><?php if ($p['campus_plan']): ?><em class="px-plan <?= $p['campus_plan'] === 'YEARLY' ? 'y' : '' ?>"><?= $p['campus_plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></em><?php endif; ?></span>
+            <span><b><?= e($p['campus_name'] ?: 'A campus') ?></b><?php if ($p['campus_plan']): ?><em class="px-plan <?= $p['campus_plan'] === 'YEARLY' ? 'y' : '' ?>"><?= e(campus_plan_label($p['campus_plan'])) ?></em><?php endif; ?></span>
           </div>
           <div class="px-st">
             <div class="px-amt"><small>UGX</small><?= e(number_format((float) $p['amount'])) ?></div>

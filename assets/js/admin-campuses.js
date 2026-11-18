@@ -94,7 +94,7 @@
     const S = D.series || [];
     const n = S.length;
     if (!n) return;
-    const yr = S.map(s => s.y), mo = S.map(s => s.m), all = S.map(s => s.y + s.m);
+    const yr = S.map(s => s.y), mo = S.map(s => s.m), dy = S.map(s => s.d || 0), all = S.map((s, i) => s.y + s.m + dy[i]);
     const W = host.clientWidth, H = host.clientHeight, L = 50, R = 10, T = 10, B = 26, iw = W - L - R, ih = H - T - B;
     const topV = Math.max(...all), empty = topV <= 0;
     const step = nice((empty ? 1000000 : topV * 1.05) / 4), max = Math.ceil((empty ? 1000000 : topV * 1.05) / step) * step;
@@ -129,7 +129,8 @@
       tip.innerHTML = `<h4>${S[i].full || S[i].label}</h4>
         <div><span><i style="background:${C.brand}"></i>All plans</span><b>UGX ${fmt(all[i])}</b></div>
         <div><span><i style="background:${C.yearly}"></i>Yearly</span><b>UGX ${fmt(yr[i])}</b></div>
-        <div><span><i style="background:${C.monthly}"></i>Monthly</span><b>UGX ${fmt(mo[i])}</b></div>`;
+        <div><span><i style="background:${C.monthly}"></i>Monthly</span><b>UGX ${fmt(mo[i])}</b></div>
+        <div><span><i style="background:${C.monthly};opacity:.45"></i>Day passes</span><b>UGX ${fmt(dy[i])}</b></div>`;
       const tw = tip.offsetWidth, left = x(i) + 16 + tw > W ? x(i) - tw - 16 : x(i) + 16;
       tip.style.transform = `translate(${left}px, ${T}px)`;
     };

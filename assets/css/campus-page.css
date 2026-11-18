@@ -107,6 +107,9 @@
 .cq-switch { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; margin-top: 18px; border-radius: 13px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); }
 .cq-switch .knob { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 10px; background: var(--on); transition: transform .6s var(--ease); }
 .cq-switch[data-plan="MONTHLY"] .knob { transform: translateX(100%); }
+.cq-switch.three { grid-template-columns: 1fr 1fr 1fr; }
+.cq-switch.three .knob { width: calc((100% - 8px) / 3); }
+.cq-switch[data-plan="DAILY"] .knob { transform: translateX(200%); }
 .cq-switch button { position: relative; z-index: 1; height: 40px; border: 0; background: none; font: 600 13.5px var(--sans); color: var(--on-2); cursor: pointer; transition: color .4s; }
 .cq-switch button[aria-pressed="true"] { color: var(--ink); }
 .cq-switch .save { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 6px; background: var(--lime); color: var(--lime-ink); font: 700 10px var(--mono); }

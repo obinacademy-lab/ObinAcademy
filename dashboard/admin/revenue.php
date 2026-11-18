@@ -109,7 +109,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             <b><?= e($p['campus_name'] ?: 'A campus') ?></b>
           </span>
           <span class="rv-member"><?= e($p['learner_name'] ?: 'A member') ?></span>
-          <span><span class="rv-plan <?= $p['campus_plan'] === 'YEARLY' ? 'y' : '' ?>"><?= $p['campus_plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></span></span>
+          <span><span class="rv-plan <?= $p['campus_plan'] === 'YEARLY' ? 'y' : '' ?>"><?= e(campus_plan_label($p['campus_plan'])) ?></span></span>
           <span class="rv-amt r"><small>UGX</small><?= e(number_format((float) $p['amount'])) ?></span>
         </div>
       <?php endforeach; ?>

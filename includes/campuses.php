@@ -209,6 +209,33 @@ function campus_membership_open(?array $m): bool {
     return $m !== null && strtotime($m['access_until']) > time();
 }
 
+/** True once migration/add-daily-plan.sql has run (campuses.daily_price exists). Until then the day pass stays hidden. */
+function campus_daily_ready(): bool {
+    static $ready = null;
+    if ($ready !== null) return $ready;
+    try { db_one('SELECT daily_price FROM campuses LIMIT 1'); return $ready = true; } catch (Throwable $e) { return $ready = false; }
+}
+
+/** A stored plan value, normalised. Anything unknown reads as monthly, as it always has. */
+function campus_plan(?string $plan): string {
+    return in_array($plan, ['DAILY', 'YEARLY'], true) ? $plan : 'MONTHLY';
+}
+
+function campus_plan_label(?string $plan): string {
+    return ['DAILY' => 'Day pass', 'MONTHLY' => 'Monthly', 'YEARLY' => 'Yearly'][campus_plan($plan)];
+}
+
+/** How long one payment on this plan opens the campus for, as a strtotime() modifier. */
+function campus_plan_period(?string $plan): string {
+    return match (campus_plan($plan)) { 'DAILY' => '+24 hours', 'YEARLY' => '+12 months', default => '+' . CAMPUS_MONTH_DAYS . ' days' };
+}
+
+/** When access ends, with the time of day when it ends within a few days (a day pass ends mid-day). */
+function campus_access_until_text(string $until): string {
+    $t = strtotime($until);
+    return $t - time() < 3 * 86400 ? date('j M Y, g:i a', $t) : date('j M Y', $t);
+}
+
 /** True once migration/add-month-completion.sql has been applied (professor-paced months, month pictures). */
 function campus_progress_ready(): bool {
     static $ready = null;
@@ -383,7 +410,11 @@ function get_campus_certificate(string $code): ?array {
 // ---------------------------------------------------------------- payment
 
 function campus_plan_price(array $campus, string $plan): float {
-    return (float) ($plan === 'YEARLY' ? $campus['yearly_price'] : $campus['monthly_price']);
+    return (float) match (campus_plan($plan)) {
+        'DAILY' => $campus['daily_price'] ?? 0,
+        'YEARLY' => $campus['yearly_price'],
+        default => $campus['monthly_price'],
+    };
 }
 
 /**
@@ -392,7 +423,8 @@ function campus_plan_price(array $campus, string $plan): float {
  * @return array{paymentId?: int, error?: string}
  */
 function initiate_campus_payment(int $userId, int $campusId, string $plan, string $phone): array {
-    if (!in_array($plan, ['MONTHLY', 'YEARLY'], true)) return ['error' => 'Choose monthly or yearly.'];
+    $plans = campus_daily_ready() ? ['DAILY', 'MONTHLY', 'YEARLY'] : ['MONTHLY', 'YEARLY'];
+    if (!in_array($plan, $plans, true)) return ['error' => 'Choose a plan.'];
     if (strlen($phone) < 9 || !preg_match('/^[0-9+\s-]+$/', $phone)) return ['error' => 'Enter a valid phone number.'];
     $campus = get_campus($campusId);
     if (!$campus || $campus['status'] !== 'PUBLISHED') return ['error' => 'This campus is not open yet.'];
@@ -414,7 +446,7 @@ function initiate_campus_payment(int $userId, int $campusId, string $plan, strin
         [$userId, $campusId, $plan, $amount, $phone]
     );
     try {
-        $note = substr('Obin Academy - ' . $campus['name'] . ' Campus (' . ($plan === 'YEARLY' ? '12 months' : '30 days') . ')', 0, 100);
+        $note = substr('Obin Academy - ' . $campus['name'] . ' Campus (' . ['DAILY' => '24 hours', 'MONTHLY' => '30 days', 'YEARLY' => '12 months'][$plan] . ')', 0, 100);
         $result = iotec_initiate_collection($amount, $phone, (string) $paymentId, $note);
         db_run('UPDATE payments SET iotec_transaction_id = ? WHERE id = ?', [$result['transactionId'], $paymentId]);
     } catch (Throwable $e) {
@@ -442,16 +474,18 @@ function fetch_payment_with_campus(int $paymentId): ?array {
 function apply_campus_payment_success(array $payment): void {
     $campusId = (int) $payment['campus_id'];
     $userId = (int) $payment['user_id'];
-    $plan = $payment['campus_plan'] === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
-    $period = $plan === 'YEARLY' ? '+12 months' : '+' . CAMPUS_MONTH_DAYS . ' days';
+    $plan = campus_plan($payment['campus_plan']);
+    $period = campus_plan_period($plan);
 
     $m = get_campus_membership($campusId, $userId);
     if ($m) {
         $from = max(time(), strtotime($m['access_until']));
         $until = date('Y-m-d H:i:s', strtotime($period, $from));
+        // A day pass bought while a monthly or yearly plan is still running only adds the hours; the membership keeps its plan.
+        $keep = $plan === 'DAILY' && campus_membership_open($m) && campus_plan($m['plan']) !== 'DAILY';
         db_run(
             'UPDATE campus_memberships SET plan = ?, access_until = ?, last_payment_id = ?, last_reminder_days = NULL, last_reminder_at = NULL, reminders_off = 0 WHERE id = ?',
-            [$plan, $until, $payment['id'], $m['id']]
+            [$keep ? $m['plan'] : $plan, $until, $payment['id'], $m['id']]
         );
     } else {
         $until = date('Y-m-d H:i:s', strtotime($period));
@@ -466,11 +500,11 @@ function apply_campus_payment_success(array $payment): void {
         resend_send($payment['learner_email'], 'Welcome to the ' . $payment['campus_name'] . ' Campus', campus_email_html(
             'You are in, ' . campus_first_name((string) $payment['learner_name']),
             'We received ' . e(format_money((float) $payment['amount'])) . ' for the ' . e($payment['campus_name']) . ' Campus. Your access is open until <strong>'
-                . e(date('j M Y', strtotime($until))) . '</strong>.',
+                . e(campus_access_until_text($until)) . '</strong>.',
             'Go to your campus', $learnUrl
         ));
     }
-    create_user_notification($userId, null, 'campus_joined', 'Your ' . $payment['campus_name'] . ' Campus access is open until ' . date('j M Y', strtotime($until)) . '.', $learnUrl);
+    create_user_notification($userId, null, 'campus_joined', 'Your ' . $payment['campus_name'] . ' Campus access is open until ' . campus_access_until_text($until) . '.', $learnUrl);
     try {
         record_campus_professor_earning($payment);
     } catch (Throwable $e) {
@@ -481,9 +515,12 @@ function apply_campus_payment_success(array $payment): void {
     } catch (Throwable $e) {
         error_log('[campus] affiliate earning not recorded for payment ' . $payment['id'] . ': ' . $e->getMessage());
     }
-    try {
-        send_admin_sale_notification_email($payment['campus_name'] . ' Campus', $plan === 'YEARLY' ? 'Campus, yearly' : 'Campus, monthly', (string) ($payment['learner_name'] ?: 'A member'), (float) $payment['amount'], 'Obin Academy');
-    } catch (Throwable $e) {}
+    // The owner is emailed for monthly and yearly sales only; day passes would flood the inbox.
+    if ($plan !== 'DAILY') {
+        try {
+            send_admin_sale_notification_email($payment['campus_name'] . ' Campus', $plan === 'YEARLY' ? 'Campus, yearly' : 'Campus, monthly', (string) ($payment['learner_name'] ?: 'A member'), (float) $payment['amount'], 'Obin Academy');
+        } catch (Throwable $e) {}
+    }
 }
 
 // ---------------------------------------------------------------- reminders
@@ -496,7 +533,7 @@ function apply_campus_payment_success(array $payment): void {
 function send_due_campus_reminders(): int {
     if (!campuses_ready()) return 0;
     $rows = db_all(
-        "SELECT m.*, c.name AS campus_name, c.slug AS campus_slug, c.monthly_price, c.yearly_price, u.name AS user_name, u.email AS user_email
+        "SELECT m.*, c.name AS campus_name, c.slug AS campus_slug, c.monthly_price, c.yearly_price" . (campus_daily_ready() ? ', c.daily_price' : '') . ", u.name AS user_name, u.email AS user_email
          FROM campus_memberships m JOIN campuses c ON c.id = m.campus_id JOIN users u ON u.id = m.user_id
          WHERE m.reminders_off = 0
            AND m.access_until BETWEEN DATE_SUB(NOW(), INTERVAL 2 DAY) AND DATE_ADD(NOW(), INTERVAL 8 DAY)"
@@ -508,13 +545,25 @@ function send_due_campus_reminders(): int {
         if ($step === null) {
             foreach (array_reverse(CAMPUS_REMINDER_STEPS) as $s) { if ($daysLeft <= $s) { $step = $s; break; } }
         }
+        // A day pass gets one message, as soon as it has ended; "ends in 1 day" and "ends today" would arrive every day.
+        $daily = campus_plan($m['plan']) === 'DAILY';
+        if ($daily) {
+            if (strtotime($m['access_until']) > time()) continue;
+            $step = -1;
+        }
         if ($step === null) continue;
         if ($m['last_reminder_days'] !== null && (int) $m['last_reminder_days'] <= $step) continue;
 
         $url = base_url('campus.php?slug=' . $m['campus_slug'] . '#join');
         $first = campus_first_name($m['user_name']);
         $when = date('j M', strtotime($m['access_until']));
-        if ($step === -1) {
+        $cta = 'Renew for ' . format_money((float) $m['monthly_price']);
+        if ($daily) {
+            $subject = 'Your ' . $m['campus_name'] . ' Campus day pass has ended';
+            $line = 'Your day pass ended at ' . date('g:i a', strtotime($m['access_until'])) . ' on ' . $when . '. Open the campus again for '
+                . format_money((float) ($m['daily_price'] ?? 0)) . ' for another 24 hours, or join monthly for ' . format_money((float) $m['monthly_price']) . '. Your progress is kept.';
+            $cta = 'Open your campus again';
+        } elseif ($step === -1) {
             $subject = 'Your ' . $m['campus_name'] . ' Campus access has ended';
             $line = 'Your access ended on ' . $when . '. Pay again to reopen your lessons, live classes and community. Your progress is kept.';
         } elseif ($step === 0) {
@@ -525,7 +574,7 @@ function send_due_campus_reminders(): int {
             $line = 'Your access ends on ' . $when . '. Renew before then to keep your lessons, live classes and community.';
         }
         if ($m['user_email']) {
-            resend_send($m['user_email'], $subject, campus_email_html('Hi ' . $first, e($line), 'Renew for ' . format_money((float) $m['monthly_price']), $url));
+            resend_send($m['user_email'], $subject, campus_email_html('Hi ' . $first, e($line), $cta, $url));
         }
         create_user_notification((int) $m['user_id'], null, 'campus_renewal', $subject . '.', $url);
         db_run('UPDATE campus_memberships SET last_reminder_days = ?, last_reminder_at = NOW() WHERE id = ?', [$step, $m['id']]);
@@ -570,17 +619,18 @@ function campus_admin_overview(): array {
     $campuses = get_all_campuses();
     $per = [];
     foreach ($campuses as $c) {
-        $per[(int) $c['id']] = $c + ['active' => 0, 'monthly' => 0, 'yearly' => 0, 'ending' => 0, 'collected' => 0.0];
+        $per[(int) $c['id']] = $c + ['active' => 0, 'monthly' => 0, 'yearly' => 0, 'daily' => 0, 'ending' => 0, 'collected' => 0.0];
     }
     foreach (db_all(
         "SELECT campus_id,
                 SUM(access_until > NOW()) AS active,
                 SUM(access_until > NOW() AND plan = 'MONTHLY') AS monthly,
                 SUM(access_until > NOW() AND plan = 'YEARLY') AS yearly,
-                SUM(access_until > NOW() AND access_until <= DATE_ADD(NOW(), INTERVAL 7 DAY)) AS ending
+                SUM(access_until > NOW() AND plan = 'DAILY') AS daily,
+                SUM(access_until > NOW() AND access_until <= DATE_ADD(NOW(), INTERVAL 7 DAY) AND plan <> 'DAILY') AS ending
          FROM campus_memberships GROUP BY campus_id"
     ) as $r) {
-        if (isset($per[(int) $r['campus_id']])) $per[(int) $r['campus_id']] = array_merge($per[(int) $r['campus_id']], array_map('intval', array_intersect_key($r, array_flip(['active', 'monthly', 'yearly', 'ending']))));
+        if (isset($per[(int) $r['campus_id']])) $per[(int) $r['campus_id']] = array_merge($per[(int) $r['campus_id']], array_map('intval', array_intersect_key($r, array_flip(['active', 'monthly', 'yearly', 'daily', 'ending']))));
     }
     foreach (db_all("SELECT campus_id, SUM(amount) AS s FROM payments WHERE type = 'CAMPUS_MEMBERSHIP' AND status = 'SUCCESS' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY campus_id") as $r) {
         if (isset($per[(int) $r['campus_id']])) $per[(int) $r['campus_id']]['collected'] = (float) $r['s'];
@@ -593,14 +643,14 @@ function campus_admin_overview(): array {
     $series = [];
     for ($i = 11; $i >= 0; $i--) {
         $key = date('Y-m', strtotime("first day of -$i month"));
-        $series[$key] = ['label' => date('M', strtotime($key . '-01')), 'MONTHLY' => 0.0, 'YEARLY' => 0.0];
+        $series[$key] = ['label' => date('M', strtotime($key . '-01')), 'MONTHLY' => 0.0, 'YEARLY' => 0.0, 'DAILY' => 0.0];
     }
     foreach (db_all(
         "SELECT DATE_FORMAT(created_at, '%Y-%m') AS ym, campus_plan, SUM(amount) AS s FROM payments
          WHERE type = 'CAMPUS_MEMBERSHIP' AND status = 'SUCCESS' AND created_at >= DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 11 MONTH)
          GROUP BY ym, campus_plan"
     ) as $r) {
-        if (isset($series[$r['ym']])) $series[$r['ym']][$r['campus_plan'] === 'YEARLY' ? 'YEARLY' : 'MONTHLY'] += (float) $r['s'];
+        if (isset($series[$r['ym']])) $series[$r['ym']][campus_plan($r['campus_plan'])] += (float) $r['s'];
     }
 
     return [
@@ -668,6 +718,7 @@ function campus_renewals_due(int $days = 7, int $limit = 50): array {
         'SELECT m.*, c.name AS campus_name, c.slug AS campus_slug, u.name AS user_name, u.email AS user_email, u.phone AS user_phone
          FROM campus_memberships m JOIN campuses c ON c.id = m.campus_id JOIN users u ON u.id = m.user_id
          WHERE m.access_until BETWEEN DATE_SUB(NOW(), INTERVAL 3 DAY) AND DATE_ADD(NOW(), INTERVAL ? DAY)
+           AND m.plan <> \'DAILY\'
          ORDER BY m.access_until ASC LIMIT ' . (int) $limit,
         [$days]
     );
@@ -717,7 +768,7 @@ function record_campus_professor_earning(array $payment): void {
     $pct = campus_professor_share($campus);
     $gross = (float) $payment['amount'];
     $amount = round($gross * $pct / 100, 2);
-    $plan = $payment['campus_plan'] === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
+    $plan = campus_plan($payment['campus_plan']);
     $added = db_run(
         'INSERT IGNORE INTO campus_professor_earnings (campus_id, payment_id, learner_id, professor_name, professor_user_id, plan, gross, share_percent, amount)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -728,7 +779,7 @@ function record_campus_professor_earning(array $payment): void {
     $prof = db_one('SELECT id, name, email FROM users WHERE id = ?', [$campus['professor_user_id']]);
     if (!$prof) return;
     $url = base_url('dashboard/professor.php?campus=' . $campus['id']);
-    $line = 'A ' . ($plan === 'YEARLY' ? 'yearly' : 'monthly') . ' payment of ' . format_money($gross) . ' came in for the ' . $campus['name'] . ' Campus. Your '
+    $line = 'A ' . strtolower(campus_plan_label($plan)) . ' payment of ' . format_money($gross) . ' came in for the ' . $campus['name'] . ' Campus. Your '
         . format_share($pct) . ' share is ' . format_money($amount) . '.';
     create_user_notification((int) $prof['id'], null, 'professor_earning', 'You earned ' . format_money($amount) . ' from a ' . $campus['name'] . ' Campus payment.', $url);
     if ($prof['email']) {

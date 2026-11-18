@@ -72,7 +72,7 @@ require __DIR__ . '/../includes/dashboard_header.php';
         <?php foreach ($ledger as $l): ?>
           <tr>
             <td style="white-space:nowrap;"><?= e(date('j M Y', strtotime($l['created_at']))) ?></td>
-            <td><?= e($l['learner_name'] ?: 'A member') ?><small><?= $l['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></small></td>
+            <td><?= e($l['learner_name'] ?: 'A member') ?><small><?= e(campus_plan_label($l['plan'])) ?></small></td>
             <td class="num"><?= e(format_money((float) $l['gross'])) ?></td>
             <td class="num"><b><?= e(format_money((float) $l['amount'])) ?></b></td>
             <td><?= $l['payout_id'] ? '<span class="ca-pill good">Paid ' . e(date('j M', strtotime($l['payout_paid_at']))) . '</span>' : '<span class="ca-pill warn">Owed</span>' ?></td>

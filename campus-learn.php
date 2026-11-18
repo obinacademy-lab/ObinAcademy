@@ -90,6 +90,8 @@ foreach ($byMonth as $mn => $ls) if ($mn <= $currentMonth) foreach ($ls as $l) $
 $nextLesson = null;
 foreach ($unlockedLessons as $l) { if (!isset($done[(int) $l['id']])) { $nextLesson = $l; break; } }
 $daysLeft = $membership ? campus_days_left($membership) : null;
+$isDayPass = $membership && campus_plan($membership['plan']) === 'DAILY';
+$dayPrice = campus_daily_ready() ? (float) $campus['daily_price'] : 0.0;
 $mTitle = fn(int $m) => trim((string) ($stages[$m]['title'] ?? ''));
 $kindLabel = fn(array $l) => $l['kind'] === 'PDF' ? 'PDF guide' : 'Video';
 $lenLabel = fn(array $l) => trim((string) $l['duration_label']);
@@ -186,12 +188,13 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
     <span class="cx-label"><?= e($campus['name']) ?> Campus</span>
     <?php if ($membership): ?>
       <h1>Your access has ended.</h1>
-      <p>Your access closed on <?= e(date('j F Y', strtotime($membership['access_until']))) ?>. Choose a plan to reopen your lessons, guides, live classes and community. You continue from month <?= campus_current_month($membership) ?>, and nothing you did is lost.</p>
+      <p>Your access closed on <?= e(date($isDayPass ? 'j F Y, g:i a' : 'j F Y', strtotime($membership['access_until']))) ?>. Choose a plan to reopen your lessons, guides, live classes and community. You continue from month <?= campus_current_month($membership) ?>, and nothing you did is lost.</p>
     <?php else: ?>
       <h1>Join to enter this campus.</h1>
       <p>This campus is for members. Join monthly or for the year to open the lessons, guides, live classes and community.</p>
     <?php endif; ?>
     <div class="cx-enrol">
+      <?php if ($dayPrice > 0): ?><div class="cx-opt" style="cursor:default;"><span class="rd"></span><span><b>Day pass</b><small>24 hours, then it closes</small></span><span class="amt"><?= e(format_money($dayPrice)) ?><small>per day</small></span></div><?php endif; ?>
       <div class="cx-opt" style="cursor:default;"><span class="rd"></span><span><b>Monthly</b><small>30 days at a time</small></span><span class="amt"><?= e(format_money((float) $campus['monthly_price'])) ?><small>per month</small></span></div>
       <div class="cx-opt" style="cursor:default;"><span class="rd"></span><span><b>Yearly</b><small>12 months</small></span><span class="amt"><?= e(format_money((float) $campus['yearly_price'])) ?><small>per year</small></span></div>
       <div class="eb"><a class="cx-btn solid full" href="<?= e($join) ?>">Choose a plan and pay</a><p class="note">Pay with MTN or Airtel Money.</p></div>
@@ -231,9 +234,15 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
 <div class="cl-notes">
   <?php if ($flash): ?><div class="cl-notice good" role="status"><?= $svg('check') ?><span><?= e($flash) ?></span></div><?php endif; ?>
   <?php if (!$isAdmin && $daysLeft !== null && $daysLeft <= 7 && $view !== 'membership'): ?>
+    <?php if ($isDayPass): ?>
+    <div class="cl-notice warn" role="status"><?= $svg('clock') ?>
+      <span><b>Your day pass is open until <?= e(campus_access_until_text($membership['access_until'])) ?>.</b> Add another day, or go monthly to stop paying every day.</span>
+      <a class="cl-btn blue sm" href="<?= e($join) ?>">Add time</a></div>
+    <?php else: ?>
     <div class="cl-notice <?= $daysLeft <= 1 ? 'bad' : 'warn' ?>" role="status"><?= $svg('clock') ?>
       <span><b><?= $daysLeft <= 0 ? 'Your access ends today.' : 'Your access ends in ' . $daysLeft . ' day' . ($daysLeft === 1 ? '' : 's') . ', on ' . e(date('j M', strtotime($membership['access_until']))) . '.' ?></b> Renew to keep your lessons, live classes and community.</span>
       <a class="cl-btn blue sm" href="<?= e($join) ?>">Renew</a></div>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
 <?php endif; ?>
@@ -312,7 +321,7 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
     <div class="cl-checks">
       <?php if (!$isAdmin): ?>
         <div><?= $svg('check') ?><?= $monthsDone ? ($monthsDone === 1 ? 'Month 1 complete' : 'Months 1 to ' . $monthsDone . ' complete') : 'Month 1 is open' ?></div>
-        <div><?= $svg('check') ?>Access until <?= e(date('j M', strtotime($membership['access_until']))) ?> · <?= max(0, (int) $daysLeft) ?> day<?= (int) $daysLeft === 1 ? '' : 's' ?> left</div>
+        <div><?= $svg('check') ?><?php if ($isDayPass): ?>Day pass · open until <?= e(date('g:i a', strtotime($membership['access_until']))) ?><?php else: ?>Access until <?= e(date('j M', strtotime($membership['access_until']))) ?> · <?= max(0, (int) $daysLeft) ?> day<?= (int) $daysLeft === 1 ? '' : 's' ?> left<?php endif; ?></div>
         <div><?= $svg('check') ?><?= !empty($membership['certificate_code']) ? '<a href="' . e($self(['view' => 'certificate'])) . '">Your certificate is ready</a>' : 'Certificate after month 12' ?></div>
       <?php else: ?>
         <div><?= $svg('check') ?><?= e($staffLabel) ?>: every month is open</div>
@@ -438,11 +447,11 @@ $step = function (array $l, int $i, ?int $nextId, ?int $hereId) use ($done, $sel
         <p class="cl-empty">You are viewing as <?= $isProf ? 'the professor' : 'an admin' ?>, without a membership.</p>
       <?php else: ?>
         <div class="cl-kv">
-          <div><span>Plan</span><b><?= $membership['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></b></div>
+          <div><span>Plan</span><b><?= e(campus_plan_label($membership['plan'])) ?></b></div>
           <div><span>Joined</span><b><?= e(date('j M Y', strtotime($membership['started_at']))) ?></b></div>
           <div><span>Access until</span><b><?= e(date('j M Y, g:i a', strtotime($membership['access_until']))) ?></b></div>
           <div><span>Renewal</span><b>Pay again before the end date. Nothing is charged automatically.</b></div>
-          <div><span>Reminders</span><b><?= (int) $membership['reminders_off'] ? 'Off' : 'Email and notification, from 7 days before' ?></b></div>
+          <div><span>Reminders</span><b><?= (int) $membership['reminders_off'] ? 'Off' : ($isDayPass ? 'One email and notification when your day pass ends' : 'Email and notification, from 7 days before') ?></b></div>
         </div>
         <div class="cl-row-acts">
           <a class="cl-btn blue" href="<?= e($join) ?>">Add more time<?= $arrow ?></a>

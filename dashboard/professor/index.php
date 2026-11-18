@@ -211,7 +211,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <?php if (!$students): ?><p class="pf-empty">No students yet. They appear here as soon as someone joins.</p><?php endif; ?>
           <?php foreach ($students as $k => $s): $segs = max(1, min(12, $s['reached'])); $lit = $s['reached'] ? (int) round($s['done'] / $s['reached'] * $segs) : 0; ?>
             <div class="pf-stu"><span class="av" style="background:<?= $avColors[$k % count($avColors)] ?>"><?= e(professor_initials($s['name'])) ?></span>
-              <div><b><?= e($s['name']) ?></b><small>Month <?= (int) $s['month'] ?> · <?= $s['plan'] === 'YEARLY' ? 'yearly' : 'monthly' ?> · joined <?= e(time_ago($s['started_at'])) ?></small></div>
+              <div><b><?= e($s['name']) ?></b><small>Month <?= (int) $s['month'] ?> · <?= e(strtolower(campus_plan_label($s['plan']))) ?> · joined <?= e(time_ago($s['started_at'])) ?></small></div>
               <div class="pf-meter"><span><?= (int) $s['done'] ?> / <?= (int) $s['reached'] ?></span><span class="dots" style="grid-template-columns:repeat(<?= $segs ?>,1fr)"><?php for ($i = 0; $i < $segs; $i++): ?><i<?= $i < $lit ? ' class="y"' : '' ?>></i><?php endfor; ?></span></div>
             </div>
           <?php endforeach; ?>

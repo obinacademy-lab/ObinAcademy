@@ -65,7 +65,7 @@ $owedCount = count(array_filter($pay, fn($c) => $c['owed'] > 0));
 $noLink = count(array_filter($live, fn($l) => trim((string) $l['join_url']) === ''));
 
 // Last 12 months: totals by plan, and what the professors earned from them.
-$total12 = array_sum(array_map(fn($s) => $s['MONTHLY'] + $s['YEARLY'], $o['series']));
+$total12 = array_sum(array_map(fn($s) => $s['MONTHLY'] + $s['YEARLY'] + $s['DAILY'], $o['series']));
 $yearly12 = array_sum(array_column($o['series'], 'YEARLY'));
 $monthly12 = array_sum(array_column($o['series'], 'MONTHLY'));
 $share12 = 0.0;
@@ -94,7 +94,7 @@ foreach ($o['campuses'] as $k => $c) {
 $openCount = count(array_filter($cards, fn($c) => $c['stage'] === 3));
 $edit = fn(int $id, string $tab = 'details') => base_url('dashboard/admin/campus-edit.php?id=' . $id . '&tab=' . $tab);
 
-$acxData = ['series' => array_map(fn($s, $i) => ['label' => $s['label'], 'm' => $s['MONTHLY'], 'y' => $s['YEARLY']], $o['series'], array_keys($o['series']))];
+$acxData = ['series' => array_map(fn($s, $i) => ['label' => $s['label'], 'm' => $s['MONTHLY'], 'y' => $s['YEARLY'], 'd' => $s['DAILY']], $o['series'], array_keys($o['series']))];
 for ($i = 0; $i < 12; $i++) $acxData['series'][$i]['full'] = date('M Y', strtotime('first day of -' . (11 - $i) . ' month'));
 
 $pageTitle = 'Campuses — Admin — Obin Academy';
@@ -216,7 +216,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
         <tbody>
           <?php foreach ($renewals as $j => $r): $ended = strtotime($r['access_until']) <= time(); $dl = (int) floor((strtotime($r['access_until']) - time()) / 86400); $wa = whatsapp_number($r['user_phone']); ?>
             <tr style="--j:<?= $j ?>">
-              <td class="acx-who"><b><?= e($r['user_name']) ?></b><small><?= $r['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></small></td>
+              <td class="acx-who"><b><?= e($r['user_name']) ?></b><small><?= e(campus_plan_label($r['plan'])) ?></small></td>
               <td><?= e($r['campus_name']) ?></td>
               <td><span class="acx-tag <?= $ended || $dl <= 1 ? 'bad' : 'warn' ?>"><?= $ended ? 'Ended ' . e(date('j M', strtotime($r['access_until']))) : ($dl <= 0 ? 'Today' : ($dl === 1 ? 'Tomorrow' : 'In ' . $dl . ' days')) ?></span></td>
               <td class="acx-muted"><?= $r['last_reminder_at'] ? e(time_ago($r['last_reminder_at'])) : 'Not yet' ?><?= (int) $r['reminders_off'] ? ' · turned off' : '' ?></td>

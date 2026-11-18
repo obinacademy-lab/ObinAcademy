@@ -36,6 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [mb_substr(trim(post('name')), 0, 120), mb_substr(trim(post('tagline')), 0, 255), trim(post('description')) ?: null,
                  array_key_exists(post('icon'), CAMPUS_ICON_PATHS) ? post('icon') : 'biz', $monthly, $yearly, mb_substr(trim(post('live_schedule')), 0, 120) ?: null, (int) post('sort_order'), $id]
             );
+            if (campus_daily_ready()) {
+                $day = $money(post('daily_price'));
+                if ($day < 0) throw new RuntimeException('The day pass price cannot be below zero.');
+                db_run('UPDATE campuses SET daily_price = ? WHERE id = ?', [$day, $id]);
+            }
             $log('updated', 'details and prices');
             flash_set('success', 'Saved.');
             redirect($here('details'));
@@ -110,19 +115,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $member = db_one('SELECT id, name, email FROM users WHERE email = ?', [strtolower(trim(post('email')))]);
             if (!$member) throw new RuntimeException('No account uses that email. The person must sign up first.');
             if (mb_strlen(trim(post('reason'))) < 5) throw new RuntimeException('Write a short reason, for the audit log.');
-            $plan = post('plan') === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
-            $period = $plan === 'YEARLY' ? '+12 months' : '+' . CAMPUS_MONTH_DAYS . ' days';
+            $plan = campus_plan(post('plan'));
+            if ($plan === 'DAILY' && !campus_daily_ready()) $plan = 'MONTHLY';
+            $period = campus_plan_period($plan);
             $m = get_campus_membership($id, (int) $member['id']);
             if ($m) {
                 $until = date('Y-m-d H:i:s', strtotime($period, max(time(), strtotime($m['access_until']))));
-                db_run('UPDATE campus_memberships SET plan = ?, access_until = ?, last_reminder_days = NULL WHERE id = ?', [$plan, $until, $m['id']]);
+                $keep = $plan === 'DAILY' && campus_membership_open($m) && campus_plan($m['plan']) !== 'DAILY';
+                db_run('UPDATE campus_memberships SET plan = ?, access_until = ?, last_reminder_days = NULL WHERE id = ?', [$keep ? $m['plan'] : $plan, $until, $m['id']]);
             } else {
                 $until = date('Y-m-d H:i:s', strtotime($period));
                 db_insert('INSERT INTO campus_memberships (campus_id, user_id, plan, started_at, access_until) VALUES (?, ?, ?, NOW(), ?)', [$id, $member['id'], $plan, $until]);
             }
-            $log('access_granted', $member['email'] . ', ' . strtolower($plan) . ', until ' . date('j M Y', strtotime($until)) . '. Reason: ' . trim(post('reason')));
-            create_user_notification((int) $member['id'], null, 'campus_joined', 'You now have access to the ' . $campus['name'] . ' Campus until ' . date('j M Y', strtotime($until)) . '.', base_url('campus-learn.php?campus=' . $campus['slug']));
-            flash_set('success', $member['name'] . ' has access until ' . date('j M Y', strtotime($until)) . '. No payment was recorded.');
+            $log('access_granted', $member['email'] . ', ' . strtolower(campus_plan_label($plan)) . ', until ' . campus_access_until_text($until) . '. Reason: ' . trim(post('reason')));
+            create_user_notification((int) $member['id'], null, 'campus_joined', 'You now have access to the ' . $campus['name'] . ' Campus until ' . campus_access_until_text($until) . '.', base_url('campus-learn.php?campus=' . $campus['slug']));
+            flash_set('success', $member['name'] . ' has access until ' . campus_access_until_text($until) . '. No payment was recorded.');
             redirect($here('members'));
         }
     } catch (RuntimeException $e) {
@@ -188,6 +195,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
     <div class="ca-f3">
       <label>Monthly price (UGX)<input name="monthly_price" inputmode="numeric" value="<?= e(number_format((float) $campus['monthly_price'], 0, '.', '')) ?>" required></label>
       <label>Yearly price (UGX)<input name="yearly_price" inputmode="numeric" value="<?= e(number_format((float) $campus['yearly_price'], 0, '.', '')) ?>" required></label>
+      <?php if (campus_daily_ready()): ?><label>Day pass price (UGX) <small>24 hours. 0 turns the day pass off</small><input name="daily_price" inputmode="numeric" value="<?= e(number_format((float) $campus['daily_price'], 0, '.', '')) ?>" required></label><?php endif; ?>
       <label>Order in the list<input name="sort_order" type="number" value="<?= (int) $campus['sort_order'] ?>"></label>
     </div>
     <label>Weekly live class time <small>For example: Thursdays, 8 pm</small><input name="live_schedule" value="<?= e($campus['live_schedule'] ?? '') ?>" maxlength="120"></label>
@@ -445,7 +453,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
           <?php foreach ($list as $r): $openR = strtotime($r['access_until']) > time(); ?>
             <tr>
               <td><a href="<?= e(base_url('dashboard/admin/user.php?id=' . $r['user_id'])) ?>" style="font-weight:600;"><?= e($r['name']) ?></a><small><?= e($r['email']) ?><?= $r['phone'] ? ' · ' . e($r['phone']) : '' ?></small></td>
-              <td><?= $r['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?><small>Joined <?= e(date('j M Y', strtotime($r['started_at']))) ?></small></td>
+              <td><?= e(campus_plan_label($r['plan'])) ?><small>Joined <?= e(date('j M Y', strtotime($r['started_at']))) ?></small></td>
               <td><span class="ca-pill <?= $openR ? (strtotime($r['access_until']) - time() < 7 * 86400 ? 'warn' : 'good') : 'mute' ?>"><?= e(date('j M Y', strtotime($r['access_until']))) ?><?= $openR ? '' : ' · ended' ?></span></td>
               <td class="num"><?= (int) $r['done'] ?> / <?= $lessonTotal ?><?= $r['certificate_code'] ? '<small>Certificate issued</small>' : '' ?></td>
             </tr>
@@ -458,7 +466,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
       <h2 style="margin:0; font-size:15px;">Give access without payment</h2>
       <p class="muted small" style="margin:0;">For example, a free month for an existing student. Adds time on top of any access they already have, and is written to the audit log.</p>
       <label>Their account email<input type="email" name="email" required></label>
-      <label>Length<select name="plan"><option value="MONTHLY">30 days</option><option value="YEARLY">12 months</option></select></label>
+      <label>Length<select name="plan"><?php if (campus_daily_ready()): ?><option value="DAILY">24 hours</option><?php endif; ?><option value="MONTHLY" selected>30 days</option><option value="YEARLY">12 months</option></select></label>
       <label>Reason<input name="reason" required minlength="5" maxlength="200" placeholder="e.g. Free first month for existing students"></label>
       <div><button class="btn btn-primary" type="submit">Give access</button></div>
     </form>

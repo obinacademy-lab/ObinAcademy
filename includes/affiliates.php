@@ -91,6 +91,7 @@ function attribute_referral_at_signup(int $newUserId): void {
  */
 function record_affiliate_earning(array $payment): void {
     if (!affiliates_ready()) return;
+    if (($payment['campus_plan'] ?? null) === 'DAILY') return; // day passes pay the professor but no referral commission
     $buyer = db_one('SELECT id, name, referred_by_user_id FROM users WHERE id = ?', [(int) $payment['user_id']]);
     if (!$buyer || empty($buyer['referred_by_user_id'])) return;
     $affiliateId = (int) $buyer['referred_by_user_id'];

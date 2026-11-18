@@ -32,6 +32,7 @@ $learnUrl = base_url('campus-learn.php?campus=' . $campus['slug']);
 $joinBack = '/campus.php?slug=' . $campus['slug'] . '#join';
 $monthly = (float) $campus['monthly_price'];
 $yearly = (float) $campus['yearly_price'];
+$daily = campus_daily_ready() ? (float) $campus['daily_price'] : 0.0; // 0 = no day pass offered
 $saving = max(0, $monthly * 12 - $yearly);
 $savePct = $monthly > 0 && $saving > 0 ? (int) round($saving / ($monthly * 12) * 100) : 0;
 $perDay = fn(float $v, int $days) => 'UGX ' . number_format(max(100, round($v / $days / 100) * 100));
@@ -52,6 +53,7 @@ $faq = [
     ['What if I join mid-year?', campus_groups_ready() ? 'You always start at stage 1, with other new members, and move on stage by stage. You never land in the middle of a class that started before you.' : 'Every stage your class has reached opens for you, with recordings, so you can catch up.'],
     ['Can I stop any time?', 'Yes. Nothing renews by itself. We remind you before your access ends.'],
 ];
+if ($daily > 0) $faq[] = ['Can I pay for just one day?', 'Yes. A day pass opens the campus for 24 hours for ' . format_money($daily) . '. When it ends, the campus closes until you pay again. Your progress is kept.'];
 if ($isTrading) $faq[] = ['Will I make money?', 'Trading carries a real risk of loss and nobody can promise profit. Lessons are educational and are not financial advice.'];
 
 $pageTitle = $campus['name'] . ' Campus — Obin Academy';
@@ -96,17 +98,18 @@ require __DIR__ . '/includes/header.php';
       <?php if ($open): ?>
         <div class="cq-member">
           <b>You are a member</b>
-          <p>Access open until <strong><?= e(date('j M Y', strtotime($membership['access_until']))) ?></strong>.</p>
+          <p>Access open until <strong><?= e(campus_access_until_text($membership['access_until'])) ?></strong>.</p>
           <a class="cq-pay" href="<?= e($learnUrl) ?>">Go to your campus <?= $arrow ?></a>
           <span class="cq-more">Or add more time</span>
         </div>
       <?php elseif ($membership): ?>
-        <p class="cq-ended">Your access ended on <?= e(date('j M Y', strtotime($membership['access_until']))) ?>. Rejoin to continue where you stopped.</p>
+        <p class="cq-ended">Your access ended on <?= e(date(campus_plan($membership['plan']) === 'DAILY' ? 'j M Y, g:i a' : 'j M Y', strtotime($membership['access_until']))) ?>. Rejoin to continue where you stopped.</p>
       <?php endif; ?>
-      <div class="cq-switch" data-switch data-plan="YEARLY">
+      <div class="cq-switch<?= $daily > 0 ? ' three' : '' ?>" data-switch data-plan="YEARLY">
         <span class="knob" aria-hidden="true"></span>
         <button type="button" aria-pressed="true" data-plan="YEARLY" data-price="<?= (int) $yearly ?>" data-per-label="/ year" data-day-label="About <b><?= e($perDay($yearly, 365)) ?></b> a day" data-amount="<?= e(format_money($yearly)) ?>">Yearly<?php if ($savePct > 0): ?><span class="save">−<?= $savePct ?>%</span><?php endif; ?></button>
         <button type="button" aria-pressed="false" data-plan="MONTHLY" data-price="<?= (int) $monthly ?>" data-per-label="/ month" data-day-label="About <b><?= e($perDay($monthly, 30)) ?></b> a day" data-amount="<?= e(format_money($monthly)) ?>">Monthly</button>
+        <?php if ($daily > 0): ?><button type="button" aria-pressed="false" data-plan="DAILY" data-price="<?= (int) $daily ?>" data-per-label="/ 24 hours" data-day-label="Opens for <b>24 hours</b>, then closes until you pay again" data-amount="<?= e(format_money($daily)) ?>">Day pass</button><?php endif; ?>
       </div>
       <div class="cq-price"><span class="cur">UGX</span><span class="cq-odo" data-odo aria-hidden="true"><?= e(number_format($yearly)) ?></span><span class="cq-sr" data-price-text aria-live="polite"><?= e(number_format($yearly)) ?></span><span class="per" data-per>/ year</span></div>
       <p class="cq-daily" data-day>About <b><?= e($perDay($yearly, 365)) ?></b> a day</p>

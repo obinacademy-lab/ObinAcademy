@@ -166,7 +166,7 @@ require __DIR__ . '/../../includes/dashboard_header.php';
             <?php foreach ($ledger as $j => $l): ?>
               <tr class="acx-whip" style="--j:<?= min($j, 12) ?>">
                 <td><?= e(date('j M Y', strtotime($l['created_at']))) ?><small class="pp-sub"><?= e(date('g:i a', strtotime($l['created_at']))) ?></small></td>
-                <td><?= e($l['learner_name'] ?: 'Deleted account') ?><small class="pp-sub"><?= $l['plan'] === 'YEARLY' ? 'Yearly' : 'Monthly' ?></small></td>
+                <td><?= e($l['learner_name'] ?: 'Deleted account') ?><small class="pp-sub"><?= e(campus_plan_label($l['plan'])) ?></small></td>
                 <td class="r acx-num"><?= e(number_format((float) $l['gross'])) ?></td>
                 <td class="r acx-num"><b><?= e(number_format((float) $l['amount'])) ?></b><small class="pp-sub"><?= e(format_share((float) $l['share_percent'])) ?></small></td>
                 <td><?= $l['payout_id'] ? '<span class="acx-tag good">Paid ' . e(date('j M', strtotime($l['payout_paid_at']))) . '</span>' : '<span class="acx-tag warn">Owed</span>' ?></td>
