@@ -324,3 +324,7 @@ html:not(.cl-again) .cl-tile { animation: cl-deal .7s var(--cl-ease) both; anima
 /* unread class room messages, filled by assets/js/chat-alerts.js */
 .cl-unread { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 2px; border-radius: 99px; background: var(--cl-lime); color: var(--cl-lime-ink); font: 600 11px var(--cl-mono); }
 .cl-unread[hidden] { display: none; }
+
+/* ---------- Bright: Obin blue and white, Geist headings. Layout and behaviour are unchanged. ---------- */
+:root { --cl-ground: #f5f7ff; --cl-ink: #0b1236; --cl-ink-2: #3f4670; --cl-muted: #5a6285; --cl-line: #e4e8f6; --cl-deep: #0b1236; --cl-deep-2: #151d4d; --cl-brand: #0b00ff; --cl-serif: "Geist", system-ui, sans-serif; }
+.cl-body h1, .cl-body h2, .cl-body h3 { font-weight: 700; letter-spacing: -.035em; }

@@ -300,3 +300,8 @@
 /* overview pay tile: request button or waiting pill */
 .pf-req-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; border-radius: 10px; background: var(--pf-ink); color: var(--pf-lime) !important; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 .pf-req-wait { display: inline-flex; align-items: center; gap: 7px; font: 600 11px var(--pf-mono); color: var(--pf-amber); background: var(--pf-amber-tint); padding: 4px 10px; border-radius: 99px; }
+
+/* ---------- Bright: Obin blue and white, Geist headings. Layout and behaviour are unchanged. ---------- */
+.pf-body { --pf-ground: #f5f7ff; --pf-ink: #0b1236; --pf-muted: #5a6285; --pf-line: #e4e8f6; --pf-night: #0b1236; --pf-night-2: #151d4d; --pf-blue: #0b00ff; --pf-blue-2: #6b66ff; --pf-blue-tint: #eef0ff; --pf-serif: "Geist", system-ui, sans-serif; }
+.pf-body h1, .pf-body h2, .pf-body h3 { font-weight: 700; letter-spacing: -.035em; }
+.pf-dock-in { background: rgba(11,18,54,.96); border-radius: 16px; }

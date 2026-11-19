@@ -1,0 +1,64 @@
+/* Log in, sign up and password pages ("Bright"): a split screen. A photo and one line of encouragement on the left, the form on
+   white on the right. Loaded after style.css so these rules replace the old night-photo glass card. Markup: includes/auth_header.php. */
+body.auth-body.ab { background: #fff; color: #0b1236; font-family: 'Geist', var(--font-sans); overflow-x: hidden; }
+.ab-shell { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); place-items: stretch; padding: 0; min-height: 100vh; min-height: 100dvh; }
+
+/* the photo side */
+.ab-photo { position: relative; overflow: hidden; background: #0b1236; color: #fff; display: flex; flex-direction: column; justify-content: space-between; padding: 36px 44px; min-height: 100%; }
+.ab-photo > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.ab-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(6,0,60,.94) 0%, rgba(6,0,60,.7) 32%, rgba(6,0,60,.12) 62%, rgba(6,0,60,.42) 100%); }
+.ab-photo > * { position: relative; z-index: 2; }
+.ab-logo { display: inline-flex; align-items: center; gap: 11px; font: 800 18px/1 'Geist', sans-serif; letter-spacing: -.02em; color: #fff; text-decoration: none; }
+.ab-logo span { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, #0b00ff, #6b66ff); color: #cdfb5e; display: grid; place-items: center; }
+.ab-logo svg { width: 18px; height: 18px; }
+.ab-quote p { font: 700 clamp(26px, 2.8vw, 38px)/1.12 'Geist', sans-serif; letter-spacing: -.035em; max-width: 14em; margin: 0; text-wrap: balance; }
+.ab-quote small { display: block; margin-top: 16px; font: 500 12px 'Geist Mono', monospace; letter-spacing: .1em; text-transform: uppercase; opacity: .8; }
+
+/* the form side */
+.ab-shell .auth-card { max-width: 440px; width: 100%; margin: auto; padding: 56px 28px 40px; background: none; border: 0; border-radius: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; animation: none; align-self: center; }
+.ab-shell .auth-card::before { display: none; }
+.ab-shell .auth-brand { display: none; }
+.ab-shell .auth-card h1.auth-headline { margin: 0; text-align: left; font: 700 clamp(30px, 3.2vw, 40px)/1.06 'Geist', sans-serif; letter-spacing: -.04em; color: #0b1236; }
+.ab-shell .auth-card h1.auth-headline em { font-family: inherit; font-style: italic; font-weight: 700; color: #0b1236; }
+.ab-shell .auth-card .auth-sub { margin: 12px 0 0; max-width: none; text-align: left; font-size: 15.5px; line-height: 1.55; color: #5a6285; }
+.ab-shell .auth-card form { margin-top: 28px; gap: 16px; }
+.ab-shell .auth-card .field label { margin: 0 0 7px; font-size: 13px; letter-spacing: 0; font-weight: 600; color: #0b1236; }
+.ab-shell .auth-card .field label i { color: #5a6285; opacity: 1; }
+.ab-shell .auth-card input { height: 50px; border-radius: 10px; border: 1px solid #cdd3ea; background: #fff; color: #0b1236; font-size: 15px; font-weight: 500; box-shadow: none; }
+.ab-shell .auth-card input::placeholder { color: #9aa1c4; }
+.ab-shell .auth-card input:focus { background: #fff; border-color: #0b00ff; box-shadow: 0 0 0 4px rgba(11,0,255,.1); }
+.ab-shell .auth-card input:-webkit-autofill { -webkit-text-fill-color: #0b1236; box-shadow: 0 0 0 40px #fff inset; }
+.ab-shell .auth-card .help { color: #5a6285; }
+.ab-shell .auth-eye { color: #5a6285; }
+.ab-shell .auth-eye:hover, .ab-shell .auth-eye.is-on { color: #0b00ff; }
+.ab-shell .auth-eye:focus-visible { outline-color: #0b00ff; }
+.ab-shell .auth-card .field-row { justify-content: space-between; margin: -4px 0 0; }
+.ab-shell .auth-card .forgot-link { color: #0b00ff; font-weight: 600; }
+.ab-shell .auth-card .forgot-link:hover { color: #0b00ff; text-decoration: underline; }
+.ab-shell .auth-card .btn-primary { height: 52px; border-radius: 10px; background: #0b00ff; color: #fff; box-shadow: none; font-weight: 600; }
+.ab-shell .auth-card .btn-primary::after { display: none; }
+.ab-shell .auth-card .btn-primary:hover { background: #0b00ff; color: #fff; filter: brightness(1.1); box-shadow: 0 14px 26px -14px #0b00ff; }
+.ab-shell .auth-card .btn-primary:focus-visible { outline-color: #0b00ff; }
+.ab-shell .auth-or { color: #5a6285; }
+.ab-shell .auth-or::before, .ab-shell .auth-or::after { background: #e4e8f6; }
+.ab-shell .auth-ghost { height: 50px; border-radius: 10px; border: 1px solid #cdd3ea; background: #fff; color: #0b1236; }
+.ab-shell .auth-ghost:hover { background: #fff; border-color: #0b1236; }
+.ab-shell .auth-ghost svg { color: #0b00ff; }
+.ab-shell .auth-card .switch-line { text-align: left; color: #5a6285; }
+.ab-shell .auth-card .switch-line a { color: #0b00ff; border-bottom: 0; }
+.ab-shell .auth-card .switch-line a:hover { color: #0b00ff; text-decoration: underline; }
+.ab-shell .auth-help { text-align: left; color: #5a6285; }
+.ab-shell .auth-help a:hover { color: #0b00ff; }
+.ab-shell .auth-card .alert { border-radius: 10px; }
+.ab-shell .auth-card .alert-error { background: #fff0f0; border-color: #f4b9b9; color: #b42318; }
+.ab-shell .auth-card .alert-success { background: #f2fbd9; border-color: #d6ee9b; color: #3f5a07; }
+
+@media (max-width: 860px) {
+  .ab-shell { grid-template-columns: 1fr; }
+  .ab-photo { min-height: 0; padding: 20px 20px 22px; }
+  .ab-photo > img { object-position: center 25%; }
+  .ab-quote { margin-top: 70px; }
+  .ab-quote p { font-size: 22px; }
+  .ab-quote small { display: none; }
+  .ab-shell .auth-card { padding: 32px 20px 40px; max-width: 480px; }
+}

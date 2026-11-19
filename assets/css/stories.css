@@ -93,3 +93,15 @@
 .vs-join:focus-visible { outline: 3px solid var(--vs-brand); outline-offset: 3px; }
 .vs-dark .vs-join { background: var(--vs-lime); color: var(--vs-lime-ink) !important; }
 .vs-dark .vs-join:hover { background: #dcff86; color: var(--vs-lime-ink) !important; box-shadow: 0 14px 34px -12px rgba(205, 251, 94, .7); }
+
+/* ---------- Bright: the stories page in white, blue and lime ---------- */
+.vs-page { background: #fff; color: #0b1236; --vs-on: #0b1236; --vs-on-2: #5a6285; --vs-line-d: #e4e8f6; --vs-deep-2: #f5f7ff; --vs-brand: #0b00ff; }
+.vs-hero::before { background: radial-gradient(closest-side, rgba(11, 0, 255, .12), transparent 70%); }
+.vs-eyebrow { color: #0b00ff; }
+.vs-hero h1 { font-family: "Geist", system-ui, sans-serif; font-weight: 700; letter-spacing: -.04em; line-height: 1.04; font-size: clamp(38px, 5.6vw, 68px); }
+.vs-hero h1 em { color: #0b1236; }
+.vs-empty svg { stroke: #0b00ff; }
+.vs-share h2 { font-family: "Geist", system-ui, sans-serif; font-weight: 700; letter-spacing: -.03em; }
+.vs-share > div { border-radius: 20px; }
+.vs-cta { background: #0b00ff; color: #fff !important; border-radius: 10px; }
+.vs-cta:hover { box-shadow: 0 14px 26px -14px #0b00ff; }

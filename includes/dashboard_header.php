@@ -114,6 +114,7 @@ if ($user['role'] === 'ADMIN') {
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/platform.css')) ?>">
   <?php foreach ($pageCss ?? [] as $css): ?><link rel="stylesheet" href="<?= e(versioned_asset($css)) ?>">
   <?php endforeach; ?>
+  <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/desk-bright.css')) ?>">
   <?php require __DIR__ . '/pwa-head.php'; ?>
 </head>
 <body class="pl pl-dashbody">

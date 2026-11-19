@@ -1,0 +1,15 @@
+/* Bright for the dashboards: the learner and admin "desk" pages keep their layout and behaviour; the look moves to
+   Obin blue and white with Geist headings. Loaded after each page's own CSS (includes/dashboard_header.php). */
+.pl-dash .ovd { --dk-ground: #f5f7ff; --dk-serif: "Geist", system-ui, sans-serif; --dk-deep: #0b1236; --dk-deep-2: #151d4d; --dk-ink: #0b1236; --dk-muted: #5a6285; --dk-line: #e4e8f6; --dk-brand: #0b00ff; }
+.pl-dash .ovd h1, .pl-dash .ovd h2, .pl-dash .ovd h3 { font-weight: 700; letter-spacing: -.035em; }
+.pl-dash .ovd h1 em, .pl-dash .ovd h2 em, .pl-dash .ovd h3 em { font-style: italic; }
+.pl-dash .dk-hero { background: linear-gradient(135deg, #0b00ff 0%, #2a22e0 55%, #0b1236 100%); border-radius: 20px; }
+.pl-dash .dk-aurora i:nth-child(1) { background: #5a52ff; }
+.pl-dash .dk-aurora i:nth-child(2) { background: #1a1fb8; }
+.pl-dash .dk-aurora i:nth-child(3) { background: rgba(205, 251, 94, .22); }
+.pl-dash .dk-hero h1 { font-weight: 700; letter-spacing: -.04em; }
+.pl-dash .dk-kpi b, .pl-dash .dk-kpi strong { font-weight: 600; }
+.pl-dash .dk-side > :first-child { border-radius: 20px; }
+.pl-dash .ovd [class*="dk-block"], .pl-dash .ovd .dk-card { border-radius: 20px; }
+.pl-dash .dash-content .card, .pl-dash .card { border-radius: 16px; }
+.pl-dash .ovd .dk-btn, .pl-dash .ovd [class*="dk-btn"] { border-radius: 10px; }

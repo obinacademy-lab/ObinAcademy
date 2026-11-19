@@ -56,6 +56,7 @@ $canonicalUrl = $canonicalUrl ?? base_url(ltrim($currentPath, '/')); // a page w
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500<?= isset($extraGoogleFont) ? '&family=' . e($extraGoogleFont) : '' ?>&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/platform.css')) ?>">
+  <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/bright.css')) ?>">
 </head>
 <body id="top" class="pl">
 <?php

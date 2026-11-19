@@ -3,6 +3,8 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/stories.php';
 require __DIR__ . '/includes/campuses.php';
+require __DIR__ . '/includes/platform.php';
+require __DIR__ . '/includes/bright.php';
 
 $campuses = get_published_campuses() ?: get_all_campuses();
 
@@ -14,13 +16,11 @@ $howItWorks = [
 ];
 
 $commitments = [
-    ['🎓', '#0b00ff', 'Professors who have done the work', 'Every campus is led by someone with real results in that skill, chosen by us.'],
-    ['🗓️', '#f5b301', 'A clear path for the year', 'Twelve stages laid out from day one, opened by your professor as the class is ready, so you always know what comes next.'],
-    ['📡', '#10b981', 'Live, every week', 'A live class each week, with time for your questions.'],
-    ['🤝', '#8b5cf6', 'A community that keeps you going', 'Learn alongside people working on the same skill as you.'],
-    ['📱', '#f97316', 'Built for your phone', 'Lessons, live classes and payments all work from a phone.'],
+    ['Professors who have done the work', 'Every campus is led by someone with real results in that skill, chosen by Obin Academy.'],
+    ['One skill, one year', 'Not a library of scattered courses. One skill, taught over a full year with a clear path of twelve stages.'],
+    ['A live class every week', 'Learn with your professor, with time for your questions, and a community learning beside you.'],
+    ['Built for your phone', 'Lessons, PDFs, live classes and payments all work on any smartphone.'],
 ];
-
 $aboutStories = get_published_video_stories(3);
 
 $aboutFaqs = [
@@ -35,150 +35,82 @@ $stats = get_platform_stats();
 $pageTitle = 'About Us — Obin Academy';
 $pageDescription = 'Obin Academy runs year-long campuses: one skill, twelve stages, a live class every week and a professor who has done the work.';
 require __DIR__ . '/includes/header.php';
+br_sprite();
 ?>
-<section class="home-hero-v3">
-  <div class="container" style="text-align:center;">
-    <h1>One skill. One year. Mastered.</h1>
-    <p class="summary" style="margin-left:auto; margin-right:auto;">Obin Academy runs year-long campuses led by professors who have done the work, so you learn a skill that changes what you earn, not just what you know.</p>
-    <div class="row gap-2" style="justify-content:center; flex-wrap:wrap; margin-top:34px;">
-      <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-gold">See the campuses <span class="btn-arrow">→</span></a>
-      <a href="<?= e(base_url('teach.php')) ?>" class="btn btn-outline">Teach at Obin Academy</a>
-    </div>
-  </div>
-</section>
-
-<?php render_stat_strip($stats); ?>
-
-<div class="section">
-  <div class="container">
-    <div class="why-exist-grid">
-      <div class="reveal">
-        <span class="eyebrow">About Obin Academy</span>
-        <h2 class="h2" style="margin-top:14px;">Education That Creates Real Results</h2>
-        <p class="lede" style="margin-top:16px; max-width:none; font-size:16.5px; line-height:1.75; color:var(--muted);">
-          We believe learning should change your life, not just fill your notes. So instead of a library of scattered courses, we run campuses: one skill, taught over a full year by a professor with real results, with a live class every week and a community learning beside you.
-        </p>
-        <div class="mission-callout" style="margin-top:24px;">
-          <span class="tag">Our Mission, Simply Put</span>
-          <p>To help people across Africa master one valuable skill at a time, with the structure and support to actually finish.</p>
-        </div>
-      </div>
-      <div class="why-exist-photo reveal reveal-delay-2">
-        <img src="<?= e(versioned_asset('assets/img/abt-students-laptop.jpg')) ?>" alt="Two learners studying together on a laptop">
+<div class="br">
+  <section class="b-ph">
+    <div class="b-w">
+      <div>
+        <span class="b-eb">About Obin Academy</span>
+        <h1>One skill. One year. <i>Mastered.</i></h1>
+        <p class="b-lead">Obin Academy runs year-long campuses led by professors who have done the work, so you learn a skill that changes what you earn, not just what you know.</p>
+        <div class="b-acts"><a class="b-btn p lg" href="<?= e(base_url('campuses.php')) ?>">See the campuses <?= br_ic('arrow') ?></a><a class="b-btn o lg" href="<?= e(base_url('teach.php')) ?>">Teach at Obin Academy</a></div>
       </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<?php if ($campuses): ?>
-<div class="section" style="background:var(--surface);">
-  <div class="container">
-    <div class="text-center reveal" style="max-width:600px; margin:0 auto 36px;">
-      <span class="eyebrow">Our Campuses</span>
-      <h2 class="h2" style="margin-top:10px;">Pick the skill you want to master</h2>
+  <section class="b-strip"><div class="b-w">
+    <div><b><?= (int) $stats['campus_count'] ?></b><span>Campuses to choose from</span></div>
+    <div><b><?= (int) $stats['learner_count'] ?>+</b><span>Learners</span></div>
+    <div><b>12</b><span>Months, step by step</span></div>
+    <div><b>52</b><span>Live classes a year</span></div>
+  </div></section>
+
+  <section class="b-sec"><div class="b-w">
+    <div class="b-split2">
+      <img src="<?= e(versioned_asset('assets/img/abt-students-laptop.jpg')) ?>" alt="Two learners studying together on a laptop">
+      <div>
+        <span class="b-eb">About Obin Academy</span>
+        <h2 style="font-size:clamp(30px,3.6vw,48px);line-height:1.06;margin:12px 0 18px">Education that creates <i>real results.</i></h2>
+        <p class="b-lead">We believe learning should change your life, not just fill your notes. So instead of a library of scattered courses, we run campuses: one skill, taught over a full year by a professor with real results, with a live class every week and a community learning beside you.</p>
+      </div>
     </div>
-    <div class="center-grid">
-      <?php foreach ($campuses as $i => $c): ?>
-        <a href="<?= e(base_url('campus.php?slug=' . $c['slug'])) ?>" class="value-card reveal reveal-delay-<?= min($i % 5 + 1, 5) ?>" style="text-decoration:none; color:inherit;">
-          <span class="icon-badge" style="--tint:#0b00ff;"><?= campus_icon($c['icon'], 1.8) ?></span>
-          <h3><?= e($c['name']) ?></h3>
-          <p><?= e($c['tagline']) ?></p>
-        </a>
+  </div></section>
+
+  <section class="b-sec" style="padding-top:0"><div class="b-w">
+    <div class="b-mission"><small>Our mission, simply put</small><p>To help people across Africa master one valuable skill at a time, with the structure and support to actually finish.</p></div>
+  </div></section>
+
+  <section class="b-sec alt"><div class="b-w">
+    <div class="b-sh"><span class="b-eb">Our commitment</span><h2>What we <i>promise you.</i></h2></div>
+    <div class="b-cols4"><?php foreach ($commitments as $i => [$title, $desc]): ?><div><small>0<?= $i + 1 ?></small><b><?= e($title) ?></b><span><?= e($desc) ?></span></div><?php endforeach; ?></div>
+  </div></section>
+
+  <?php if ($campuses): ?>
+  <section class="b-sec"><div class="b-w">
+    <div class="b-sh"><span class="b-eb">Our campuses</span><h2>Pick the skill you <i>want to master.</i></h2></div>
+    <div class="b-feat b-camplinks">
+      <?php foreach ($campuses as $c): ?>
+        <a href="<?= e(base_url('campus.php?slug=' . rawurlencode($c['slug']))) ?>"><i><?= campus_icon($c['icon'], 1.8) ?></i><b><?= e($c['name']) ?></b><span><?= e($c['tagline']) ?></span></a>
       <?php endforeach; ?>
     </div>
-  </div>
-</div>
-<?php endif; ?>
+  </div></section>
+  <?php endif; ?>
 
-<div class="section">
-  <div class="container">
-    <div class="text-center reveal" style="max-width:580px; margin:0 auto 40px;">
-      <span class="eyebrow">Simple By Design</span>
-      <h2 class="h2" style="margin-top:10px;">How a Campus Works</h2>
-    </div>
-    <div class="how-panel panel-learners reveal" style="max-width:760px; margin:0 auto;">
-      <div class="stack gap-3" style="position:relative; z-index:1;">
-        <?php foreach ($howItWorks as $i => [$title, $desc]): ?>
-          <div class="step-row">
-            <span class="step-num"><?= $i + 1 ?></span>
-            <div><h4><?= e($title) ?></h4><p><?= e($desc) ?></p></div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-      <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-primary" style="margin-top:26px; position:relative; z-index:1;">Choose your campus <span class="btn-arrow">→</span></a>
-    </div>
-  </div>
-</div>
+  <section class="b-sec alt"><div class="b-w">
+    <div class="b-sh"><span class="b-eb">Simple by design</span><h2>How a campus <i>works.</i></h2></div>
+    <div class="b-steps"><?php foreach ($howItWorks as $i => [$title, $desc]): ?><div><b class="b-n">STEP 0<?= $i + 1 ?></b><h3><?= e($title) ?></h3><p><?= e($desc) ?></p></div><?php endforeach; ?></div>
+  </div></section>
 
-<div class="section" style="background:var(--surface);">
-  <div class="container">
-    <div class="text-center reveal" style="max-width:560px; margin:0 auto 40px;">
-      <span class="eyebrow">Our Commitment</span>
-      <h2 class="h2" style="margin-top:10px;">What We Promise You</h2>
-    </div>
-    <div class="center-grid">
-      <?php foreach ($commitments as $i => [$emoji, $tint, $title, $desc]): ?>
-        <div class="value-card reveal reveal-delay-<?= $i + 1 ?>">
-          <span class="icon-badge" style="--tint:<?= e($tint) ?>;"><?= $emoji ?></span>
-          <h3><?= e($title) ?></h3>
-          <p><?= e($desc) ?></p>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  </div>
-</div>
+  <?php if ($aboutStories): ?>
+  <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/stories.css')) ?>">
+  <section class="b-sec"><div class="b-w">
+    <div class="b-sh"><span class="b-eb">Real students</span><h2>In their <i>own words.</i></h2><p class="b-lead">Students on camera, talking about their campus. Tap a story to watch it with sound.</p></div>
+    <div class="vs-wall three"><?php foreach ($aboutStories as $s) render_video_story_card($s); ?></div>
+    <p class="b-note"><a href="<?= e(base_url('stories.php')) ?>" style="color:var(--link);font-weight:600">Watch every story →</a></p>
+  </div></section>
+  <script src="<?= e(versioned_asset('assets/js/stories.js')) ?>" defer></script>
+  <?php endif; ?>
 
-<?php if ($aboutStories): ?>
-<link rel="stylesheet" href="<?= e(versioned_asset('assets/css/stories.css')) ?>">
-<div class="section">
-  <div class="container">
-    <div class="text-center" style="max-width:560px; margin:0 auto 40px;">
-      <span class="eyebrow">Real Students</span>
-      <h2 class="h2" style="margin-top:10px;">In Their Own Words</h2>
-      <p class="muted" style="margin-top:10px;">Students on camera, talking about their campus. Tap a story to watch it with sound.</p>
+  <section class="b-sec<?= $aboutStories ? ' alt' : '' ?>"><div class="b-w">
+    <div class="b-sh"><span class="b-eb">Questions</span><h2>Before you <i>join.</i></h2></div>
+    <div class="b-faq" style="max-width:820px;margin:0 auto">
+      <?php foreach ($aboutFaqs as $i => [$q, $a]): ?><details<?= $i === 0 ? ' open' : '' ?>><summary><?= e($q) ?></summary><p><?= e($a) ?></p></details><?php endforeach; ?>
     </div>
-    <div class="vs-wall three">
-      <?php foreach ($aboutStories as $s) render_video_story_card($s); ?>
-    </div>
-    <div class="text-center" style="margin-top:36px;">
-      <a href="<?= e(base_url('stories.php')) ?>" class="btn btn-dark">Watch Every Story →</a>
-    </div>
-  </div>
-</div>
-<script src="<?= e(versioned_asset('assets/js/stories.js')) ?>" defer></script>
-<?php endif; ?>
+  </div></section>
 
-<div class="section">
-  <div class="container" style="max-width:760px;">
-    <div class="text-center reveal" style="max-width:560px; margin:0 auto 36px;">
-      <span class="eyebrow">FAQ</span>
-      <h2 class="h2" style="margin-top:10px;">Questions? We've Got Answers</h2>
-    </div>
-    <div class="faq-list reveal">
-      <?php foreach ($aboutFaqs as $i => [$q, $a]): ?>
-        <div class="faq-item">
-          <button type="button" class="faq-question" aria-expanded="false" aria-controls="about-faq-panel-<?= $i ?>" id="about-faq-q-<?= $i ?>">
-            <span><?= e($q) ?></span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="faq-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
-          </button>
-          <div class="faq-answer" id="about-faq-panel-<?= $i ?>" role="region" aria-labelledby="about-faq-q-<?= $i ?>">
-            <div class="faq-answer-inner"><p><?= e($a) ?></p></div>
-          </div>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  </div>
+  <section class="b-sec" style="padding-top:20px"><div class="b-w">
+    <div class="b-cta"><div><h2>Your year starts the day you join.</h2><p>Twelve months from now you will wish you had started today. Choose your campus and take the first step.</p></div><a class="b-btn a lg" href="<?= e(base_url('campuses.php')) ?>">Choose your campus <?= br_ic('arrow') ?></a></div>
+  </div></section>
 </div>
-
-<section class="feature-cta-section" style="background-image: url('<?= e(versioned_asset('assets/img/abt-video-call.jpg')) ?>');">
-  <div class="container">
-    <div class="cta-panel-premium reveal">
-      <span class="eyebrow" style="background:rgba(255,255,255,0.1); color:var(--gold);">Your year starts the day you join</span>
-      <h2 class="h2" style="margin-top:14px; color:#fff;">Ready to master one skill?</h2>
-      <div class="row gap-2" style="justify-content:center; margin-top:28px;">
-        <a href="<?= e(base_url('campuses.php')) ?>" class="btn btn-gold btn-lg">Choose your campus <span class="btn-arrow">→</span></a>
-      </div>
-    </div>
-  </div>
-</section>
 <?php require __DIR__ . '/includes/footer.php'; ?>

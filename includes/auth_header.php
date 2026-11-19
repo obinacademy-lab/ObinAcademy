@@ -14,19 +14,22 @@ ensure_referral_cookie(); // a referral link can land straight on signup.php, no
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
   <meta name="robots" content="noindex, follow">
-  <meta name="theme-color" content="#070b24">
+  <meta name="theme-color" content="#ffffff">
   <title><?= e($pageTitle ?? 'Obin Academy') ?></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/style.css')) ?>">
+  <link rel="stylesheet" href="<?= e(versioned_asset('assets/css/auth-bright.css')) ?>">
   <?php require __DIR__ . '/pwa-head.php'; ?>
-  <style>.ag-bg { background-image: url('<?= e(versioned_asset('assets/img/auth-slide-2.jpg')) ?>'); }</style>
 </head>
-<body class="auth-body">
-<div class="ag-bg" aria-hidden="true"></div><div class="ag-tint" aria-hidden="true"></div>
-<div class="ag-glow ag-glow-a" aria-hidden="true"></div><div class="ag-glow ag-glow-b" aria-hidden="true"></div><div class="ag-stars" aria-hidden="true"></div>
-<main class="auth-shell">
+<body class="auth-body ab">
+<main class="auth-shell ab-shell">
+  <aside class="ab-photo" aria-hidden="false">
+    <img src="<?= e(versioned_asset('assets/img/hero-couch-learner.jpg')) ?>" alt="">
+    <a class="ab-logo" href="<?= e(base_url('index.php')) ?>"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg></span>Obin Academy</a>
+    <div class="ab-quote"><p>Twelve months from now you will wish you had started today.</p><small>Obin Academy · Kampala, Uganda</small></div>
+  </aside>
   <section class="auth-card">
     <div class="auth-brand">
       <a class="auth-mark" href="<?= e(base_url('index.php')) ?>" aria-label="Obin Academy home"><?php dash_icon('graduation-cap'); ?></a>

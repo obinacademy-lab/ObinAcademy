@@ -1,6 +1,6 @@
 <?php
 /**
- * The platform shell ("Soft Pearl"): the header every page shares, the footer, and the dashboard tab bar.
+ * The platform shell ("Bright"): the header every page shares (with the Campuses mega-menu), the footer, and the dashboard tab bar.
  * Public pages (header.php / footer.php) and the learner and admin dashboards (dashboard_header.php) all build
  * their chrome from here, so a change to the nav or a link happens in one place. Styles: assets/css/platform.css.
  * Behaviour reuses main.js: [data-site-header] shadow on scroll, [data-nav-toggle] / [data-mobile-menu] for the phone menu.
@@ -28,7 +28,30 @@ function pl_logo(): void {
 }
 
 /**
- * The top of every page: the slim info strip, the sticky header and the phone menu.
+ * The open campuses for the header mega-menu, plus the line shown in its promo card. Never throws: if the database is
+ * unreachable the header simply has no mega-menu.
+ * @return array{0: array, 1: ?float} [published campuses, cheapest day pass or null]
+ */
+function pl_mega_campuses(): array {
+    static $cache = null;
+    if ($cache !== null) return $cache;
+    $cache = [[], null];
+    try {
+        require_once __DIR__ . '/campuses.php';
+        $open = get_published_campuses();
+        $day = null;
+        if ($open && campus_daily_ready()) {
+            $prices = array_filter(array_map(fn($c) => (float) ($c['daily_price'] ?? 0), $open), fn($v) => $v > 0);
+            $day = $prices ? min($prices) : null;
+        }
+        $cache = [$open, $day];
+    } catch (Throwable $e) {
+    }
+    return $cache;
+}
+
+/**
+ * The top of every page: the sticky header (with the Campuses mega-menu) and the phone menu.
  * $o['bell']     HTML for the notification bell (shown before the account menu)
  * $o['search']   HTML for a search box between the nav and the account area (admin)
  * $o['account']  [[href, label, icon-svg-inner, danger?], ...] links in the account dropdown
@@ -41,19 +64,16 @@ function pl_render_head(?array $user, array $o = []): void {
         ['dashboard/settings.php', 'Settings', '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>', false],
         ['logout.php', 'Sign Out', '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>', true],
     ];
+    [$megaCampuses, $megaDay] = pl_mega_campuses();
     ?>
-  <div class="pl-util">
-    <div class="pl-w">
-      <span>Kampala, Uganda · Pay with MTN or Airtel Money</span>
-      <span><a href="<?= e(PL_WHATSAPP_URL) ?>" target="_blank" rel="noopener noreferrer">WhatsApp us</a><?php if ($user): ?><a href="<?= e(base_url('dashboard.php')) ?>">Dashboard</a><?php else: ?><a href="<?= e(base_url('login.php')) ?>">Log in</a><?php endif; ?></span>
-    </div>
-  </div>
   <header class="pl-hd" data-site-header>
     <div class="pl-w pl-hd-in">
       <?php pl_logo(); ?>
       <nav class="pl-nav" aria-label="Main">
-        <?php foreach ($nav as [$label, $href, $on]): ?>
-          <a href="<?= e(base_url($href)) ?>" class="<?= in_array($path, $on, true) ? 'on' : '' ?>"<?= in_array($path, $on, true) ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
+        <?php foreach ($nav as $i => [$label, $href, $on]):
+            $isOn = in_array($path, $on, true);
+            $hasMega = $i === 0 && $megaCampuses; ?>
+          <a href="<?= e(base_url($href)) ?>" class="<?= $isOn ? 'on' : '' ?><?= $hasMega ? ' pl-hasm' : '' ?>"<?= $isOn ? ' aria-current="page"' : '' ?>><?= e($label) ?><?php if ($hasMega): ?><svg class="pl-dd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><?php endif; ?></a>
         <?php endforeach; ?>
       </nav>
       <?= $o['search'] ?? '' ?>
@@ -86,6 +106,30 @@ function pl_render_head(?array $user, array $o = []): void {
         </button>
       </div>
     </div>
+    <?php if ($megaCampuses): ?>
+    <div class="pl-mega" aria-label="Campuses">
+      <div class="pl-w">
+        <div class="pl-ml">
+          <?php foreach ($megaCampuses as $mc): $mp = campus_photo($mc); ?>
+            <a class="pl-mi" href="<?= e(base_url('campus.php?slug=' . rawurlencode($mc['slug']))) ?>">
+              <?php if ($mp): ?><img src="<?= e($mp) ?>" alt="" width="54" height="54" loading="lazy"><?php else: ?><span class="pl-mi-ic"><?= campus_icon($mc['icon'], 1.6) ?></span><?php endif; ?>
+              <span><b><?= e($mc['name']) ?></b><small><?= e(format_money((float) $mc['monthly_price'])) ?>/mo</small></span>
+            </a>
+          <?php endforeach; ?>
+        </div>
+        <div class="pl-mp">
+          <?php if ($megaDay): ?>
+            <small>New · Day pass</small>
+            <b>Try any campus for <?= e(format_money($megaDay)) ?> a day.</b>
+          <?php else: ?>
+            <small>Pay your way</small>
+            <b>Monthly or yearly, with MTN or Airtel Money.</b>
+          <?php endif; ?>
+          <a class="pl-btn a sm" href="<?= e(base_url('index.php#how')) ?>">See how it works</a>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
   </header>
 
   <div class="mobile-menu pl-mm" data-mobile-menu>
@@ -131,7 +175,7 @@ function pl_render_footer(?array $user): void {
           <h4>Learn</h4>
           <ul>
             <li><a href="<?= e(base_url('campuses.php')) ?>">All campuses</a></li>
-            <li><a href="<?= e(base_url('index.php#offer')) ?>">How it works</a></li>
+            <li><a href="<?= e(base_url('index.php#how')) ?>">How it works</a></li>
             <li><a href="<?= e(base_url('index.php#prices')) ?>">Pricing</a></li>
             <li><a href="<?= e(base_url('index.php#faq')) ?>">Questions</a></li>
           </ul>
@@ -156,7 +200,7 @@ function pl_render_footer(?array $user): void {
           </ul>
         </div>
       </div>
-      <div class="pl-ft-legal"><span>&copy; <?= date('Y') ?> Obin Academy · Kampala, Uganda</span><span>Pay with MTN or Airtel Money</span></div>
+      <div class="pl-ft-legal"><span>&copy; <?= date('Y') ?> Obin Academy · Kampala, Uganda</span><span>Pay with MTN or Airtel Money · <a href="<?= e(PL_WHATSAPP_URL) ?>" target="_blank" rel="noopener noreferrer">WhatsApp us</a></span></div>
     </div>
   </footer>
     <?php

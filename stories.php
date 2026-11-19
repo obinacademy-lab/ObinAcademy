@@ -27,7 +27,7 @@ require __DIR__ . '/includes/header.php';
 
   <div class="vs-body">
     <?php if ($stories): ?>
-      <div class="vs-wall vs-dark">
+      <div class="vs-wall">
         <?php foreach ($stories as $s) render_video_story_card($s); ?>
       </div>
     <?php else: ?>
